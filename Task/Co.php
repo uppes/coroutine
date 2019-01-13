@@ -32,17 +32,17 @@ class Co
 	{		
 	}
 	
-	public function retval($value) 
+	public static function retval($value) 
 	{
 		return new CoroutineReturnValue($value);
 	}
 
-	public function plainval($value) 
+	public static function plainval($value) 
 	{
 		return new CoroutinePlainValue($value);
 	}
 
-	public function routine(\Generator $gen) 
+	public static function routine(\Generator $gen) 
 	{
 		$stack = new \SplStack;
 		$exception = null;
