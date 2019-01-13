@@ -1,6 +1,15 @@
 <?php
+/**
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+namespace Async\Task;
 
-class Scheduler {
+use Async\Task\Task;
+use Async\Task\Syscall;
+
+class Scheduler
+{
     protected $maxTaskId = 0;
     protected $taskMap = []; // taskId => task
     protected $taskQueue;
@@ -9,11 +18,13 @@ class Scheduler {
     protected $waitingForRead = [];
     protected $waitingForWrite = [];
 
-    public function __construct() {
-        $this->taskQueue = new SplQueue();
+    public function __construct() 
+	{
+        $this->taskQueue = new \SplQueue();
     }
 
-    public function newTask(Generator $coroutine) {
+    public function coroutine(\Generator $coroutine) 
+	{
         $tid = ++$this->maxTaskId;
         $task = new Task($tid, $coroutine);
         $this->taskMap[$tid] = $task;
@@ -21,11 +32,13 @@ class Scheduler {
         return $tid;
     }
 
-    public function schedule(Task $task) {
+    public function schedule(Task $task) 
+	{
         $this->taskQueue->enqueue($task);
     }
 
-    public function killTask($tid) {
+    public function killTask($tid) 
+	{
         if (!isset($this->taskMap[$tid])) {
             return false;
         }
@@ -41,18 +54,19 @@ class Scheduler {
     
         return true;
     }
-
-    public function run() {
-        $this->newTask($this->ioPollTask());
+	
+    public function run() 
+	{
+        $this->coroutine($this->ioPollTask());
 
         while (!$this->taskQueue->isEmpty()) {
             $task = $this->taskQueue->dequeue();
             $retval = $task->run();
 
-            if ($retval instanceof SystemCall) {
+            if ($retval instanceof Syscall) {
                 try {
                     $retval($task, $this);
-                } catch (Exception $e) {
+                } catch (\Exception $e) {
                     $task->setException($e);
                     $this->schedule($task);
                 }
@@ -67,7 +81,8 @@ class Scheduler {
         }
     }
 
-    protected function ioPoll($timeout) {
+    protected function ioPoll($timeout) 
+	{
         if (empty($this->waitingForRead) && empty($this->waitingForWrite)) {
             return;
         }
@@ -107,7 +122,8 @@ class Scheduler {
         }
     }
 
-    protected function ioPollTask() {
+    protected function ioPollTask() 
+	{
         while (true) {
             if ($this->taskQueue->isEmpty()) {
                 $this->ioPoll(null);
@@ -118,7 +134,8 @@ class Scheduler {
         }
     }
 
-    public function waitForRead($socket, Task $task) {
+    public function waitForRead($socket, Task $task) 
+	{
         if (isset($this->waitingForRead[(int) $socket])) {
             $this->waitingForRead[(int) $socket][1][] = $task;
         } else {
@@ -126,7 +143,8 @@ class Scheduler {
         }
     }
 
-    public function waitForWrite($socket, Task $task) {
+    public function waitForWrite($socket, Task $task) 
+	{
         if (isset($this->waitingForWrite[(int) $socket])) {
             $this->waitingForWrite[(int) $socket][1][] = $task;
         } else {

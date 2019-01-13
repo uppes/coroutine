@@ -1,15 +1,21 @@
 <?php
+namespace Async\Tests;
 
-namespace Ditaio;
+use Async\Task\Co;
+use Async\Task\Task;
+use Async\Task\Syscall;
+use Async\Task\Scheduler;
+use PHPUnit\Framework\TestCase;
 
-class StackedCoroutineTest extends \PHPUnit_Framework_TestCase {
+class CoroutineCreateTest extends TestCase 
+{
     /**
      * @dataProvider testNoSendProvider
      */
     public function testNoSend(
         $coroutineFactory, $expectedArray, $reindex = false
     ) {
-        $coroutine = stackedCoroutine($coroutineFactory());
+        $coroutine = Co::routine($coroutineFactory());
         $resultArray = iterator_to_array($coroutine, !$reindex);
         $this->assertEquals($expectedArray, $resultArray);
     }
@@ -68,12 +74,12 @@ class StackedCoroutineTest extends \PHPUnit_Framework_TestCase {
                     "ck2" => "cv2", "pk2" => "pv2"
                 ]
             ],
-            // retval() in outermost coroutine aborts
+            // Co::retval() in outermost coroutine aborts
             [
                 function() {
                     yield 1;
                     yield 2;
-                    yield retval(3);
+                    yield Co::retval(3);
                     yield 4;
                     yield 5;
                 }, [
@@ -97,7 +103,7 @@ class StackedCoroutineTest extends \PHPUnit_Framework_TestCase {
                     yield (yield $this->child5());
 
                 }, [
-                    $this->child5(), retval('test'), plainval('test'), null
+                    $this->child5(), Co::retval('test'), Co::plainval('test'), null
                 ], true
             ],
         ];
@@ -128,14 +134,14 @@ class StackedCoroutineTest extends \PHPUnit_Framework_TestCase {
 
     private function child4() {
         yield "c1";
-        yield retval("crv");
+        yield Co::retval("crv");
         yield "c2";
     }
 
     private function child5() {
-        yield plainval($this->child5());
-        yield plainval(retval('test'));
-        yield plainval(plainval('test'));
+        yield Co::plainval($this->child5());
+        yield Co::plainval(Co::retval('test'));
+        yield Co::plainval(Co::plainval('test'));
     }
 
 
@@ -143,7 +149,7 @@ class StackedCoroutineTest extends \PHPUnit_Framework_TestCase {
      * @dataProvider testSendProvider
      */
     public function testSend($coroutineFactory, $sendValues, $expectedArray) {
-        $coroutine = stackedCoroutine($coroutineFactory());
+        $coroutine = Co::routine($coroutineFactory());
         $resultArray = [$coroutine->current()];
         foreach ($sendValues as $value) {
             $resultArray[] = $coroutine->send($value);
@@ -179,7 +185,7 @@ class StackedCoroutineTest extends \PHPUnit_Framework_TestCase {
     }
 
     private function child6($s) {
-        yield retval(yield (yield (yield $s)));
+        yield Co::retval(yield (yield (yield $s)));
     }
 
     /**
@@ -188,7 +194,7 @@ class StackedCoroutineTest extends \PHPUnit_Framework_TestCase {
     public function testThrow(
         $coroutineFactory, $throwAtKeys, $expectedArray, $shouldThrow
     ) {
-        $coroutine = stackedCoroutine($coroutineFactory());
+        $coroutine = Co::routine($coroutineFactory());
         $throwAtKeys = array_flip($throwAtKeys);
 
         $hasThrown = false;
@@ -313,7 +319,7 @@ class StackedCoroutineTest extends \PHPUnit_Framework_TestCase {
     }
 
     private function child10() {
-        yield retval('foo');
+        yield Co::retval('foo');
     }
 
     private function child11() {

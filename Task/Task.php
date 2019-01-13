@@ -1,30 +1,43 @@
 <?php
+/**
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+namespace Async\Task;
 
-class Task {
+use Async\Task\Co;
+
+class Task 
+{
     protected $taskId;
     protected $coroutine;
     protected $sendValue = null;
     protected $beforeFirstYield = true;
     protected $exception = null;
 
-    public function __construct($taskId, Generator $coroutine) {
+    public function __construct($taskId, Generator $coroutine) 
+	{
         $this->taskId = $taskId;
-        $this->coroutine = stackedCoroutine($coroutine);
+        $this->coroutine = Co::routine($coroutine);
     }
 
-    public function getTaskId() {
+    public function getTaskId() 
+	{
         return $this->taskId;
     }
 
-    public function setSendValue($sendValue) {
+    public function setSendValue($sendValue) 
+	{
         $this->sendValue = $sendValue;
     }
 
-    public function setException($exception) {
+    public function setException($exception) 
+	{
         $this->exception = $exception;
     }
 
-    public function run() {
+    public function run() 
+	{
         if ($this->beforeFirstYield) {
             $this->beforeFirstYield = false;
             return $this->coroutine->current();
@@ -39,7 +52,8 @@ class Task {
         }
     }
 
-    public function isFinished() {
+    public function isFinished() 
+	{
         return !$this->coroutine->valid();
     }
 }

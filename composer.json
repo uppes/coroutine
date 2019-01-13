@@ -1,0 +1,44 @@
+{
+    "name": "uppes/coroutine",
+    "description": "A task library to implement coroutine by yield & generator for cooperative multitasking.",
+	"keywords": [
+		"cooperative",
+		"multitasking",
+		"coroutine",
+		"task",
+		"yield",
+		"Generator"
+	],
+    "homepage": "https://github.com/uppes/coroutine",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Nikita Popov",
+            "email": "nikic@php.net"
+        },
+        {
+            "name": "Lawrence Stubbs",
+            "email": "lstubbs@techno.express"
+        }
+    ],
+    "require": {
+        "php": ">5.6"
+    },
+    "autoload": {
+        "psr-4": { 
+			"Async\\Task\\": "Task/"
+		}
+    },
+    "require-dev": {
+        "phpunit/phpunit": ">5.7"
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Async\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit --bootstrap vendor/autoload.php tests"
+    }
+}
