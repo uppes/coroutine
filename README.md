@@ -1,3 +1,4 @@
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/fbd1d327f0d14164833396e2fbdf492b)](https://app.codacy.com/app/techno-express/coroutine?utm_source=github.com&utm_medium=referral&utm_content=uppes/coroutine&utm_campaign=Badge_Grade_Dashboard)
 [![Build Status](https://travis-ci.org/uppes/coroutine.svg?branch=master)](https://travis-ci.org/uppes/coroutine)[![codecov](https://codecov.io/gh/uppes/coroutine/branch/master/graph/badge.svg)](https://codecov.io/gh/uppes/coroutine)
 
 Coroutine - PHP multitasking
