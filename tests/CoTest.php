@@ -1,13 +1,13 @@
 <?php
 namespace Async\Tests;
 
-use Async\Task\Co;
-use Async\Task\Task;
-use Async\Task\Syscall;
-use Async\Task\Scheduler;
+use Async\Coroutine\Co;
+use Async\Coroutine\Task;
+use Async\Coroutine\Syscall;
+use Async\Coroutine\Scheduler;
 use PHPUnit\Framework\TestCase;
 
-class CoroutineCreateTest extends TestCase 
+class CoTest extends TestCase 
 {
     /**
      * @dataProvider testNoSendProvider

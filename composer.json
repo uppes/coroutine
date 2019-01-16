@@ -1,6 +1,6 @@
 {
     "name": "uppes/coroutine",
-    "description": "A task library to implement coroutine by yield & generator for cooperative multitasking.",
+    "description": "A Coroutine task library to implement cooperative multitasking by yields & generators.",
 	"keywords": [
 		"cooperative",
 		"multitasking",
@@ -23,11 +23,12 @@
         }
     ],
     "require": {
-        "php": ">5.6"
+        "php": ">5.6",
+        "uppes/promiseplus": "*"
     },
     "autoload": {
         "psr-4": { 
-			"Async\\Task\\": "Task/"
+			"Async\\Coroutine\\": "Coroutine/"
 		}
     },
     "require-dev": {

@@ -3,12 +3,14 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace Async\Task;
+namespace Async\Coroutine;
 
-use Async\Task\Task;
-use Async\Task\Syscall;
+use Async\Coroutine\Task;
+use Async\Coroutine\Syscall;
+use Async\Coroutine\Tasks\TaskInterface;
+use Async\Coroutine\SchedulerInterface;
 
-class Scheduler
+class Scheduler implements SchedulerInterface
 {
     protected $maxTaskId = 0;
     protected $taskMap = []; // taskId => task
@@ -32,7 +34,7 @@ class Scheduler
         return $tid;
     }
 
-    public function schedule(Task $task) 
+    public function schedule(TaskInterface $task) 
 	{
         $this->taskQueue->enqueue($task);
     }

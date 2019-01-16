@@ -9,11 +9,11 @@ echo "CO-ROUTINE EXAMPLE. WEBSERVER" . PHP_EOL;
 
 chdir(__DIR__);
 
-require_once('lib/Scheduler.php');
-require_once('lib/Task.php');
-require_once('lib/Co.php');
-require_once('lib/Syscall.php');
-require_once('lib/CoSocket.php');
+require_once('../../Coroutine/Scheduler.php');
+require_once('../../Coroutine/Task.php');
+require_once('../../Coroutine/Co.php');
+require_once('../../Coroutine/Syscall.php');
+require_once('../../Coroutine/CoSocket.php');
 
 echo "LIBS LOADED" . PHP_EOL;
 
@@ -22,7 +22,7 @@ function server($port) {
     echo "SERVER LISTENING ON: $port" . PHP_EOL . PHP_EOL;;
 
     $socket = @stream_socket_server("tcp://localhost:$port", $errNo, $errStr);
-    if (!$socket) throw new Exception($errStr, $errNo);
+    if (!$socket) throw new \Exception($errStr, $errNo);
 
     stream_set_blocking($socket, 0);
 

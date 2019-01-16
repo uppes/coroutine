@@ -1,7 +1,7 @@
 <?php
 include 'vendor/autoload.php';
 
-use Async\Task\Scheduler;
+use Async\Coroutine\Scheduler;
 
 function task1() {
     for ($i = 1; $i <= 10; ++$i) {

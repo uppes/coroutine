@@ -17,7 +17,7 @@
 
     <filter>
         <whitelist>
-            <directory suffix=".php">Task/</directory>
+            <directory suffix=".php">Coroutine/</directory>
         </whitelist>
     </filter>
 	

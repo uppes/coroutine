@@ -1,7 +1,7 @@
 <?php
 include 'vendor/autoload.php';
 
-use Async\Task\Scheduler;
+use Async\Coroutine\Scheduler;
 
 $start = microtime(true);
 /**

@@ -1,8 +1,8 @@
 <?php
 include 'vendor/autoload.php';
 
-use Async\Task\Syscall;
-use Async\Task\Scheduler;
+use Async\Coroutine\Syscall;
+use Async\Coroutine\Scheduler;
 
 function childTask() {
     $tid = (yield Syscall::getTaskId());

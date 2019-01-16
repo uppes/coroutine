@@ -1,9 +1,9 @@
 <?php
 include 'vendor/autoload.php';
 
-use Async\Task\Syscall;
-use Async\Task\CoSocket;
-use Async\Task\Scheduler;
+use Async\Coroutine\Syscall;
+use Async\Coroutine\CoSocket;
+use Async\Coroutine\Scheduler;
 
 function server($port) {
     echo "Starting server at port $port...\n";

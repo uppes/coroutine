@@ -3,9 +3,9 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace Async\Task;
+namespace Async\Coroutine;
 
-use Async\Task\Co;
+use Async\Coroutine\Co;
 
 class Task 
 {
@@ -15,7 +15,7 @@ class Task
     protected $beforeFirstYield = true;
     protected $exception = null;
 
-    public function __construct($taskId, Generator $coroutine) 
+    public function __construct($taskId, \Generator $coroutine) 
 	{
         $this->taskId = $taskId;
         $this->coroutine = Co::routine($coroutine);

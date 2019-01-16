@@ -3,11 +3,10 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace Async\Task;
+namespace Async\Coroutine;
 
-use Async\Task\Co;
-use Async\Task\Task;
-use Async\Task\Scheduler;
+use Async\Coroutine\Task;
+use Async\Coroutine\Scheduler;
 
 class Syscall 
 {
@@ -32,7 +31,7 @@ class Syscall
 		});
 	}
 
-	public function newTask(Generator $coroutine) 
+	public function newTask(\Generator $coroutine) 
 	{
 		return new Syscall(
 			function(Task $task, Scheduler $scheduler) use ($coroutine) {
