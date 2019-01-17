@@ -6,15 +6,15 @@
 namespace Async\Coroutine;
 
 use Async\Coroutine\SchedulerInterface;
-use Async\Coroutine\Tasks\TaskInterface;
-use Async\Coroutine\Tasks\GeneratorTask;
-use Async\Coroutine\Tasks\PromiseTask;
-use Async\Coroutine\Tasks\CallableTask;
-use Async\Coroutine\Tasks\ThrottledTask;
-use Async\Coroutine\Tasks\DelayedTask;
-use Async\Coroutine\Tasks\AnyTask;
 use Async\Coroutine\Tasks\AllTask;
+use Async\Coroutine\Tasks\AnyTask;
+use Async\Coroutine\Tasks\CallableTask;
+use Async\Coroutine\Tasks\DelayedTask;
+use Async\Coroutine\Tasks\GeneratorTask;
 use Async\Coroutine\Tasks\SomeTask;
+use Async\Coroutine\Tasks\TaskInterface;
+use Async\Coroutine\Tasks\PromiseTask;
+use Async\Coroutine\Tasks\ThrottledTask;
 
 abstract class AbstractCoroutine 
 {
@@ -208,41 +208,5 @@ class Co
     public static function throttle($object, $tickInterval) 
 	{
         return new ThrottledTask(Co::async($object), $tickInterval);
-    }
-	
-   /**
-     * Runs the event loop until the promise is resolved. 
-	 * Should not be called within a running event loop.
-     *
-     * Use this function only in synchronous contexts to wait for an 
-	 * asynchronous operation. Use coroutines and yield to await promise
-     * resolution in a fully asynchronous application instead.
-     *
-     * @param PromiseInterface $promise Promise to wait for.
-     * @return mixed Promise success value.
-     *
-     * @throws \TypeError If $promise is not an instance of PromiseInterface.
-     * @throws \Error If the event loop stopped without the $promise being resolved.
-     * @throws \Throwable Promise failure reason.
-     */
-    public static function await($promises)
-    {
-        if (!$promise instanceof PromiseInterface) {
-			throw new \Error("$promise is not an instance of PromiseInterface.");
-        }
-		
-        try {
-			$resolved = $promises->wait();
-        } catch (\Throwable $throwable) {
-            throw new \Error("Loop exceptionally stopped without resolving the promise", 0, $throwable);
-        } catch (\Exception $exception) {
-            throw new \Error("Loop exceptionally stopped without resolving the promise", 0, $exception);
-        }
-		
-        if ($promises->isFulFilled()) {
-			return $resolved;
-        } else {
-            throw new \Error("Loop stopped without resolving the promise");
-		}		
     }
 }

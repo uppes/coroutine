@@ -2,24 +2,14 @@
 
 namespace Async\Tests;
 
-use Async\Promise\Promise;
 use Async\Coroutine\Co;
 use Async\Coroutine\SchedulerInterface;
 use Async\Coroutine\Tasks\TaskInterface;
-use Async\Coroutine\Tasks\PromiseTask;
-use Async\Coroutine\Tasks\GeneratorTask;
 use Async\Tests\CallableStub;
 use PHPUnit\Framework\TestCase;
 
 class AsyncTest extends TestCase 
-{
-	private $loop;
-	
-	protected function setUp()
-    {			
-        $this->loop = Promise::getLoop(true);
-    }	
-	
+{	
     /**
      * Test that Co::async returns the given task when given a task
      */
@@ -28,50 +18,6 @@ class AsyncTest extends TestCase
         
         // It should be the exact same task
         $this->assertSame($task, Co::async($task));
-    }
-    
-    /**
-     * Test that Co::async returns a PromiseTask when given a promise
-     */
-    public function testWithPromise() {
-		$this->markTestSkipped('');
-        $promise = new Promise();
-        
-        $task = Co::async($promise);
-        // Check it returned an instance of the correct class
-        //$this->assertInstanceOf(PromiseTask::class, $task);
-        
-        // Verify it behaves as if linked to the given promise
-        // The behavior of PromiseTask is verified in more detail in its own
-        // test
-        $this->assertFalse($task->isComplete());
-        
-        $promise->resolve('resolved');		
-        //$this->loop->run();
-		
-        $this->assertTrue($task->isComplete());
-        $this->assertFalse($task->isFaulted());
-        $this->assertEquals('resolved', $task->getResult());
-    }
-    
-    /**
-     * Test that Co::async returns a GeneratorTask when given a generator
-     */
-    public function testWithGenerator() {
-        $generator = function() {
-            for( $i = 0; $i < 3; $i++ )
-                yield new PromiseTask(Promise::resolver($i));
-        };
-        
-        $task = Co::async($generator());
-        
-        // Check it returned an instance of the correct class
-        $this->assertInstanceOf(GeneratorTask::class, $task);
-        
-        // Verify it behaves as if linked to the given promise
-        // The behavior of PromiseTask is verified in more detail in its own
-        // test
-        $this->assertFalse($task->isComplete());
     }
     
     /**

@@ -7,11 +7,32 @@ namespace Async\Coroutine;
 
 use Async\Coroutine\Task;
 use Async\Coroutine\Syscall;
-use Async\Coroutine\Tasks\TaskInterface;
 use Async\Coroutine\SchedulerInterface;
+use Async\Coroutine\Tasks\TaskInterface;
 
 class Scheduler implements SchedulerInterface
 {
+    /**
+     * Indicates whether the scheduler is currently running
+     *
+     * @var boolean
+     */
+    protected $running = false;
+	
+    /**
+     * Indicates whether it's a coroutine, otherwise use \SplObjectStorage queuing
+     *
+     * @var boolean
+     */
+    protected $isCoroutine = false;
+	
+    /**
+     * The queue of tasks to execute next time
+     *
+     * @var \SplObjectStorage
+     */
+    protected $next = null;
+
     protected $maxTaskId = 0;
     protected $taskMap = []; // taskId => task
     protected $taskQueue;
@@ -23,10 +44,12 @@ class Scheduler implements SchedulerInterface
     public function __construct() 
 	{
         $this->taskQueue = new \SplQueue();
+        $this->next = new \SplObjectStorage();
     }
 
     public function coroutine(\Generator $coroutine) 
 	{
+		$this->isCoroutine = true;
         $tid = ++$this->maxTaskId;
         $task = new Task($tid, $coroutine);
         $this->taskMap[$tid] = $task;
@@ -34,9 +57,18 @@ class Scheduler implements SchedulerInterface
         return $tid;
     }
 
-    public function schedule(TaskInterface $task) 
+    public function schedule(TaskInterface $task, $delay = null, $tickInterval = null) 
 	{
-        $this->taskQueue->enqueue($task);
+        // We don't support the use of timers with this scheduler
+        if( null !== $delay || null !== $tickInterval ) {
+            throw new \RuntimeException("Timers are not supported by this scheduler implementation");
+        }
+		
+		if ($this->isCoroutine)
+			$this->taskQueue->enqueue($task);
+		else
+			// Just add the task to be run next tick
+			$this->next->attach($task);
     }
 
     public function killTask($tid) 
@@ -59,30 +91,73 @@ class Scheduler implements SchedulerInterface
 	
     public function run() 
 	{
-        $this->coroutine($this->ioPollTask());
+		if ($this->isCoroutine) {			
+			$this->coroutine($this->ioPollTask());
 
-        while (!$this->taskQueue->isEmpty()) {
-            $task = $this->taskQueue->dequeue();
-            $retval = $task->run();
+			while (!$this->taskQueue->isEmpty()) {
+				$task = $this->taskQueue->dequeue();
+				$retval = $task->run();
 
-            if ($retval instanceof Syscall) {
-                try {
-                    $retval($task, $this);
-                } catch (\Exception $e) {
-                    $task->setException($e);
-                    $this->schedule($task);
-                }
-                continue;
-            }
+				if ($retval instanceof Syscall) {
+					try {
+						$retval($task, $this);
+					} catch (\Exception $e) {
+						$task->setException($e);
+						$this->schedule($task);
+					}
+					continue;
+				}
 
-            if ($task->isFinished()) {
-                unset($this->taskMap[$task->getTaskId()]);
-            } else {
-                $this->schedule($task);
-            }
+				if ($task->isFinished()) {
+					unset($this->taskMap[$task->getTaskId()]);
+				} else {
+					$this->schedule($task);
+				}
+			}
+		} else {
+			$this->doActionTick();
+		}
+    }
+   
+    /**
+     * {@inheritdoc}
+     */
+    protected function actionTick() {
+        // Get the queue of actions for this tick
+        // This is in case any of the actions adds an action to be called on
+        // the next tick
+        $tasks = $this->next;
+        
+        // Initialise the queue for next tick
+        $this->next = new \SplObjectStorage();
+        
+        foreach( $tasks as $task ) {            
+            // Execute the task
+            $task->tick($this);
+            // If the task is not complete, reschedule it for the next tick
+            if( !$task->isComplete() ) $this->schedule($task);
         }
     }
 
+    /**
+     * {@inheritdoc}
+     */
+    public function doActionTick() {
+        $this->running = true;
+        
+        // Tick until there are no more tasks or we are manually stopped
+        do {
+            $this->actionTick();
+        } while( $this->running && count($this->next) > 0 );
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function stop() {
+        $this->running = false;
+    }
+	
     protected function ioPoll($timeout) 
 	{
         if (empty($this->waitingForRead) && empty($this->waitingForWrite)) {

@@ -6,9 +6,11 @@
 namespace Async\Coroutine;
 
 use Async\Coroutine\Co;
+use Async\Coroutine\SchedulerInterface;
+use Async\Coroutine\Tasks\TaskInterface;
 
-class Task 
-{
+class Task implements TaskInterface
+{	
     protected $taskId;
     protected $coroutine;
     protected $sendValue = null;
@@ -56,4 +58,40 @@ class Task
 	{
         return !$this->coroutine->valid();
     }
+	
+    public function isCancelled() 
+	{
+	}
+	
+    public function isComplete()
+	{
+	}
+	
+    public function isSuccessful() 
+	{
+	}
+	
+    public function isFaulted()
+	{
+	}
+
+    public function cancel() 
+	{
+	}
+		
+    public function getResult() 
+	{
+	}
+		
+    public function getException()
+	{
+	}
+		
+    public function tick(SchedulerInterface $scheduler)
+	{
+	}	
+		
+    protected function doTick(SchedulerInterface $scheduler)
+	{
+	}
 }

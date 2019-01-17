@@ -2,9 +2,9 @@
 
 namespace Async\Coroutine\Tasks;
 
+use Async\Promise\PromiseInterface;
 use Async\Coroutine\SchedulerInterface;
 use Async\Coroutine\Tasks\AbstractTask;
-use Async\Promise\PromiseInterface;
 
 /**
  * Task that waits for a promise to complete

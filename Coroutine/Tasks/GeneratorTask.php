@@ -5,8 +5,8 @@ namespace Async\Coroutine\Tasks;
 use Generator;
 use Async\Coroutine\Co;
 use Async\Coroutine\SchedulerInterface;
-use Async\Coroutine\Tasks\TaskInterface;
 use Async\Coroutine\Tasks\AbstractTask;
+use Async\Coroutine\Tasks\TaskInterface;
 
 class GeneratorTask extends AbstractTask 
 {
@@ -107,7 +107,8 @@ class GeneratorTask extends AbstractTask
         }
         
         // If we are complete, there is nothing more to do
-        if( $this->isComplete() ) return;
+        if( $this->isComplete() ) 
+			return;
         
         // Otherwise, we wait on the yielded task to complete
         $this->waiting = $this->generator->current();

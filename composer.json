@@ -23,8 +23,7 @@
         }
     ],
     "require": {
-        "php": ">5.6",
-        "uppes/promiseplus": "*"
+        "php": ">5.6"
     },
     "autoload": {
         "psr-4": { 
