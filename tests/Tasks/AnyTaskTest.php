@@ -16,36 +16,7 @@ use PHPUnit\Framework\TestCase;
  */
 class AnyTaskTest extends TestCase 
 {
-	public function getMock($originalClassName, $methods = array(), array $arguments = array(), $mockClassName = '', $callOriginalConstructor = true, $callOriginalClone = true, $callAutoload = true, $cloneArguments = false, $callOriginalMethods = false, $proxyTarget = null)
-	{
-		$builder = $this->getMockBuilder($originalClassName);
-
-		if (is_array($methods)) {
-			$builder->setMethods($methods);
-		}
-
-		if (is_array($arguments)) {
-			$builder->setConstructorArgs($arguments);
-		}
-
-		$callOriginalConstructor ? $builder->enableOriginalConstructor() : $builder->disableOriginalConstructor();
-		$callOriginalClone ? $builder->enableOriginalClone() : $builder->disableOriginalClone();
-		$callAutoload ? $builder->enableAutoload() : $builder->disableAutoload();
-		$cloneArguments ? $builder->enableOriginalClone() : $builder->disableOriginalClone();
-		$callOriginalMethods ? $builder->enableProxyingToOriginalMethods() : $builder->disableProxyingToOriginalMethods();
-
-		if ($mockClassName) {
-			$builder->setMockClassName($mockClassName);
-		}
-
-		if ($proxyTarget) {
-			$builder->setProxyTarget($proxyTarget);
-		}
-
-		$mockObject = $builder->getMock();
-
-		return $mockObject;
-	}
+	use \Async\Tests\getMocker;
 	
     /**
      * Tests that an AnyTask completes successfully after one subtask completes

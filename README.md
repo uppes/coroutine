@@ -75,7 +75,7 @@ Utility functions
 
 The class __Co__ provides several static utility functions for easily creating certain kinds of tasks.
 
-`Co::async(mixed $object)`
+`Co::task(mixed $object)`
 
     Takes any object and returns a suitable task for that object:
 

@@ -125,7 +125,7 @@ class Co
      * @param mixed $object
      * @return TaskInterface
      */
-    public static function async($object) 
+    public static function task($object) 
 	{
         if ( $object instanceof TaskInterface ) {
             return $object;

@@ -11,17 +11,17 @@ use PHPUnit\Framework\TestCase;
 class AsyncTest extends TestCase 
 {	
     /**
-     * Test that Co::async returns the given task when given a task
+     * Test that Co::task returns the given task when given a task
      */
     public function testWithTask() {
         $task = $this->getMockBuilder(TaskInterface::class)->getMock();
         
         // It should be the exact same task
-        $this->assertSame($task, Co::async($task));
+        $this->assertSame($task, Co::task($task));
     }
     
     /**
-     * Test that Co::async returns a CallableTask when given a callable
+     * Test that Co::task returns a CallableTask when given a callable
      */
     public function testWithCallable() {
         // The callable expects to be called once
@@ -30,7 +30,7 @@ class AsyncTest extends TestCase
 
         $callable->expects($this->once())->method('__invoke');
         
-        $task = Co::async($callable);
+        $task = Co::task($callable);
         
         // Check it returned an instance of the correct class
         $this->assertInstanceOf(\Async\Coroutine\Tasks\CallableTask::class, $task);
@@ -43,13 +43,13 @@ class AsyncTest extends TestCase
     }
     
     /**
-     * Test that Co::async returns an appropriate CallableTask when given any
+     * Test that Co::task returns an appropriate CallableTask when given any
      * other object
      * 
      * I.e. one that, when ticked, the task result is the given object
      */
     public function testWithOther() {
-        $task = Co::async(101);
+        $task = Co::task(101);
         
         // Check it returned an instance of the correct class
         $this->assertInstanceOf(\Async\Coroutine\Tasks\CallableTask::class, $task);
