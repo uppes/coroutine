@@ -1,5 +1,4 @@
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/fbd1d327f0d14164833396e2fbdf492b)](https://app.codacy.com/app/techno-express/coroutine?utm_source=github.com&utm_medium=referral&utm_content=uppes/coroutine&utm_campaign=Badge_Grade_Dashboard)
-[![Build Status](https://travis-ci.org/uppes/coroutine.svg?branch=master)](https://travis-ci.org/uppes/coroutine)[![codecov](https://codecov.io/gh/uppes/coroutine/branch/master/graph/badge.svg)](https://codecov.io/gh/uppes/coroutine)
+[![Build Status](https://travis-ci.org/uppes/coroutine.svg?branch=master)](https://travis-ci.org/uppes/coroutine)[![codecov](https://codecov.io/gh/uppes/coroutine/branch/master/graph/badge.svg)](https://codecov.io/gh/uppes/coroutine)[![Codacy Badge](https://api.codacy.com/project/badge/Grade/fbd1d327f0d14164833396e2fbdf492b)](https://app.codacy.com/app/techno-express/coroutine?utm_source=github.com&utm_medium=referral&utm_content=uppes/coroutine&utm_campaign=Badge_Grade_Dashboard)
 
 Coroutine - PHP multitasking
 ========================================
@@ -24,7 +23,9 @@ This is of particular benefit when combined with a non-blocking I/O library.
 Concepts
 ===
 
-[Curious Course on Coroutines and Concurrency](https://youtu.be/Z_OAlIhXziw)
+[Curious Course on Coroutines and Concurrency](https://youtu.be/Z_OAlIhXziw) __video__
+
+[Cooperative multitasking with generators](https://youtu.be/cY8FUhZvK7w) __video__
 
 The main concept in Coroutine is that of a task. A task is an object that represents some work to be done, potentially with a result at the end of it. These tasks are registered with a scheduler that is responsible for running them.
 
@@ -38,7 +39,7 @@ A task can become complete in one of three ways:
     The task encounters an error and fails
     The task is cancelled by calling cancel()
 
-In Coroutine, any object implementing the TaskInterface can be used as a task.
+In Coroutine, any object implementing the __`TaskInterface`__ can be used as a task.
 ___
 
 There are several built-in tasks - please see the source for more detail:
@@ -50,7 +51,7 @@ There are several built-in tasks - please see the source for more detail:
 > Task that takes a callable object and an optional number of times to execute the callable object. Each time the task is 'ticked', the callable object is executed until it has been called enough times (if the number of times is not given, the callable object is executed on each scheduler tick forever, and the task only completes if an error occurs or it is cancelled).
 
 `PromiseTask`
-> Task that takes a React promise. The task waits for the promise to be resolved, at which point the task is complete and its result is the value the promise was resolved with.
+> Task that takes a promise. The task waits for the promise to be resolved, at which point the task is complete and its result is the value the promise was resolved with.
 
 `GeneratorTask`
 > This is the task that enables the yield syntax introduced above. Takes a Generator that yields Tasks. Each time the generator task is 'ticked', it checks to see if the currently yielded task is complete. If it is, then it resumes the generator, passing the result of the task back in. The generator task itself is complete when the generator yields no more tasks.
@@ -87,22 +88,21 @@ The class __Co__ provides several static utility functions for easily creating c
 `Co::some(array $tasks, integer $howMany)`
 
     Returns a SomeTask for the given tasks that requires $howMany of those tasks to complete.
-	
+
 `Co::all(array $tasks)`
 
     Returns an AllTask for the given tasks that requires all of those tasks to complete.
-	
+
 `Co::any(array $tasks)`
 
     Returns an AnyTask for the given tasks that requires one of those tasks to complete.
-	
+
 `Co::delay(mixed $object, float $delay)`
 
     Creates a task for the given object using Co::async and returns a DelayedTask that delays the execution of that task by $delay seconds. $delay can have a fractional part, e.g. for a half second delay, specify $delay = 0.5.
-	
+
 `Co::throttle(mixed $object, float $tickInterval)`
 
     Creates a task for the given object using Co::async and returns a ThrottledTask that throttles the execution of the tick method of that task by $tickInterval seconds. $tickInterval can have a fractional part, e.g. for a half second interval, specify $tickInterval = 0.5.
 
-	
   [blog_post]: http://nikic.github.com/2012/12/22/Cooperative-multitasking-using-coroutines-in-PHP.html
