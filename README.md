@@ -24,7 +24,9 @@ This is of particular benefit when combined with a non-blocking I/O library.
 Concepts
 ===
 
-The main concept in Async is that of a task. A task is an object that represents some work to be done, potentially with a result at the end of it. These tasks are registered with a scheduler that is responsible for running them.
+[Curious Course on Coroutines and Concurrency](https://youtu.be/Z_OAlIhXziw)
+
+The main concept in Coroutine is that of a task. A task is an object that represents some work to be done, potentially with a result at the end of it. These tasks are registered with a scheduler that is responsible for running them.
 
 Due to the single-threaded nature of PHP (without extensions anyway), we cannot think of a task as doing a single long-running calculation - this will block the single thread until the task is finished. Instead, tasks must perform work in small chunks ('ticks') where possible, passing control back to the scheduler at appropriate points. This is known as cooperative multi-tasking (so called because the tasks must cooperate by yielding control voluntarily).
 
@@ -36,7 +38,7 @@ A task can become complete in one of three ways:
     The task encounters an error and fails
     The task is cancelled by calling cancel()
 
-In Async, any object implementing the TaskInterface can be used as a task.
+In Coroutine, any object implementing the TaskInterface can be used as a task.
 ___
 
 There are several built-in tasks - please see the source for more detail:
