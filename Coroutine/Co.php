@@ -43,12 +43,12 @@ class Co
 	{		
 	}
 	
-	public static function retval($value) 
+	public static function value($value) 
 	{
 		return new CoroutineReturnValue($value);
 	}
 
-	public static function plainval($value) 
+	public static function plain($value) 
 	{
 		return new CoroutinePlainValue($value);
 	}

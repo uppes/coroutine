@@ -74,36 +74,36 @@ class CoTest extends TestCase
                     "ck2" => "cv2", "pk2" => "pv2"
                 ]
             ],
-            // Co::retval() in outermost coroutine aborts
+            // Co::value() in outermost coroutine aborts
             [
                 function() {
                     yield 1;
                     yield 2;
-                    yield Co::retval(3);
+                    yield Co::value(3);
                     yield 4;
                     yield 5;
                 }, [
                     1, 2
                 ]
             ],
-            // retval() is accessible as yield return value
+            // value() is accessible as yield return value
             [
                 function() {
                     yield "p1";
-                    $retval = (yield $this->child4());
-                    yield "Retval: $retval";
+                    $value = (yield $this->child4());
+                    yield "value: $value";
                     yield "p2";
                 }, [
-                    "p1", "c1", "Retval: crv", "p2"
+                    "p1", "c1", "value: crv", "p2"
                 ], true
             ],
-            // plainval() does a plain passthru
+            // plain() does a plain passthru
             [
                 function() {
                     yield (yield $this->child5());
 
                 }, [
-                    $this->child5(), Co::retval('test'), Co::plainval('test'), null
+                    $this->child5(), Co::value('test'), Co::plain('test'), null
                 ], true
             ],
         ];
@@ -134,14 +134,14 @@ class CoTest extends TestCase
 
     private function child4() {
         yield "c1";
-        yield Co::retval("crv");
+        yield Co::value("crv");
         yield "c2";
     }
 
     private function child5() {
-        yield Co::plainval($this->child5());
-        yield Co::plainval(Co::retval('test'));
-        yield Co::plainval(Co::plainval('test'));
+        yield Co::plain($this->child5());
+        yield Co::plain(Co::value('test'));
+        yield Co::plain(Co::plain('test'));
     }
 
 
@@ -185,7 +185,7 @@ class CoTest extends TestCase
     }
 
     private function child6($s) {
-        yield Co::retval(yield (yield (yield $s)));
+        yield Co::value(yield (yield (yield $s)));
     }
 
     /**
@@ -282,7 +282,7 @@ class CoTest extends TestCase
                     yield 'b';
                 }, ['throw'], ['a', 'c', 'e', 'b'], false
             ],
-            // Exception during retval sending to outermost coroutine
+            // Exception during value sending to outermost coroutine
             [
                 function() {
                     yield 'a';
@@ -291,7 +291,7 @@ class CoTest extends TestCase
                     yield 'b';
                 }, [], ['a'], true
             ],
-            // Exception during retval sending in inner coroutine
+            // Exception during value sending in inner coroutine
             [
                 function() {
                     yield 'a';
@@ -319,7 +319,7 @@ class CoTest extends TestCase
     }
 
     private function child10() {
-        yield Co::retval('foo');
+        yield Co::value('foo');
     }
 
     private function child11() {

@@ -20,13 +20,13 @@ class CoSocket
     public function accept() 
 	{
         yield Syscall::waitForRead($this->socket);
-        yield Co::retval(new CoSocket(stream_socket_accept($this->socket, 0)));
+        yield Co::value(new CoSocket(\stream_socket_accept($this->socket, 0)));
     }
 	
     public function read($size) 
 	{
         yield Syscall::waitForRead($this->socket);
-        yield Co::retval(fread($this->socket, $size));
+        yield Co::value(\fread($this->socket, $size));
     }
 
     public function write($string) 
@@ -37,6 +37,6 @@ class CoSocket
 
     public function close() 
 	{
-        @fclose($this->socket);
+        @\fclose($this->socket);
     }
 }

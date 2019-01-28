@@ -48,7 +48,7 @@ class Syscall
 				if ($scheduler->killTask($tid)) {
 					$scheduler->schedule($task);
 				} else {
-					throw new InvalidArgumentException('Invalid task ID!');
+					throw new \InvalidArgumentException('Invalid task ID!');
 				}
 			}
 		);

@@ -118,7 +118,31 @@ class Scheduler implements SchedulerInterface
 			$this->doActionTick();
 		}
     }
-   
+
+    public function runCoroutines() 
+	{
+		while (!$this->taskQueue->isEmpty()) {
+            $task = $this->taskQueue->dequeue();
+            $retval = $task->run();
+
+            if ($retval instanceof Syscall) {
+                try {
+                    $retval($task, $this);
+                } catch (\Exception $e) {
+                    $task->setException($e);
+                    $this->schedule($task);
+                }
+                continue;
+            }
+
+            if ($task->isFinished()) {
+                unset($this->taskMap[$task->getTaskId()]);
+            } else {
+                $this->schedule($task);
+            }
+        }
+    }
+
     /**
      * {@inheritdoc}
      */
