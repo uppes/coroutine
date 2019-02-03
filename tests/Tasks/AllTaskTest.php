@@ -69,7 +69,7 @@ class AllTaskTest extends TestCase
         $this->assertInstanceOf(
             MultipleFailureException::class, $task->getException()
         );
-        $this->assertContains('1 tasks failed', $task->getException()->getMessage());
+        $this->assertStringContainsString('1 tasks failed', $task->getException()->getMessage());
         $this->assertEquals(
             [1 => new \Exception("failure")],
             $task->getException()->getFailures()
