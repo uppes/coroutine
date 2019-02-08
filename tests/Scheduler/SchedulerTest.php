@@ -17,22 +17,20 @@ class SchedulerTest extends AbstractSchedulerTest
 
     /**
      * Test that attempting to schedule a task with a delay results in an error
-     * 
-     * @expectedException \RuntimeException
      */
     public function testScheduleWithDelayIsError()
 	{
+        $this->expectException(\RuntimeException::class);
         // Try to schedule a task with a delay
         $this->scheduler->schedule($this->getMock(TaskInterface::class), 0.05);
     }
     
     /**
      * Test that attempting to schedule a task with a tickInterval results in an error
-     * 
-     * @expectedException \RuntimeException
      */
     public function testScheduleWithTickIntervalIsError() 
 	{
+        $this->expectException(\RuntimeException::class);
         // Try to schedule a task with a delay
         $this->scheduler->schedule($this->getMock(TaskInterface::class), null, 0.05);
     }
