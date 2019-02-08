@@ -14,7 +14,7 @@ function childTask() {
 
 function task() {
     $tid = (yield Syscall::getTaskId());
-    $childTid = (yield Syscall::coroutine(childTask()));
+    $childTid = (yield Syscall::newTask(childTask()));
 
     for ($i = 1; $i <= 6; ++$i) {
         echo "Parent task $tid iteration $i.\n";

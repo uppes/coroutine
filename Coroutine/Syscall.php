@@ -25,17 +25,19 @@ class Syscall
 
 	public function getTaskId() 
 	{
-		return new Syscall(function(Task $task, Scheduler $scheduler) {
-			$task->setSendValue($task->getTaskId());
-			$scheduler->schedule($task);
-		});
+		return new Syscall(
+			function(Task $task, Scheduler $scheduler) {
+				$task->setSendValue($task->getTaskId());
+				$scheduler->schedule($task);
+			}
+		);
 	}
 
 	public function newTask(\Generator $coroutine) 
 	{
 		return new Syscall(
 			function(Task $task, Scheduler $scheduler) use ($coroutine) {
-				$task->setSendValue($scheduler->newTask($coroutine));
+				$task->setSendValue($scheduler->coroutine($coroutine));
 				$scheduler->schedule($task);
 			}
 		);

@@ -96,11 +96,11 @@ class Scheduler implements SchedulerInterface
 
 			while (!$this->taskQueue->isEmpty()) {
 				$task = $this->taskQueue->dequeue();
-				$retval = $task->run();
+				$value = $task->run();
 
-				if ($retval instanceof Syscall) {
+				if ($value instanceof Syscall) {
 					try {
-						$retval($task, $this);
+						$value($task, $this);
 					} catch (\Exception $e) {
 						$task->setException($e);
 						$this->schedule($task);
@@ -123,11 +123,11 @@ class Scheduler implements SchedulerInterface
 	{
 		while (!$this->taskQueue->isEmpty()) {
             $task = $this->taskQueue->dequeue();
-            $retval = $task->run();
+            $value = $task->run();
 
-            if ($retval instanceof Syscall) {
+            if ($value instanceof Syscall) {
                 try {
-                    $retval($task, $this);
+                    $value($task, $this);
                 } catch (\Exception $e) {
                     $task->setException($e);
                     $this->schedule($task);
@@ -152,7 +152,7 @@ class Scheduler implements SchedulerInterface
         // the next tick
         $tasks = $this->next;
         
-        // Initialise the queue for next tick
+        // Initialize the queue for next tick
         $this->next = new \SplObjectStorage();
         
         foreach( $tasks as $task ) {            
@@ -227,7 +227,7 @@ class Scheduler implements SchedulerInterface
 	{
         while (true) {
             if ($this->taskQueue->isEmpty()) {
-                $this->ioPoll(null);
+                break;
             } else {
                 $this->ioPoll(0);
             }
