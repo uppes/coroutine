@@ -146,7 +146,8 @@ class Scheduler implements SchedulerInterface
     /**
      * {@inheritdoc}
      */
-    protected function actionTick() {
+    protected function actionTick() 
+    {
         // Get the queue of actions for this tick
         // This is in case any of the actions adds an action to be called on
         // the next tick
@@ -166,7 +167,8 @@ class Scheduler implements SchedulerInterface
     /**
      * {@inheritdoc}
      */
-    public function doActionTick() {
+    public function doActionTick() 
+    {
         $this->running = true;
         
         // Tick until there are no more tasks or we are manually stopped
@@ -178,7 +180,8 @@ class Scheduler implements SchedulerInterface
     /**
      * {@inheritdoc}
      */
-    public function stop() {
+    public function stop() 
+    {
         $this->running = false;
     }
 	
@@ -226,7 +229,10 @@ class Scheduler implements SchedulerInterface
     protected function ioPollTask() 
 	{
         while (true) {
-            if ($this->taskQueue->isEmpty()) {
+            if ($this->taskQueue->isEmpty() 
+                && (empty($this->waitingForRead) 
+                && empty($this->waitingForWrite))
+            ) {
                 break;
             } else {
                 $this->ioPoll(0);
