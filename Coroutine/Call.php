@@ -23,7 +23,7 @@ class Call
         return $callback($task, $scheduler);
     }
 
-	public function taskId() 
+	public static function taskId() 
 	{
 		return new Call(
 			function(Task $task, Scheduler $scheduler) {
@@ -33,7 +33,7 @@ class Call
 		);
 	}
 
-	public function coroutine(\Generator $coroutine) 
+	public static function coroutine(\Generator $coroutine) 
 	{
 		return new Call(
 			function(Task $task, Scheduler $scheduler) use ($coroutine) {
@@ -43,7 +43,7 @@ class Call
 		);
 	}
 
-	public function killTask($tid) 
+	public static function killTask($tid) 
 	{
 		return new Call(
 			function(Task $task, Scheduler $scheduler) use ($tid) {
@@ -56,7 +56,7 @@ class Call
 		);
 	}
 
-	public function waitForRead($socket) 
+	public static function waitForRead($socket) 
 	{
 		return new Call(
 			function(Task $task, Scheduler $scheduler) use ($socket) {
@@ -65,7 +65,7 @@ class Call
 		);
 	}
 
-	public function waitForWrite($socket) 
+	public static function waitForWrite($socket) 
 	{
 		return new Call(
 			function(Task $task, Scheduler $scheduler) use ($socket) {

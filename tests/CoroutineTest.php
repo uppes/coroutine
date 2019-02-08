@@ -79,7 +79,7 @@ class CoroutineTest extends TestCase
         }
     }
 
-    public function testSysCall_GetTaskId() 
+    public function testCall_GetTaskId() 
     {
         $this->task = null;
 
