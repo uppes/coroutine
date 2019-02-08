@@ -44,13 +44,13 @@ class Task implements TaskInterface
             $this->beforeFirstYield = false;
             return $this->coroutine->current();
         } elseif ($this->exception) {
-            $retval = $this->coroutine->throw($this->exception);
+            $value = $this->coroutine->throw($this->exception);
             $this->exception = null;
-            return $retval;
+            return $value;
         } else {
-            $retval = $this->coroutine->send($this->sendValue);
+            $value = $this->coroutine->send($this->sendValue);
             $this->sendValue = null;
-            return $retval;
+            return $value;
         }
     }
 

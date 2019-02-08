@@ -10,7 +10,7 @@ class SchedulerTest extends AbstractSchedulerTest
 {
 	use \Async\Tests\getMocker;
 	
-	protected function setUp()
+	protected function setUp(): void
     {
         $this->scheduler = new Scheduler();
     }
