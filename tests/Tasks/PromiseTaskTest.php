@@ -12,7 +12,7 @@ class PromiseTaskTest extends TestCase
 {
 	private $loop = null;
 	
-	protected function setUp()
+	protected function setUp(): void
     {
 		$this->markTestSkipped('These test fails in various stages.');
 		$this->loop = Loop\instance();
