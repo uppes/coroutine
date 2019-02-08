@@ -1,7 +1,7 @@
 <?php
 include 'vendor/autoload.php';
 
-use Async\Coroutine\Syscall;
+use Async\Coroutine\Call;
 use Async\Coroutine\CoSocket;
 use Async\Coroutine\Scheduler;
 
@@ -15,7 +15,7 @@ function server($port) {
 
     $socket = new CoSocket($socket);
     while (true) {
-        yield Syscall::coroutine(
+        yield Call::coroutine(
             handleClient(yield $socket->accept())
         );
     }

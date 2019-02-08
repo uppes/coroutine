@@ -23,12 +23,12 @@ class Task implements TaskInterface
         $this->coroutine = Co::routine($coroutine);
     }
 
-    public function getTaskId() 
+    public function taskId() 
 	{
         return $this->taskId;
     }
 
-    public function setSendValue($sendValue) 
+    public function sendValue($sendValue) 
 	{
         $this->sendValue = $sendValue;
     }

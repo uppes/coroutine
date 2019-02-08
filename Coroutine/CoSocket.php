@@ -6,7 +6,7 @@
 namespace Async\Coroutine;
 
 use Async\Coroutine\Co;
-use Async\Coroutine\Syscall;
+use Async\Coroutine\Call;
 
 class CoSocket 
 {
@@ -19,20 +19,20 @@ class CoSocket
 
     public function accept() 
 	{
-        yield Syscall::waitForRead($this->socket);
+        yield Call::waitForRead($this->socket);
         yield Co::value(new CoSocket(\stream_socket_accept($this->socket, 0)));
     }
 	
     public function read($size) 
 	{
-        yield Syscall::waitForRead($this->socket);
+        yield Call::waitForRead($this->socket);
         yield Co::value(\fread($this->socket, $size));
     }
 
     public function write($string) 
 	{
-        yield Syscall::waitForWrite($this->socket);
-        fwrite($this->socket, $string);
+        yield Call::waitForWrite($this->socket);
+        \fwrite($this->socket, $string);
     }
 
     public function close() 

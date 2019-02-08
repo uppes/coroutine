@@ -12,7 +12,7 @@ chdir(__DIR__);
 require_once('../../Coroutine/Scheduler.php');
 require_once('../../Coroutine/Task.php');
 require_once('../../Coroutine/Co.php');
-require_once('../../Coroutine/Syscall.php');
+require_once('../../Coroutine/Call.php');
 require_once('../../Coroutine/CoSocket.php');
 
 echo "LIBS LOADED" . PHP_EOL;
@@ -28,7 +28,7 @@ function server($port) {
 
     $socket = new CoSocket($socket);
     while (true) {
-        yield newTask(
+        yield coroutine(
             handleClient(yield $socket->accept())
         );
     }
@@ -117,5 +117,5 @@ RES;*/
 
 
 $scheduler = new Scheduler;
-$scheduler->newTask(server(5000));
+$scheduler->coroutine(server(5000));
 $scheduler->run();

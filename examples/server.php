@@ -1,7 +1,7 @@
 <?php
 include 'vendor/autoload.php';
 
-use Async\Coroutine\Syscall;
+use Async\Coroutine\Call;
 use Async\Coroutine\Scheduler;
 
 function server($port) {
@@ -13,14 +13,14 @@ function server($port) {
     stream_set_blocking($socket, 0);
 
     while (true) {
-        yield Syscall::waitForRead($socket);
+        yield Call::waitForRead($socket);
         $clientSocket = stream_socket_accept($socket, 0);
-        yield Syscall::coroutine(handleClient($clientSocket));
+        yield Call::coroutine(handleClient($clientSocket));
     }
 }
 
 function handleClient($socket) {
-    yield Syscall::waitForRead($socket);
+    yield Call::waitForRead($socket);
     $data = fread($socket, 8192);
 
     $msg = "Received following request:\n\n$data";
@@ -35,7 +35,7 @@ Connection: close\r
 $msg
 RES;
 
-    yield Syscall::waitForWrite($socket);
+    yield Call::waitForWrite($socket);
     fwrite($socket, $response);
 
     fclose($socket);

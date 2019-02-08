@@ -3,7 +3,7 @@ namespace Async\Tests;
 
 use Async\Coroutine\Co;
 use Async\Coroutine\Task;
-use Async\Coroutine\Syscall;
+use Async\Coroutine\Call;
 use Async\Coroutine\Scheduler;
 use PHPUnit\Framework\TestCase;
 

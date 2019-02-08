@@ -6,7 +6,7 @@
 namespace Async\Coroutine;
 
 use Async\Coroutine\Task;
-use Async\Coroutine\Syscall;
+use Async\Coroutine\Call;
 use Async\Coroutine\SchedulerInterface;
 use Async\Coroutine\Tasks\TaskInterface;
 
@@ -80,7 +80,7 @@ class Scheduler implements SchedulerInterface
         unset($this->taskMap[$tid]);
     
         foreach ($this->taskQueue as $i => $task) {
-            if ($task->getTaskId() === $tid) {
+            if ($task->taskId() === $tid) {
                 unset($this->taskQueue[$i]);
                 break;
             }
@@ -91,14 +91,19 @@ class Scheduler implements SchedulerInterface
 	
     public function run() 
 	{
+        return $this->doRun();
+    }
+
+    protected function doRun() 
+	{
 		if ($this->isCoroutine) {			
-			$this->coroutine($this->ioPollTask());
+			$this->coroutine($this->ioSocketPoll());
 
 			while (!$this->taskQueue->isEmpty()) {
 				$task = $this->taskQueue->dequeue();
 				$value = $task->run();
 
-				if ($value instanceof Syscall) {
+				if ($value instanceof Call) {
 					try {
 						$value($task, $this);
 					} catch (\Exception $e) {
@@ -109,7 +114,7 @@ class Scheduler implements SchedulerInterface
 				}
 
 				if ($task->isFinished()) {
-					unset($this->taskMap[$task->getTaskId()]);
+					unset($this->taskMap[$task->taskId()]);
 				} else {
 					$this->schedule($task);
 				}
@@ -119,28 +124,9 @@ class Scheduler implements SchedulerInterface
 		}
     }
 
-    public function runCoroutines() 
+    protected function runCoroutines() 
 	{
-		while (!$this->taskQueue->isEmpty()) {
-            $task = $this->taskQueue->dequeue();
-            $value = $task->run();
-
-            if ($value instanceof Syscall) {
-                try {
-                    $value($task, $this);
-                } catch (\Exception $e) {
-                    $task->setException($e);
-                    $this->schedule($task);
-                }
-                continue;
-            }
-
-            if ($task->isFinished()) {
-                unset($this->taskMap[$task->getTaskId()]);
-            } else {
-                $this->schedule($task);
-            }
-        }
+        return $this->doRun();
     }
 
     /**
@@ -167,7 +153,7 @@ class Scheduler implements SchedulerInterface
     /**
      * {@inheritdoc}
      */
-    public function doActionTick() 
+    protected function doActionTick() 
     {
         $this->running = true;
         
@@ -226,13 +212,11 @@ class Scheduler implements SchedulerInterface
         }
     }
 
-    protected function ioPollTask() 
+    protected function ioSocketPoll() 
 	{
         while (true) {
-            if ($this->taskQueue->isEmpty() 
-                && (empty($this->waitingForRead) 
-                && empty($this->waitingForWrite))
-            ) {
+            if ($this->taskQueue->isEmpty()) {
+                $this->ioPoll(0);
                 break;
             } else {
                 $this->ioPoll(0);

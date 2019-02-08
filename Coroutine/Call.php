@@ -8,7 +8,7 @@ namespace Async\Coroutine;
 use Async\Coroutine\Task;
 use Async\Coroutine\Scheduler;
 
-class Syscall 
+class Call 
 {
     protected $callback;
 
@@ -23,21 +23,21 @@ class Syscall
         return $callback($task, $scheduler);
     }
 
-	public function getTaskId() 
+	public function taskId() 
 	{
-		return new Syscall(
+		return new Call(
 			function(Task $task, Scheduler $scheduler) {
-				$task->setSendValue($task->getTaskId());
+				$task->sendValue($task->taskId());
 				$scheduler->schedule($task);
 			}
 		);
 	}
 
-	public function newTask(\Generator $coroutine) 
+	public function coroutine(\Generator $coroutine) 
 	{
-		return new Syscall(
+		return new Call(
 			function(Task $task, Scheduler $scheduler) use ($coroutine) {
-				$task->setSendValue($scheduler->coroutine($coroutine));
+				$task->sendValue($scheduler->coroutine($coroutine));
 				$scheduler->schedule($task);
 			}
 		);
@@ -45,7 +45,7 @@ class Syscall
 
 	public function killTask($tid) 
 	{
-		return new Syscall(
+		return new Call(
 			function(Task $task, Scheduler $scheduler) use ($tid) {
 				if ($scheduler->killTask($tid)) {
 					$scheduler->schedule($task);
@@ -58,7 +58,7 @@ class Syscall
 
 	public function waitForRead($socket) 
 	{
-		return new Syscall(
+		return new Call(
 			function(Task $task, Scheduler $scheduler) use ($socket) {
 				$scheduler->waitForRead($socket, $task);
 			}
@@ -67,7 +67,7 @@ class Syscall
 
 	public function waitForWrite($socket) 
 	{
-		return new Syscall(
+		return new Call(
 			function(Task $task, Scheduler $scheduler) use ($socket) {
 				$scheduler->waitForWrite($socket, $task);
 			}

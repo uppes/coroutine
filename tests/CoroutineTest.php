@@ -2,7 +2,7 @@
 
 namespace Async\Tests;
 
-use Async\Coroutine\Syscall;
+use Async\Coroutine\Call;
 use Async\Coroutine\Scheduler;
 use PHPUnit\Framework\TestCase;
 
@@ -72,7 +72,7 @@ class CoroutineTest extends TestCase
 
     public function task($max) 
     {
-        $tid = (yield Syscall::getTaskId()); // <-- here's the syscall!
+        $tid = (yield Call::taskId()); // <-- here's the syscall!
         for ($i = 1; $i <= $max; ++$i) {
             $this->task .= "This is task $tid iteration $i.\n";
             yield;
@@ -116,7 +116,7 @@ class CoroutineTest extends TestCase
 
     public function childTask() 
     {
-        $tid = (yield Syscall::getTaskId());
+        $tid = (yield Call::taskId());
         while (true) {
             $this->task .= "Child task $tid still alive!\n";
             yield;
@@ -125,18 +125,18 @@ class CoroutineTest extends TestCase
 
     public function taskCall() 
     {
-        $tid = (yield Syscall::getTaskId());
-        $childTid = (yield Syscall::newTask($this->childTask()));
+        $tid = (yield Call::taskId());
+        $childTid = (yield Call::coroutine($this->childTask()));
 
         for ($i = 1; $i <= 6; ++$i) {            
             $this->task .= "Parent task $tid iteration $i.\n";
             yield;
     
-            if ($i == 3) yield Syscall::killTask($childTid);
+            if ($i == 3) yield Call::killTask($childTid);
         }
     }
 
-    public function testSyscall() 
+    public function testCall() 
     {
         $this->task = null;
 
