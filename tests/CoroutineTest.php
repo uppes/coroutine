@@ -3,7 +3,7 @@
 namespace Async\Tests;
 
 use Async\Coroutine\Call;
-use Async\Coroutine\Scheduler;
+use Async\Coroutine\Coroutine;
 use PHPUnit\Framework\TestCase;
 
 class CoroutineTest extends TestCase 
@@ -34,18 +34,18 @@ class CoroutineTest extends TestCase
         }
     }
 
-    public function testScheduler() 
+    public function testCoroutine() 
     {
-        $scheduler = new Scheduler();
-        $this->assertInstanceOf('\Async\Coroutine\SchedulerInterface', $scheduler);
+        $coroutine = new Coroutine();
+        $this->assertInstanceOf('\Async\Coroutine\Coroutine', $coroutine);
 
-        $taskId = $scheduler->coroutine($this->task1());
+        $taskId = $coroutine->add($this->task1());
         $this->assertNotNull($taskId);
         
-        $scheduler->coroutine($this->task2());
-        $scheduler->coroutine($this->task3());
+        $coroutine->add($this->task2());
+        $coroutine->add($this->task3());
 
-        $scheduler->run();
+        $coroutine->run();
         
         $expect[] = "This is task 1 iteration 1.";
         $expect[] = "This is task 2 iteration 1.";
@@ -79,17 +79,17 @@ class CoroutineTest extends TestCase
         }
     }
 
-    public function testCall_GetTaskId() 
+    public function testCall_TaskId() 
     {
         $this->task = null;
 
-        $scheduler = new Scheduler();
+        $coroutine = new Coroutine();
 
-        $scheduler->coroutine($this->task(10));
-        $scheduler->coroutine($this->task(5));
-        $scheduler->coroutine($this->task(3));
+        $coroutine->add($this->task(10));
+        $coroutine->add($this->task(5));
+        $coroutine->add($this->task(3));
         
-        $scheduler->run();
+        $coroutine->run();
 
         $expect[] = "This is task 1 iteration 1.";
         $expect[] = "This is task 2 iteration 1.";
@@ -126,13 +126,13 @@ class CoroutineTest extends TestCase
     public function taskCall() 
     {
         $tid = (yield Call::taskId());
-        $childTid = (yield Call::coroutine($this->childTask()));
+        $childTid = (yield Call::addTask($this->childTask()));
 
         for ($i = 1; $i <= 6; ++$i) {            
             $this->task .= "Parent task $tid iteration $i.\n";
             yield;
     
-            if ($i == 3) yield Call::killTask($childTid);
+            if ($i == 3) yield Call::removeTask($childTid);
         }
     }
 
@@ -140,16 +140,16 @@ class CoroutineTest extends TestCase
     {
         $this->task = null;
 
-        $scheduler = new Scheduler();
-        $scheduler->coroutine($this->taskCall());
-        $scheduler->run();
+        $coroutine = new Coroutine();
+        $coroutine->add($this->taskCall());
+        $coroutine->run();
 
         $expect[] = "Parent task 1 iteration 1.";
-        $expect[] = "Child task 3 still alive!";
+        $expect[] = "Child task 2 still alive!";
         $expect[] = "Parent task 1 iteration 2.";
-        $expect[] = "Child task 3 still alive!";
+        $expect[] = "Child task 2 still alive!";
         $expect[] = "Parent task 1 iteration 3.";
-        $expect[] = "Child task 3 still alive!";
+        $expect[] = "Child task 2 still alive!";
         $expect[] = "Parent task 1 iteration 4.";
         $expect[] = "Parent task 1 iteration 5.";
         $expect[] = "Parent task 1 iteration 6.";
@@ -157,6 +157,6 @@ class CoroutineTest extends TestCase
         foreach ($expect as $iteration)
             $this->assertStringContainsString($iteration, $this->task);
 
-        $this->assertEquals(3, preg_match_all('/Child task 3 still alive!/', $this->task, $matches));
+        $this->assertEquals(3, preg_match_all('/Child task 2 still alive!/', $this->task, $matches));
     }
 }

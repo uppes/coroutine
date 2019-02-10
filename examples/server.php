@@ -2,7 +2,7 @@
 include 'vendor/autoload.php';
 
 use Async\Coroutine\Call;
-use Async\Coroutine\Scheduler;
+use Async\Coroutine\Coroutine;
 
 function server($port) {
     echo "Starting server at port $port...\n";
@@ -41,6 +41,6 @@ RES;
     fclose($socket);
 }
 
-$scheduler = new Scheduler;
-$scheduler->coroutine(server(8000));
-$scheduler->run();
+$coroutine = new Coroutine;
+$coroutine->add(server(8000));
+$coroutine->run();

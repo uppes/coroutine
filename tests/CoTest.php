@@ -1,10 +1,8 @@
 <?php
 namespace Async\Tests;
 
-use Async\Coroutine\Co;
-use Async\Coroutine\Task;
 use Async\Coroutine\Call;
-use Async\Coroutine\Scheduler;
+use Async\Coroutine\Coroutine;
 use PHPUnit\Framework\TestCase;
 
 class CoTest extends TestCase 
@@ -15,12 +13,16 @@ class CoTest extends TestCase
     public function testNoSend(
         $coroutineFactory, $expectedArray, $reindex = false
     ) {
-        $coroutine = Co::routine($coroutineFactory());
+        $coroutine = Coroutine::create($coroutineFactory());
         $resultArray = iterator_to_array($coroutine, !$reindex);
         $this->assertEquals($expectedArray, $resultArray);
     }
 
-    public function testNoSendProvider() {
+    /**
+     * @doesNotPerformAssertions
+     */
+    public function testNoSendProvider() 
+    {
         return [
             // Trivial coroutine without nesting
             [
@@ -74,12 +76,12 @@ class CoTest extends TestCase
                     "ck2" => "cv2", "pk2" => "pv2"
                 ]
             ],
-            // Co::value() in outermost coroutine aborts
+            // Coroutine::value() in outermost coroutine aborts
             [
                 function() {
                     yield 1;
                     yield 2;
-                    yield Co::value(3);
+                    yield Coroutine::value(3);
                     yield 4;
                     yield 5;
                 }, [
@@ -103,19 +105,21 @@ class CoTest extends TestCase
                     yield (yield $this->child5());
 
                 }, [
-                    $this->child5(), Co::value('test'), Co::plain('test'), null
+                    $this->child5(), Coroutine::value('test'), Coroutine::plain('test'), null
                 ], true
             ],
         ];
     }
 
-    private function child1() {
+    private function child1() 
+    {
         yield "c1";
         yield "c2";
         yield "c3";
     }
 
-    private function child2($nesting) {
+    private function child2($nesting) 
+    {
         yield "e$nesting";
 
         if (0 === $nesting) {
@@ -127,29 +131,33 @@ class CoTest extends TestCase
         yield "l$nesting";
     }
 
-    private function child3() {
+    private function child3() 
+    {
         yield "ck1" => "cv1";
         yield "ck2" => "cv2";
     }
 
-    private function child4() {
+    private function child4() 
+    {
         yield "c1";
-        yield Co::value("crv");
+        yield Coroutine::value("crv");
         yield "c2";
     }
 
-    private function child5() {
-        yield Co::plain($this->child5());
-        yield Co::plain(Co::value('test'));
-        yield Co::plain(Co::plain('test'));
+    private function child5() 
+    {
+        yield Coroutine::plain($this->child5());
+        yield Coroutine::plain(Coroutine::value('test'));
+        yield Coroutine::plain(Coroutine::plain('test'));
     }
 
 
     /**
      * @dataProvider testSendProvider
      */
-    public function testSend($coroutineFactory, $sendValues, $expectedArray) {
-        $coroutine = Co::routine($coroutineFactory());
+    public function testSend($coroutineFactory, $sendValues, $expectedArray) 
+    {
+        $coroutine = Coroutine::create($coroutineFactory());
         $resultArray = [$coroutine->current()];
         foreach ($sendValues as $value) {
             $resultArray[] = $coroutine->send($value);
@@ -157,7 +165,11 @@ class CoTest extends TestCase
         $this->assertEquals($expectedArray, $resultArray);
     }
 
-    public function testSendProvider() {
+    /**
+     * @doesNotPerformAssertions
+     */
+    public function testSendProvider() 
+    {
         return [
             // Coroutine without nesting
             [
@@ -184,8 +196,9 @@ class CoTest extends TestCase
         ];
     }
 
-    private function child6($s) {
-        yield Co::value(yield (yield (yield $s)));
+    private function child6($s) 
+    {
+        yield Coroutine::value(yield (yield (yield $s)));
     }
 
     /**
@@ -194,7 +207,7 @@ class CoTest extends TestCase
     public function testThrow(
         $coroutineFactory, $throwAtKeys, $expectedArray, $shouldThrow
     ) {
-        $coroutine = Co::routine($coroutineFactory());
+        $coroutine = Coroutine::create($coroutineFactory());
         $throwAtKeys = array_flip($throwAtKeys);
 
         $hasThrown = false;
@@ -218,7 +231,11 @@ class CoTest extends TestCase
         $this->assertEquals($expectedArray, $resultArray);
     }
 
-    public function testThrowProvider() {
+    /**
+     * @doesNotPerformAssertions
+     */
+    public function testThrowProvider() 
+    {
         return [
             // Throwing an exception from the outermost coroutine
             [
@@ -304,25 +321,30 @@ class CoTest extends TestCase
         ];
     }
 
-    private function child7() {
+    private function child7() 
+    {
         yield 'throw' => 'c';
     }
 
-    private function child8() {
+    private function child8() 
+    {
         try {
             yield 'throw' => 'c';
         } catch (\Exception $e) { yield 'e'; }
     }
 
-    private function child9() {
+    private function child9() 
+    {
         yield $this->child7();
     }
 
-    private function child10() {
-        yield Co::value('foo');
+    private function child10() 
+    {
+        yield Coroutine::value('foo');
     }
 
-    private function child11() {
+    private function child11() 
+    {
         yield $this->child10();
         throw new \Exception;
     }

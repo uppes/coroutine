@@ -1,12 +1,9 @@
 <?php
-/**
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
+
 namespace Async\Coroutine;
 
-use Async\Coroutine\Task;
-use Async\Coroutine\Scheduler;
+use Async\Coroutine\Coroutine;
+use Async\Coroutine\TaskInterface;
 
 class Call 
 {
@@ -17,38 +14,38 @@ class Call
         $this->callback = $callback;
     }
 
-    public function __invoke(Task $task, Scheduler $scheduler) 
+    public function __invoke(TaskInterface $task, Coroutine $coroutine) 
 	{
         $callback = $this->callback; // Yes, PHP sucks
-        return $callback($task, $scheduler);
+        return $callback($task, $coroutine);
     }
 
 	public static function taskId() 
 	{
 		return new Call(
-			function(Task $task, Scheduler $scheduler) {
+			function(TaskInterface $task, Coroutine $coroutine) {
 				$task->sendValue($task->taskId());
-				$scheduler->schedule($task);
+				$coroutine->schedule($task);
 			}
 		);
 	}
 
-	public static function coroutine(\Generator $coroutine) 
+	public static function addTask(\Generator $coroutines) 
 	{
 		return new Call(
-			function(Task $task, Scheduler $scheduler) use ($coroutine) {
-				$task->sendValue($scheduler->coroutine($coroutine));
-				$scheduler->schedule($task);
+			function(TaskInterface $task, Coroutine $coroutine) use ($coroutines) {
+				$task->sendValue($coroutine->add($coroutines));
+				$coroutine->schedule($task);
 			}
 		);
 	}
 
-	public static function killTask($tid) 
+	public static function removeTask($tid) 
 	{
 		return new Call(
-			function(Task $task, Scheduler $scheduler) use ($tid) {
-				if ($scheduler->killTask($tid)) {
-					$scheduler->schedule($task);
+			function(TaskInterface $task, Coroutine $coroutine) use ($tid) {
+				if ($coroutine->remove($tid)) {
+					$coroutine->schedule($task);
 				} else {
 					throw new \InvalidArgumentException('Invalid task ID!');
 				}
@@ -59,8 +56,8 @@ class Call
 	public static function waitForRead($socket) 
 	{
 		return new Call(
-			function(Task $task, Scheduler $scheduler) use ($socket) {
-				$scheduler->waitForRead($socket, $task);
+			function(TaskInterface $task, Coroutine $coroutine) use ($socket) {
+				$coroutine->waitForRead($socket, $task);
 			}
 		);
 	}
@@ -68,8 +65,8 @@ class Call
 	public static function waitForWrite($socket) 
 	{
 		return new Call(
-			function(Task $task, Scheduler $scheduler) use ($socket) {
-				$scheduler->waitForWrite($socket, $task);
+			function(TaskInterface $task, Coroutine $coroutine) use ($socket) {
+				$coroutine->waitForWrite($socket, $task);
 			}
 		);
 	}

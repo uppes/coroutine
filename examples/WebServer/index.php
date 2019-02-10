@@ -9,7 +9,7 @@ echo "CO-ROUTINE EXAMPLE. WEBSERVER" . PHP_EOL;
 
 chdir(__DIR__);
 
-require_once('../../Coroutine/Scheduler.php');
+require_once('../../Coroutine/Coroutine.php');
 require_once('../../Coroutine/Task.php');
 require_once('../../Coroutine/Co.php');
 require_once('../../Coroutine/Call.php');
@@ -116,6 +116,6 @@ RES;*/
 }
 
 
-$scheduler = new Scheduler;
-$scheduler->coroutine(server(5000));
-$scheduler->run();
+$coroutine = new Coroutine();
+$coroutine->add(server(5000));
+$coroutine->run();

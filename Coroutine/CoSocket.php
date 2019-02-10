@@ -1,12 +1,9 @@
 <?php
-/**
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
+
 namespace Async\Coroutine;
 
-use Async\Coroutine\Co;
 use Async\Coroutine\Call;
+use Async\Coroutine\Coroutine;
 
 class CoSocket 
 {
@@ -20,13 +17,13 @@ class CoSocket
     public function accept() 
 	{
         yield Call::waitForRead($this->socket);
-        yield Co::value(new CoSocket(\stream_socket_accept($this->socket, 0)));
+        yield Coroutine::value(new CoSocket(\stream_socket_accept($this->socket, 0)));
     }
 	
     public function read($size) 
 	{
         yield Call::waitForRead($this->socket);
-        yield Co::value(\fread($this->socket, $size));
+        yield Coroutine::value(\fread($this->socket, $size));
     }
 
     public function write($string) 

@@ -1,13 +1,9 @@
 <?php
-/**
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- */
+
 namespace Async\Coroutine;
 
-use Async\Coroutine\Co;
-use Async\Coroutine\SchedulerInterface;
-use Async\Coroutine\Tasks\TaskInterface;
+use Async\Coroutine\Coroutine;
+use Async\Coroutine\TaskInterface;
 
 class Task implements TaskInterface
 {	
@@ -20,10 +16,10 @@ class Task implements TaskInterface
     public function __construct($taskId, \Generator $coroutine) 
 	{
         $this->taskId = $taskId;
-        $this->coroutine = Co::routine($coroutine);
+        $this->coroutine = Coroutine::create($coroutine);
     }
 
-    public function taskId() 
+    public function taskId(): int 
 	{
         return $this->taskId;
     }
@@ -33,7 +29,7 @@ class Task implements TaskInterface
         $this->sendValue = $sendValue;
     }
 
-    public function setException($exception) 
+    public function exception($exception) 
 	{
         $this->exception = $exception;
     }
@@ -58,40 +54,4 @@ class Task implements TaskInterface
 	{
         return !$this->coroutine->valid();
     }
-	
-    public function isCancelled() 
-	{
-	}
-	
-    public function isComplete()
-	{
-	}
-	
-    public function isSuccessful() 
-	{
-	}
-	
-    public function isFaulted()
-	{
-	}
-
-    public function cancel() 
-	{
-	}
-		
-    public function getResult() 
-	{
-	}
-		
-    public function getException()
-	{
-	}
-		
-    public function tick(SchedulerInterface $scheduler)
-	{
-	}	
-		
-    protected function doTick(SchedulerInterface $scheduler)
-	{
-	}
 }
