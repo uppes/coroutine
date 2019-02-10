@@ -3,16 +3,18 @@ include 'vendor/autoload.php';
 
 use Async\Coroutine\Coroutine;
 
-function childTask($tid) 
+function childTask() 
 {
+    $tid = yield asyncId();
     while (true) {
         echo "Child task $tid still alive!\n";
         yield;
     }
 };
 
-function parentTask($tid) 
+function parentTask() 
 {
+    $tid = yield asyncId();
     $childTid = yield from await('childTask');
 
     for ($i = 1; $i <= 6; ++$i) {

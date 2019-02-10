@@ -19,14 +19,20 @@ if (! function_exists('await')) {
 if (! function_exists('awaitAble')) {
 	function awaitAble(callable $awaitableFunction, $args = null) 
 	{
-		$tid = (yield Call::taskId());        
-		return yield $awaitableFunction($tid, $args);
+		return yield $awaitableFunction($args);
 	}	
 }
 
 if (! function_exists('asyncRemove')) {
-	function asyncRemove(int $tid) 
+	function asyncRemove(int $tid)
 	{
 		return Call::removeTask($tid); 
+	}	
+}
+
+if (! function_exists('asyncId')) {
+	function asyncId()
+	{
+		return Call::taskId();
 	}	
 }
