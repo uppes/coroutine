@@ -14,12 +14,12 @@
     "license": "MIT",
     "authors": [
         {
-            "name": "Nikita Popov",
-            "email": "nikic@php.net"
-        },
-        {
             "name": "Lawrence Stubbs",
             "email": "lstubbs@techno.express"
+        },
+        {
+            "name": "Nikita Popov",
+            "email": "nikic@php.net"
         }
     ],
     "require": {
@@ -27,7 +27,7 @@
     },
     "autoload": {
         "files": [
-            "Coroutine/auto.php"
+            "Coroutine/Auto.php"
         ],
         "psr-4": { 
 			"Async\\Coroutine\\": "Coroutine/"

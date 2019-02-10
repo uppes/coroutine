@@ -1,7 +1,6 @@
 <?php
 
 use Async\Coroutine\Call;
-use Async\Coroutine\Coroutine;
 
 if (! function_exists('async')) {
 	function async(callable $asyncFunction) 
