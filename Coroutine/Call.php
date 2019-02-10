@@ -16,7 +16,7 @@ class Call
 
     public function __invoke(TaskInterface $task, Coroutine $coroutine) 
 	{
-        $callback = $this->callback; // Yes, PHP sucks
+        $callback = $this->callback;
         return $callback($task, $coroutine);
     }
 
