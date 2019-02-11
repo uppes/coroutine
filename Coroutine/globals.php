@@ -37,15 +37,15 @@ if (! function_exists('asyncId')) {
 	}	
 }
 
-if (! function_exists('asyncStreamRead')) {
-	function asyncStreamRead($socket)
+if (! function_exists('asyncReadStream')) {
+	function asyncReadStream($socket)
 	{
 		return Call::waitForRead($socket); 
 	}	
 }
 
-if (! function_exists('asyncStreamWrite')) {
-	function asyncStreamWrite($socket)
+if (! function_exists('asyncWriteStream')) {
+	function asyncWriteStream($socket)
 	{
 		return Call::waitForWrite($socket);
 	}	
