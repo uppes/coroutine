@@ -15,7 +15,7 @@ interface CoroutineInterface
 	
     public function run();
 
-    public function waitForRead($socket, TaskInterface $task);
+    public function addReadStream($stream, $task);
 
-    public function waitForWrite($socket, TaskInterface $task);
+    public function addWriteStream($stream, $task);
 }

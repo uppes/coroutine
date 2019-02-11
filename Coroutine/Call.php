@@ -57,7 +57,7 @@ class Call
 	{
 		return new Call(
 			function(TaskInterface $task, Coroutine $coroutine) use ($socket) {
-				$coroutine->waitForRead($socket, $task);
+				$coroutine->addReadStream($socket, $task);
 			}
 		);
 	}
@@ -66,7 +66,7 @@ class Call
 	{
 		return new Call(
 			function(TaskInterface $task, Coroutine $coroutine) use ($socket) {
-				$coroutine->waitForWrite($socket, $task);
+				$coroutine->addWriteStream($socket, $task);
 			}
 		);
 	}

@@ -36,3 +36,17 @@ if (! function_exists('asyncId')) {
 		return Call::taskId();
 	}	
 }
+
+if (! function_exists('asyncStreamRead')) {
+	function asyncStreamRead($socket)
+	{
+		return Call::waitForRead($socket); 
+	}	
+}
+
+if (! function_exists('asyncStreamWrite')) {
+	function asyncStreamWrite($socket)
+	{
+		return Call::waitForWrite($socket);
+	}	
+}

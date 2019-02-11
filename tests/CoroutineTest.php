@@ -145,11 +145,11 @@ class CoroutineTest extends TestCase
         $coroutine->run();
 
         $expect[] = "Parent task 1 iteration 1.";
-        $expect[] = "Child task 2 still alive!";
+        $expect[] = "Child task 3 still alive!";
         $expect[] = "Parent task 1 iteration 2.";
-        $expect[] = "Child task 2 still alive!";
+        $expect[] = "Child task 3 still alive!";
         $expect[] = "Parent task 1 iteration 3.";
-        $expect[] = "Child task 2 still alive!";
+        $expect[] = "Child task 3 still alive!";
         $expect[] = "Parent task 1 iteration 4.";
         $expect[] = "Parent task 1 iteration 5.";
         $expect[] = "Parent task 1 iteration 6.";
@@ -157,6 +157,6 @@ class CoroutineTest extends TestCase
         foreach ($expect as $iteration)
             $this->assertStringContainsString($iteration, $this->task);
 
-        $this->assertEquals(3, preg_match_all('/Child task 2 still alive!/', $this->task, $matches));
+        $this->assertEquals(3, preg_match_all('/3 still alive!/', $this->task, $matches));
     }
 }

@@ -16,6 +16,12 @@ class Coroutine implements CoroutineInterface
     protected $taskMap = []; // taskId => task
     protected $taskQueue;
 
+    protected $readStreams = [];    
+    protected $readCallbacks = [];
+
+    protected $writeStreams = [];
+    protected $writeCallbacks = [];	
+
     // resourceID => [socket, tasks]
     protected $waitingForRead = [];
     protected $waitingForWrite = [];
@@ -66,11 +72,12 @@ class Coroutine implements CoroutineInterface
 	
     public function run() 
 	{
+        $this->add($this->ioSocketPoll());
         return $this->doRun();
     }
 
     protected function doRun() 
-	{		
+	{
 		while (!$this->taskQueue->isEmpty()) {
 			$task = $this->taskQueue->dequeue();
 			$value = $task->run();
@@ -152,21 +159,51 @@ class Coroutine implements CoroutineInterface
         }
     }
 
-    public function waitForRead($socket, TaskInterface $task) 
+    /**
+     * Adds a read stream.
+     */
+    public function addReadStream($stream, $task)
+    {
+        $this->waitForRead($stream, $task);
+    }
+
+    public function waitForRead($socket, $task) 
 	{
-        if (isset($this->waitingForRead[(int) $socket])) {
-            $this->waitingForRead[(int) $socket][1][] = $task;
+        if ($task instanceof TaskInterface) {
+            if (isset($this->waitingForRead[(int) $socket])) {
+                $this->waitingForRead[(int) $socket][1][] = $task;
+            } else {
+                $this->waitingForRead[(int) $socket] = [$socket, [$task]];
+            }
+        } elseif (is_callable($task)) {
+            $this->readStreams[(int) $stream] = $stream;
+            $this->readCallbacks[(int) $stream] = $task;
         } else {
-            $this->waitingForRead[(int) $socket] = [$socket, [$task]];
+            throw new \RunTimeException('Invalid/missing parameters!');
         }
     }
 
-    public function waitForWrite($socket, TaskInterface $task) 
+    /**
+     * Adds a write stream.
+     */
+    public function addWriteStream($stream, $task)
+    {
+        $this->waitForWrite($stream, $task);
+    }
+
+    public function waitForWrite($socket, $task) 
 	{
-        if (isset($this->waitingForWrite[(int) $socket])) {
-            $this->waitingForWrite[(int) $socket][1][] = $task;
+        if ($task instanceof TaskInterface) {
+            if (isset($this->waitingForWrite[(int) $socket])) {
+                $this->waitingForWrite[(int) $socket][1][] = $task;
+            } else {
+                $this->waitingForWrite[(int) $socket] = [$socket, [$task]];
+            }
+        } elseif (is_callable($task)) {
+            $this->writeStreams[(int) $stream] = $stream;
+            $this->writeCallbacks[(int) $stream] = $task; 
         } else {
-            $this->waitingForWrite[(int) $socket] = [$socket, [$task]];
+            throw new \RunTimeException('Invalid/missing parameters!');
         }
     }
 	
