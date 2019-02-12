@@ -7,11 +7,11 @@ use Async\Coroutine\TaskInterface;
 interface CoroutineInterface 
 {
 
-    public function add(\Generator $coroutine);
+    public function addTask(\Generator $coroutine);
 
     public function schedule(TaskInterface $task);
 
-    public function remove(int $tid);
+    public function removeTask(int $tid);
 	
     public function run();
 

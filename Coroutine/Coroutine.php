@@ -31,7 +31,7 @@ class Coroutine implements CoroutineInterface
         $this->taskQueue = new \SplQueue();
     }
 
-    public function add(\Generator $coroutine) 
+    public function addTask(\Generator $coroutine) 
 	{
         $tid = ++$this->maxTaskId;
         $task = new Task($tid, $coroutine);
@@ -45,7 +45,7 @@ class Coroutine implements CoroutineInterface
 			$this->taskQueue->enqueue($task);
     }
 
-    public function remove(int $tid) 
+    public function removeTask(int $tid) 
 	{
         if (!isset($this->taskMap[$tid])) {
             return false;
@@ -72,7 +72,7 @@ class Coroutine implements CoroutineInterface
 	
     public function run() 
 	{
-        $this->add($this->ioSocketPoll());
+        $this->addTask($this->ioSocketPoll());
         return $this->doRun();
     }
 

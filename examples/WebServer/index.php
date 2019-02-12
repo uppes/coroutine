@@ -117,5 +117,5 @@ RES;*/
 
 
 $coroutine = new Coroutine();
-$coroutine->add(server(5000));
+$coroutine->addTask(server(5000));
 $coroutine->run();

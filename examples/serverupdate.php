@@ -42,5 +42,5 @@ RES;
 
 
 $coroutine = new Coroutine;
-$coroutine->add(server(8000));
+$coroutine->addTask(server(8000));
 $coroutine->run();

@@ -36,7 +36,7 @@ class GlobalTest extends TestCase
         $this->task = null;
 
         $coroutine = new Coroutine();
-        $coroutine->add( awaitAble([$this, 'parentTask']) );
+        $coroutine->addTask( awaitAble([$this, 'parentTask']) );
         $coroutine->run();        
 
         $expect[] = "Parent task 1 iteration 1.";

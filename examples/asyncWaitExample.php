@@ -26,5 +26,5 @@ function parentTask()
 };
 
 $coroutine = new Coroutine();
-$coroutine->add( awaitAble('parentTask') );
+$coroutine->addTask( awaitAble('parentTask') );
 $coroutine->run();

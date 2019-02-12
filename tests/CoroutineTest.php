@@ -39,11 +39,11 @@ class CoroutineTest extends TestCase
         $coroutine = new Coroutine();
         $this->assertInstanceOf('\Async\Coroutine\Coroutine', $coroutine);
 
-        $taskId = $coroutine->add($this->task1());
+        $taskId = $coroutine->addTask($this->task1());
         $this->assertNotNull($taskId);
         
-        $coroutine->add($this->task2());
-        $coroutine->add($this->task3());
+        $coroutine->addTask($this->task2());
+        $coroutine->addTask($this->task3());
 
         $coroutine->run();
         
@@ -85,9 +85,9 @@ class CoroutineTest extends TestCase
 
         $coroutine = new Coroutine();
 
-        $coroutine->add($this->task(10));
-        $coroutine->add($this->task(5));
-        $coroutine->add($this->task(3));
+        $coroutine->addTask($this->task(10));
+        $coroutine->addTask($this->task(5));
+        $coroutine->addTask($this->task(3));
         
         $coroutine->run();
 
@@ -141,7 +141,7 @@ class CoroutineTest extends TestCase
         $this->task = null;
 
         $coroutine = new Coroutine();
-        $coroutine->add($this->taskCall());
+        $coroutine->addTask($this->taskCall());
         $coroutine->run();
 
         $expect[] = "Parent task 1 iteration 1.";
