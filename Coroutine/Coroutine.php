@@ -73,10 +73,10 @@ class Coroutine implements CoroutineInterface
     public function run() 
 	{
         $this->addTask($this->ioSocketPoll());
-        return $this->doRun();
+        return $this->runCoroutines();
     }
 
-    protected function doRun() 
+    protected function runCoroutines() 
 	{
 		while (!$this->taskQueue->isEmpty()) {
 			$task = $this->taskQueue->dequeue();
@@ -98,11 +98,6 @@ class Coroutine implements CoroutineInterface
 				$this->schedule($task);
 			}
 		}
-    }
-
-    protected function runCoroutines() 
-	{
-        return $this->doRun();
     }
 
     protected function ioPoll($timeout) 
@@ -169,17 +164,14 @@ class Coroutine implements CoroutineInterface
 
     public function waitForRead($socket, $task) 
 	{
-        if ($task instanceof TaskInterface) {
+        if ($task instanceof TaskInterface || is_callable($task)) {
             if (isset($this->waitingForRead[(int) $socket])) {
                 $this->waitingForRead[(int) $socket][1][] = $task;
             } else {
                 $this->waitingForRead[(int) $socket] = [$socket, [$task]];
             }
-        } elseif (is_callable($task)) {
-            $this->readStreams[(int) $stream] = $stream;
-            $this->readCallbacks[(int) $stream] = $task;
-        } else {
-            throw new \RunTimeException('Invalid/missing parameters!');
+            $this->readStreams[(int) $socket] = $socket;
+            $this->readCallbacks[(int) $socket] = $task;
         }
     }
 
@@ -193,18 +185,16 @@ class Coroutine implements CoroutineInterface
 
     public function waitForWrite($socket, $task) 
 	{
-        if ($task instanceof TaskInterface) {
+        if ($task instanceof TaskInterface || is_callable($task)) {
             if (isset($this->waitingForWrite[(int) $socket])) {
                 $this->waitingForWrite[(int) $socket][1][] = $task;
             } else {
                 $this->waitingForWrite[(int) $socket] = [$socket, [$task]];
             }
-        } elseif (is_callable($task)) {
-            $this->writeStreams[(int) $stream] = $stream;
-            $this->writeCallbacks[(int) $stream] = $task; 
-        } else {
-            throw new \RunTimeException('Invalid/missing parameters!');
-        }
+
+            $this->writeStreams[(int) $socket] = $socket;
+            $this->writeCallbacks[(int) $socket] = $task; 
+        } 
     }
 	
 	public static function value($value) 
