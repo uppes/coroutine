@@ -15,9 +15,7 @@ function server($port) {
 
     $socket = new CoSocket($socket);
     while (true) {
-        yield Call::coroutine(
-            handleClient(yield $socket->accept())
-        );
+        yield from \async('handleClient', yield $socket->accept() );
     }
 }
 

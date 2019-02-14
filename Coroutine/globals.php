@@ -3,16 +3,16 @@
 use Async\Coroutine\Call;
 
 if (! function_exists('async')) {
-	function async(callable $asyncFunction) 
+	function async(callable $asyncFunction, $args = null) 
 	{
-		return yield Call::addTask(awaitAble($asyncFunction));
+		return yield Call::addTask(awaitAble($asyncFunction, $args));
 	}	
 }
 
 if (! function_exists('await')) {
-	function await(callable $awaitedFunction) 
+	function await(callable $awaitedFunction, $args = null) 
 	{     
-		return async($awaitedFunction);
+		return async($awaitedFunction, $args = null);
 	}
 }
 

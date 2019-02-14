@@ -63,11 +63,11 @@ class Coroutine implements CoroutineInterface
         return true;
     }
 	
-    public function isEmpty() 
+    public function hasCoroutines() 
 	{
-        return $this->taskQueue->isEmpty() 
-			&& empty($this->waitingForRead) 
-			&& empty($this->waitingForWrite);
+        return ! $this->taskQueue->isEmpty()
+            && ! empty($this->readStreams) 
+            && ! empty($this->writeStreams);
     }
 	
     public function run() 
@@ -100,55 +100,48 @@ class Coroutine implements CoroutineInterface
 		}
     }
 
-    protected function ioPoll($timeout) 
-	{
-        if (empty($this->waitingForRead) && empty($this->waitingForWrite)) {
-            return;
-        }
+    protected function runStreams($timeout)
+    {
+        if ($this->readStreams || $this->writeStreams) {
+            $read = $this->readStreams;
+            $write = $this->writeStreams;
+            $except = null;
+            if (\stream_select(
+                $read, 
+                $write, 
+                $except, 
+                (null === $timeout) ? null : 0, 
+                $timeout ? (int) ( $timeout * (($timeout === null) ? 1000000 : 1)) : 0)
+            ) {
+                foreach ($read as $readStream) {
+                    $readCb = $this->readCallbacks[(int) $readStream];
+                    $this->removeReadStream($readStream);
+                    $this->schedule($readCb);
+                }
 
-        $rSocks = [];
-        foreach ($this->waitingForRead as list($socket)) {
-            $rSocks[] = $socket;
-        }
-
-        $wSocks = [];
-        foreach ($this->waitingForWrite as list($socket)) {
-            $wSocks[] = $socket;
-        }
-
-        $eSocks = []; // dummy
-
-        if (!stream_select($rSocks, $wSocks, $eSocks, $timeout)) {
-            return;
-        }
-
-        foreach ($rSocks as $socket) {
-            list(, $tasks) = $this->waitingForRead[(int) $socket];
-            unset($this->waitingForRead[(int) $socket]);
-
-            foreach ($tasks as $task) {
-                $this->schedule($task);
+                foreach ($write as $writeStream) {
+                    $writeCb = $this->writeCallbacks[(int) $writeStream];
+                    $this->removeWriteStream($writeStream);
+                    $this->schedule($writeCb);
+                }
             }
-        }
-
-        foreach ($wSocks as $socket) {
-            list(, $tasks) = $this->waitingForWrite[(int) $socket];
-            unset($this->waitingForWrite[(int) $socket]);
-
-            foreach ($tasks as $task) {
-                $this->schedule($task);
-            }
+        } else {
+            return;
         }
     }
 
     protected function ioSocketPoll() 
 	{
         while (true) {
-            if ($this->taskQueue->isEmpty()) {
-                $this->ioPoll(0);
+            if (! $this->hasCoroutines()) {
                 break;
             } else {
-                $this->ioPoll(0);
+                $streamWait = null;
+                if (! $this->taskQueue->isEmpty()) {
+                    $streamWait = 0 ;
+                }
+
+                $this->runStreams($streamWait);
             }
             yield;
         }
@@ -164,15 +157,8 @@ class Coroutine implements CoroutineInterface
 
     public function waitForRead($socket, $task) 
 	{
-        if ($task instanceof TaskInterface || is_callable($task)) {
-            if (isset($this->waitingForRead[(int) $socket])) {
-                $this->waitingForRead[(int) $socket][1][] = $task;
-            } else {
-                $this->waitingForRead[(int) $socket] = [$socket, [$task]];
-            }
-            $this->readStreams[(int) $socket] = $socket;
-            $this->readCallbacks[(int) $socket] = $task;
-        }
+        $this->readStreams[(int) $socket] = $socket;
+        $this->readCallbacks[(int) $socket] = $task;
     }
 
     /**
@@ -185,18 +171,32 @@ class Coroutine implements CoroutineInterface
 
     public function waitForWrite($socket, $task) 
 	{
-        if ($task instanceof TaskInterface || is_callable($task)) {
-            if (isset($this->waitingForWrite[(int) $socket])) {
-                $this->waitingForWrite[(int) $socket][1][] = $task;
-            } else {
-                $this->waitingForWrite[(int) $socket] = [$socket, [$task]];
-            }
-
-            $this->writeStreams[(int) $socket] = $socket;
-            $this->writeCallbacks[(int) $socket] = $task; 
-        } 
+        $this->writeStreams[(int) $socket] = $socket;
+        $this->writeCallbacks[(int) $socket] = $task; 
     }
-	
+
+    /**
+     * Stop watching a stream for reads.
+     */
+    public function removeReadStream($stream)
+    {
+        unset(
+            $this->readStreams[(int) $stream],
+            $this->readCallbacks[(int) $stream]
+        );
+    }
+
+    /**
+     * Stop watching a stream for writes.
+     */
+    public function removeWriteStream($stream)
+    {
+        unset(
+            $this->writeStreams[(int) $stream],
+            $this->writeCallbacks[(int) $stream]
+        );
+    }
+
 	public static function value($value) 
 	{
 		return new ReturnValueCoroutine($value);

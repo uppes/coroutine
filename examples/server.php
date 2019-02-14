@@ -7,24 +7,24 @@ use Async\Coroutine\Coroutine;
 function server($port) {
     echo "Starting server at port $port...\n";
 
-    $socket = @stream_socket_server("tcp://localhost:$port", $errNo, $errStr);
+    $socket = @\stream_socket_server("tcp://localhost:$port", $errNo, $errStr);
     if (!$socket) throw new \Exception($errStr, $errNo);
 
-    stream_set_blocking($socket, 0);
+    \stream_set_blocking($socket, 0);
 
     while (true) {
-        yield Call::waitForRead($socket);
-        $clientSocket = stream_socket_accept($socket, 0);
-        yield Call::coroutine(handleClient($clientSocket));
+        yield \asyncReadStream($socket);
+        $clientSocket = \stream_socket_accept($socket, 0);
+        yield from \async('handleClient', $clientSocket);
     }
 }
 
 function handleClient($socket) {
-    yield Call::waitForRead($socket);
-    $data = fread($socket, 8192);
+    yield \asyncReadStream($socket);
+    $data = \fread($socket, 8192);
 
     $msg = "Received following request:\n\n$data";
-    $msgLength = strlen($msg);
+    $msgLength = \strlen($msg);
 
     $response = <<<RES
 HTTP/1.1 200 OK\r
@@ -35,10 +35,10 @@ Connection: close\r
 $msg
 RES;
 
-    yield Call::waitForWrite($socket);
-    fwrite($socket, $response);
+    yield \asyncWriteStream($socket);
+    \fwrite($socket, $response);
 
-    fclose($socket);
+    \fclose($socket);
 }
 
 $coroutine = new Coroutine;
