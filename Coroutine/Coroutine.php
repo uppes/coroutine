@@ -16,10 +16,32 @@ class Coroutine implements CoroutineInterface
     protected $taskMap = []; // taskId => task
     protected $taskQueue;
 
-    protected $readStreams = [];    
+    /**
+     * List of readable streams for stream_select, indexed by stream id.
+     *
+     * @var resource[]
+     */
+    protected $readStreams = [];
+
+    /**
+     * List of writable streams for stream_select, indexed by stream id.
+     *
+     * @var resource[]
+     */
+    protected $writeStreams = [];
+
+    /**
+     * List of read callbacks, indexed by stream id.
+     *
+     * @var callback[]
+     */
     protected $readCallbacks = [];
 
-    protected $writeStreams = [];
+    /**
+     * List of write callbacks, indexed by stream id.
+     *
+     * @var callback[]
+     */
     protected $writeCallbacks = [];	
 
     // resourceID => [socket, tasks]
