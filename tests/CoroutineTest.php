@@ -159,4 +159,32 @@ class CoroutineTest extends TestCase
 
         $this->assertEquals(3, preg_match_all('/3 still alive!/', $this->task, $matches));
     }
+    
+    function testAddWriteStream() 
+	{
+        $coroutine = new Coroutine();
+        $h = fopen('php://temp', 'r+');
+        $coroutine->addWriteStream($h, function() use ($h, $coroutine) {
+            fwrite($h, 'hello world');
+            $coroutine->removeWriteStream($h);
+        });
+        $coroutine->run();
+        rewind($h);
+        $this->assertEquals('hello world', stream_get_contents($h));
+    }
+
+    function testAddReadStream() 
+	{
+        $coroutine = new Coroutine();
+        $h = fopen('php://temp', 'r+');
+        fwrite($h, 'hello world');
+        rewind($h);
+        $result = null;
+        $coroutine->addReadStream($h, function() use ($h, $coroutine, &$result) {
+            $result = fgets($h);
+            $coroutine->removeReadStream($h);
+        });
+        $coroutine->run();
+        $this->assertEquals('hello world', $result);
+    }
 }

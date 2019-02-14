@@ -137,18 +137,24 @@ class Coroutine implements CoroutineInterface
             ) {
                 foreach ($read as $readStream) {
                     $readCb = $this->readCallbacks[(int) $readStream];
-                    $this->removeReadStream($readStream);
-                    $this->schedule($readCb);
+                    if ($readCb instanceof TaskInterface) {
+                        $this->removeReadStream($readStream);
+                        $this->schedule($readCb);
+                    } else {
+                        $readCb();
+                    }
                 }
 
                 foreach ($write as $writeStream) {
                     $writeCb = $this->writeCallbacks[(int) $writeStream];
-                    $this->removeWriteStream($writeStream);
-                    $this->schedule($writeCb);
+                    if ($writeCb instanceof TaskInterface) {
+                        $this->removeWriteStream($writeStream);
+                        $this->schedule($writeCb);
+                    } else {
+                        $writeCb();
+                    }
                 }
             }
-        } else {
-            return;
         }
     }
 
@@ -156,6 +162,7 @@ class Coroutine implements CoroutineInterface
 	{
         while (true) {
             if (! $this->hasCoroutines()) {
+                $this->runStreams(0);
                 break;
             } else {
                 $streamWait = null;
