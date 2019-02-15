@@ -2,6 +2,7 @@
 
 use Async\Coroutine\Call;
 use Async\Coroutine\CoSocket;
+use Async\Coroutine\CoSocketInterface;
 
 if (! function_exists('async')) {
 	function async(callable $asyncFunction, $args = null) 
@@ -39,49 +40,55 @@ if (! function_exists('asyncId')) {
 }
 
 if (! function_exists('asyncReadStream')) {
-	function asyncReadStream($socket)
+	function asyncReadStream($stream)
 	{
-		return Call::waitForRead($socket); 
+		return Call::waitForRead($stream); 
 	}	
 }
 
 if (! function_exists('asyncWriteStream')) {
-	function asyncWriteStream($socket)
+	function asyncWriteStream($stream)
 	{
-		return Call::waitForWrite($socket);
+		return Call::waitForWrite($stream);
 	}	
 }
 
-if (! function_exists('asyncCreate')) {
-	function asyncCreate($socket)
+if (! function_exists('createSocket')) {
+	function createSocket(int $port = 80000, $uri = "tcp://localhost:"): CoSocketInterface
 	{
+		$socket = @\stream_socket_server($uri.$port, $errNo, $errStr);
+		if (!$socket)
+			throw new \Exception($errStr, $errNo);
+	
+		\stream_set_blocking($socket, 0);
+
 		return new CoSocket($socket);
 	}	
 }
 
-if (! function_exists('asyncAccept')) {
-	function asyncAccept($socket)
+if (! function_exists('acceptSocket')) {
+	function acceptSocket(CoSocketInterface $socket)
 	{
 		return $socket->accept();
 	}	
 }
 
-if (! function_exists('asyncRead')) {
-	function asyncRead($socket, $size)
+if (! function_exists('readSocket')) {
+	function readSocket(CoSocketInterface $socket, int $size)
 	{
 		return $socket->read($size);
 	}	
 }
 
-if (! function_exists('asyncWrite')) {
-	function asyncWrite($socket, $response)
+if (! function_exists('writeSocket')) {
+	function writeSocket(CoSocketInterface $socket, string $response)
 	{
 		return $socket->write($response);
 	}	
 }
 
-if (! function_exists('asyncClose')) {
-	function asyncClose($socket)
+if (! function_exists('closeSocket')) {
+	function closeSocket(CoSocketInterface $socket)
 	{
 		return $socket->close();
 	}	

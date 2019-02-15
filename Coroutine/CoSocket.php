@@ -4,8 +4,9 @@ namespace Async\Coroutine;
 
 use Async\Coroutine\Call;
 use Async\Coroutine\Coroutine;
+use Async\Coroutine\CoSocketInterface;
 
-class CoSocket 
+class CoSocket implements CoSocketInterface
 {
     protected $socket;
 
@@ -20,13 +21,13 @@ class CoSocket
         yield Coroutine::value(new CoSocket(\stream_socket_accept($this->socket, 0)));
     }
 	
-    public function read($size) 
+    public function read(int $size) 
 	{
         yield Call::waitForRead($this->socket);
         yield Coroutine::value(\fread($this->socket, $size));
     }
 
-    public function write($string) 
+    public function write(string $string) 
 	{
         yield Call::waitForWrite($this->socket);
         \fwrite($this->socket, $string);
