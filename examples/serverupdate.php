@@ -1,26 +1,24 @@
 <?php
 include 'vendor/autoload.php';
 
-use Async\Coroutine\Call;
-use Async\Coroutine\CoSocket;
 use Async\Coroutine\Coroutine;
 
 function server($port) {
     echo "Starting server at port $port...\n";
 
-    $socket = @stream_socket_server("tcp://localhost:$port", $errNo, $errStr);
+    $socket = @\stream_socket_server("tcp://localhost:$port", $errNo, $errStr);
     if (!$socket) throw new \Exception($errStr, $errNo);
 
-    stream_set_blocking($socket, 0);
+    \stream_set_blocking($socket, 0);
 
-    $socket = new CoSocket($socket);
+    $socket = \asyncCreate($socket);
     while (true) {
-        yield from \async('handleClient', yield $socket->accept() );
+        yield from \async('handleClient', yield \asyncAccept($socket) );
     }
 }
 
 function handleClient($socket) {
-    $data = (yield $socket->read(8192));
+    $data = yield \asyncRead($socket, 8192);
 
     $msg = "Received following request:\n\n$data";
     $msgLength = strlen($msg);
@@ -34,11 +32,11 @@ Connection: close\r
 $msg
 RES;
 
-    yield $socket->write($response);
-    yield $socket->close();
+    yield \asyncWrite($socket, $response);
+    yield \asyncClose($socket);
 }
 
 
-$coroutine = new Coroutine;
+$coroutine = new Coroutine();
 $coroutine->addTask(server(8000));
 $coroutine->run();

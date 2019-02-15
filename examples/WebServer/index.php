@@ -1,5 +1,9 @@
 <?php
 
+include 'vendor/autoload.php';
+
+use Async\Coroutine\Coroutine;
+
 // Let's ensure we have optimal performance. Set this simple thing
 date_default_timezone_set('America/NewYork');
 
@@ -9,28 +13,20 @@ echo "CO-ROUTINE EXAMPLE. WEBSERVER" . PHP_EOL;
 
 chdir(__DIR__);
 
-require_once('../../Coroutine/Coroutine.php');
-require_once('../../Coroutine/Task.php');
-require_once('../../Coroutine/Co.php');
-require_once('../../Coroutine/Call.php');
-require_once('../../Coroutine/CoSocket.php');
-
 echo "LIBS LOADED" . PHP_EOL;
 
 
 function server($port) {
     echo "SERVER LISTENING ON: $port" . PHP_EOL . PHP_EOL;;
 
-    $socket = @stream_socket_server("tcp://localhost:$port", $errNo, $errStr);
+    $socket = @\stream_socket_server("tcp://localhost:$port", $errNo, $errStr);
     if (!$socket) throw new \Exception($errStr, $errNo);
 
-    stream_set_blocking($socket, 0);
+    \stream_set_blocking($socket, 0);
 
-    $socket = new CoSocket($socket);
+    $socket = \asyncCreate($socket);
     while (true) {
-        yield coroutine(
-            handleClient(yield $socket->accept())
-        );
+        yield from \async('handleClient', yield \asyncAccept($socket) );
     }
 }
 
@@ -47,7 +43,7 @@ function loadTemplateFile($template, $vars){
 
 
 function handleClient($socket) {
-    $data = (yield $socket->read(8192));
+    $data = yield \asyncRead($socket, 8192);
     $output = "Received following request:\n\n$data";
 
     $input = explode(" ", $data);
@@ -111,8 +107,8 @@ Connection: close\r
 $output
 RES;*/
 
-    yield $socket->write($output);
-    yield $socket->close();
+    yield \asyncWrite($socket, $output);
+    yield \asyncClose($socket);
 }
 
 

@@ -1,6 +1,7 @@
 <?php
 
 use Async\Coroutine\Call;
+use Async\Coroutine\CoSocket;
 
 if (! function_exists('async')) {
 	function async(callable $asyncFunction, $args = null) 
@@ -48,5 +49,40 @@ if (! function_exists('asyncWriteStream')) {
 	function asyncWriteStream($socket)
 	{
 		return Call::waitForWrite($socket);
+	}	
+}
+
+if (! function_exists('asyncCreate')) {
+	function asyncCreate($socket)
+	{
+		return new CoSocket($socket);
+	}	
+}
+
+if (! function_exists('asyncAccept')) {
+	function asyncAccept($socket)
+	{
+		return $socket->accept();
+	}	
+}
+
+if (! function_exists('asyncRead')) {
+	function asyncRead($socket, $size)
+	{
+		return $socket->read($size);
+	}	
+}
+
+if (! function_exists('asyncWrite')) {
+	function asyncWrite($socket, $response)
+	{
+		return $socket->write($response);
+	}	
+}
+
+if (! function_exists('asyncClose')) {
+	function asyncClose($socket)
+	{
+		return $socket->close();
 	}	
 }

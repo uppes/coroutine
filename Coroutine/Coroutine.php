@@ -87,9 +87,7 @@ class Coroutine implements CoroutineInterface
 	
     public function hasCoroutines() 
 	{
-        return ! $this->taskQueue->isEmpty()
-            && ! empty($this->readStreams) 
-            && ! empty($this->writeStreams);
+        return (!$this->taskQueue->isEmpty() && !empty($this->readStreams) && !empty($this->writeStreams));
     }
 	
     public function run() 
@@ -161,8 +159,10 @@ class Coroutine implements CoroutineInterface
     protected function ioSocketPoll() 
 	{
         while (true) {
-            if (! $this->hasCoroutines()) {
-                $this->runStreams(0);
+            if ($this->taskQueue->isEmpty()
+                && empty($this->readStreams) 
+                && empty($this->writeStreams)
+            ) {
                 break;
             } else {
                 $streamWait = null;
@@ -181,13 +181,8 @@ class Coroutine implements CoroutineInterface
      */
     public function addReadStream($stream, $task)
     {
-        $this->waitForRead($stream, $task);
-    }
-
-    public function waitForRead($socket, $task) 
-	{
-        $this->readStreams[(int) $socket] = $socket;
-        $this->readCallbacks[(int) $socket] = $task;
+        $this->readStreams[(int) $stream] = $stream;
+        $this->readCallbacks[(int) $stream] = $task;
     }
 
     /**
@@ -195,13 +190,8 @@ class Coroutine implements CoroutineInterface
      */
     public function addWriteStream($stream, $task)
     {
-        $this->waitForWrite($stream, $task);
-    }
-
-    public function waitForWrite($socket, $task) 
-	{
-        $this->writeStreams[(int) $socket] = $socket;
-        $this->writeCallbacks[(int) $socket] = $task; 
+        $this->writeStreams[(int) $stream] = $stream;
+        $this->writeCallbacks[(int) $stream] = $task; 
     }
 
     /**

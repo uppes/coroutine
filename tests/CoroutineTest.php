@@ -117,6 +117,7 @@ class CoroutineTest extends TestCase
     public function childTask() 
     {
         $tid = (yield Call::taskId());
+        $this->assertNotNull($tid);
         while (true) {
             $this->task .= "Child task $tid still alive!\n";
             yield;
