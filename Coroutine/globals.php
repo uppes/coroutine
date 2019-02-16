@@ -122,3 +122,23 @@ if (! function_exists('closeSocket')) {
 		return $socket->close();
 	}	
 }
+
+if (! function_exists('asyncContents')) {
+	function asyncContents(string $fileUrl)
+	{
+		$ret = "";
+
+		$handle = \fopen($fileUrl, 'r');
+
+		\stream_set_blocking($handle, 0);
+
+		while (!feof($handle)) {
+			$ret .= \stream_get_contents($handle, 1);
+			yield;
+		}
+
+		\fclose($handle);
+
+		return $ret;
+	}
+}
