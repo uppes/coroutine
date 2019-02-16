@@ -54,11 +54,40 @@ if (! function_exists('asyncWriteStream')) {
 }
 
 if (! function_exists('createSocket')) {
-	function createSocket(int $port = 80000, $uri = "tcp://localhost:"): CoSocketInterface
+	function createSocket($uri = 8000): CoSocketInterface
 	{
-		$socket = @\stream_socket_server($uri.$port, $errNo, $errStr);
+		// a single port has been given => assume localhost
+        if ((string)(int)$uri === (string)$uri) {
+            $uri = '127.0.0.1:' . $uri;
+		}
+		
+        // assume default scheme if none has been given
+        if (\strpos($uri, '://') === false) {
+            $uri = 'tcp://' . $uri;
+		}
+		
+        // parse_url() does not accept null ports (random port assignment) => manually remove
+        if (\substr($uri, -2) === ':0') {
+            $parts = \parse_url(\substr($uri, 0, -2));
+            if ($parts) {
+                $parts['port'] = 0;
+            }
+        } else {
+            $parts = \parse_url($uri);
+		}
+		
+        // ensure URI contains TCP scheme, host and port
+        if (!$parts || !isset($parts['scheme'], $parts['host'], $parts['port']) || $parts['scheme'] !== 'tcp') {
+            throw new \InvalidArgumentException('Invalid URI "' . $uri . '" given');
+		}
+		
+        if (false === \filter_var(\trim($parts['host'], '[]'), \FILTER_VALIDATE_IP)) {
+            throw new \InvalidArgumentException('Given URI "' . $uri . '" does not contain a valid host IP');
+        }
+
+		$socket = @\stream_socket_server($uri, $errNo, $errStr);
 		if (!$socket)
-			throw new \Exception($errStr, $errNo);
+			throw new \RuntimeException('Failed to listen on "' . $uri . '": ' . $errStr, $errNo);
 	
 		\stream_set_blocking($socket, 0);
 
