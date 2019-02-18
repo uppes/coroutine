@@ -67,6 +67,8 @@ class CoSocket implements CoSocketInterface
             throw new \InvalidArgumentException('Given URI "' . $uri . '" does not contain a valid host IP');
         }
         
+       $context = \stream_context_create(['socket' => $context]);
+
         #create a stream socket on IP:Port
         $socket = @\stream_socket_server(
             $uri, 
@@ -86,7 +88,6 @@ class CoSocket implements CoSocketInterface
 
     public static function secure($uri = null, array $context = []) 
 	{
-        $context += self::$context;
         $context = \stream_context_create($context);
 
         if (! self::$isSecure) {
