@@ -90,6 +90,12 @@ class CoSocket implements CoSocketInterface
             throw new \RuntimeException('Failed to listen on "' . $uri . '": ' . $errStr, $errNo);
 
         if (self::$isSecure) {
+            // get crypto method from context options
+            $method = \STREAM_CRYPTO_METHOD_TLS_SERVER;
+            if (isset($context['ssl']['crypto_method'])) {
+                $method = $context['ssl']['crypto_method'];
+            }
+
             $error = null;
             \set_error_handler(function ($_, $errstr) use (&$error) {
                 $error = \str_replace(array("\r", "\n"), ' ', $errstr);
@@ -99,7 +105,7 @@ class CoSocket implements CoSocketInterface
                 }
             });
 
-            $result = \stream_socket_enable_crypto($socket, false, \STREAM_CRYPTO_METHOD_TLS_SERVER);
+            $result = \stream_socket_enable_crypto($socket, false, $method);
 
             \restore_error_handler();
 
