@@ -89,8 +89,34 @@ class CoSocket implements CoSocketInterface
         if (!$socket)
             throw new \RuntimeException('Failed to listen on "' . $uri . '": ' . $errStr, $errNo);
 
-        if (self::$isSecure) {        
-            \stream_socket_enable_crypto($socket, false);
+        if (self::$isSecure) {
+            $error = null;
+            \set_error_handler(function ($_, $errstr) use (&$error) {
+                $error = \str_replace(array("\r", "\n"), ' ', $errstr);
+                // remove useless function name from error message
+                if (($pos = \strpos($error, "): ")) !== false) {
+                    $error = \substr($error, $pos + 3);
+                }
+            });
+
+            $result = \stream_socket_enable_crypto($socket, false, \STREAM_CRYPTO_METHOD_TLS_SERVER);
+
+            \restore_error_handler();
+
+            if (false === $result) {
+                if (\feof($socket) || $error === null) {
+                    // EOF or failed without error => connection closed during handshake
+                    throw new \UnexpectedValueException(
+                        'Connection lost during TLS handshake',
+                        \defined('SOCKET_ECONNRESET') ? \SOCKET_ECONNRESET : 0
+                    );
+                } else {
+                    // handshake failed with error message
+                    throw new \UnexpectedValueException(
+                        'Unable to complete TLS handshake: ' . $error
+                    );
+                }
+            }
         }
 
 		\stream_set_blocking($socket, 0);
