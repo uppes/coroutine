@@ -67,16 +67,6 @@ class CoSocket implements CoSocketInterface
             throw new \InvalidArgumentException('Given URI "' . $uri . '" does not contain a valid host IP');
         }
         
-        $context += self::$context;
-        $context = \stream_context_create($context);
-        if (self::$isSecure) {
-            #Setup the SSL Options
-            \stream_context_set_option($context, 'ssl', 'local_cert', self::$privatekey);		// Our SSL Cert in PEM format
-            \stream_context_set_option($context, 'ssl', 'passphrase', null);	// Private key Password
-            \stream_context_set_option($context, 'ssl', 'allow_self_signed', true);
-            \stream_context_set_option($context, 'ssl', 'verify_peer', false);            
-        }
-
         #create a stream socket on IP:Port
         $socket = @\stream_socket_server(
             $uri, 
@@ -89,45 +79,66 @@ class CoSocket implements CoSocketInterface
         if (!$socket)
             throw new \RuntimeException('Failed to listen on "' . $uri . '": ' . $errStr, $errNo);
 
-        if (self::$isSecure) {
-            // get crypto method from context options
-            $method = \STREAM_CRYPTO_METHOD_TLS_SERVER;
-            if (isset($context['ssl']['crypto_method'])) {
-                $method = $context['ssl']['crypto_method'];
+		\stream_set_blocking($socket, 0);
+
+		return new self($socket);
+    }
+
+    public static function secure($uri = null, array $context = []) 
+	{
+        $context += self::$context;
+        $context = \stream_context_create($context);
+
+        if (! self::$isSecure) {
+            CoSocket::createCert();
+        }
+
+        #Setup the SSL Options
+        \stream_context_set_option($context, 'ssl', 'local_cert', self::$privatekey);		// Our SSL Cert in PEM format
+        \stream_context_set_option($context, 'ssl', 'passphrase', null);	// Private key Password
+        \stream_context_set_option($context, 'ssl', 'allow_self_signed', true);
+        \stream_context_set_option($context, 'ssl', 'verify_peer', false);
+
+        #create a stream socket on IP:Port
+        $socket = CoSocket::create($uri, $context);
+
+        // get crypto method from context options
+        $method = \STREAM_CRYPTO_METHOD_TLS_SERVER;
+        if (isset($context['ssl']['crypto_method'])) {
+            $method = $context['ssl']['crypto_method'];
+        }
+
+        $error = null;
+        \set_error_handler(function ($_, $errstr) use (&$error) {
+            $error = \str_replace(array("\r", "\n"), ' ', $errstr);
+            // remove useless function name from error message
+            if (($pos = \strpos($error, "): ")) !== false) {
+                $error = \substr($error, $pos + 3);
             }
+        });
 
-            $error = null;
-            \set_error_handler(function ($_, $errstr) use (&$error) {
-                $error = \str_replace(array("\r", "\n"), ' ', $errstr);
-                // remove useless function name from error message
-                if (($pos = \strpos($error, "): ")) !== false) {
-                    $error = \substr($error, $pos + 3);
-                }
-            });
+        $result = \stream_socket_enable_crypto($socket, false, $method);
 
-            $result = \stream_socket_enable_crypto($socket, false, $method);
+        \restore_error_handler();
 
-            \restore_error_handler();
-
-            if (false === $result) {
-                if (\feof($socket) || $error === null) {
-                    // EOF or failed without error => connection closed during handshake
-                    throw new \UnexpectedValueException(
-                        'Connection lost during TLS handshake',
-                        \defined('SOCKET_ECONNRESET') ? \SOCKET_ECONNRESET : 0
-                    );
-                } else {
-                    // handshake failed with error message
-                    throw new \UnexpectedValueException(
-                        'Unable to complete TLS handshake: ' . $error
-                    );
-                }
+        if (false === $result) {
+            if (\feof($socket) || $error === null) {
+                // EOF or failed without error => connection closed during handshake
+                throw new \UnexpectedValueException(
+                    'Connection lost during TLS handshake',
+                    \defined('SOCKET_ECONNRESET') ? \SOCKET_ECONNRESET : 0
+                );
+            } else {
+                // handshake failed with error message
+                throw new \UnexpectedValueException(
+                    'Unable to complete TLS handshake: ' . $error
+                );
             }
         }
 
 		\stream_set_blocking($socket, 0);
 
-		return new self($socket);
+		return $socket;
     }
 
     public static function createCert(
