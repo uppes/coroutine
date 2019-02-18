@@ -19,39 +19,35 @@ echo "LIBS LOADED" . PHP_EOL;
 function server($port) {
     echo "SERVER LISTENING ON: $port" . PHP_EOL . PHP_EOL;;
 
-    $socket = @\stream_socket_server("tcp://localhost:$port", $errNo, $errStr);
-    if (!$socket) throw new \Exception($errStr, $errNo);
+    $socket = \createSocket($port);
 
-    \stream_set_blocking($socket, 0);
-
-    $socket = \asyncCreate($socket);
     while (true) {
-        yield from \async('handleClient', yield \asyncAccept($socket) );
+        yield from \async('handleClient', yield \acceptSocket($socket) );
     }
 }
 
 
 function loadTemplateFile($template, $vars){
-    extract($vars, EXTR_OVERWRITE);
+    \extract($vars, \EXTR_OVERWRITE);
     $output = '';
-    ob_start();
+    \ob_start();
     require $template;
-    $output = ob_get_contents();
-    ob_end_clean();
+    $output = \ob_get_contents();
+    \ob_end_clean();
     return $output;
 }
 
 
 function handleClient($socket) {
-    $data = yield \asyncRead($socket, 8192);
+    $data = yield \readSocket($socket, 8192);
     $output = "Received following request:\n\n$data";
 
-    $input = explode(" ", $data);
+    $input = \explode(" ", $data);
     if (empty($input[1])) {
         $input[1] = "index.html";
     }
     $input = $input[1];
-    $fileinfo = pathinfo($input);
+    $fileinfo = \pathinfo($input);
     $mime = "text/html";
 
     if (!empty($fileinfo['extension'])) {
@@ -107,8 +103,8 @@ Connection: close\r
 $output
 RES;*/
 
-    yield \asyncWrite($socket, $output);
-    yield \asyncClose($socket);
+    yield \writeSocket($socket, $output);
+    yield \closeSocket($socket);
 }
 
 
