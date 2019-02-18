@@ -104,8 +104,19 @@ if (! function_exists('asyncContents')) {
 
 		\stream_set_blocking($handle, 0);
 
-		while (!feof($handle)) {
-			$ret .= \stream_get_contents($handle, 1);
+		while (true) {			
+			$starttime = \microtime(true);
+			$new = \stream_get_contents($handle, 1);
+			$endtime = \microtime(true);
+			if (\is_string($new) && \strlen($new) >= 1) {
+				$ret .= $new;
+			}
+			$time_used = $endtime - $starttime;
+			// var_dump('time_used:',$time_used);
+			if (($time_used >= $timeout_seconds) || ! \is_string($new) ||
+					 (\is_string($new) && \strlen($new) < 1)) {
+				break;
+			}        
 			yield;
 		}
 
