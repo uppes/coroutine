@@ -104,6 +104,7 @@ class CoSocket implements CoSocketInterface
         #create a stream socket on IP:Port
         $socket = CoSocket::create($uri, $context);
 
+        \stream_set_blocking($socket, 1);
         // get crypto method from context options
         $method = \STREAM_CRYPTO_METHOD_TLS_SERVER;
         if (isset($context['ssl']['crypto_method'])) {
@@ -138,7 +139,7 @@ class CoSocket implements CoSocketInterface
             }
         }
 
-		\stream_set_blocking($socket, 0);
+        \stream_set_blocking($socket, 0);
 
 		return $socket;
     }
