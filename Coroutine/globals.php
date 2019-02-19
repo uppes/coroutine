@@ -96,7 +96,7 @@ if (! function_exists('closeSocket')) {
 }
 
 if (! function_exists('asyncContents')) {
-	function asyncContents(string $fileUrl)
+	function asyncContents(string $fileUrl, float $timeout_seconds = 0.5)
 	{
 		$ret = "";
 
@@ -105,14 +105,13 @@ if (! function_exists('asyncContents')) {
 		\stream_set_blocking($handle, 0);
 
 		while (true) {			
-			$starttime = \microtime(true);
+			$startTime = \microtime(true);
 			$new = \stream_get_contents($handle, 1);
-			$endtime = \microtime(true);
+			$endTime = \microtime(true);
 			if (\is_string($new) && \strlen($new) >= 1) {
 				$ret .= $new;
 			}
-			$time_used = $endtime - $starttime;
-			// var_dump('time_used:',$time_used);
+			$time_used = $endTime - $startTime;
 			if (($time_used >= $timeout_seconds) || ! \is_string($new) ||
 					 (\is_string($new) && \strlen($new) < 1)) {
 				break;
