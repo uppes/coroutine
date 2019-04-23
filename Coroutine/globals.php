@@ -54,9 +54,9 @@ if (! function_exists('asyncWriteStream')) {
 }
 
 if (! function_exists('createSecureSocket')) {
-	function createSecureSocket($uri = null, array $context = []) : CoSocketInterface
+	function createSecureSocket($uri = null, array $options = []) : CoSocketInterface
 	{
-		return CoSocket::secure($uri, $context);
+		return CoSocket::secure($uri, $options);
 	}
 }
 
