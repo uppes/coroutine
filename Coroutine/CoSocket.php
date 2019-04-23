@@ -10,7 +10,7 @@ class CoSocket implements CoSocketInterface
 {
     protected $socket;
     protected static $isSecure = false;
-    protected static $privatekey = 'privkey.pem';
+    protected static $privatekey = 'privatekey.pem';
     protected static $context = ["commonName" => "localhost"];
 
     public function __construct($socket) 
@@ -36,7 +36,7 @@ class CoSocket implements CoSocketInterface
      * @throws InvalidArgumentException if the listening address is invalid
      * @throws RuntimeException if listening on this address fails (already in use etc.)
      */
-    public static function create($uri = null, array $context = []) 
+    public static function create($uri = null, $context = []) 
 	{
 		// a single port has been given => assume localhost
         if ((string)(int)$uri === (string)$uri) {
@@ -87,9 +87,9 @@ class CoSocket implements CoSocketInterface
 		return new self($socket);
     }
 
-    public static function secure($uri = null, array $context = []) 
+    public static function secure($uri = null, array $options = []) 
 	{
-        $context = \stream_context_create($context);
+        $context = \stream_context_create($options);
 
         if (! self::$isSecure) {
             CoSocket::createCert();
@@ -144,39 +144,69 @@ class CoSocket implements CoSocketInterface
 		return $socket;
     }
 
+    /**
+     * Creates self signed certificate
+     * 
+     * @param string $privatekeyFile
+     * @param string $certificateFile
+     * @param string $signingFile
+     * // param string $caCertificate
+     * @param string $ssl_path
+     * @param array $details - certificate details 
+     * 
+     * Example: 
+     *  array $details = [
+     *      "countryName" =>  '',
+     *      "stateOrProvinceName" => '',
+     *      "localityName" => '',
+     *      "organizationName" => '',
+     *      "organizationalUnitName" => '',
+     *      "commonName" => '',
+     *      "emailAddress" => ''
+     *  ];
+     * 
+     * @return string certificate path
+     */
     public static function createCert(
-        string $pem_file = 'privkey.pem', 
-        array $pem_dn = ["commonName" => "localhost"]) 
+        string $privatekeyFile = 'privatekey.pem', 
+        string $certificateFile = 'certificate.crt', 
+        string $signingFile = 'certificate.csr', 
+        // string $caCertificate = null, 
+        string $ssl_path = null, 
+        array $details = ["commonName" => "localhost"]
+    ) 
     {
-        self::$privatekey = $pem_file;
-        self::$context = $pem_dn;
-        self::$isSecure = true;
+        if (empty($ssl_path)) {
+            $ssl_path = \getcwd();
+            $ssl_path = \preg_replace('/\\\/', \DIRECTORY_SEPARATOR, $ssl_path). \DIRECTORY_SEPARATOR;
+        } else
+            $ssl_path = $ssl_path. \DIRECTORY_SEPARATOR;
 
-        #create ssl cert for this scripts life.
-        //== Determine path
-        $ssl_path = \getcwd();
-        $ssl_path = \preg_replace('/\\\/', \DIRECTORY_SEPARATOR, $ssl_path);
+        self::$privatekey = $privatekeyFile;
+        self::$context = $details;
+        self::$isSecure = true;
         
-        $Configs = array("config" => $ssl_path. \DIRECTORY_SEPARATOR .'openssl.cnf');
+        $opensslConfig = array("config" => $ssl_path.'openssl.cnf');
         
-        #Create private key
-        $privkey = \openssl_pkey_new($Configs);
+        // Generate a new private (and public) key pair
+        $privatekey = \openssl_pkey_new($opensslConfig);
             
-        #Create and sign CSR
-        $cert    = \openssl_csr_new($pem_dn, $privkey, $Configs);
-        $cert    = \openssl_csr_sign($cert, null, $privkey, 365, $Configs);
-            
-        \openssl_pkey_export_to_file($privkey, $pem_file, null, $Configs);
-        \openssl_x509_export_to_file($cert, "server.crt",  false );
+        // Generate a certificate signing request
+        $csr = \openssl_csr_new($details, $privatekey, $opensslConfig);
+    
+        // Create a self-signed certificate valid for 365 days
+        $sslcert = \openssl_csr_sign($csr, null, $privatekey, 365, $opensslConfig);
+    
+        // Create key file. Note no passphrase
+        \openssl_pkey_export_to_file($privatekey, $ssl_path.$privatekeyFile, null, $opensslConfig);
+    
+        // Create server certificate 
+        \openssl_x509_export_to_file($sslcert, $ssl_path.$certificateFile, false);
         
-        #Generate PEM file
-        //$pem = array();
-        //openssl_x509_export($cert, $pem[0]);
-        //openssl_pkey_export($privkey, $pem[1], null);
-        //$pem = implode($pem);
-        #Save PEM file
-        //file_put_contents($pem_file, $pem);
-        //chmod($pem_file, 0600);
+        // Create a signing request file 
+        \openssl_csr_export_to_file($csr, $ssl_path.$signingFile);
+
+        return $ssl_path;
     }
         
     public function address()

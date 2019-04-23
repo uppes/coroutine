@@ -13,7 +13,7 @@ dir			= .
 [ req ]
 default_bits            = 1024
 default_md              = sha1
-default_keyfile         = privkey.pem
+default_keyfile         = privatekey.pem
 distinguished_name      = req_distinguished_name
 x509_extensions         = v3_ca
 string_mask             = nombstr

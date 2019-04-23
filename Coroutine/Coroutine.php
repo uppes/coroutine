@@ -5,7 +5,6 @@ namespace Async\Coroutine;
 use Async\Coroutine\Call;
 use Async\Coroutine\Task;
 use Async\Coroutine\TaskInterface;
-use Async\Coroutine\AbstractCoroutine;
 use Async\Coroutine\ReturnValueCoroutine;
 use Async\Coroutine\PlainValueCoroutine;
 use Async\Coroutine\CoroutineInterface;

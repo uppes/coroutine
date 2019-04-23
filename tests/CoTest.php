@@ -11,10 +11,10 @@ class CoTest extends TestCase
      * @dataProvider testNoSendProvider
      */
     public function testNoSend(
-        $coroutineFactory, $expectedArray, $reindex = false
+        $coroutineFactory, $expectedArray, $reIndex = false
     ) {
         $coroutine = Coroutine::create($coroutineFactory());
-        $resultArray = iterator_to_array($coroutine, !$reindex);
+        $resultArray = iterator_to_array($coroutine, !$reIndex);
         $this->assertEquals($expectedArray, $resultArray);
     }
 
@@ -225,7 +225,7 @@ class CoTest extends TestCase
         }
 
         if ($shouldThrow !== $hasThrown) {
-            $this->fail('Throwiness does not match');
+            $this->fail('Throws does not match');
         }
 
         $this->assertEquals($expectedArray, $resultArray);

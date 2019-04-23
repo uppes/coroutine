@@ -72,7 +72,7 @@ class CoroutineTest extends TestCase
 
     public function task($max) 
     {
-        $tid = (yield Call::taskId()); // <-- here's the syscall!
+        $tid = (yield Call::taskId()); // <-- here's the system call!
         for ($i = 1; $i <= $max; ++$i) {
             $this->task .= "This is task $tid iteration $i.\n";
             yield;

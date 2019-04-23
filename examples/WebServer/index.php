@@ -5,7 +5,7 @@ include 'vendor/autoload.php';
 use Async\Coroutine\Coroutine;
 
 // Let's ensure we have optimal performance. Set this simple thing
-date_default_timezone_set('America/NewYork');
+date_default_timezone_set('America/New_York');
 
 error_reporting(-1);
 ini_set("display_errors", 1);
@@ -20,7 +20,6 @@ function server($port) {
     echo "SERVER LISTENING ON: $port" . PHP_EOL . PHP_EOL;;
 
     $socket = \createSocket($port);
-
     while (true) {
         yield from \async('handleClient', yield \acceptSocket($socket) );
     }
@@ -74,7 +73,7 @@ function handleClient($socket) {
         $input = "/test.php";
     }
 
-    $input = ".$input";
+    $input = '.'.$input;
 
     if (file_exists($input) && is_readable($input)) {
         print "Serving $input\n";
