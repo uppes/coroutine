@@ -19,7 +19,8 @@ echo "LIBS LOADED" . PHP_EOL;
 function server($port) {
     echo "SERVER LISTENING ON: $port" . PHP_EOL . PHP_EOL;;
 
-    $socket = \createSocket($port);
+    $socket = \createSecureSocket($port);
+    //$socket = \createSocket($port);
     while (true) {
         yield from \async('handleClient', yield \acceptSocket($socket) );
     }

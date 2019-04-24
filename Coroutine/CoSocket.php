@@ -9,6 +9,7 @@ use Async\Coroutine\CoSocketInterface;
 class CoSocket implements CoSocketInterface
 {
     protected $socket;
+    protected static $caPath = \DIRECTORY_SEPARATOR;
     protected static $isSecure = false;
     protected static $privatekey = 'privatekey.pem';
     protected static $context = ["commonName" => "localhost"];
@@ -38,15 +39,15 @@ class CoSocket implements CoSocketInterface
      */
     public static function create($uri = null, $context = []) 
 	{
-		// a single port has been given => assume localhost
+        // a single port has been given => assume localhost
         if ((string)(int)$uri === (string)$uri) {
             $uri = '127.0.0.1:' . $uri;
-		}
-		
+        }
+
         // assume default scheme if none has been given
         if (\strpos($uri, '://') === false) {
-            $uri = 'tcp://' . $uri;
-		}
+            $uri = (self::$isSecure) ? 'tls://' . $uri: 'tcp://' . $uri;
+        }
 		
         // parse_url() does not accept null ports (random port assignment) => manually remove
         if (\substr($uri, -2) === ':0') {
@@ -59,7 +60,9 @@ class CoSocket implements CoSocketInterface
 		}
 		
         // ensure URI contains TCP scheme, host and port
-        if (!$parts || !isset($parts['scheme'], $parts['host'], $parts['port']) || $parts['scheme'] !== 'tcp') {
+        if (!$parts || !isset($parts['scheme'], $parts['host'], $parts['port']) 
+            || !in_array($parts['scheme'], ['tls', 'tcp', 'ssl', 'tlsv1.2']))
+         {
             throw new \InvalidArgumentException('Invalid URI "' . $uri . '" given');
 		}
 		
@@ -67,8 +70,8 @@ class CoSocket implements CoSocketInterface
             throw new \InvalidArgumentException('Given URI "' . $uri . '" does not contain a valid host IP');
         }
         
-        if (! is_resource($context))
-            $context = \stream_context_create(['socket' => $context]);
+        if (empty($context))
+            $context = \stream_context_create($context);
 
         #create a stream socket on IP:Port
         $socket = @\stream_socket_server(
@@ -84,10 +87,11 @@ class CoSocket implements CoSocketInterface
 
 		\stream_set_blocking($socket, 0);
 
-		return new self($socket);
+		return (self::$isSecure) ? $socket : new self($socket);
     }
 
-    public static function secure($uri = null, array $options = []) 
+    public static function secure($uri = null, 
+        array $options = ['ssl' => ['ciphers' => 'DHE-RSA-AES256-SHA:LONG-CIPHER']]) 
 	{
         $context = \stream_context_create($options);
 
@@ -96,20 +100,16 @@ class CoSocket implements CoSocketInterface
         }
 
         #Setup the SSL Options
-        \stream_context_set_option($context, 'ssl', 'local_cert', self::$privatekey);		// Our SSL Cert in PEM format
+        \stream_context_set_option($context, 'ssl', 'local_cert', '.'.self::$caPath.self::$privatekey);		// Our SSL Cert in PEM format
         \stream_context_set_option($context, 'ssl', 'passphrase', null);	// Private key Password
         \stream_context_set_option($context, 'ssl', 'allow_self_signed', true);
         \stream_context_set_option($context, 'ssl', 'verify_peer', false);
-
+        
         #create a stream socket on IP:Port
         $socket = CoSocket::create($uri, $context);
 
-        \stream_set_blocking($socket, 1);
         // get crypto method from context options
-        $method = \STREAM_CRYPTO_METHOD_TLS_SERVER;
-        if (isset($context['ssl']['crypto_method'])) {
-            $method = $context['ssl']['crypto_method'];
-        }
+        $method = \STREAM_CRYPTO_METHOD_TLS_SERVER | \STREAM_CRYPTO_METHOD_TLSv1_0_SERVER | \STREAM_CRYPTO_METHOD_TLSv1_1_SERVER | \STREAM_CRYPTO_METHOD_TLSv1_2_SERVER;
 
         $error = null;
         \set_error_handler(function ($_, $errstr) use (&$error) {
@@ -120,6 +120,7 @@ class CoSocket implements CoSocketInterface
             }
         });
 
+        \stream_set_blocking($socket, 1);
         $result = \stream_socket_enable_crypto($socket, false, $method);
 
         \restore_error_handler();
@@ -141,7 +142,7 @@ class CoSocket implements CoSocketInterface
 
         \stream_set_blocking($socket, 0);
 
-		return $socket;
+		return new self($socket);
     }
 
     /**
@@ -164,13 +165,11 @@ class CoSocket implements CoSocketInterface
      *      "commonName" => '',
      *      "emailAddress" => ''
      *  ];
-     * 
-     * @return string certificate path
      */
     public static function createCert(
         string $privatekeyFile = 'privatekey.pem', 
         string $certificateFile = 'certificate.crt', 
-        string $signingFile = 'certificate.csr', 
+        string $signingFile = 'signing.csr', 
         // string $caCertificate = null, 
         string $ssl_path = null, 
         array $details = ["commonName" => "localhost"]
@@ -184,6 +183,7 @@ class CoSocket implements CoSocketInterface
 
         self::$privatekey = $privatekeyFile;
         self::$context = $details;
+        self::$caPath = $ssl_path;
         self::$isSecure = true;
         
         $opensslConfig = array("config" => $ssl_path.'openssl.cnf');
