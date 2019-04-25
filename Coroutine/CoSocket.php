@@ -12,6 +12,7 @@ class CoSocket implements CoSocketInterface
     protected static $caPath = \DIRECTORY_SEPARATOR;
     protected static $isSecure = false;
     protected static $privatekey = 'privatekey.pem';
+    protected static $certificate = 'certificate.crt';
     protected static $context = [];
     protected static $method = null;
 
@@ -92,7 +93,7 @@ class CoSocket implements CoSocketInterface
     }
 
     public static function secure($uri = null, 
-        array $options = []) 
+        array $options = ['ssl' => ['ciphers' => 'DHE-RSA-AES256-SHA:LONG-CIPHER',],]) 
 	{
         $context = \stream_context_create($options);
 
@@ -100,20 +101,21 @@ class CoSocket implements CoSocketInterface
             CoSocket::createCert();
         }
 
-        #Setup the SSL Options
-        \stream_context_set_option($context, 'ssl', 'local_cert', '.'.self::$caPath.self::$privatekey);		// Our SSL Cert in PEM format
+        #Setup the SSL Options 
+        \stream_context_set_option($context, 'ssl', 'local_cert', '.'.self::$caPath.self::$certificate); // Our SSL Cert in PEM format
+        \stream_context_set_option($context, 'ssl', 'local_pk', '.'.self::$caPath.self::$privatekey); // Our RSA key in PEM format
         \stream_context_set_option($context, 'ssl', 'passphrase', null);	// Private key Password
         \stream_context_set_option($context, 'ssl', 'allow_self_signed', true);
         \stream_context_set_option($context, 'ssl', 'verify_peer', false);
-        \stream_context_set_option($context, 'ssl', 'ciphers', 'DHE-RSA-AES256-SHA:LONG-CIPHER');
         
         // get crypto method from context options
-        $method = \STREAM_CRYPTO_METHOD_TLS_SERVER | \STREAM_CRYPTO_METHOD_TLSv1_0_SERVER | \STREAM_CRYPTO_METHOD_TLSv1_1_SERVER | \STREAM_CRYPTO_METHOD_TLSv1_2_SERVER;
+        $method = \STREAM_CRYPTO_METHOD_TLS_SERVER;
         self::$method = $method;
 
         #create a stream socket on IP:Port
         self::$context = $context;
         $socket = CoSocket::create($uri, $context);
+        \stream_socket_enable_crypto($socket, false);
 
 		return new self($socket);
     }
@@ -153,6 +155,7 @@ class CoSocket implements CoSocketInterface
             $ssl_path = $ssl_path. \DIRECTORY_SEPARATOR;
 
         self::$privatekey = $privatekeyFile;
+        self::$certificate = $certificateFile;
         self::$caPath = $ssl_path;
         self::$isSecure = true;
         
@@ -225,7 +228,7 @@ class CoSocket implements CoSocketInterface
                 );
             }
         }
-
+ 
         return $socket;
     }
 

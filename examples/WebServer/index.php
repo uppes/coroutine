@@ -19,8 +19,8 @@ echo "LIBS LOADED" . PHP_EOL;
 function server($port) {
     echo "SERVER LISTENING ON: $port" . PHP_EOL . PHP_EOL;;
 
-    $socket = \createSecureSocket($port);
-    //$socket = \createSocket($port);
+    //$socket = \createSecureSocket($port);
+    $socket = \createSocket($port);
     while (true) {
         yield from \async('handleClient', yield \acceptSocket($socket) );
     }
@@ -40,6 +40,10 @@ function loadTemplateFile($template, $vars){
 
 function handleClient($socket) {
     $data = yield \readSocket($socket, 8192);
+    
+    $ip = \socketAddress($socket);
+    echo "New connection from " . $ip."\n";
+    
     $output = "Received following request:\n\n$data";
 
     $input = \explode(" ", $data);
@@ -90,18 +94,6 @@ function handleClient($socket) {
         $contents = "The file you requested does not exist. Sorry!";
         $output = "HTTP/1.0 404 OBJECT NOT FOUND\r\nServer: APatchyServer\r\nConnection: close\r\nContent-Type: text/html\r\n\r\n$contents";
     }
-
-    //$output = "Hello World!" . PHP_EOL;
-    $msgLength = strlen($output);
-
-/*    $response = <<<RES
-HTTP/1.1 200 OK\r
-Content-Type: text/plain\r
-Content-Length: $msgLength\r
-Connection: close\r
-\r
-$output
-RES;*/
 
     yield \writeSocket($socket, $output);
     yield \closeSocket($socket);

@@ -95,6 +95,13 @@ if (! function_exists('closeSocket')) {
 	}	
 }
 
+if (! function_exists('socketAddress')) {
+	function socketAddress(CoSocketInterface $socket)
+	{
+		return $socket->address();
+	}	
+}
+
 if (! function_exists('asyncContents')) {
 	function asyncContents(string $fileUrl, float $timeout_seconds = 0.5)
 	{
