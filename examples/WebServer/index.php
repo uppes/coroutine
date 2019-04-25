@@ -19,8 +19,8 @@ echo "LIBS LOADED" . PHP_EOL;
 function server($port) {
     echo "SERVER LISTENING ON: $port" . PHP_EOL . PHP_EOL;;
 
-    //$socket = \createSecureSocket($port);
-    $socket = \createSocket($port);
+    $socket = \createSecureSocket($port);
+    //$socket = \createSocket($port);
     while (true) {
         yield from \async('handleClient', yield \acceptSocket($socket) );
     }
@@ -41,8 +41,8 @@ function loadTemplateFile($template, $vars){
 function handleClient($socket) {
     $data = yield \readSocket($socket, 8192);
     
-    $ip = \socketAddress($socket);
-    echo "New connection from " . $ip."\n";
+    $ip = \remoteAddress($socket);
+    print "New connection from " . $ip."\n";
     
     $output = "Received following request:\n\n$data";
 

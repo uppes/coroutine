@@ -54,9 +54,16 @@ if (! function_exists('asyncWriteStream')) {
 }
 
 if (! function_exists('createSecureSocket')) {
-	function createSecureSocket($uri = null, array $options = []) : CoSocketInterface
+	function createSecureSocket(
+		$uri = null, 
+		array $options = [],	
+		string $privatekeyFile = 'privatekey.pem', 
+		string $certificateFile = 'certificate.crt', 
+		string $signingFile = 'signing.csr',
+		string $ssl_path = null, 
+		array $details = ["commonName" => "localhost"]) : CoSocketInterface
 	{
-		return CoSocket::secure($uri, $options);
+		return CoSocket::secure($uri, $options, $privatekeyFile, $certificateFile, $signingFile, $ssl_path, $details);
 	}
 }
 
@@ -96,7 +103,7 @@ if (! function_exists('closeSocket')) {
 }
 
 if (! function_exists('socketAddress')) {
-	function socketAddress(CoSocketInterface $socket)
+	function remoteAddress(CoSocketInterface $socket)
 	{
 		return $socket->address();
 	}	

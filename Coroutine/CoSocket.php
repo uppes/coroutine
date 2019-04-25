@@ -9,11 +9,12 @@ use Async\Coroutine\CoSocketInterface;
 class CoSocket implements CoSocketInterface
 {
     protected $socket;
+    protected $secure;
+    protected static $remote = null;
     protected static $caPath = \DIRECTORY_SEPARATOR;
     protected static $isSecure = false;
     protected static $privatekey = 'privatekey.pem';
     protected static $certificate = 'certificate.crt';
-    protected static $context = [];
     protected static $method = null;
 
     public function __construct($socket) 
@@ -81,7 +82,7 @@ class CoSocket implements CoSocketInterface
             $errNo, 
             $errStr,
             \STREAM_SERVER_BIND | \STREAM_SERVER_LISTEN, 
-            \stream_context_create(['socket' => $context])
+            $context
         );
 
         if (!$socket)
@@ -92,28 +93,35 @@ class CoSocket implements CoSocketInterface
 		return (self::$isSecure) ? $socket : new self($socket);
     }
 
-    public static function secure($uri = null, 
-        array $options = ['ssl' => ['ciphers' => 'DHE-RSA-AES256-SHA:LONG-CIPHER',],]) 
+    public static function secure(
+        $uri = null, 
+        array $options = [],
+        string $privatekeyFile = 'privatekey.pem', 
+        string $certificateFile = 'certificate.crt', 
+        string $signingFile = 'signing.csr',
+        string $ssl_path = null, 
+        array $details = ["commonName" => "localhost"])
 	{
         $context = \stream_context_create($options);
 
         if (! self::$isSecure) {
-            CoSocket::createCert();
+            CoSocket::createCert($privatekeyFile, $certificateFile, $signingFile, $ssl_path, $details);
         }
 
         #Setup the SSL Options 
-        \stream_context_set_option($context, 'ssl', 'local_cert', '.'.self::$caPath.self::$certificate); // Our SSL Cert in PEM format
-        \stream_context_set_option($context, 'ssl', 'local_pk', '.'.self::$caPath.self::$privatekey); // Our RSA key in PEM format
+        \stream_context_set_option($context, 'ssl', 'local_cert', self::$certificate); // Our SSL Cert in PEM format
+        \stream_context_set_option($context, 'ssl', 'local_pk', self::$privatekey); // Our RSA key in PEM format
         \stream_context_set_option($context, 'ssl', 'passphrase', null);	// Private key Password
         \stream_context_set_option($context, 'ssl', 'allow_self_signed', true);
         \stream_context_set_option($context, 'ssl', 'verify_peer', false);
-        
+        \stream_context_set_option($context, 'ssl', 'verify_peer_name', false);
+        \stream_context_set_option($context, 'ssl', 'capath', '.'.self::$caPath);
+
         // get crypto method from context options
-        $method = \STREAM_CRYPTO_METHOD_TLS_SERVER;
+        $method = \STREAM_CRYPTO_METHOD_TLSv1_2_SERVER;
         self::$method = $method;
 
         #create a stream socket on IP:Port
-        self::$context = $context;
         $socket = CoSocket::create($uri, $context);
         \stream_socket_enable_crypto($socket, false);
 
@@ -159,44 +167,32 @@ class CoSocket implements CoSocketInterface
         self::$caPath = $ssl_path;
         self::$isSecure = true;
         
-        $opensslConfig = array("config" => $ssl_path.'openssl.cnf');
+        if (! \file_exists($ssl_path.$privatekeyFile)) {
+            $opensslConfig = array("config" => $ssl_path.'openssl.cnf');
+
+            // Generate a new private (and public) key pair
+            $privatekey = \openssl_pkey_new($opensslConfig);
+                
+            // Generate a certificate signing request
+            $csr = \openssl_csr_new($details, $privatekey, $opensslConfig);
         
-        // Generate a new private (and public) key pair
-        $privatekey = \openssl_pkey_new($opensslConfig);
+            // Create a self-signed certificate valid for 365 days
+            $sslcert = \openssl_csr_sign($csr, null, $privatekey, 365, $opensslConfig);
+        
+            // Create key file. Note no passphrase
+            \openssl_pkey_export_to_file($privatekey, $ssl_path.$privatekeyFile, null, $opensslConfig);
+        
+            // Create server certificate 
+            \openssl_x509_export_to_file($sslcert, $ssl_path.$certificateFile, false);
             
-        // Generate a certificate signing request
-        $csr = \openssl_csr_new($details, $privatekey, $opensslConfig);
-    
-        // Create a self-signed certificate valid for 365 days
-        $sslcert = \openssl_csr_sign($csr, null, $privatekey, 365, $opensslConfig);
-    
-        // Create key file. Note no passphrase
-        \openssl_pkey_export_to_file($privatekey, $ssl_path.$privatekeyFile, null, $opensslConfig);
-    
-        // Create server certificate 
-        \openssl_x509_export_to_file($sslcert, $ssl_path.$certificateFile, false);
-        
-        // Create a signing request file 
-        \openssl_csr_export_to_file($csr, $ssl_path.$signingFile);
+            // Create a signing request file 
+            \openssl_csr_export_to_file($csr, $ssl_path.$signingFile);
+        }
     }
         
     public function address()
     {
-        if (!\is_resource($this->socket)) {
-            return null;
-        }
-
-        $address = \stream_socket_get_name($this->socket, false);
-
-        // check if this is an IPv6 address which includes multiple colons but no square brackets
-        $pos = \strrpos($address, ':');
-
-        if ($pos !== false && \strpos($address, ':') < $pos && \substr($address, 0, 1) !== '[') {
-            $port = \substr($address, $pos + 1);
-            $address = '[' . \substr($address, 0, $pos) . ']:' . $port;
-        }
-
-        return 'tcp://' . $address;
+        return self::$remote;
     }
     
     public function acceptSecure($socket) 
@@ -219,13 +215,10 @@ class CoSocket implements CoSocketInterface
         if (false === $result) {
             if (\feof($socket) || $error === null) {
                 // EOF or failed without error => connection closed during handshake
-                throw new \UnexpectedValueException(
-                    'Connection lost during TLS handshake');
+                print 'Connection lost during TLS handshake with: '. self::$remote;
             } else {
                 // handshake failed with error message
-                throw new \UnexpectedValueException(
-                    'Unable to complete TLS handshake: ' . $error
-                );
+                print 'Unable to complete TLS handshake: ' . $error;
             }
         }
  
@@ -237,11 +230,11 @@ class CoSocket implements CoSocketInterface
         yield Call::waitForRead($this->socket);
         if (self::$isSecure) {
             \stream_set_blocking($this->socket, true);
-            $socket  = \stream_socket_accept($this->socket, 0);
+            $this->secure  = \stream_socket_accept($this->socket, 0, self::$remote);
             \stream_set_blocking($this->socket, false);
-            yield Coroutine::value(new CoSocket($this->acceptSecure($socket)));
+            yield Coroutine::value(new CoSocket($this->acceptSecure($this->secure)));
         } else
-            yield Coroutine::value(new CoSocket(\stream_socket_accept($this->socket, 0)));
+            yield Coroutine::value(new CoSocket(\stream_socket_accept($this->socket, 0, self::$remote)));
     }
 	
     public function read(int $size) 
