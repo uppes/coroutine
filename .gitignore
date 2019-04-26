@@ -5,3 +5,6 @@ phpunit.*
 vendor/
 *.lock
 *.cache
+*.crt
+*.pem
+*.csr
