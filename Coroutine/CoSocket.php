@@ -221,10 +221,10 @@ class CoSocket implements CoSocketInterface
         if (false === $result) {
             if (\feof($socket) || $error === null) {
                 // EOF or failed without error => connection closed during handshake
-                print 'Connection lost during TLS handshake with: '. self::$remote . '\n';
+                print 'Connection lost during TLS handshake with: '. self::$remote . "\n";
             } else {
                 // handshake failed with error message
-                print 'Unable to complete TLS handshake: ' . $error . '\n';
+                print 'Unable to complete TLS handshake: ' . $error . "\n";
             }
         }
  
