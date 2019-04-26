@@ -42,9 +42,12 @@ class CoSocket implements CoSocketInterface
      */
     public static function create($uri = null, $context = []) 
 	{
+        $hostname = gethostname();
+        $ip = gethostbyname($hostname);
+
         // a single port has been given => assume localhost
         if ((string)(int)$uri === (string)$uri) {
-            $uri = '127.0.0.1:' . $uri;
+            $uri = $ip.':' . $uri;
         }
 
         // assume default scheme if none has been given
@@ -100,7 +103,7 @@ class CoSocket implements CoSocketInterface
         string $certificateFile = 'certificate.crt', 
         string $signingFile = 'signing.csr',
         string $ssl_path = null, 
-        array $details = ["commonName" => "localhost"])
+        array $details = [])
 	{
         $context = \stream_context_create($options);
 
@@ -116,10 +119,11 @@ class CoSocket implements CoSocketInterface
         \stream_context_set_option($context, 'ssl', 'verify_peer', false);
         \stream_context_set_option($context, 'ssl', 'verify_peer_name', false);
         \stream_context_set_option($context, 'ssl', 'capath', '.'.self::$caPath);
+        \stream_context_set_option($context, 'ssl', 'SNI_enabled', true);
+        \stream_context_set_option($context, 'ssl', 'disable_compression', true);
 
         // get crypto method from context options
-        $method = \STREAM_CRYPTO_METHOD_TLSv1_2_SERVER;
-        self::$method = $method;
+        self::$method = \STREAM_CRYPTO_METHOD_SSLv23_SERVER | \STREAM_CRYPTO_METHOD_TLS_SERVER | \STREAM_CRYPTO_METHOD_TLSv1_1_SERVER | \STREAM_CRYPTO_METHOD_TLSv1_2_SERVER;
 
         #create a stream socket on IP:Port
         $socket = CoSocket::create($uri, $context);
@@ -153,7 +157,7 @@ class CoSocket implements CoSocketInterface
         string $certificateFile = 'certificate.crt', 
         string $signingFile = 'signing.csr',
         string $ssl_path = null, 
-        array $details = ["commonName" => "localhost"]
+        array $details = []
     ) 
     {
         if (empty($ssl_path)) {
@@ -172,7 +176,10 @@ class CoSocket implements CoSocketInterface
 
             // Generate a new private (and public) key pair
             $privatekey = \openssl_pkey_new($opensslConfig);
-                
+
+            if (empty($details))
+                $details = ["commonName" => \gethostname()];
+
             // Generate a certificate signing request
             $csr = \openssl_csr_new($details, $privatekey, $opensslConfig);
         
@@ -208,7 +215,6 @@ class CoSocket implements CoSocketInterface
 
         \stream_set_blocking($socket, true);
         $result = @\stream_socket_enable_crypto($socket, true, self::$method);
-        \stream_set_blocking($socket, false);
 
         \restore_error_handler();
 
@@ -241,6 +247,7 @@ class CoSocket implements CoSocketInterface
 	{
         yield Call::waitForRead($this->socket);
         yield Coroutine::value(\fread($this->socket, $size));
+        \stream_set_blocking($this->socket, false);
     }
 
     public function write(string $string) 
