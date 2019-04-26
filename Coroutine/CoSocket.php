@@ -42,8 +42,8 @@ class CoSocket implements CoSocketInterface
      */
     public static function create($uri = null, $context = []) 
 	{
-        $hostname = gethostname();
-        $ip = gethostbyname($hostname);
+        $hostname = \gethostname();
+        $ip = \gethostbyname($hostname);
 
         // a single port has been given => assume localhost
         if ((string)(int)$uri === (string)$uri) {
@@ -114,7 +114,7 @@ class CoSocket implements CoSocketInterface
         #Setup the SSL Options 
         \stream_context_set_option($context, 'ssl', 'local_cert', self::$certificate); // Our SSL Cert in PEM format
         \stream_context_set_option($context, 'ssl', 'local_pk', self::$privatekey); // Our RSA key in PEM format
-        \stream_context_set_option($context, 'ssl', 'passphrase', null);	// Private key Password
+        \stream_context_set_option($context, 'ssl', 'passphrase', null); // Private key Password
         \stream_context_set_option($context, 'ssl', 'allow_self_signed', true);
         \stream_context_set_option($context, 'ssl', 'verify_peer', false);
         \stream_context_set_option($context, 'ssl', 'verify_peer_name', false);
@@ -127,7 +127,7 @@ class CoSocket implements CoSocketInterface
 
         #create a stream socket on IP:Port
         $socket = CoSocket::create($uri, $context);
-        \stream_socket_enable_crypto($socket, false);
+        \stream_socket_enable_crypto($socket, false, self::$method);
 
 		return new self($socket);
     }
@@ -171,7 +171,7 @@ class CoSocket implements CoSocketInterface
         self::$caPath = $ssl_path;
         self::$isSecure = true;
         
-        if (! \file_exists($ssl_path.$privatekeyFile)) {
+        if (! \file_exists('.'.$ssl_path.$privatekeyFile)) {
             $opensslConfig = array("config" => $ssl_path.'openssl.cnf');
 
             // Generate a new private (and public) key pair
@@ -221,10 +221,10 @@ class CoSocket implements CoSocketInterface
         if (false === $result) {
             if (\feof($socket) || $error === null) {
                 // EOF or failed without error => connection closed during handshake
-                print 'Connection lost during TLS handshake with: '. self::$remote;
+                print 'Connection lost during TLS handshake with: '. self::$remote . '\n';
             } else {
                 // handshake failed with error message
-                print 'Unable to complete TLS handshake: ' . $error;
+                print 'Unable to complete TLS handshake: ' . $error . '\n';
             }
         }
  
