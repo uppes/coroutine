@@ -109,8 +109,8 @@ if (! function_exists('socketAddress')) {
 	}	
 }
 
-if (! function_exists('asyncContents')) {
-	function asyncContents(string $fileUrl, float $timeout_seconds = 0.5)
+if (! function_exists('get_contents')) {
+	function get_contents(string $fileUrl, float $timeout_seconds = 0.5)
 	{
 		$ret = "";
 
