@@ -10,6 +10,9 @@ class CoSocket implements CoSocketInterface
 {
     protected $socket;
     protected $secure;
+    protected $client;
+    protected $buffer = null;
+    protected static $isClient = false;
     protected static $remote = null;
     protected static $caPath = \DIRECTORY_SEPARATOR;
     protected static $isSecure = false;
@@ -17,9 +20,54 @@ class CoSocket implements CoSocketInterface
     protected static $certificate = 'certificate.crt';
     protected static $method = null;
 
-    public function __construct($socket) 
+    public function __construct($socket, bool $isClient = false) 
 	{
         $this->socket = $socket;
+        if ($isClient) {
+            self::$isClient = true;
+            $this->client = $socket;
+        }
+    }
+
+    private static function checkUri(array $parts, string $url) 
+    {
+        // ensure URI contains TCP scheme, host and port
+        if (!$parts || !isset($parts['scheme'], $parts['host'], $parts['port']) 
+            || $parts['scheme'] != 'tcp')
+         {
+            throw new \InvalidArgumentException('Invalid URI "' . $uri . '" given');
+		}
+		
+        if (false === \filter_var(\trim($parts['host'], '[]'), \FILTER_VALIDATE_IP)) {
+            throw new \InvalidArgumentException('Given URI "' . $uri . '" does not contain a valid host IP');
+        }
+    }
+
+    public static function createClient($uri = null, $context = []) 
+	{
+        // assume default scheme if none has been given
+        if (\strpos($uri, '://') === false) {
+            $uri = 'tcp://' . $uri;
+        }
+
+        #Connect to Server
+        $socket = @\stream_socket_client(
+            $uri, 
+            $errNo,
+            $errStr, 
+            30, 
+            \STREAM_CLIENT_CONNECT, 
+            stream_context_create($context)
+        );
+
+        if (!$socket)
+            throw new \RuntimeException('Failed to connect to "' . $uri . '": ' . $errStr, $errNo);
+    
+	    \stream_set_blocking ($socket, true);
+	    \stream_socket_enable_crypto ($socket, true, \STREAM_CRYPTO_METHOD_TLS_CLIENT);
+        \stream_set_blocking ($socket, false);
+                
+		return new self($socket, true);
     }
 
     /**
@@ -40,7 +88,7 @@ class CoSocket implements CoSocketInterface
      * @throws InvalidArgumentException if the listening address is invalid
      * @throws RuntimeException if listening on this address fails (already in use etc.)
      */
-    public static function create($uri = null, $context = []) 
+    public static function createServer($uri = null, $context = []) 
 	{
         $hostname = \gethostname();
         $ip = \gethostbyname($hostname);
@@ -64,17 +112,8 @@ class CoSocket implements CoSocketInterface
         } else {
             $parts = \parse_url($uri);
 		}
-		
-        // ensure URI contains TCP scheme, host and port
-        if (!$parts || !isset($parts['scheme'], $parts['host'], $parts['port']) 
-            || $parts['scheme'] != 'tcp')
-         {
-            throw new \InvalidArgumentException('Invalid URI "' . $uri . '" given');
-		}
-		
-        if (false === \filter_var(\trim($parts['host'], '[]'), \FILTER_VALIDATE_IP)) {
-            throw new \InvalidArgumentException('Given URI "' . $uri . '" does not contain a valid host IP');
-        }
+			
+        self::checkUri($parts, $uri);
         
         if (empty($context))
             $context = \stream_context_create($context);
@@ -90,13 +129,15 @@ class CoSocket implements CoSocketInterface
 
         if (!$socket)
             throw new \RuntimeException('Failed to listen on "' . $uri . '": ' . $errStr, $errNo);
+        
+        print "Listening to {$uri} for connections\n";
 
 		\stream_set_blocking($socket, false);
 
 		return (self::$isSecure) ? $socket : new self($socket);
     }
 
-    public static function secure(
+    public static function secureServer(
         $uri = null, 
         array $options = [],
         string $privatekeyFile = 'privatekey.pem', 
@@ -126,7 +167,7 @@ class CoSocket implements CoSocketInterface
         self::$method = \STREAM_CRYPTO_METHOD_SSLv23_SERVER | \STREAM_CRYPTO_METHOD_TLS_SERVER | \STREAM_CRYPTO_METHOD_TLSv1_1_SERVER | \STREAM_CRYPTO_METHOD_TLSv1_2_SERVER;
 
         #create a stream socket on IP:Port
-        $socket = CoSocket::create($uri, $context);
+        $socket = CoSocket::createServer($uri, $context);
         \stream_socket_enable_crypto($socket, false, self::$method);
 
 		return new self($socket);
@@ -163,7 +204,7 @@ class CoSocket implements CoSocketInterface
         if (empty($ssl_path)) {
             $ssl_path = \getcwd();
             $ssl_path = \preg_replace('/\\\/', \DIRECTORY_SEPARATOR, $ssl_path). \DIRECTORY_SEPARATOR;
-        } else
+        } elseif (\strpos($ssl_path, \DIRECTORY_SEPARATOR, -1) === false)
             $ssl_path = $ssl_path. \DIRECTORY_SEPARATOR;
 
         self::$privatekey = $privatekeyFile;
@@ -236,14 +277,41 @@ class CoSocket implements CoSocketInterface
         yield Call::waitForRead($this->socket);
         if (self::$isSecure) {
             \stream_set_blocking($this->socket, true);
-            $this->secure  = \stream_socket_accept($this->socket, 0, self::$remote);
+            $this->secure  = $this->acceptConnection($this->socket);
             \stream_set_blocking($this->socket, false);
             yield Coroutine::value(new CoSocket($this->acceptSecure($this->secure)));
         } else
-            yield Coroutine::value(new CoSocket(\stream_socket_accept($this->socket, 0, self::$remote)));
+            yield Coroutine::value(new CoSocket($this->acceptConnection($this->socket)));
     }
-	
-    public function read(int $size) 
+
+    public function acceptConnection($socket) 
+	{
+        $newSocket = \stream_socket_accept($socket, 0, self::$remote);
+
+        if (false === $newSocket) {
+            throw new \RuntimeException('Error accepting new connection');
+        }
+
+        return $newSocket;
+    }
+    
+    public function getBuffer()
+    {
+        return $this->buffer;
+    }
+
+    public function response(int $size = 20240) 
+	{
+        if (self::$isClient) {
+            $this->buffer = '';
+            while (!\feof($this->client)) {
+                $this->buffer .= \fread($this->client, $size);
+                yield;
+            }
+        }
+    }
+
+    public function read(int $size = 8192) 
 	{
         yield Call::waitForRead($this->socket);
         yield Coroutine::value(\fread($this->socket, $size));
