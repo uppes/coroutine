@@ -203,7 +203,9 @@ class CoTest extends TestCase
 
     /**
      * @dataProvider testThrowProvider
+     * @covers Async\Coroutine\Coroutine::create
      */
+    
     public function testThrow(
         $coroutineFactory, $throwAtKeys, $expectedArray, $shouldThrow
     ) {

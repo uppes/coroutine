@@ -29,12 +29,15 @@ class CoSocket implements CoSocketInterface
         }
     }
 
-    private static function checkUri(array $parts, string $url) 
+    private static function checkUri(array $parts = [], string $uri = '') 
     {
+        if (empty($parts))
+            $parts = \parse_url($uri);
+
         // ensure URI contains TCP scheme, host and port
         if (!$parts || !isset($parts['scheme'], $parts['host'], $parts['port']) 
-            || $parts['scheme'] != 'tcp')
-         {
+            || !\in_array($parts['scheme'], ['tcp', 'tls', 'http', 'https', 'ssl', 'udp', 'unix'])
+        ) {
             throw new \InvalidArgumentException('Invalid URI "' . $uri . '" given');
 		}
 		
@@ -43,7 +46,7 @@ class CoSocket implements CoSocketInterface
         }
     }
 
-    public static function createClient($uri = null, $context = []) 
+    public static function createClient(string $uri = null, array $context = [], bool $isUriStream = false) 
 	{
         // assume default scheme if none has been given
         if (\strpos($uri, '://') === false) {
@@ -56,7 +59,7 @@ class CoSocket implements CoSocketInterface
             $errNo,
             $errStr, 
             30, 
-            \STREAM_CLIENT_CONNECT, 
+            \STREAM_CLIENT_CONNECT | \STREAM_CLIENT_ASYNC_CONNECT, 
             stream_context_create($context)
         );
 
@@ -67,7 +70,7 @@ class CoSocket implements CoSocketInterface
 	    \stream_socket_enable_crypto ($socket, true, \STREAM_CRYPTO_METHOD_TLS_CLIENT);
         \stream_set_blocking ($socket, false);
                 
-		return new self($socket, true);
+		return ($isUriStream === false) ? new self($socket, true) : $socket;
     }
 
     /**
@@ -321,7 +324,7 @@ class CoSocket implements CoSocketInterface
     public function write(string $string) 
 	{
         yield Call::waitForWrite($this->socket);
-        \fwrite($this->socket, $string);
+        yield \fwrite($this->socket, $string);
     }
 
     public function close() 

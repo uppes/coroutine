@@ -21,7 +21,7 @@ class GlobalTest extends TestCase
     public function parentTask() 
     {
         $tid = yield asyncId();
-        $childTid = yield from await([$this, 'childTask']);
+        $childTid = yield from async([$this, 'childTask']);
         
         for ($i = 1; $i <= 6; ++$i) {
             $this->task .= "Parent task $tid iteration $i.\n";
@@ -31,6 +31,19 @@ class GlobalTest extends TestCase
         }
     }
 
+    /**
+     * @covers Async\Coroutine\Coroutine::addTask
+     * @covers Async\Coroutine\Coroutine::schedule
+     * @covers Async\Coroutine\Coroutine::create
+     * @covers Async\Coroutine\Coroutine::removeTask
+     * @covers Async\Coroutine\Coroutine::run
+     * @covers Async\Coroutine\Task::taskId
+     * @covers Async\Coroutine\Task::run
+     * @covers \asyncId
+     * @covers \async
+     * @covers \awaitAble
+     * @covers \asyncRemove
+     */
     public function testGlobalFunctions() 
     {
         $this->task = null;

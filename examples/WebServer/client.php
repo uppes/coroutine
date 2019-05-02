@@ -1,4 +1,10 @@
 <?php
+/**
+ * This also an simpler version of 
+ * "HOWTO: PHP TCP Server/Client with SSL Encryption using Streams"
+ *  
+ * @see http://blog.leenix.co.uk/2011/05/howto-php-tcp-serverclient-with-ssl.html
+ */
 
 include 'vendor/autoload.php';
 

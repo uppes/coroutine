@@ -7,12 +7,13 @@ use Async\Coroutine\CoSocketInterface;
 if (! \function_exists('globalCoroutines')) {
 	function async(callable $asyncFunction, ...$args) 
 	{
-		return yield Call::addTask(awaitAble($asyncFunction, ...$args));
+		return yield Call::addTask(\awaitAble($asyncFunction, ...$args));
 	}	
 
 	function await(callable $awaitedFunction, ...$args) 
-	{     
-		return async($awaitedFunction, ...$args);
+	{
+		$value = yield from \awaitAble($awaitedFunction, ...$args);
+		yield Coroutine::value($value);
 	}
 
 	function awaitAble(callable $awaitableFunction, ...$args) 
@@ -57,9 +58,9 @@ if (! \function_exists('globalCoroutines')) {
 		return CoSocket::createServer($uri, $options);
 	}	
 
-	function createClient($uri = null, array $options = []): CoSocketInterface
+	function createClient($uri = null, array $options = [], bool $isRequest = false)
 	{
-		return CoSocket::createClient($uri, $options);
+		return CoSocket::createClient($uri, $options, $isRequest);
 	}
 
 	function clientRead(CoSocketInterface $socket, int $size = 20240) 

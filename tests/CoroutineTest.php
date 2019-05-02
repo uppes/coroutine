@@ -34,6 +34,16 @@ class CoroutineTest extends TestCase
         }
     }
 
+    /**
+     * @covers Async\Coroutine\Coroutine::addTask
+     * @covers Async\Coroutine\Coroutine::schedule
+     * @covers Async\Coroutine\Coroutine::create
+     * @covers Async\Coroutine\Coroutine::ioSocketPoll
+     * @covers Async\Coroutine\Coroutine::runCoroutines
+     * @covers Async\Coroutine\Coroutine::run
+     * @covers Async\Coroutine\Task::taskId
+     * @covers Async\Coroutine\Task::run
+     */
     public function testCoroutine() 
     {
         $coroutine = new Coroutine();
@@ -79,6 +89,14 @@ class CoroutineTest extends TestCase
         }
     }
 
+    /**
+     * @covers Async\Coroutine\Coroutine::addTask
+     * @covers Async\Coroutine\Coroutine::schedule
+     * @covers Async\Coroutine\Coroutine::create
+     * @covers Async\Coroutine\Coroutine::ioSocketPoll
+     * @covers Async\Coroutine\Coroutine::runCoroutines
+     * @covers Async\Coroutine\Coroutine::run
+     */
     public function testCall_TaskId() 
     {
         $this->task = null;
@@ -137,6 +155,14 @@ class CoroutineTest extends TestCase
         }
     }
 
+    /**
+     * @covers Async\Coroutine\Coroutine::addTask
+     * @covers Async\Coroutine\Coroutine::schedule
+     * @covers Async\Coroutine\Coroutine::create
+     * @covers Async\Coroutine\Coroutine::runStreams
+     * @covers Async\Coroutine\Coroutine::runCoroutines
+     * @covers Async\Coroutine\Coroutine::run
+     */
     public function testCall() 
     {
         $this->task = null;
@@ -161,6 +187,16 @@ class CoroutineTest extends TestCase
         $this->assertEquals(3, preg_match_all('/3 still alive!/', $this->task, $matches));
     }
     
+    /**
+     * @covers Async\Coroutine\Coroutine::addWriteStream
+     * @covers Async\Coroutine\Coroutine::removeWriteStream
+     * @covers Async\Coroutine\Coroutine::runStreams
+     * @covers Async\Coroutine\Coroutine::ioSocketPoll
+     * @covers Async\Coroutine\Coroutine::runCoroutines
+     * @covers Async\Coroutine\Coroutine::run
+     * @covers Async\Coroutine\Task::taskId
+     * @covers Async\Coroutine\Task::run
+     */
     function testAddWriteStream() 
 	{
         $coroutine = new Coroutine();
@@ -174,6 +210,16 @@ class CoroutineTest extends TestCase
         $this->assertEquals('hello world', stream_get_contents($h));
     }
 
+    /**
+     * @covers Async\Coroutine\Coroutine::addReadStream
+     * @covers Async\Coroutine\Coroutine::removeReadStream
+     * @covers Async\Coroutine\Coroutine::runStreams
+     * @covers Async\Coroutine\Coroutine::ioSocketPoll
+     * @covers Async\Coroutine\Coroutine::runCoroutines
+     * @covers Async\Coroutine\Coroutine::run
+     * @covers Async\Coroutine\Task::taskId
+     * @covers Async\Coroutine\Task::run
+     */
     function testAddReadStream() 
 	{
         $coroutine = new Coroutine();
