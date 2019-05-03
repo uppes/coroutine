@@ -46,7 +46,7 @@ class CoSocket implements CoSocketInterface
         }
     }
 
-    public static function createClient(string $uri = null, array $context = [], bool $isUriStream = false) 
+    public static function createClient(string $uri = null, array $context = [], bool $skipInterface = false) 
 	{
         // assume default scheme if none has been given
         if (\strpos($uri, '://') === false) {
@@ -70,7 +70,7 @@ class CoSocket implements CoSocketInterface
 	    \stream_socket_enable_crypto ($socket, true, \STREAM_CRYPTO_METHOD_TLS_CLIENT);
         \stream_set_blocking ($socket, false);
                 
-		return ($isUriStream === false) ? new self($socket, true) : $socket;
+		return ($skipInterface === false) ? new self($socket, true) : $socket;
     }
 
     /**
