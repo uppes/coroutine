@@ -63,7 +63,7 @@ class Coroutine implements CoroutineInterface
 
     public function schedule(TaskInterface $task) 
 	{
-			$this->taskQueue->enqueue($task);
+		$this->taskQueue->enqueue($task);
     }
 
     public function removeTask(int $tid) 
@@ -175,27 +175,18 @@ class Coroutine implements CoroutineInterface
         }
     }
 
-    /**
-     * Adds a read stream.
-     */
     public function addReadStream($stream, $task)
     {
         $this->readStreams[(int) $stream] = $stream;
         $this->readCallbacks[(int) $stream] = $task;
     }
 
-    /**
-     * Adds a write stream.
-     */
     public function addWriteStream($stream, $task)
     {
         $this->writeStreams[(int) $stream] = $stream;
         $this->writeCallbacks[(int) $stream] = $task; 
     }
 
-    /**
-     * Stop watching a stream for reads.
-     */
     public function removeReadStream($stream)
     {
         unset(
@@ -204,9 +195,6 @@ class Coroutine implements CoroutineInterface
         );
     }
 
-    /**
-     * Stop watching a stream for writes.
-     */
     public function removeWriteStream($stream)
     {
         unset(
@@ -220,6 +208,13 @@ class Coroutine implements CoroutineInterface
 		return new ReturnValueCoroutine($value);
 	}
 
+    /**
+     * Creates an object instance of the value which will signal 
+     * `Coroutine::create` that it’s a return value. 
+     * 
+     * @param mixed $value
+     * @return PlainValueCoroutine
+     */
 	public static function plain($value) 
 	{
 		return new PlainValueCoroutine($value);
