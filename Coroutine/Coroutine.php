@@ -16,6 +16,13 @@ class Coroutine implements CoroutineInterface
     protected $taskQueue;
 
     /**
+     * A list of timers, added by addTimeout.
+     *
+     * @var array
+     */
+    protected $timers = [];
+
+    /**
      * List of readable streams for stream_select, indexed by stream id.
      *
      * @var resource[]
@@ -95,6 +102,30 @@ class Coroutine implements CoroutineInterface
         return $this->runCoroutines();
     }
 
+    /**
+     * Runs all pending timers.
+     * 
+     * @return int|void
+     */
+    protected function runTimers()
+    {
+        $now = \microtime(true);
+        while (($timer = \array_pop($this->timers)) && $timer[0] < $now) {
+            if ($timer[1] instanceof TaskInterface) {
+                $this->schedule($timer[1]);
+            } else {
+                $timer[1]();
+            }
+        }
+
+        // Add the last timer back to the array.
+        if ($timer) {
+            $this->timers[] = $timer;
+
+            return \max(0, $timer[0] - \microtime(true));
+        }
+    }
+
     protected function runCoroutines() 
 	{
 		while (!$this->taskQueue->isEmpty()) {
@@ -161,12 +192,18 @@ class Coroutine implements CoroutineInterface
             if ($this->taskQueue->isEmpty()
                 && empty($this->readStreams) 
                 && empty($this->writeStreams)
+                && empty($this->timers)
             ) {
                 break;
             } else {
                 $streamWait = null;
                 if (! $this->taskQueue->isEmpty()) {
-                    $streamWait = 0 ;
+                    $nextTimeout = $this->runTimers();
+                    if (\is_numeric($nextTimeout))
+                        // Wait until the next Timeout should trigger.
+                        $streamWait = $nextTimeout * 1000000;
+                    else
+                        $streamWait = 0 ;
                 }
 
                 $this->runStreams($streamWait);
@@ -218,7 +255,46 @@ class Coroutine implements CoroutineInterface
 	public static function plain($value) 
 	{
 		return new PlainValueCoroutine($value);
-	}
+    }
+
+    /**
+     * Executes a function after x seconds.
+     * 
+     * @param callable $task
+     * @param float $timeout
+     */
+    public function addTimeout(callable $task, float $timeout)
+    {
+        $triggerTime = \microtime(true) + ($timeout);
+
+        if (!$this->timers) {
+            // Special case when the timers array was empty.
+            $this->timers[] = [$triggerTime, $task];
+
+            return;
+        }
+
+        // We need to insert these values in the timers array, but the timers
+        // array must be in reverse-order of trigger times.
+        //
+        // So here we search the array for the insertion point.
+        $index = \count($this->timers) - 1;
+        while (true) {
+            if ($triggerTime < $this->timers[$index][0]) {
+                \array_splice(
+                    $this->timers,
+                    $index + 1,
+                    0,
+                    [[$triggerTime, $task]]
+                );
+                break;
+            } elseif (0 === $index) {
+                \array_unshift($this->timers, [$triggerTime, $task]);
+                break;
+            }
+            --$index;
+        }
+    }
 
 	public static function create(\Generator $gen) 
 	{

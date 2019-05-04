@@ -109,4 +109,18 @@ class Call
 			}
 		);
 	}
+
+    /**
+     * Wait for an timeout to passed in x seconds.
+     * 
+     * @param float $timeout
+     */
+	public static function waitForTimeout($timeout) 
+	{
+		return new Call(
+			function(TaskInterface $task, Coroutine $coroutine) use ($timeout) {
+				$coroutine->addTimeout($task, $timeout);
+			}
+		);
+	}
 }
