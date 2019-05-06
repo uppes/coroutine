@@ -4,6 +4,8 @@ namespace Async\Coroutine;
 
 use Async\Coroutine\Call;
 use Async\Coroutine\Task;
+use Async\Coroutine\Spawn;
+use Async\Coroutine\Process;
 use Async\Coroutine\TaskInterface;
 use Async\Coroutine\ReturnValueCoroutine;
 use Async\Coroutine\PlainValueCoroutine;
@@ -54,9 +56,43 @@ class Coroutine implements CoroutineInterface
     protected $waitingForRead = [];
     protected $waitingForWrite = [];
 
+    protected $pcntl = null;
+    protected $process = null;
+    protected $spawn = null;
+
     public function __construct()
 	{
+        global $__coroutine__;
+        $__coroutine__ = $this;
+        
+        $this->spawn = new Spawn($this);
         $this->taskQueue = new \SplQueue();
+    }
+
+    public function spawnInstance(): Spawn
+    {
+        return $this->spawn;
+    }
+
+    /**
+     * Add callable for parallel processing, in an separate php process
+	 * 
+     * @param callable $callable
+     * @param int $timeout 
+     *
+     * @return ProcessInterface
+     */
+	public function addProcess($callable, int $timeout = 300): ProcessInterface
+    {		
+		return $this->spawn->add($callable, $timeout);
+    }
+    
+    public function isPcntl(): bool
+    {
+        $this->pcntl = \extension_loaded('pcntl') && \function_exists('pcntl_async_signals')
+        && \function_exists('posix_kill');
+		
+        return $this->pcntl;
     }
 
     public function addTask(\Generator $coroutine) 
@@ -126,8 +162,11 @@ class Coroutine implements CoroutineInterface
         }
     }
 
-    protected function runCoroutines() 
+    protected function runCoroutines(bool $checkProcess = false) 
 	{
+        if ($checkProcess)
+            $this->process->processing();
+
 		while (!$this->taskQueue->isEmpty()) {
 			$task = $this->taskQueue->dequeue();
 			$value = $task->run();
@@ -146,7 +185,10 @@ class Coroutine implements CoroutineInterface
 				unset($this->taskMap[$task->taskId()]);
 			} else {
 				$this->schedule($task);
-			}
+            }
+            
+            if ($checkProcess)
+                $this->process->processing();
 		}
     }
 
@@ -193,18 +235,23 @@ class Coroutine implements CoroutineInterface
                 && empty($this->readStreams) 
                 && empty($this->writeStreams)
                 && empty($this->timers)
+                && $this->process->isEmpty()
             ) {
                 break;
             } else {
                 $streamWait = null;
-                if (! $this->taskQueue->isEmpty()) {
-                    $nextTimeout = $this->runTimers();
-                    if (\is_numeric($nextTimeout))
-                        // Wait until the next Timeout should trigger.
-                        $streamWait = $nextTimeout * 1000000;
-                    else
-                        $streamWait = 0 ;
-                }
+                $this->process->processing();
+                
+                $nextTimeout = $this->runTimers();
+                if (\is_numeric($nextTimeout))
+                    // Wait until the next Timeout should trigger.
+                    $streamWait = $nextTimeout * 1000000;
+                elseif (! $this->process->isEmpty())
+                    // There's a running 'process', wait some before rechecking.
+                    $streamWait = $this->process->sleepingTime();
+                elseif (! $this->taskQueue->isEmpty())
+                    // There's a pending 'addTask'. Don't wait.
+                    $streamWait = 0;
 
                 $this->runStreams($streamWait);
             }
@@ -238,23 +285,6 @@ class Coroutine implements CoroutineInterface
             $this->writeStreams[(int) $stream],
             $this->writeCallbacks[(int) $stream]
         );
-    }
-
-	public static function value($value) 
-	{
-		return new ReturnValueCoroutine($value);
-	}
-
-    /**
-     * Creates an object instance of the value which will signal 
-     * `Coroutine::create` that it’s a return value. 
-     * 
-     * @param mixed $value
-     * @return PlainValueCoroutine
-     */
-	public static function plain($value) 
-	{
-		return new PlainValueCoroutine($value);
     }
 
     /**
@@ -296,6 +326,62 @@ class Coroutine implements CoroutineInterface
         }
     }
 
+    /**
+     * Executes a function every x seconds.
+     * 
+     * @param callable $task
+     * @param float $timeout
+     */
+    public function setInterval(callable $task, float $timeout): array
+    {
+        $keepGoing = true;
+        $f = null;
+
+        $f = function () use ($task, &$f, $timeout, &$keepGoing) {
+            if ($keepGoing) {
+                $task();
+                $this->addTimeout($f, $timeout);
+            }
+        };
+        $this->addTimeout($f, $timeout);
+		
+        return ['I\'m an implementation detail', &$keepGoing];
+    }
+
+    /**
+     * Stops a running interval.
+     */
+    public function clearInterval(array $intervalId)
+    {
+        $intervalId[1] = false;
+    }
+
+    public function initProcess(
+        callable $timedOutCallback = null, 
+        callable $finishCallback = null, 
+        callable $failCallback = null)
+    {
+        $this->process = new Process($this, $timedOutCallback, $finishCallback, $failCallback);
+        return $this->process;
+    }
+
+	public static function value($value) 
+	{
+		return new ReturnValueCoroutine($value);
+	}
+
+    /**
+     * Creates an object instance of the value which will signal 
+     * `Coroutine::create` that it’s a return value. 
+     * 
+     * @param mixed $value
+     * @return PlainValueCoroutine
+     */
+	public static function plain($value) 
+	{
+		return new PlainValueCoroutine($value);
+    }
+	    
 	public static function create(\Generator $gen) 
 	{
 		$stack = new \SplStack;

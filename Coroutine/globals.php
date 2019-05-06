@@ -2,9 +2,14 @@
 
 use Async\Coroutine\Call;
 use Async\Coroutine\CoSocket;
+use Async\Coroutine\Coroutine;
 use Async\Coroutine\CoSocketInterface;
+use Async\Coroutine\CoroutineInterface;
+use Async\Coroutine\Spawn;
+use Async\Processor\Processor;
+use Async\Processor\ProcessInterface;
 
-if (! \function_exists('globalCoroutines')) {
+if (! \function_exists('coroutineRun')) {
 	function async(callable $asyncFunction, ...$args) 
 	{
 		return yield Call::addTask(\awaitAble($asyncFunction, ...$args));
@@ -103,8 +108,90 @@ if (! \function_exists('globalCoroutines')) {
 		return $socket->address();
 	}
 
-	function globalCoroutines()
+	function coroutineInstance()
 	{
-		return true;
-	}	
+		return \coroutineAdd();
+	}
+
+	function coroutineAdd(\Generator $coroutine = null)
+	{
+		global $__coroutine__;
+
+		if (! $__coroutine__ instanceof CoroutineInterface)
+			$__coroutine__ = new Coroutine();
+
+		if (! empty($coroutine))
+			return $__coroutine__->addTask($coroutine);
+
+		return $__coroutine__;
+	}
+	
+	function coroutineRun()
+	{
+		$coroutine = \coroutineInstance();
+
+		if ($coroutine instanceof CoroutineInterface) {			
+			$coroutine->run();
+			return true;
+		}
+
+		return false;
+	}
+
+    /**
+     * Add something/callable to `coroutine` process pool
+	 * 
+     * @param callable $callable
+     * @param int $timeout 
+     *
+     * @return ProcessInterface
+     */
+	function spawn($callable, int $timeout = 300): ProcessInterface
+    {
+		$coroutine = \coroutineInstance();
+
+		if ($coroutine instanceof CoroutineInterface)			
+			return $coroutine->addProcess($callable, $timeout);
+	}
+
+    /**
+     * Get/create process worker pool of an spawn instance.
+	 * 
+     * @return ProcessInterface
+     */
+    function spawnInstance(): Spawn
+    {
+		$coroutine = \coroutineInstance();
+
+		if ($coroutine instanceof CoroutineInterface)			
+			return $coroutine->spawnInstance();
+	}
+
+    /**
+     * Add something/callable to spawn instance process pool.
+	 * 
+     * @param callable $somethingToRun
+     * @param int $timeout 
+     *
+     * @return ProcessInterface
+     */
+    function spawnAdd($somethingToRun, int $timeout = 300): ProcessInterface
+    {
+		return Processor::create($somethingToRun, $timeout);
+	}
+
+    /**
+     * Execute process pool, wait for results. Will do other stuff come back later.
+	 * 
+     * @return array
+     */
+    function spawnWait(): ?array
+    {
+		$pool = \spawnInstance();
+		
+		if ($pool instanceof Spawn)	
+			return $pool->wait();
+		
+		return array();
+    }
 }

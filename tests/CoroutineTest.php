@@ -234,4 +234,61 @@ class CoroutineTest extends TestCase
         $coroutine->run();
         $this->assertEquals('hello world', $result);
     }
+    
+    /**
+     * @covers Async\Coroutine\Coroutine::addTimeout
+     * @covers Async\Coroutine\Coroutine::run
+     */
+    function testTimeout() 
+	{
+        $coroutine = new Coroutine();
+        $check  = 0;
+        $coroutine->addTimeout(function() use (&$check) {
+            $check++;
+        }, 0.02);
+        $coroutine->run();
+        $this->assertEquals(1, $check);
+    }
+    
+    /**
+     * @covers Async\Coroutine\Coroutine::addTimeout
+     * @covers Async\Coroutine\Coroutine::run
+     */
+    function testTimeoutOrder() 
+	{
+        $coroutine = new Coroutine();
+        $check  = [];
+        $coroutine->addTimeout(function() use (&$check) {
+            $check[] = 'a';
+        }, 0.2);
+        $coroutine->addTimeout(function() use (&$check) {
+            $check[] = 'b';
+        }, 0.1);
+        $coroutine->addTimeout(function() use (&$check) {
+            $check[] = 'c';
+        }, 0.3);
+        $coroutine->run();
+        $this->assertEquals(['b', 'a', 'c'], $check);
+    }
+
+    /**
+     * @covers Async\Coroutine\Coroutine::addTimeout
+     * @covers Async\Coroutine\Coroutine::setInterval
+     * @covers Async\Coroutine\Coroutine::clearInterval
+     * @covers Async\Coroutine\Coroutine::run
+     */
+    function testSetInterval() 
+	{
+        $coroutine = new Coroutine();
+        $check = 0;
+        $intervalId = null;
+        $intervalId = $coroutine->setInterval(function() use (&$check, &$intervalId, $coroutine) {
+            $check++;
+            if ($check > 5) {
+                $coroutine->clearInterval($intervalId);
+            }
+        }, 0.02);
+        $coroutine->run();
+        $this->assertEquals(6, $check);
+    }
 }

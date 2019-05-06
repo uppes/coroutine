@@ -9,6 +9,13 @@ class GlobalTest extends TestCase
 {
     protected $task = null;
 
+	protected function setUp(): void
+    {
+        global $__coroutine__;
+        
+        $__coroutine__ = null;
+    }
+
     public function childTask() 
     {
         $tid = yield asyncId();
@@ -43,14 +50,17 @@ class GlobalTest extends TestCase
      * @covers \async
      * @covers \awaitAble
      * @covers \asyncRemove
+     * @covers \coroutineInstance
+     * @covers \coroutineAdd
+     * @covers \coroutineRun
      */
     public function testGlobalFunctions() 
     {
         $this->task = null;
 
-        $coroutine = new Coroutine();
-        $coroutine->addTask( awaitAble([$this, 'parentTask']) );
-        $coroutine->run();        
+        $coroutine = \coroutineInstance();
+        \coroutineAdd( \awaitAble([$this, 'parentTask']) );
+        \coroutineRun();        
 
         $expect[] = "Parent task 1 iteration 1.";
         $expect[] = "Child task 3 still alive!";
