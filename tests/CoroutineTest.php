@@ -238,6 +238,7 @@ class CoroutineTest extends TestCase
     /**
      * @covers Async\Coroutine\Coroutine::addTimeout
      * @covers Async\Coroutine\Coroutine::run
+     * @covers Async\Coroutine\Coroutine::runTimers
      */
     function testTimeout() 
 	{
@@ -253,6 +254,7 @@ class CoroutineTest extends TestCase
     /**
      * @covers Async\Coroutine\Coroutine::addTimeout
      * @covers Async\Coroutine\Coroutine::run
+     * @covers Async\Coroutine\Coroutine::runTimers
      */
     function testTimeoutOrder() 
 	{
@@ -276,6 +278,7 @@ class CoroutineTest extends TestCase
      * @covers Async\Coroutine\Coroutine::setInterval
      * @covers Async\Coroutine\Coroutine::clearInterval
      * @covers Async\Coroutine\Coroutine::run
+     * @covers Async\Coroutine\Coroutine::runTimers
      */
     function testSetInterval() 
 	{

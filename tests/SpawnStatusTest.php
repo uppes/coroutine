@@ -9,6 +9,13 @@ use PHPUnit\Framework\TestCase;
 class SpawnStatusTest extends TestCase
 {
     /**
+     * @covers Async\Coroutine\Coroutine::initProcess
+     * @covers Async\Coroutine\Process::add
+     * @covers Async\Coroutine\Process::processing
+     * @covers Async\Coroutine\Process::init
+     * @covers Async\Coroutine\Spawn::markAsFinished
+     * @covers Async\Coroutine\Spawn::markAsTimedOut
+     * @covers Async\Coroutine\Spawn::markAsFailed
      * @covers Async\Coroutine\Spawn::__construct
      * @covers Async\Coroutine\Spawn::add
      * @covers Async\Coroutine\Spawn::wait
@@ -32,7 +39,13 @@ class SpawnStatusTest extends TestCase
     }
 
     /**
-     * @covers Async\Coroutine\Spawn::__construct
+     * @covers Async\Coroutine\Coroutine::initProcess
+     * @covers Async\Coroutine\Process::add
+     * @covers Async\Coroutine\Process::processing
+     * @covers Async\Coroutine\Process::init
+     * @covers Async\Coroutine\Spawn::markAsFinished
+     * @covers Async\Coroutine\Spawn::markAsTimedOut
+     * @covers Async\Coroutine\Spawn::markAsFailed
      * @covers Async\Coroutine\Spawn::add
      * @covers Async\Coroutine\Spawn::__construct
      * @covers Async\Coroutine\Spawn::wait
@@ -60,7 +73,13 @@ class SpawnStatusTest extends TestCase
     }	
 
     /**
-     * @covers Async\Coroutine\Spawn::__construct
+     * @covers Async\Coroutine\Coroutine::initProcess
+     * @covers Async\Coroutine\Process::add
+     * @covers Async\Coroutine\Process::processing
+     * @covers Async\Coroutine\Process::init
+     * @covers Async\Coroutine\Spawn::markAsFinished
+     * @covers Async\Coroutine\Spawn::markAsTimedOut
+     * @covers Async\Coroutine\Spawn::markAsFailed
      * @covers Async\Coroutine\Spawn::add
      * @covers Async\Coroutine\Spawn::__construct
      * @covers Async\Coroutine\Spawn::wait
