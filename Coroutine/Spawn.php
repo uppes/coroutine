@@ -4,11 +4,12 @@ namespace Async\Coroutine;
 use ArrayAccess;
 use InvalidArgumentException;
 use Async\Coroutine\SpawnStatus;
+use Async\Coroutine\SpawnInterface;
 use Async\Coroutine\CoroutineInterface;
 use Async\Processor\Processor;
 use Async\Processor\ProcessInterface;
  
-class Spawn implements ArrayAccess
+class Spawn implements ArrayAccess, SpawnInterface
 {
     private $coroutine = null;
     private $processor = null;
@@ -36,12 +37,12 @@ class Spawn implements ArrayAccess
     /**
      * @return static
      */
-    public static function create(): self
+    public static function create(): SpawnInterface
     {
         return new static();
     }
 	
-    public function concurrency(int $concurrency): self
+    public function concurrency(int $concurrency): SpawnInterface
     {
         $this->concurrency = $concurrency;
 

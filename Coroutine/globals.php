@@ -3,6 +3,7 @@
 use Async\Coroutine\Call;
 use Async\Coroutine\CoSocket;
 use Async\Coroutine\Coroutine;
+use Async\Coroutine\SpawnInterface;
 use Async\Coroutine\CoSocketInterface;
 use Async\Coroutine\CoroutineInterface;
 use Async\Coroutine\Spawn;
@@ -159,7 +160,7 @@ if (! \function_exists('coroutineRun')) {
 	 * 
      * @return ProcessInterface
      */
-    function spawnInstance(): Spawn
+    function spawnInstance(): SpawnInterface
     {
 		$coroutine = \coroutineInstance();
 
@@ -189,7 +190,7 @@ if (! \function_exists('coroutineRun')) {
     {
 		$pool = \spawnInstance();
 		
-		if ($pool instanceof Spawn)	
+		if ($pool instanceof SpawnInterface)	
 			return $pool->wait();
 		
 		return array();
