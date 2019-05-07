@@ -124,7 +124,5 @@ function handleClient($socket)
     yield \closeSocket($socket);
 }
 
-
-$coroutine = new Coroutine();
-$coroutine->addTask(server(5000));
-$coroutine->run();
+\coroutineCreate(\server(5000));
+\coroutineRun();

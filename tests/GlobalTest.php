@@ -18,7 +18,7 @@ class GlobalTest extends TestCase
 
     public function childTask() 
     {
-        $tid = yield asyncId();
+        $tid = yield async_id();
         while (true) {
             $this->task .= "Child task $tid still alive!\n";
             yield;
@@ -27,39 +27,38 @@ class GlobalTest extends TestCase
 
     public function parentTask() 
     {
-        $tid = yield asyncId();
-        $childTid = yield from async([$this, 'childTask']);
+        $tid = yield async_id();
+        $childTid = yield await([$this, 'childTask']);
         
         for ($i = 1; $i <= 6; ++$i) {
             $this->task .= "Parent task $tid iteration $i.\n";
             yield;
         
-            if ($i == 3) $this->assertNull(yield asyncRemove($childTid));
+            if ($i == 3) $this->assertNull(yield async_remove($childTid));
         }
     }
 
     /**
-     * @covers Async\Coroutine\Coroutine::addTask
+     * @covers Async\Coroutine\Coroutine::createTask
      * @covers Async\Coroutine\Coroutine::schedule
      * @covers Async\Coroutine\Coroutine::create
      * @covers Async\Coroutine\Coroutine::removeTask
      * @covers Async\Coroutine\Coroutine::run
      * @covers Async\Coroutine\Task::taskId
      * @covers Async\Coroutine\Task::run
-     * @covers \asyncId
+     * @covers \async_id
      * @covers \async
      * @covers \awaitAble
-     * @covers \asyncRemove
+     * @covers \async_remove
      * @covers \coroutineInstance
-     * @covers \coroutineAdd
+     * @covers \coroutineCreate
      * @covers \coroutineRun
      */
     public function testGlobalFunctions() 
     {
-        $this->task = null;
+        $this->task = '';
 
-        $coroutine = \coroutineInstance();
-        \coroutineAdd( \awaitAble([$this, 'parentTask']) );
+        \coroutineCreate( \awaitAble([$this, 'parentTask']) );
         \coroutineRun();        
 
         $expect[] = "Parent task 1 iteration 1.";

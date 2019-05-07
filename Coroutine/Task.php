@@ -5,6 +5,9 @@ namespace Async\Coroutine;
 use Async\Coroutine\Coroutine;
 use Async\Coroutine\TaskInterface;
 
+/**
+ * Task is used to schedule coroutines concurrently.
+ */
 class Task implements TaskInterface
 {	
     protected $taskId;

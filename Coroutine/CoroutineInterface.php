@@ -9,10 +9,12 @@ interface CoroutineInterface
     /**
      * Creates a new task (using the next free task id).
      * 
+     * @see https://docs.python.org/3.7/library/asyncio-task.html#creating-tasks
+     * 
      * @param \Generator $coroutine
      * @return int task id
      */
-    public function addTask(\Generator $coroutine);
+    public function createTask(\Generator $coroutine);
 
     /**
      * Add an new task into the running task queue.
@@ -32,6 +34,8 @@ interface CoroutineInterface
     /**
      * Process/walk the task queue and runs the tasks.
      * If a task is finished it's dropped, otherwise rescheduled at the end of the queue.
+     * 
+     * @see https://docs.python.org/3.7/library/asyncio-task.html#running-an-asyncio-program
      */
     public function run();
 
@@ -64,6 +68,27 @@ interface CoroutineInterface
      * @param resource $stream
      */
     public function removeWriteStream($stream);
+
+    /**
+     * Executes a function after x seconds.
+     * 
+     * @param callable $task
+     * @param float $timeout
+     */
+    public function addTimeout($task, float $timeout);
+
+    /**
+     * Executes a function every x seconds.
+     * 
+     * @param callable $task
+     * @param float $timeout
+     */
+    public function setInterval($task, float $timeout): array;
+
+    /**
+     * Stops a running interval.
+     */
+    public function clearInterval(array $intervalId);
 
     /**
      * Creates an object instance of the value which will signal 

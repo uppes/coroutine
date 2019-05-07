@@ -277,7 +277,7 @@ class CoSocket implements CoSocketInterface
 
     public function accept() 
 	{
-        yield Call::waitForRead($this->socket);
+        yield Call::readWait($this->socket);
         if (self::$isSecure) {
             \stream_set_blocking($this->socket, true);
             $this->secure  = $this->acceptConnection($this->socket);
@@ -316,15 +316,15 @@ class CoSocket implements CoSocketInterface
 
     public function read(int $size = 8192) 
 	{
-        yield Call::waitForRead($this->socket);
+        yield Call::readWait($this->socket);
         yield Coroutine::value(\fread($this->socket, $size));
         \stream_set_blocking($this->socket, false);
     }
 
     public function write(string $string) 
 	{
-        yield Call::waitForWrite($this->socket);
-        yield \fwrite($this->socket, $string);
+        yield Call::writeWait($this->socket);
+        yield Coroutine::value(\fwrite($this->socket, $string));
     }
 
     public function close() 

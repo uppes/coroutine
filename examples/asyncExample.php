@@ -5,7 +5,7 @@ use Async\Coroutine\Coroutine;
 
 function childTask() 
 {
-    $tid = yield asyncId();
+    $tid = yield async_id();
     while (true) {
         echo "Child task $tid still alive!\n";
         yield;
@@ -14,17 +14,16 @@ function childTask()
 
 function parentTask() 
 {
-    $tid = yield asyncId();
-    $childTid = yield from await('childTask');
+    $tid = yield \async_id();
+    $childTid = yield \await('childTask');
 
     for ($i = 1; $i <= 6; ++$i) {
         echo "Parent task $tid iteration $i.\n";
         yield;
 
-        if ($i == 3) yield asyncRemove($childTid);
+        if ($i == 3) yield \async_remove($childTid);
     }
 };
 
-$coroutine = new Coroutine();
-$coroutine->addTask( parentTask() );
-$coroutine->run();
+\coroutineCreate( \parentTask() );
+\coroutineRun();

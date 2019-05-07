@@ -8,8 +8,6 @@
 
 include 'vendor/autoload.php';
 
-use Async\Coroutine\Coroutine;
-
 // Let's ensure we have optimal performance. Set this simple thing
 date_default_timezone_set('America/New_York');
 
@@ -48,6 +46,5 @@ function client($ip, $port, $command) {
     echo $socket->getBuffer();
 }
 
-$coroutine = new Coroutine();
-$coroutine->addTask(client($ip, $port, $command));
-$coroutine->run();
+\coroutineCreate(\client($ip, $port, $command));
+\coroutineRun();

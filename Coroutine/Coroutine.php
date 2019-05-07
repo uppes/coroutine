@@ -10,7 +10,11 @@ use Async\Coroutine\TaskInterface;
 use Async\Coroutine\ReturnValueCoroutine;
 use Async\Coroutine\PlainValueCoroutine;
 use Async\Coroutine\CoroutineInterface;
+use Async\Processor\ProcessInterface;
 
+/**
+ * The Scheduler 
+ */
 class Coroutine implements CoroutineInterface
 {	
     protected $maxTaskId = 0;
@@ -95,7 +99,7 @@ class Coroutine implements CoroutineInterface
         return $this->pcntl;
     }
 
-    public function addTask(\Generator $coroutine) 
+    public function createTask(\Generator $coroutine) 
 	{
         $tid = ++$this->maxTaskId;
         $task = new Task($tid, $coroutine);
@@ -126,16 +130,31 @@ class Coroutine implements CoroutineInterface
     
         return true;
     }
-	
-    public function hasCoroutines() 
-	{
-        return (!$this->taskQueue->isEmpty() && !empty($this->readStreams) && !empty($this->writeStreams));
-    }
-	
+		
     public function run() 
 	{
-        $this->addTask($this->ioSocketPoll());
-        return $this->runCoroutines();
+        $this->createTask($this->ioSocketPoll());
+
+		while (!$this->taskQueue->isEmpty()) {
+			$task = $this->taskQueue->dequeue();
+			$value = $task->run();
+
+			if ($value instanceof Call) {
+				try {
+					$value($task, $this);
+				} catch (\Exception $e) {
+					$task->exception($e);
+					$this->schedule($task);
+				}
+				continue;
+			}
+
+			if ($task->isFinished()) {
+				unset($this->taskMap[$task->taskId()]);
+			} else {
+				$this->schedule($task);
+            }
+		}
     }
 
     /**
@@ -160,36 +179,6 @@ class Coroutine implements CoroutineInterface
 
             return \max(0, $timer[0] - \microtime(true));
         }
-    }
-
-    protected function runCoroutines(bool $checkProcess = false) 
-	{
-        if ($checkProcess)
-            $this->process->processing();
-
-		while (!$this->taskQueue->isEmpty()) {
-			$task = $this->taskQueue->dequeue();
-			$value = $task->run();
-
-			if ($value instanceof Call) {
-				try {
-					$value($task, $this);
-				} catch (\Exception $e) {
-					$task->exception($e);
-					$this->schedule($task);
-				}
-				continue;
-			}
-
-			if ($task->isFinished()) {
-				unset($this->taskMap[$task->taskId()]);
-			} else {
-				$this->schedule($task);
-            }
-            
-            if ($checkProcess)
-                $this->process->processing();
-		}
     }
 
     protected function runStreams($timeout)
@@ -250,7 +239,7 @@ class Coroutine implements CoroutineInterface
                     // There's a running 'process', wait some before rechecking.
                     $streamWait = $this->process->sleepingTime();
                 elseif (! $this->taskQueue->isEmpty())
-                    // There's a pending 'addTask'. Don't wait.
+                    // There's a pending 'createTask'. Don't wait.
                     $streamWait = 0;
 
                 $this->runStreams($streamWait);
@@ -293,7 +282,7 @@ class Coroutine implements CoroutineInterface
      * @param callable $task
      * @param float $timeout
      */
-    public function addTimeout(callable $task, float $timeout)
+    public function addTimeout($task, float $timeout)
     {
         $triggerTime = \microtime(true) + ($timeout);
 
@@ -332,7 +321,7 @@ class Coroutine implements CoroutineInterface
      * @param callable $task
      * @param float $timeout
      */
-    public function setInterval(callable $task, float $timeout): array
+    public function setInterval($task, float $timeout): array
     {
         $keepGoing = true;
         $f = null;

@@ -11,7 +11,7 @@ use Async\Coroutine\CoroutineInterface;
 class Process
 {
     private $processes = array();
-    private $sleepTime = 30000;
+    private $sleepTime = 15000;
     private $timedOutCallback = null;
     private $finishCallback = null;
     private $failCallback = null;
@@ -63,8 +63,8 @@ class Process
                     $this->remove($process);
 					$markTimedOuted = $this->timedOutCallback;
 
-                    if (! method_exists($markTimedOuted, 'callTimeout'))
-                        $this->coroutine->addTask($markTimedOuted($process));
+                    if (! \method_exists($markTimedOuted, 'callTimeout'))
+                        $this->coroutine->createTask($markTimedOuted($process));
                     else
                         $markTimedOuted($process);
                 } 
@@ -76,16 +76,16 @@ class Process
                         $this->remove($process);
 						$markFinished = $this->finishCallback;
 
-                        if (! method_exists($markFinished, 'callSuccess'))
-                            $this->coroutine->addTask($markFinished($process));
+                        if (! \method_exists($markFinished, 'callSuccess'))
+                            $this->coroutine->createTask($markFinished($process));
                         else
                             $markFinished($process);
                     } elseif ($process->isTerminated()) {
                         $this->remove($process);
                         $markFailed = $this->failCallback;
 
-                        if (! method_exists($markFailed, 'callError'))
-                            $this->coroutine->addTask($markFailed($process));
+                        if (! \method_exists($markFailed, 'callError'))
+                            $this->coroutine->createTask($markFailed($process));
                         else
                             $markFailed($process);
                     } 
@@ -153,8 +153,8 @@ class Process
                     $this->remove($process);
                     $markFinished = $this->finishCallback;
 
-                    if (! method_exists($markFinished, 'callSuccess'))
-                        $this->coroutine->addTask($markFinished($process));
+                    if (! \method_exists($markFinished, 'callSuccess'))
+                        $this->coroutine->createTask($markFinished($process));
                     else
                         $markFinished($process);
 
@@ -164,8 +164,8 @@ class Process
                 $this->remove($process);
                 $markFailed = $this->failCallback;
 
-                if (! method_exists($markFailed, 'callError'))
-                    $this->coroutine->addTask($markFailed($process));
+                if (! \method_exists($markFailed, 'callError'))
+                    $this->coroutine->createTask($markFailed($process));
                 else
                     $markFailed($process);
             }

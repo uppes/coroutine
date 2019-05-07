@@ -8,7 +8,7 @@ use PHPUnit\Framework\TestCase;
 
 class CoroutineTest extends TestCase 
 {
-    protected $task = null;
+    protected $task = '';
 
     public function task1() 
     {
@@ -35,11 +35,10 @@ class CoroutineTest extends TestCase
     }
 
     /**
-     * @covers Async\Coroutine\Coroutine::addTask
+     * @covers Async\Coroutine\Coroutine::createTask
      * @covers Async\Coroutine\Coroutine::schedule
      * @covers Async\Coroutine\Coroutine::create
      * @covers Async\Coroutine\Coroutine::ioSocketPoll
-     * @covers Async\Coroutine\Coroutine::runCoroutines
      * @covers Async\Coroutine\Coroutine::run
      * @covers Async\Coroutine\Task::taskId
      * @covers Async\Coroutine\Task::run
@@ -49,11 +48,11 @@ class CoroutineTest extends TestCase
         $coroutine = new Coroutine();
         $this->assertInstanceOf('\Async\Coroutine\Coroutine', $coroutine);
 
-        $taskId = $coroutine->addTask($this->task1());
+        $taskId = $coroutine->createTask($this->task1());
         $this->assertNotNull($taskId);
         
-        $coroutine->addTask($this->task2());
-        $coroutine->addTask($this->task3());
+        $coroutine->createTask($this->task2());
+        $coroutine->createTask($this->task3());
 
         $coroutine->run();
         
@@ -90,22 +89,21 @@ class CoroutineTest extends TestCase
     }
 
     /**
-     * @covers Async\Coroutine\Coroutine::addTask
+     * @covers Async\Coroutine\Coroutine::createTask
      * @covers Async\Coroutine\Coroutine::schedule
      * @covers Async\Coroutine\Coroutine::create
      * @covers Async\Coroutine\Coroutine::ioSocketPoll
-     * @covers Async\Coroutine\Coroutine::runCoroutines
      * @covers Async\Coroutine\Coroutine::run
      */
     public function testCall_TaskId() 
     {
-        $this->task = null;
+        $this->task = '';
 
         $coroutine = new Coroutine();
 
-        $coroutine->addTask($this->task(10));
-        $coroutine->addTask($this->task(5));
-        $coroutine->addTask($this->task(3));
+        $coroutine->createTask($this->task(10));
+        $coroutine->createTask($this->task(5));
+        $coroutine->createTask($this->task(3));
         
         $coroutine->run();
 
@@ -145,7 +143,7 @@ class CoroutineTest extends TestCase
     public function taskCall() 
     {
         $tid = (yield Call::taskId());
-        $childTid = (yield Call::addTask($this->childTask()));
+        $childTid = (yield Call::createTask($this->childTask()));
 
         for ($i = 1; $i <= 6; ++$i) {            
             $this->task .= "Parent task $tid iteration $i.\n";
@@ -156,19 +154,18 @@ class CoroutineTest extends TestCase
     }
 
     /**
-     * @covers Async\Coroutine\Coroutine::addTask
+     * @covers Async\Coroutine\Coroutine::createTask
      * @covers Async\Coroutine\Coroutine::schedule
      * @covers Async\Coroutine\Coroutine::create
      * @covers Async\Coroutine\Coroutine::runStreams
-     * @covers Async\Coroutine\Coroutine::runCoroutines
      * @covers Async\Coroutine\Coroutine::run
      */
     public function testCall() 
     {
-        $this->task = null;
+        $this->task = '';
 
         $coroutine = new Coroutine();
-        $coroutine->addTask($this->taskCall());
+        $coroutine->createTask($this->taskCall());
         $coroutine->run();
 
         $expect[] = "Parent task 1 iteration 1.";
@@ -192,7 +189,6 @@ class CoroutineTest extends TestCase
      * @covers Async\Coroutine\Coroutine::removeWriteStream
      * @covers Async\Coroutine\Coroutine::runStreams
      * @covers Async\Coroutine\Coroutine::ioSocketPoll
-     * @covers Async\Coroutine\Coroutine::runCoroutines
      * @covers Async\Coroutine\Coroutine::run
      * @covers Async\Coroutine\Task::taskId
      * @covers Async\Coroutine\Task::run
@@ -215,7 +211,6 @@ class CoroutineTest extends TestCase
      * @covers Async\Coroutine\Coroutine::removeReadStream
      * @covers Async\Coroutine\Coroutine::runStreams
      * @covers Async\Coroutine\Coroutine::ioSocketPoll
-     * @covers Async\Coroutine\Coroutine::runCoroutines
      * @covers Async\Coroutine\Coroutine::run
      * @covers Async\Coroutine\Task::taskId
      * @covers Async\Coroutine\Task::run
@@ -284,7 +279,7 @@ class CoroutineTest extends TestCase
 	{
         $coroutine = new Coroutine();
         $check = 0;
-        $intervalId = null;
+        $intervalId = [];
         $intervalId = $coroutine->setInterval(function() use (&$check, &$intervalId, $coroutine) {
             $check++;
             if ($check > 5) {

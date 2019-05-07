@@ -8,7 +8,7 @@ use Async\Coroutine\TaskInterface;
 /**
  * This class is used for Communication between the tasks and the scheduler
  * 
- * The yield also act both as an interrupt and as a way to 
+ * The `yield` keyword in your code, act both as an interrupt and as a way to 
  * pass information to (and from) the scheduler.
  */
 class Call 
@@ -53,16 +53,26 @@ class Call
 	 * 
 	 * @return int task ID
 	 */
-	public static function addTask(\Generator $coroutines) 
+	public static function createTask(\Generator $coroutines) 
 	{
 		return new Call(
 			function(TaskInterface $task, Coroutine $coroutine) use ($coroutines) {
-				$task->sendValue($coroutine->addTask($coroutines));
+				$task->sendValue($coroutine->createTask($coroutines));
 				$coroutine->schedule($task);
 			}
 		);
 	}
 
+	public static function await($callable, ...$args) 
+	{
+		return new Call(
+			function(TaskInterface $task, Coroutine $coroutine) use ($callable, $args) {
+				$task->sendValue($coroutine->createTask(\awaitAble($callable, $args)));				
+				$coroutine->schedule($task);
+			}
+		);
+	}
+	
 	/**
 	 * kill/remove an task using task id
 	 * 
@@ -87,7 +97,7 @@ class Call
      * 
      * @param resource $socket
      */
-	public static function waitForRead($socket) 
+	public static function readWait($socket) 
 	{
 		return new Call(
 			function(TaskInterface $task, Coroutine $coroutine) use ($socket) {
@@ -101,7 +111,7 @@ class Call
      * 
      * @param resource $socket
      */
-	public static function waitForWrite($socket) 
+	public static function writeWait($socket) 
 	{
 		return new Call(
 			function(TaskInterface $task, Coroutine $coroutine) use ($socket) {
@@ -111,15 +121,52 @@ class Call
 	}
 
     /**
-     * Wait for an timeout to passed in x seconds.
-     * 
-     * @param float $timeout
+     * Block/sleep for delay seconds.
+     * Suspends the calling task, allowing other tasks to run.
+	 * 
+	 * @see https://docs.python.org/3.7/library/asyncio-task.html#sleeping
+	 * 
+     * @param float $delay
+	 * @param mixed $result - If provided, it is returned to the caller when the coroutine complete
      */
-	public static function waitForTimeout($timeout) 
+	public static function sleepFor(float $delay = 0.0, $result = null) 
 	{
 		return new Call(
-			function(TaskInterface $task, Coroutine $coroutine) use ($timeout) {
-				$coroutine->addTimeout($task, $timeout);
+			function(TaskInterface $task, Coroutine $coroutine) use ($delay, $result) {
+				$coroutine->addTimeout(function () use ($task, $coroutine, $result) {
+					if (!empty($result)) 
+						$task->sendValue($result);
+					$coroutine->schedule($task);
+				}, $delay);
+			}
+		);
+	}
+
+    /**
+     * Wait for the callable to complete with a timeout.
+     * 
+	 * @see https://docs.python.org/3.7/library/asyncio-task.html#timeouts
+	 * 
+	 * @param callable $callable
+     * @param float $timeout
+     */
+	public static function waitFor($callable, float $timeout = null) 
+	{
+		return new Call(
+			function(TaskInterface $task, Coroutine $coroutine) use ($callable, $timeout) {
+				if ($callable instanceof \Generator) {
+					$taskId = $coroutine->createTask($callable);
+				} else {
+					$taskId = $coroutine->createTask(\awaitAble($callable));					
+				}
+				
+				$coroutine->addTimeout(function () use ($taskId, $timeout, $task, $coroutine) {
+					if (!empty($timeout)) {
+						$coroutine->removeTask($taskId);
+						$task->exception(new \RuntimeException('The operation has exceeded the given deadline'));
+						$coroutine->schedule($task);
+					}
+				}, $timeout);
 			}
 		);
 	}
