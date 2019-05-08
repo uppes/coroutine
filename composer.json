@@ -7,8 +7,9 @@
 		"coroutine",
 		"task",
 		"yield",
-		"parallel",
-		"Generator",
+        "parallel",
+        "process",
+		"generator",
         "async"
 	],
     "homepage": "https://github.com/uppes/coroutine",
@@ -30,15 +31,14 @@
     },
     "autoload": {
         "files": [
-            "Coroutine/globals.php"
+            "Coroutine/Core.php"
         ],
         "psr-4": { 
 			"Async\\Coroutine\\": "Coroutine/"
 		}
     },
     "require-dev": {
-        "phpunit/phpunit": ">5.7",
-        "symfony/stopwatch": "^4.0"
+        "phpunit/phpunit": ">5.7"
     },
     "autoload-dev": {
         "psr-4": {

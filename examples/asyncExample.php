@@ -25,5 +25,5 @@ function parentTask()
     }
 };
 
-\coroutineCreate( \parentTask() );
-\coroutineRun();
+\coroutine_create( \parentTask() );
+\coroutine_run();

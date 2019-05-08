@@ -7,16 +7,13 @@ use Async\Coroutine\Spawn;
 use Async\Tests\MyClass;
 use Async\Tests\InvokableClass;
 use Async\Tests\NonInvokableClass;
-use Symfony\Component\Stopwatch\Stopwatch;
 use PHPUnit\Framework\TestCase;
 
 class SpawnTest extends TestCase
 {
 	protected function setUp(): void
     {
-        global $__coroutine__;
-        
-        $__coroutine__ = null;
+        \coroutine_clear();
     }
 
     /**
@@ -35,12 +32,9 @@ class SpawnTest extends TestCase
      */
     public function testIt_can_check_for_asynchronous_support_speed()
     {
-        /** @var \Symfony\Component\Stopwatch\Stopwatch */
-        $stopwatch = new Stopwatch();
-
         $parallel = new Spawn();
 
-        $stopwatch->start('test');
+        $stopwatch = \microtime(true);
 
         foreach (range(1, 5) as $i) {
             $parallel->add(function () {
@@ -50,17 +44,17 @@ class SpawnTest extends TestCase
 
         $parallel->wait();
 
-        $stopwatchResult = $stopwatch->stop('test');
+        $stopwatchResult = \microtime(true) - $stopwatch;
 		
 		if ('\\' !== \DIRECTORY_SEPARATOR) {
-			$expect = 400;
+			$expect = (float) 1.0;
             $this->assertTrue($parallel->isPcntl());
         } else {
-            $expect = 600;
+            $expect = (float) 2.0;
             $this->assertFalse($parallel->isPcntl());
         }
 
-        $this->assertLessThan($expect, $stopwatchResult->getDuration(), "Execution time was {$stopwatchResult->getDuration()}, expected less than {$expect}.\n".(string) $parallel->status());
+        $this->assertLessThan($expect, $stopwatchResult, "Execution time was {$stopwatchResult}, expected less than {$expect}.\n".(string) $parallel->status());
     }
 
     /**
@@ -261,8 +255,8 @@ class SpawnTest extends TestCase
      * @covers Async\Coroutine\Spawn::sleepTime
      * @covers Async\Coroutine\Spawn::offsetGet
      * @covers Async\Coroutine\Spawn::offsetUnset
-     * @covers \spawnAdd
-     * @covers \spawnWait
+     * @covers \spawn_add
+     * @covers \spawn_wait
      */
     public function testIt_can_handle_sleep_array_access()
     {
@@ -273,14 +267,14 @@ class SpawnTest extends TestCase
         $parallel->sleepTime(10000);
 
         foreach (range(1, 5) as $i) {
-            $parallel[] = \spawnAdd(function () {
+            $parallel[] = \spawn_add(function () {
                 usleep(random_int(100, 1000));
 
                 return 2;
             });
         }
 
-        \spawnWait();
+        \spawn_wait();
 
         $this->assertTrue(isset($parallel[0]));
 
@@ -304,7 +298,7 @@ class SpawnTest extends TestCase
      * @covers Async\Coroutine\Spawn::offsetSet
      * @covers Async\Coroutine\Spawn::__construct
      * @covers Async\Coroutine\Spawn::wait
-     * @covers \spawnAdd
+     * @covers \spawn_add
      */
     public function testIt_returns_all_the_output_as_an_array()
     {
@@ -313,7 +307,7 @@ class SpawnTest extends TestCase
         $result = null;
 
         foreach (range(1, 5) as $i) {
-            $parallel[] = \spawnAdd(function () {
+            $parallel[] = \spawn_add(function () {
                 return 2;
             });
         }
@@ -335,18 +329,18 @@ class SpawnTest extends TestCase
      * @covers Async\Coroutine\Spawn::offsetSet
      * @covers Async\Coroutine\Spawn::__construct
      * @covers Async\Coroutine\Spawn::wait
-     * @covers \spawnAdd
-     * @covers \spawnWait
-     * @covers \spawnInstance
+     * @covers \spawn_add
+     * @covers \spawn_wait
+     * @covers \spawn_instance
      */
     public function testIt_can_use_a_class_from_the_parent_process()
     {
-        $parallel = \spawnInstance();
+        $parallel = \spawn_instance();
 
         /** @var MyClass $result */
         $result = null;
 
-        $parallel[] = \spawnAdd(function () {
+        $parallel[] = \spawn_add(function () {
             $class = new MyClass();
 
             $class->property = true;
@@ -356,7 +350,7 @@ class SpawnTest extends TestCase
             $result = $class;
         });
 
-        \spawnWait();
+        \spawn_wait();
 
         $this->assertInstanceOf(MyClass::class, $result);
         $this->assertTrue($result->property);
@@ -372,18 +366,18 @@ class SpawnTest extends TestCase
      * @covers Async\Coroutine\Spawn::markAsFailed
      * @covers Async\Coroutine\Spawn::offsetSet
      * @covers Async\Coroutine\Spawn::wait
-     * @covers \spawnAdd
-     * @covers \spawnWait
-     * @covers \spawnInstance
+     * @covers \spawn_add
+     * @covers \spawn_wait
+     * @covers \spawn_instance
      */
     public function testIt_works_with_global_helper_functions()
     {
-        $workers = \spawnInstance();
+        $workers = \spawn_instance();
 
         $counter = 0;
 
         foreach (range(1, 5) as $i) {
-            $workers[] = \spawnAdd(function () {
+            $workers[] = \spawn_add(function () {
                 usleep(random_int(10, 1000));
 
                 return 2;
@@ -392,7 +386,7 @@ class SpawnTest extends TestCase
             });
         }
 
-        \spawnWait();
+        \spawn_wait();
 
         $this->assertEquals(10, $counter, (string) $workers->status());
     }
@@ -406,17 +400,16 @@ class SpawnTest extends TestCase
      * @covers Async\Coroutine\Spawn::markAsTimedOut
      * @covers Async\Coroutine\Spawn::markAsFailed
      * @covers Async\Coroutine\Spawn::add
-     * @covers \spawnAdd
-     * @covers \spawnWait
-     * @covers \spawnInstance
+     * @covers \spawn_wait
+     * @covers \spawn_instance
      */
     public function testIt_can_run_invokable_classes()
     {
-        $parallel = \spawnInstance();
+        $parallel = \spawn_instance();
 
         $parallel->add(new InvokableClass());
 
-        $results = \spawnWait();
+        $results = \spawn_wait();
 
         $this->assertEquals(2, $results[0]);
     }
@@ -426,13 +419,13 @@ class SpawnTest extends TestCase
      * @covers Async\Coroutine\Process::add
      * @covers Async\Coroutine\Process::init
      * @covers Async\Coroutine\Spawn::add
-     * @covers \spawnInstance
+     * @covers \spawn_instance
      */
     public function testIt_reports_error_for_non_invokable_classes()
     {
         $this->expectException(\InvalidArgumentException::class);
 
-        $parallel = \spawnInstance();
+        $parallel = \spawn_instance();
 
         $parallel->add(new NonInvokableClass());
     }

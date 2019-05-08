@@ -23,7 +23,7 @@ class Process
         callable $finishCallback = null, 
         callable $failCallback = null)
     {
-        $this->coroutine = empty($coroutine) ? \coroutineInstance() : $coroutine;
+        $this->coroutine = empty($coroutine) ? \coroutine_instance() : $coroutine;
         $this->init($timedOutCallback,  $finishCallback,  $failCallback);
 		
 		if ($this->isPcntl())

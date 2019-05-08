@@ -1,12 +1,11 @@
 <?php
 
 use Async\Coroutine\Call;
-use Async\Coroutine\StreamSocket;
-use Async\Coroutine\Coroutine;
 use Async\Coroutine\SpawnInterface;
+use Async\Coroutine\StreamSocket;
 use Async\Coroutine\StreamSocketInterface;
+use Async\Coroutine\Coroutine;
 use Async\Coroutine\CoroutineInterface;
-use Async\Coroutine\Spawn;
 use Async\Processor\Processor;
 use Async\Processor\ProcessInterface;
 
@@ -170,12 +169,23 @@ if (! \function_exists('coroutineRun')) {
 		return $socket->address();
 	}
 
-	function coroutineInstance()
+	function read_input(int $size = 1024)
 	{
-		return \coroutineCreate();
+		 return StreamSocket::input($size);
+	}
+	
+	function coroutine_instance()
+	{
+		return \coroutine_create();
 	}
 
-	function coroutineCreate(\Generator $coroutine = null)
+	function coroutine_clear()
+	{
+		global $__coroutine__;
+		$__coroutine__ = null;
+	}
+
+	function coroutine_create(\Generator $coroutine = null)
 	{
 		global $__coroutine__;
 
@@ -188,9 +198,9 @@ if (! \function_exists('coroutineRun')) {
 		return $__coroutine__;
 	}
 	
-	function coroutineRun()
+	function coroutine_run()
 	{
-		$coroutine = \coroutineInstance();
+		$coroutine = \coroutine_instance();
 
 		if ($coroutine instanceof CoroutineInterface) {			
 			$coroutine->run();
@@ -210,7 +220,7 @@ if (! \function_exists('coroutineRun')) {
      */
 	function spawn($callable, int $timeout = 300): ProcessInterface
     {
-		$coroutine = \coroutineInstance();
+		$coroutine = \coroutine_instance();
 
 		if ($coroutine instanceof CoroutineInterface)			
 			return $coroutine->addProcess($callable, $timeout);
@@ -221,9 +231,9 @@ if (! \function_exists('coroutineRun')) {
 	 * 
      * @return ProcessInterface
      */
-    function spawnInstance(): SpawnInterface
+    function spawn_instance(): SpawnInterface
     {
-		$coroutine = \coroutineInstance();
+		$coroutine = \coroutine_instance();
 
 		if ($coroutine instanceof CoroutineInterface)			
 			return $coroutine->spawnInstance();
@@ -237,7 +247,7 @@ if (! \function_exists('coroutineRun')) {
      *
      * @return ProcessInterface
      */
-    function spawnAdd($somethingToRun, int $timeout = 300): ProcessInterface
+    function spawn_add($somethingToRun, int $timeout = 300): ProcessInterface
     {
 		return Processor::create($somethingToRun, $timeout);
 	}
@@ -247,21 +257,23 @@ if (! \function_exists('coroutineRun')) {
 	 * 
      * @return array
      */
-    function spawnWait(): ?array
+    function spawn_wait(): ?array
     {
-		$pool = \spawnInstance();
+		$pool = \spawn_instance();
 		
 		if ($pool instanceof SpawnInterface)	
 			return $pool->wait();
 		
 		return array();
     }
-    
-    function read_input()
-    {
-				//Check on STDIN stream
-				\stream_set_blocking(\STDIN, false);
-				yield Call::readWait(\STDIN);
-				yield Coroutine::value(\trim(\fread(\STDIN, 1024)));
-    }
+    function non_block_read($fd, &$data) {
+	$read = array($fd);
+	$write = array();
+	$except = array();
+	$result = \stream_select($read, $write, $except, 0);
+	if($result === false) throw new \Exception('stream_select failed');
+	if($result === 0) return false;
+	$data = \stream_get_line($fd, 1);
+	return true;
+ }
 }

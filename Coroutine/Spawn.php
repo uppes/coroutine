@@ -25,7 +25,7 @@ class Spawn implements ArrayAccess, SpawnInterface
 	
     public function __construct(CoroutineInterface $coroutine = null)
     {
-        $this->coroutine = empty($coroutine) ? \coroutineInstance() : $coroutine;
+        $this->coroutine = empty($coroutine) ? \coroutine_instance() : $coroutine;
         $this->processor = $this->coroutine->initProcess([$this, 'markAsTimedOut'], 
             [$this, 'markAsFinished'], 
             [$this, 'markAsFailed']

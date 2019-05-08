@@ -46,5 +46,5 @@ function client($ip, $port, $command) {
     echo $socket->getBuffer();
 }
 
-\coroutineCreate(\client($ip, $port, $command));
-\coroutineRun();
+\coroutine_create(\client($ip, $port, $command));
+\coroutine_run();

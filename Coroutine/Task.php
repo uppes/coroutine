@@ -57,4 +57,21 @@ class Task implements TaskInterface
 	{
         return !$this->coroutine->valid();
     }
+    
+    public function cancel()
+    {
+    }
+
+    public function cancelled()
+    {
+    }
+
+    public function done() 
+    {
+    }
+
+
+    public function result()
+    {
+    }
 }

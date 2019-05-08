@@ -11,7 +11,7 @@ function eternity() {
 function keyboard() {
     // will begin outputs of `needName` in 1 second
     print("What's your name: ");
-    yield \read_input('help', 5);
+    yield \read_input();
 }
 
 function needName() {
@@ -29,7 +29,7 @@ function needName() {
 }
 
 function main() {
-    yield \await('needName');
+    $ct = yield \await('needName');
     yield \keyboard();
     
     try {
@@ -45,5 +45,5 @@ function main() {
 	}
 }
 
-\coroutineCreate(\main());
-\coroutineRun();
+\coroutine_create(\main());
+\coroutine_run();

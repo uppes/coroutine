@@ -83,7 +83,8 @@ class Call
 	{
 		return new Call(
 			function(TaskInterface $task, Coroutine $coroutine) use ($tid) {
-				if ($coroutine->removeTask($tid)) {
+				if ($coroutine->removeTask($tid)) {					
+					$task->sendValue(true);		
 					$coroutine->schedule($task);
 				} else {
 					throw new \InvalidArgumentException('Invalid task ID!');

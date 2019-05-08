@@ -319,6 +319,14 @@ class StreamSocket implements StreamSocketInterface
         }
     }
 
+    public static function input(int $size = 256) 
+	{
+		//Check on STDIN stream
+		\stream_set_blocking(\STDIN, false);
+		yield Call::readWait(\STDIN);
+		return yield Coroutine::value(\trim(\stream_get_line(\STDIN, $size, \PHP_EOL)));
+    }
+
     public function read(int $size = 8192) 
 	{
         yield Call::readWait($this->socket);

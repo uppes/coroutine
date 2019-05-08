@@ -7,10 +7,8 @@
  */
 include 'vendor/autoload.php';
 
-use Async\Coroutine\Coroutine;
-
 // Let's ensure we have optimal performance. Set this simple thing
-date_default_timezone_set('America/New_York');
+\date_default_timezone_set('America/New_York');
 
 error_reporting(-1);
 ini_set("display_errors", 1);
@@ -103,13 +101,13 @@ function handleClient($socket)
 
             $input = '.'.$input;
 
-            if (file_exists($input) && is_readable($input)) {
+            if (\file_exists($input) && \is_readable($input)) {
                 print "Serving $input\n";
 
                 if (strstr($input, '.php')) {
-                    $contents = loadTemplateFile($input, []);
+                    $contents = \loadTemplateFile($input, []);
                 } else {
-                    $contents = file_get_contents($input);
+                    $contents = \file_get_contents($input);
                 }
 
                 $output = "HTTP/1.0 200 OK\r\nServer: APatchyServer\r\nConnection: close\r\nContent-Type: $mime\r\n\r\n$contents";
@@ -124,5 +122,5 @@ function handleClient($socket)
     yield \closeSocket($socket);
 }
 
-\coroutineCreate(\server(5000));
-\coroutineRun();
+\coroutine_create(\server(5000));
+\coroutine_run();
