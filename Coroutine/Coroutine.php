@@ -230,17 +230,17 @@ class Coroutine implements CoroutineInterface
             } else {
                 $streamWait = null;
                 $this->process->processing();
-                
+
                 $nextTimeout = $this->runTimers();
                 if (\is_numeric($nextTimeout))
                     // Wait until the next Timeout should trigger.
-                    $streamWait = $nextTimeout * 1000000;
+                    $streamWait = $nextTimeout * 1000000;                
+                elseif (! $this->taskQueue->isEmpty()) 
+                    // There's a pending 'createTask'. Don't wait.
+                    $streamWait = 0;
                 elseif (! $this->process->isEmpty())
                     // There's a running 'process', wait some before rechecking.
                     $streamWait = $this->process->sleepingTime();
-                elseif (! $this->taskQueue->isEmpty())
-                    // There's a pending 'createTask'. Don't wait.
-                    $streamWait = 0;
 
                 $this->runStreams($streamWait);
             }

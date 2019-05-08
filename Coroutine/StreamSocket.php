@@ -4,9 +4,9 @@ namespace Async\Coroutine;
 
 use Async\Coroutine\Call;
 use Async\Coroutine\Coroutine;
-use Async\Coroutine\CoSocketInterface;
+use Async\Coroutine\StreamSocketInterface;
 
-class CoSocket implements CoSocketInterface
+class StreamSocket implements StreamSocketInterface
 {
     protected $socket;
     protected $secure;
@@ -152,7 +152,7 @@ class CoSocket implements CoSocketInterface
         $context = \stream_context_create($options);
 
         if (! self::$isSecure) {
-            CoSocket::createCert($privatekeyFile, $certificateFile, $signingFile, $ssl_path, $details);
+            StreamSocket::createCert($privatekeyFile, $certificateFile, $signingFile, $ssl_path, $details);
         }
 
         #Setup the SSL Options 
@@ -170,7 +170,7 @@ class CoSocket implements CoSocketInterface
         self::$method = \STREAM_CRYPTO_METHOD_SSLv23_SERVER | \STREAM_CRYPTO_METHOD_TLS_SERVER | \STREAM_CRYPTO_METHOD_TLSv1_1_SERVER | \STREAM_CRYPTO_METHOD_TLSv1_2_SERVER;
 
         #create a stream socket on IP:Port
-        $socket = CoSocket::createServer($uri, $context);
+        $socket = StreamSocket::createServer($uri, $context);
         \stream_socket_enable_crypto($socket, false, self::$method);
 
 		return new self($socket);
@@ -275,16 +275,21 @@ class CoSocket implements CoSocketInterface
         return $socket;
     }
 
+    public function handshake() 
+	{
+        \stream_set_blocking($this->socket, true);
+        $this->secure  = $this->acceptConnection($this->socket);
+        \stream_set_blocking($this->socket, false);
+        yield Coroutine::value(new StreamSocket($this->acceptSecure($this->secure)));
+    }
+
     public function accept() 
 	{
         yield Call::readWait($this->socket);
         if (self::$isSecure) {
-            \stream_set_blocking($this->socket, true);
-            $this->secure  = $this->acceptConnection($this->socket);
-            \stream_set_blocking($this->socket, false);
-            yield Coroutine::value(new CoSocket($this->acceptSecure($this->secure)));
+            return $this->handshake();
         } else
-            yield Coroutine::value(new CoSocket($this->acceptConnection($this->socket)));
+            yield Coroutine::value(new StreamSocket($this->acceptConnection($this->socket)));
     }
 
     public function acceptConnection($socket) 

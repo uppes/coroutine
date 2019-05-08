@@ -1,10 +1,10 @@
 <?php
 
 use Async\Coroutine\Call;
-use Async\Coroutine\CoSocket;
+use Async\Coroutine\StreamSocket;
 use Async\Coroutine\Coroutine;
 use Async\Coroutine\SpawnInterface;
-use Async\Coroutine\CoSocketInterface;
+use Async\Coroutine\StreamSocketInterface;
 use Async\Coroutine\CoroutineInterface;
 use Async\Coroutine\Spawn;
 use Async\Processor\Processor;
@@ -115,57 +115,57 @@ if (! \function_exists('coroutineRun')) {
 		string $certificateFile = 'certificate.crt', 
 		string $signingFile = 'signing.csr',
 		string $ssl_path = null, 
-		array $details = []) : CoSocketInterface
+		array $details = []) : StreamSocketInterface
 	{
-		return CoSocket::secureServer($uri, $options, $privatekeyFile, $certificateFile, $signingFile, $ssl_path, $details);
+		return StreamSocket::secureServer($uri, $options, $privatekeyFile, $certificateFile, $signingFile, $ssl_path, $details);
 	}
 
-	function createServer($uri = null, array $options = []): CoSocketInterface
+	function createServer($uri = null, array $options = []): StreamSocketInterface
 	{
-		return CoSocket::createServer($uri, $options);
+		return StreamSocket::createServer($uri, $options);
 	}	
 
 	function createClient($uri = null, array $options = [], bool $isRequest = false)
 	{
-		return CoSocket::createClient($uri, $options, $isRequest);
+		return StreamSocket::createClient($uri, $options, $isRequest);
 	}
 
-	function clientRead(CoSocketInterface $socket, int $size = 20240) 
+	function clientRead(StreamSocketInterface $socket, int $size = 20240) 
 	{
 		return $socket->response($size);
 	}
 
-	function clientWrite(CoSocketInterface $socket, string $response = null) 
+	function clientWrite(StreamSocketInterface $socket, string $response = null) 
 	{
 		return \writeSocket($socket, $response);
 	}
 
-	function closeClient(CoSocketInterface $socket)
+	function closeClient(StreamSocketInterface $socket)
 	{
 		return \closeSocket($socket);
 	}	
 
-	function acceptSocket(CoSocketInterface $socket)
+	function acceptSocket(StreamSocketInterface $socket)
 	{
 		return $socket->accept();
 	}	
 
-	function readSocket(CoSocketInterface $socket, int $size = 8192)
+	function readSocket(StreamSocketInterface $socket, int $size = 8192)
 	{
 		return $socket->read($size);
 	}	
 
-	function writeSocket(CoSocketInterface $socket, string $response = null)
+	function writeSocket(StreamSocketInterface $socket, string $response = null)
 	{
 		return $socket->write($response);
 	}	
 
-	function closeSocket(CoSocketInterface $socket)
+	function closeSocket(StreamSocketInterface $socket)
 	{
 		return $socket->close();
 	}	
 
-	function remoteAddress(CoSocketInterface $socket)
+	function remoteAddress(StreamSocketInterface $socket)
 	{
 		return $socket->address();
 	}
@@ -259,9 +259,9 @@ if (! \function_exists('coroutineRun')) {
     
     function read_input()
     {
-        //Check on STDIN stream
-        $read = [STDIN];
-        yield Call::readWait($read);			
-        yield Coroutine::value(\trim(\stream_get_line(STDIN, 1024, PHP_EOL)));
+				//Check on STDIN stream
+				\stream_set_blocking(\STDIN, false);
+				yield Call::readWait(\STDIN);
+				yield Coroutine::value(\trim(\fread(\STDIN, 1024)));
     }
 }

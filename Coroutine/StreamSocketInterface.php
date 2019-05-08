@@ -2,7 +2,7 @@
 
 namespace Async\Coroutine;
 
-interface CoSocketInterface 
+interface StreamSocketInterface 
 {
     public function accept();
 	

@@ -11,7 +11,7 @@ use Async\Coroutine\CoroutineInterface;
 class Process
 {
     private $processes = array();
-    private $sleepTime = 15000;
+    private $sleepTime = 500;
     private $timedOutCallback = null;
     private $finishCallback = null;
     private $failCallback = null;
