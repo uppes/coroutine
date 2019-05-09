@@ -324,7 +324,7 @@ class StreamSocket implements StreamSocketInterface
 		//Check on STDIN stream
 		\stream_set_blocking(\STDIN, false);
 		yield Call::readWait(\STDIN);
-		return yield Coroutine::value(\trim(\stream_get_line(\STDIN, $size, \PHP_EOL)));
+		yield Coroutine::value(\trim(\stream_get_line(\STDIN, $size, \PHP_EOL)));
     }
 
     public function read(int $size = 8192) 

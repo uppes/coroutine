@@ -23,11 +23,11 @@ function server($port)
     global $i;
     echo "SERVER LISTENING ON: $port" . PHP_EOL . PHP_EOL;;
 
-    $socket = \secureServer($port);
-    //$socket = \createServer($port);
+    $socket = \secure_server($port);
+    //$socket = \create_server($port);
     $i=1;
     while (true) {
-        yield from \async('handleClient', yield \acceptSocket($socket));
+        yield from \async('handleClient', yield \accept_socket($socket));
     }
 }
 
@@ -47,9 +47,9 @@ function loadTemplateFile($template, $vars)
 function handleClient($socket) 
 {
     global $i;
-    $data = yield \readSocket($socket, 8192);
+    $data = yield \read_socket($socket, 8192);
     
-    $ip = \remoteAddress($socket);
+    $ip = \remote_ip($socket);
     print "New connection from " . $ip."\n";
     
     $output = "Received following request:\n\n$data";
@@ -62,7 +62,7 @@ function handleClient($socket)
 		#hi command
 		case 'hi';
             #write back to the client a response.
-            yield \writeSocket($socket, "Hello {$ip}. This is our $i command run!");
+            yield \write_socket($socket, "Hello {$ip}. This is our $i command run!");
 			$i++;
 			print "hi command received \n";
             break;
@@ -116,10 +116,10 @@ function handleClient($socket)
                 $output = "HTTP/1.0 404 OBJECT NOT FOUND\r\nServer: APatchyServer\r\nConnection: close\r\nContent-Type: text/html\r\n\r\n$contents";
             }
 
-            yield \writeSocket($socket, $output);        
+            yield \write_socket($socket, $output);        
     }
 
-    yield \closeSocket($socket);
+    yield \close_socket($socket);
 }
 
 \coroutine_create(\server(5000));

@@ -9,7 +9,7 @@ use Async\Coroutine\CoroutineInterface;
 use Async\Processor\Processor;
 use Async\Processor\ProcessInterface;
 
-if (! \function_exists('coroutineRun')) {
+if (! \function_exists('coroutine_run')) {
 	/**
 	 * Add/schedule an `yield`-ing `function/callable/task` for execution.
 	 * The passed in `function/callable/task` is wrapped within `awaitAble`
@@ -87,9 +87,9 @@ if (! \function_exists('coroutineRun')) {
 		return Call::waitFor($callable, $timeout); 
 	}	
 
-	function async_remove(int $tid)
+	function async_cancel(int $tid)
 	{
-		return Call::removeTask($tid); 
+		return Call::cancelTask($tid); 
 	}	
 
 	function async_id()
@@ -97,17 +97,17 @@ if (! \function_exists('coroutineRun')) {
 		return Call::taskId();
 	}	
 
-	function asyncReadStream($stream)
+	function async_read_wait($stream)
 	{
 		return Call::readWait($stream); 
 	}
 
-	function asyncWriteStream($stream)
+	function async_write_wait($stream)
 	{
 		return Call::writeWait($stream);
 	}	
 
-	function secureServer(
+	function secure_server(
 		$uri = null, 
 		array $options = [],	
 		string $privatekeyFile = 'privatekey.pem', 
@@ -119,42 +119,42 @@ if (! \function_exists('coroutineRun')) {
 		return StreamSocket::secureServer($uri, $options, $privatekeyFile, $certificateFile, $signingFile, $ssl_path, $details);
 	}
 
-	function createServer($uri = null, array $options = []): StreamSocketInterface
+	function create_server($uri = null, array $options = []): StreamSocketInterface
 	{
 		return StreamSocket::createServer($uri, $options);
 	}	
 
-	function createClient($uri = null, array $options = [], bool $isRequest = false)
+	function create_client($uri = null, array $options = [], bool $isRequest = false)
 	{
 		return StreamSocket::createClient($uri, $options, $isRequest);
 	}
 
-	function clientRead(StreamSocketInterface $socket, int $size = 20240) 
+	function client_read(StreamSocketInterface $socket, int $size = 20240) 
 	{
 		return $socket->response($size);
 	}
 
-	function clientWrite(StreamSocketInterface $socket, string $response = null) 
+	function client_write(StreamSocketInterface $socket, string $response = null) 
 	{
 		return \writeSocket($socket, $response);
 	}
 
-	function closeClient(StreamSocketInterface $socket)
+	function close_client(StreamSocketInterface $socket)
 	{
 		return \closeSocket($socket);
 	}	
 
-	function acceptSocket(StreamSocketInterface $socket)
+	function accept_socket(StreamSocketInterface $socket)
 	{
 		return $socket->accept();
 	}	
 
-	function readSocket(StreamSocketInterface $socket, int $size = 8192)
+	function read_socket(StreamSocketInterface $socket, int $size = 8192)
 	{
 		return $socket->read($size);
 	}	
 
-	function writeSocket(StreamSocketInterface $socket, string $response = null)
+	function write_socket(StreamSocketInterface $socket, string $response = null)
 	{
 		return $socket->write($response);
 	}	
@@ -164,7 +164,7 @@ if (! \function_exists('coroutineRun')) {
 		return $socket->close();
 	}	
 
-	function remoteAddress(StreamSocketInterface $socket)
+	function remote_ip(StreamSocketInterface $socket)
 	{
 		return $socket->address();
 	}
@@ -266,14 +266,4 @@ if (! \function_exists('coroutineRun')) {
 		
 		return array();
     }
-    function non_block_read($fd, &$data) {
-	$read = array($fd);
-	$write = array();
-	$except = array();
-	$result = \stream_select($read, $write, $except, 0);
-	if($result === false) throw new \Exception('stream_select failed');
-	if($result === 0) return false;
-	$data = \stream_get_line($fd, 1);
-	return true;
- }
 }

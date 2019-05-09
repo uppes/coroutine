@@ -27,7 +27,7 @@ class CoreTest extends TestCase
             yield;
         
             if ($i == 3) {
-                $bool = yield \async_remove($childTid);
+                $bool = yield \async_cancel($childTid);
                 $this->assertTrue($bool);
             }
         }
@@ -37,14 +37,14 @@ class CoreTest extends TestCase
      * @covers Async\Coroutine\Coroutine::createTask
      * @covers Async\Coroutine\Coroutine::schedule
      * @covers Async\Coroutine\Coroutine::create
-     * @covers Async\Coroutine\Coroutine::removeTask
+     * @covers Async\Coroutine\Coroutine::cancelTask
      * @covers Async\Coroutine\Coroutine::run
      * @covers Async\Coroutine\Task::taskId
      * @covers Async\Coroutine\Task::run
      * @covers \async_id
      * @covers \async
      * @covers \awaitAble
-     * @covers \async_remove
+     * @covers \async_cancel
      * @covers \coroutine_instance
      * @covers \coroutine_create
      * @covers \coroutine_run

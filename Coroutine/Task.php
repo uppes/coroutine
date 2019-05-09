@@ -12,6 +12,8 @@ class Task implements TaskInterface
 {	
     protected $taskId;
     protected $coroutine;
+    protected $status;
+    protected $result;
     protected $sendValue = null;
     protected $beforeFirstYield = true;
     protected $exception = null;
@@ -53,25 +55,40 @@ class Task implements TaskInterface
         }
     }
 
-    public function isFinished() 
+    public function isFinished(): bool
 	{
         return !$this->coroutine->valid();
+    }
+
+    public function setStatus(string $status)
+	{
+        $this->status = $status;
+    }
+
+    public function setResult($value)
+	{
+        $this->result = $value;
     }
     
     public function cancel()
     {
     }
 
-    public function cancelled()
+    public function cancelled(): bool
     {
+        return ($this->status == 'terminated');
     }
 
-    public function done() 
+    public function done(): bool
     {
+        return ($this->status == 'completed');
     }
-
 
     public function result()
     {
+        if ($this->done() && !empty($this->result))
+            return $this->result;
+        else
+            throw new \Exception("Invalid State Error");            
     }
 }

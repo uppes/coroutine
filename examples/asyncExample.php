@@ -21,7 +21,7 @@ function parentTask()
         echo "Parent task $tid iteration $i.\n";
         yield;
 
-        if ($i == 3) yield \async_remove($childTid);
+        if ($i == 3) yield \async_cancel($childTid);
     }
 };
 

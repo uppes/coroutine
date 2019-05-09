@@ -29,7 +29,7 @@ interface CoroutineInterface
 	 * @param int $tid
 	 * @return bool
 	 */
-    public function removeTask(int $tid);
+    public function cancelTask(int $tid);
     
     /**
      * Process/walk the task queue and runs the tasks.

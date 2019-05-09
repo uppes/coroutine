@@ -113,7 +113,7 @@ class Coroutine implements CoroutineInterface
 		$this->taskQueue->enqueue($task);
     }
 
-    public function removeTask(int $tid) 
+    public function cancelTask(int $tid) 
 	{
         if (!isset($this->taskMap[$tid])) {
             return false;
@@ -131,10 +131,19 @@ class Coroutine implements CoroutineInterface
         return true;
     }
 		
+    public function gather(...$taskId) 
+	{
+        // @todo
+    }
+
     public function run() 
 	{
         $this->createTask($this->ioSocketPoll());
+		return $this->runCoroutines();
+    }
 
+    protected function runCoroutines() 
+	{
 		while (!$this->taskQueue->isEmpty()) {
 			$task = $this->taskQueue->dequeue();
 			$value = $task->run();

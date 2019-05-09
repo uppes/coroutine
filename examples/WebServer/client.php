@@ -31,16 +31,16 @@ function client($ip, $port, $command) {
 
     #Connect to Server
     #Start SSL
-    $socket = \createClient("tcp://{$ip}:{$port}", $contextOptions);
+    $socket = \create_client("tcp://{$ip}:{$port}", $contextOptions);
 
     #Send a command
-    yield \clientWrite($socket, $command);
+    yield \client_write($socket, $command);
 
     #Receive response from server. Loop until the response is finished
-    yield \clientRead($socket);
+    yield \client_read($socket);
 
     #close connection
-    yield \closeClient($socket);
+    yield \close_client($socket);
 
     #echo our command response
     echo $socket->getBuffer();

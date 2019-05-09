@@ -63,6 +63,23 @@ class Call
 		);
 	}
 
+	public static function async($callable, ...$args) 
+	{
+		$coroutineMaker = function (TaskInterface $task, Coroutine $coroutine) use($callable, $args) {
+			$value =  yield $callable($args);
+			$task->sendValue($value);				
+			$coroutine->schedule($task);
+		};
+
+		return new Call(
+			function(TaskInterface $task, Coroutine $coroutine) use ($coroutineMaker) {
+				$value = $coroutineMaker($task, $coroutine);
+				$task->sendValue($value);				
+				$coroutine->schedule($task);
+			}
+		);
+	}
+
 	public static function await($callable, ...$args) 
 	{
 		return new Call(
@@ -79,11 +96,11 @@ class Call
 	 * @param int $tid
 	 * @throws \InvalidArgumentException
 	 */
-	public static function removeTask($tid) 
+	public static function cancelTask($tid) 
 	{
 		return new Call(
 			function(TaskInterface $task, Coroutine $coroutine) use ($tid) {
-				if ($coroutine->removeTask($tid)) {					
+				if ($coroutine->cancelTask($tid)) {					
 					$task->sendValue(true);		
 					$coroutine->schedule($task);
 				} else {
@@ -163,7 +180,7 @@ class Call
 				
 				$coroutine->addTimeout(function () use ($taskId, $timeout, $task, $coroutine) {
 					if (!empty($timeout)) {
-						$coroutine->removeTask($taskId);
+						$coroutine->cancelTask($taskId);
 						$task->exception(new \RuntimeException('The operation has exceeded the given deadline'));
 						$coroutine->schedule($task);
 					}

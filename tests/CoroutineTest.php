@@ -149,7 +149,7 @@ class CoroutineTest extends TestCase
             $this->task .= "Parent task $tid iteration $i.\n";
             yield;
     
-            if ($i == 3) yield Call::removeTask($childTid);
+            if ($i == 3) yield Call::cancelTask($childTid);
         }
     }
 
