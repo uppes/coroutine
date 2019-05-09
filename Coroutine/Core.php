@@ -136,12 +136,12 @@ if (! \function_exists('coroutine_run')) {
 
 	function client_write(StreamSocketInterface $socket, string $response = null) 
 	{
-		return \writeSocket($socket, $response);
+		return \write_Socket($socket, $response);
 	}
 
 	function close_client(StreamSocketInterface $socket)
 	{
-		return \closeSocket($socket);
+		return \close_Socket($socket);
 	}	
 
 	function accept_socket(StreamSocketInterface $socket)
@@ -159,7 +159,7 @@ if (! \function_exists('coroutine_run')) {
 		return $socket->write($response);
 	}	
 
-	function closeSocket(StreamSocketInterface $socket)
+	function close_Socket(StreamSocketInterface $socket)
 	{
 		return $socket->close();
 	}	
