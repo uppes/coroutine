@@ -21,6 +21,7 @@ class Coroutine implements CoroutineInterface
 {	
     protected $maxTaskId = 0;
     protected $taskMap = []; // taskId => task
+    protected $completeMap = [];
     protected $taskQueue;
 
     /**

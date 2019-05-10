@@ -89,7 +89,8 @@ class Kernel
 		return new Kernel(
 			function(TaskInterface $task, Coroutine $coroutine) use ($tid) {
 				if ($coroutine->cancelTask($tid)) {					
-					$task->sendValue(true);		
+					$task->sendValue(true);
+					$task->setState('terminated');
 					$coroutine->schedule($task);
 				} else {
 					throw new \InvalidArgumentException('Invalid task ID!');
