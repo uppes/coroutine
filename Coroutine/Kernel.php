@@ -66,19 +66,6 @@ class Kernel
 
 	public static function async($callable, ...$args) 
 	{
-		$coroutineMaker = function (TaskInterface $task, Coroutine $coroutine) use($callable, $args) {
-			$value =  yield $callable($args);
-			$task->sendValue($value);				
-			$coroutine->schedule($task);
-		};
-
-		return new Kernel(
-			function(TaskInterface $task, Coroutine $coroutine) use ($coroutineMaker) {
-				$value = $coroutineMaker($task, $coroutine);
-				$task->sendValue($value);				
-				$coroutine->schedule($task);
-			}
-		);
 	}
 
 	public static function await($callable, ...$args) 
