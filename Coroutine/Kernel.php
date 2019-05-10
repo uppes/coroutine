@@ -108,7 +108,7 @@ class Kernel
 	{
 		return new Kernel(
 			function(TaskInterface $task, Coroutine $coroutine) use ($socket) {
-				$coroutine->addReadStream($socket, $task);
+				$coroutine->addReader($socket, $task);
 			}
 		);
 	}
@@ -122,7 +122,7 @@ class Kernel
 	{
 		return new Kernel(
 			function(TaskInterface $task, Coroutine $coroutine) use ($socket) {
-				$coroutine->addWriteStream($socket, $task);
+				$coroutine->addWriter($socket, $task);
 			}
 		);
 	}

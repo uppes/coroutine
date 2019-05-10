@@ -221,7 +221,7 @@ class Coroutine implements CoroutineInterface
                 foreach ($read as $readStream) {
                     $readCb = $this->readCallbacks[(int) $readStream];
                     if ($readCb instanceof TaskInterface) {
-                        $this->removeReadStream($readStream);
+                        $this->removeReader($readStream);
                         $this->schedule($readCb);
                     } else {
                         $readCb();
@@ -231,7 +231,7 @@ class Coroutine implements CoroutineInterface
                 foreach ($write as $writeStream) {
                     $writeCb = $this->writeCallbacks[(int) $writeStream];
                     if ($writeCb instanceof TaskInterface) {
-                        $this->removeWriteStream($writeStream);
+                        $this->removeWriter($writeStream);
                         $this->schedule($writeCb);
                     } else {
                         $writeCb();
@@ -272,19 +272,19 @@ class Coroutine implements CoroutineInterface
         }
     }
 
-    public function addReadStream($stream, $task)
+    public function addReader($stream, $task)
     {
         $this->readStreams[(int) $stream] = $stream;
         $this->readCallbacks[(int) $stream] = $task;
     }
 
-    public function addWriteStream($stream, $task)
+    public function addWriter($stream, $task)
     {
         $this->writeStreams[(int) $stream] = $stream;
         $this->writeCallbacks[(int) $stream] = $task; 
     }
 
-    public function removeReadStream($stream)
+    public function removeReader($stream)
     {
         unset(
             $this->readStreams[(int) $stream],
@@ -292,7 +292,7 @@ class Coroutine implements CoroutineInterface
         );
     }
 
-    public function removeWriteStream($stream)
+    public function removeWriter($stream)
     {
         unset(
             $this->writeStreams[(int) $stream],

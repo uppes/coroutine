@@ -41,34 +41,38 @@ interface CoroutineInterface
     public function run();
 
     /**
-     * Adds a read stream.
+     * Adds a read stream to start monitoring the
+     * stream/file descriptor for read availability and invoke callback
+     * once stream is available for reading.
      * 
      * @param resource $stream
      * @param callable $task
      */
-    public function addReadStream($stream, $task);
+    public function addReader($stream, $task);
 
     /**
-     * Adds a write stream.
+     * Adds a write stream to start monitoring the 
+     * stream/file descriptor for write availability and invoke callback
+     * once stream is available for writing.
      * 
      * @param resource $stream
      * @param callable $task
      */
-    public function addWriteStream($stream, $task);
+    public function addWriter($stream, $task);
 
     /**
-     * Stop watching a stream for reads.
+     * Stop monitoring the stream/file descriptor for read availability.
      * 
      * @param resource $stream
      */
-    public function removeReadStream($stream);
+    public function removeReader($stream);
     
     /**
-     * Stop watching a stream for writes.
+     * Stop monitoring the stream/file descriptor for write availability.
      * 
      * @param resource $stream
      */
-    public function removeWriteStream($stream);
+    public function removeWriter($stream);
 
     /**
      * Executes a function after x seconds.

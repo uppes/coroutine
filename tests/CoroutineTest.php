@@ -190,8 +190,8 @@ class CoroutineTest extends TestCase
     }
     
     /**
-     * @covers Async\Coroutine\Coroutine::addWriteStream
-     * @covers Async\Coroutine\Coroutine::removeWriteStream
+     * @covers Async\Coroutine\Coroutine::addWriter
+     * @covers Async\Coroutine\Coroutine::removeWriter
      * @covers Async\Coroutine\Coroutine::runStreams
      * @covers Async\Coroutine\Coroutine::ioWaiting
      * @covers Async\Coroutine\Coroutine::run
@@ -202,9 +202,9 @@ class CoroutineTest extends TestCase
 	{
         $coroutine = new Coroutine();
         $h = fopen('php://temp', 'r+');
-        $coroutine->addWriteStream($h, function() use ($h, $coroutine) {
+        $coroutine->addWriter($h, function() use ($h, $coroutine) {
             fwrite($h, 'hello world');
-            $coroutine->removeWriteStream($h);
+            $coroutine->removeWriter($h);
         });
         $coroutine->run();
         rewind($h);
@@ -212,8 +212,8 @@ class CoroutineTest extends TestCase
     }
 
     /**
-     * @covers Async\Coroutine\Coroutine::addReadStream
-     * @covers Async\Coroutine\Coroutine::removeReadStream
+     * @covers Async\Coroutine\Coroutine::addReader
+     * @covers Async\Coroutine\Coroutine::removeReader
      * @covers Async\Coroutine\Coroutine::runStreams
      * @covers Async\Coroutine\Coroutine::ioWaiting
      * @covers Async\Coroutine\Coroutine::run
@@ -227,9 +227,9 @@ class CoroutineTest extends TestCase
         fwrite($h, 'hello world');
         rewind($h);
         $result = null;
-        $coroutine->addReadStream($h, function() use ($h, $coroutine, &$result) {
+        $coroutine->addReader($h, function() use ($h, $coroutine, &$result) {
             $result = fgets($h);
-            $coroutine->removeReadStream($h);
+            $coroutine->removeReader($h);
         });
         $coroutine->run();
         $this->assertEquals('hello world', $result);
