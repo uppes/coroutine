@@ -2,7 +2,7 @@
 
 namespace Async\Coroutine;
 
-use Async\Coroutine\Call;
+use Async\Coroutine\Kernel;
 use Async\Coroutine\Coroutine;
 use Async\Coroutine\StreamSocketInterface;
 
@@ -285,7 +285,7 @@ class StreamSocket implements StreamSocketInterface
 
     public function accept() 
 	{
-        yield Call::readWait($this->socket);
+        yield Kernel::readWait($this->socket);
         if (self::$isSecure) {
             return $this->handshake();
         } else
@@ -323,20 +323,20 @@ class StreamSocket implements StreamSocketInterface
 	{
 		//Check on STDIN stream
 		\stream_set_blocking(\STDIN, false);
-		yield Call::readWait(\STDIN);
+		yield Kernel::readWait(\STDIN);
 		yield Coroutine::value(\trim(\stream_get_line(\STDIN, $size, \PHP_EOL)));
     }
 
     public function read(int $size = 8192) 
 	{
-        yield Call::readWait($this->socket);
+        yield Kernel::readWait($this->socket);
         yield Coroutine::value(\fread($this->socket, $size));
         \stream_set_blocking($this->socket, false);
     }
 
     public function write(string $string) 
 	{
-        yield Call::writeWait($this->socket);
+        yield Kernel::writeWait($this->socket);
         yield Coroutine::value(\fwrite($this->socket, $string));
     }
 

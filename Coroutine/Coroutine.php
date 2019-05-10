@@ -2,7 +2,7 @@
 
 namespace Async\Coroutine;
 
-use Async\Coroutine\Call;
+use Async\Coroutine\Kernel;
 use Async\Coroutine\Task;
 use Async\Coroutine\Spawn;
 use Async\Coroutine\Process;
@@ -14,6 +14,8 @@ use Async\Processor\ProcessInterface;
 
 /**
  * The Scheduler 
+ * 
+ * @see https://docs.python.org/3/library/asyncio-task.html#coroutines
  */
 class Coroutine implements CoroutineInterface
 {	
@@ -78,6 +80,17 @@ class Coroutine implements CoroutineInterface
         return $this->spawn;
     }
 
+    public function processInstance($timedOutCallback = null, $finishCallback = null, $failCallback = null)
+    {
+        if (!empty($this->process)) {
+            $this->process->stopAll();
+            $this->process = null;
+        }
+            
+        $this->process = new Process($this, $timedOutCallback, $finishCallback, $failCallback);
+        return $this->process;
+    }
+
     /**
      * Add callable for parallel processing, in an separate php process
 	 * 
@@ -86,7 +99,7 @@ class Coroutine implements CoroutineInterface
      *
      * @return ProcessInterface
      */
-	public function addProcess($callable, int $timeout = 300): ProcessInterface
+	public function createProcess($callable, int $timeout = 300): ProcessInterface
     {		
 		return $this->spawn->add($callable, $timeout);
     }
@@ -138,7 +151,7 @@ class Coroutine implements CoroutineInterface
 
     public function run() 
 	{
-        $this->createTask($this->ioSocketPoll());
+        $this->createTask($this->ioWaiting());
 		return $this->runCoroutines();
     }
 
@@ -148,7 +161,7 @@ class Coroutine implements CoroutineInterface
 			$task = $this->taskQueue->dequeue();
 			$value = $task->run();
 
-			if ($value instanceof Call) {
+			if ($value instanceof Kernel) {
 				try {
 					$value($task, $this);
 				} catch (\Exception $e) {
@@ -159,6 +172,7 @@ class Coroutine implements CoroutineInterface
 			}
 
 			if ($task->isFinished()) {
+                $task->setState('completed');
 				unset($this->taskMap[$task->taskId()]);
 			} else {
 				$this->schedule($task);
@@ -226,7 +240,7 @@ class Coroutine implements CoroutineInterface
         }
     }
 
-    protected function ioSocketPoll() 
+    protected function ioWaiting() 
 	{
         while (true) {
             if ($this->taskQueue->isEmpty()
@@ -354,15 +368,6 @@ class Coroutine implements CoroutineInterface
         $intervalId[1] = false;
     }
 
-    public function initProcess(
-        callable $timedOutCallback = null, 
-        callable $finishCallback = null, 
-        callable $failCallback = null)
-    {
-        $this->process = new Process($this, $timedOutCallback, $finishCallback, $failCallback);
-        return $this->process;
-    }
-
 	public static function value($value) 
 	{
 		return new ReturnValueCoroutine($value);
@@ -394,7 +399,6 @@ class Coroutine implements CoroutineInterface
 				}
 
 				$value = $gen->current();
-
 				if ($value instanceof \Generator) {
 					$stack->push($gen);
 					$gen = $value;

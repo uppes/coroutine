@@ -1,7 +1,6 @@
 <?php
 namespace Async\Tests;
 
-use Async\Coroutine\Call;
 use Async\Coroutine\Coroutine;
 use PHPUnit\Framework\TestCase;
 

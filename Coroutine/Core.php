@@ -1,6 +1,6 @@
 <?php
 
-use Async\Coroutine\Call;
+use Async\Coroutine\Kernel;
 use Async\Coroutine\SpawnInterface;
 use Async\Coroutine\StreamSocket;
 use Async\Coroutine\StreamSocketInterface;
@@ -24,7 +24,7 @@ if (! \function_exists('coroutine_run')) {
 	 */
 	function async(callable $asyncFunction, ...$args)
 	{
-		return yield Call::createTask(\awaitAble($asyncFunction, ...$args));
+		return yield Kernel::createTask(\awaitAble($asyncFunction, ...$args));
 	}	
 
 	/**
@@ -40,7 +40,7 @@ if (! \function_exists('coroutine_run')) {
 	 */
 	function await(callable $awaitedFunction, ...$args) 
 	{
-		return Call::await($awaitedFunction, ...$args);
+		return Kernel::await($awaitedFunction, ...$args);
 	}
 
 	/**
@@ -71,7 +71,7 @@ if (! \function_exists('coroutine_run')) {
 	 */
 	function async_sleep(float $delay = 0.0, $result = null) 
 	{
-		return Call::sleepFor($delay, $result); 
+		return Kernel::sleepFor($delay, $result); 
 	}
 	
 	/**
@@ -84,27 +84,27 @@ if (! \function_exists('coroutine_run')) {
 	 */
 	function async_wait_for(callable $callable, float $timeout = 0.0) 
 	{
-		return Call::waitFor($callable, $timeout); 
+		return Kernel::waitFor($callable, $timeout); 
 	}	
 
 	function async_cancel(int $tid)
 	{
-		return Call::cancelTask($tid); 
+		return Kernel::cancelTask($tid); 
 	}	
 
 	function async_id()
 	{
-		return Call::taskId();
+		return Kernel::taskId();
 	}	
 
 	function async_read_wait($stream)
 	{
-		return Call::readWait($stream); 
+		return Kernel::readWait($stream); 
 	}
 
 	function async_write_wait($stream)
 	{
-		return Call::writeWait($stream);
+		return Kernel::writeWait($stream);
 	}	
 
 	function secure_server(

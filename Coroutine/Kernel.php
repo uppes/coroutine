@@ -6,12 +6,13 @@ use Async\Coroutine\Coroutine;
 use Async\Coroutine\TaskInterface;
 
 /**
+ * The Kernel
  * This class is used for Communication between the tasks and the scheduler
  * 
  * The `yield` keyword in your code, act both as an interrupt and as a way to 
  * pass information to (and from) the scheduler.
  */
-class Call 
+class Kernel 
 {
     protected $callback;
 
@@ -40,7 +41,7 @@ class Call
 	 */
 	public static function taskId() 
 	{
-		return new Call(
+		return new Kernel(
 			function(TaskInterface $task, Coroutine $coroutine) {
 				$task->sendValue($task->taskId());
 				$coroutine->schedule($task);
@@ -55,7 +56,7 @@ class Call
 	 */
 	public static function createTask(\Generator $coroutines) 
 	{
-		return new Call(
+		return new Kernel(
 			function(TaskInterface $task, Coroutine $coroutine) use ($coroutines) {
 				$task->sendValue($coroutine->createTask($coroutines));
 				$coroutine->schedule($task);
@@ -71,7 +72,7 @@ class Call
 			$coroutine->schedule($task);
 		};
 
-		return new Call(
+		return new Kernel(
 			function(TaskInterface $task, Coroutine $coroutine) use ($coroutineMaker) {
 				$value = $coroutineMaker($task, $coroutine);
 				$task->sendValue($value);				
@@ -82,7 +83,7 @@ class Call
 
 	public static function await($callable, ...$args) 
 	{
-		return new Call(
+		return new Kernel(
 			function(TaskInterface $task, Coroutine $coroutine) use ($callable, $args) {
 				$task->sendValue($coroutine->createTask(\awaitAble($callable, $args)));				
 				$coroutine->schedule($task);
@@ -98,7 +99,7 @@ class Call
 	 */
 	public static function cancelTask($tid) 
 	{
-		return new Call(
+		return new Kernel(
 			function(TaskInterface $task, Coroutine $coroutine) use ($tid) {
 				if ($coroutine->cancelTask($tid)) {					
 					$task->sendValue(true);		
@@ -117,7 +118,7 @@ class Call
      */
 	public static function readWait($socket) 
 	{
-		return new Call(
+		return new Kernel(
 			function(TaskInterface $task, Coroutine $coroutine) use ($socket) {
 				$coroutine->addReadStream($socket, $task);
 			}
@@ -131,7 +132,7 @@ class Call
      */
 	public static function writeWait($socket) 
 	{
-		return new Call(
+		return new Kernel(
 			function(TaskInterface $task, Coroutine $coroutine) use ($socket) {
 				$coroutine->addWriteStream($socket, $task);
 			}
@@ -149,7 +150,7 @@ class Call
      */
 	public static function sleepFor(float $delay = 0.0, $result = null) 
 	{
-		return new Call(
+		return new Kernel(
 			function(TaskInterface $task, Coroutine $coroutine) use ($delay, $result) {
 				$coroutine->addTimeout(function () use ($task, $coroutine, $result) {
 					if (!empty($result)) 
@@ -170,7 +171,7 @@ class Call
      */
 	public static function waitFor($callable, float $timeout = null) 
 	{
-		return new Call(
+		return new Kernel(
 			function(TaskInterface $task, Coroutine $coroutine) use ($callable, $timeout) {
 				if ($callable instanceof \Generator) {
 					$taskId = $coroutine->createTask($callable);

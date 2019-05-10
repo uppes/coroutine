@@ -11,16 +11,13 @@ class ErrorHandlingTest extends TestCase
 {
 	protected function setUp(): void
     {
-        global $__coroutine__;
-        
-        $__coroutine__ = null;
+        \coroutine_clear();
     }
 
     /**
-     * @covers Async\Coroutine\Coroutine::initProcess
+     * @covers Async\Coroutine\Coroutine::processInstance
      * @covers Async\Coroutine\Process::add
      * @covers Async\Coroutine\Process::processing
-     * @covers Async\Coroutine\Process::init
      * @covers Async\Coroutine\Spawn::markAsFinished
      * @covers Async\Coroutine\Spawn::markAsTimedOut
      * @covers Async\Coroutine\Spawn::markAsFailed
@@ -48,10 +45,9 @@ class ErrorHandlingTest extends TestCase
     }
 
     /**
-     * @covers Async\Coroutine\Coroutine::initProcess
+     * @covers Async\Coroutine\Coroutine::processInstance
      * @covers Async\Coroutine\Process::add
      * @covers Async\Coroutine\Process::processing
-     * @covers Async\Coroutine\Process::init
      * @covers Async\Coroutine\Spawn::markAsFinished
      * @covers Async\Coroutine\Spawn::markAsTimedOut
      * @covers Async\Coroutine\Spawn::markAsFailed
@@ -74,10 +70,9 @@ class ErrorHandlingTest extends TestCase
     }
 
     /**
-     * @covers Async\Coroutine\Coroutine::initProcess
+     * @covers Async\Coroutine\Coroutine::processInstance
      * @covers Async\Coroutine\Process::add
      * @covers Async\Coroutine\Process::processing
-     * @covers Async\Coroutine\Process::init
      * @covers Async\Coroutine\Spawn::markAsFinished
      * @covers Async\Coroutine\Spawn::markAsTimedOut
      * @covers Async\Coroutine\Spawn::markAsFailed

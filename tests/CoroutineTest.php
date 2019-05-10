@@ -2,7 +2,7 @@
 
 namespace Async\Tests;
 
-use Async\Coroutine\Call;
+use Async\Coroutine\Kernel;
 use Async\Coroutine\Coroutine;
 use PHPUnit\Framework\TestCase;
 
@@ -10,6 +10,11 @@ class CoroutineTest extends TestCase
 {
     protected $task = '';
 
+	protected function setUp(): void
+    {
+        \coroutine_clear();
+    }
+    
     public function task1() 
     {
         for ($i = 1; $i <= 10; ++$i) {
@@ -38,7 +43,7 @@ class CoroutineTest extends TestCase
      * @covers Async\Coroutine\Coroutine::createTask
      * @covers Async\Coroutine\Coroutine::schedule
      * @covers Async\Coroutine\Coroutine::create
-     * @covers Async\Coroutine\Coroutine::ioSocketPoll
+     * @covers Async\Coroutine\Coroutine::ioWaiting
      * @covers Async\Coroutine\Coroutine::run
      * @covers Async\Coroutine\Task::taskId
      * @covers Async\Coroutine\Task::run
@@ -81,7 +86,7 @@ class CoroutineTest extends TestCase
 
     public function task($max) 
     {
-        $tid = (yield Call::taskId()); // <-- here's the system call!
+        $tid = (yield Kernel::taskId()); // <-- here's the system call!
         for ($i = 1; $i <= $max; ++$i) {
             $this->task .= "This is task $tid iteration $i.\n";
             yield;
@@ -92,10 +97,10 @@ class CoroutineTest extends TestCase
      * @covers Async\Coroutine\Coroutine::createTask
      * @covers Async\Coroutine\Coroutine::schedule
      * @covers Async\Coroutine\Coroutine::create
-     * @covers Async\Coroutine\Coroutine::ioSocketPoll
+     * @covers Async\Coroutine\Coroutine::ioWaiting
      * @covers Async\Coroutine\Coroutine::run
      */
-    public function testCall_TaskId() 
+    public function testKernel_TaskId() 
     {
         $this->task = '';
 
@@ -132,7 +137,7 @@ class CoroutineTest extends TestCase
 
     public function childTask() 
     {
-        $tid = (yield Call::taskId());
+        $tid = (yield Kernel::taskId());
         $this->assertNotNull($tid);
         while (true) {
             $this->task .= "Child task $tid still alive!\n";
@@ -140,16 +145,16 @@ class CoroutineTest extends TestCase
         }
     }
 
-    public function taskCall() 
+    public function taskKernel() 
     {
-        $tid = (yield Call::taskId());
-        $childTid = (yield Call::createTask($this->childTask()));
+        $tid = (yield Kernel::taskId());
+        $childTid = (yield Kernel::createTask($this->childTask()));
 
         for ($i = 1; $i <= 6; ++$i) {            
             $this->task .= "Parent task $tid iteration $i.\n";
             yield;
     
-            if ($i == 3) yield Call::cancelTask($childTid);
+            if ($i == 3) yield Kernel::cancelTask($childTid);
         }
     }
 
@@ -160,12 +165,12 @@ class CoroutineTest extends TestCase
      * @covers Async\Coroutine\Coroutine::runStreams
      * @covers Async\Coroutine\Coroutine::run
      */
-    public function testCall() 
+    public function testKernel() 
     {
         $this->task = '';
 
         $coroutine = new Coroutine();
-        $coroutine->createTask($this->taskCall());
+        $coroutine->createTask($this->taskKernel());
         $coroutine->run();
 
         $expect[] = "Parent task 1 iteration 1.";
@@ -188,7 +193,7 @@ class CoroutineTest extends TestCase
      * @covers Async\Coroutine\Coroutine::addWriteStream
      * @covers Async\Coroutine\Coroutine::removeWriteStream
      * @covers Async\Coroutine\Coroutine::runStreams
-     * @covers Async\Coroutine\Coroutine::ioSocketPoll
+     * @covers Async\Coroutine\Coroutine::ioWaiting
      * @covers Async\Coroutine\Coroutine::run
      * @covers Async\Coroutine\Task::taskId
      * @covers Async\Coroutine\Task::run
@@ -210,7 +215,7 @@ class CoroutineTest extends TestCase
      * @covers Async\Coroutine\Coroutine::addReadStream
      * @covers Async\Coroutine\Coroutine::removeReadStream
      * @covers Async\Coroutine\Coroutine::runStreams
-     * @covers Async\Coroutine\Coroutine::ioSocketPoll
+     * @covers Async\Coroutine\Coroutine::ioWaiting
      * @covers Async\Coroutine\Coroutine::run
      * @covers Async\Coroutine\Task::taskId
      * @covers Async\Coroutine\Task::run

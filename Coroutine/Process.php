@@ -3,6 +3,7 @@
 namespace Async\Coroutine;
 
 use Async\Processor\ProcessInterface;
+use Async\Coroutine\TaskInterface;
 use Async\Coroutine\CoroutineInterface;
 
 /**
@@ -11,17 +12,15 @@ use Async\Coroutine\CoroutineInterface;
 class Process
 {
     private $processes = array();
-    private $sleepTime = 500;
+    private $sleepTime = 15000;
     private $timedOutCallback = null;
     private $finishCallback = null;
     private $failCallback = null;
     private $pcntl = false;
     private $coroutine = null;
 	
-    public function __construct(CoroutineInterface $coroutine = null,
-        callable $timedOutCallback = null, 
-        callable $finishCallback = null, 
-        callable $failCallback = null)
+    public function __construct(CoroutineInterface $coroutine = null, 
+        $timedOutCallback = null, $finishCallback = null, $failCallback = null)
     {
         $this->coroutine = empty($coroutine) ? \coroutine_instance() : $coroutine;
         $this->init($timedOutCallback,  $finishCallback,  $failCallback);
@@ -63,10 +62,10 @@ class Process
                     $this->remove($process);
 					$markTimedOuted = $this->timedOutCallback;
 
-                    if (! \method_exists($markTimedOuted, 'callTimeout'))
+                    if ($markTimedOuted($process) instanceof \Generator)
                         $this->coroutine->createTask($markTimedOuted($process));
                     else
-                        $markTimedOuted($process);
+                        $this->coroutine->schedule($markTimedOuted);
                 } 
                 
                 if (! $this->pcntl) {
@@ -76,18 +75,18 @@ class Process
                         $this->remove($process);
 						$markFinished = $this->finishCallback;
 
-                        if (! \method_exists($markFinished, 'callSuccess'))
+                        if ($markFinished($process) instanceof \Generator)
                             $this->coroutine->createTask($markFinished($process));
                         else
-                            $markFinished($process);
+                            $this->coroutine->schedule($markFinished);
                     } elseif ($process->isTerminated()) {
                         $this->remove($process);
                         $markFailed = $this->failCallback;
 
-                        if (! \method_exists($markFailed, 'callError'))
+                        if ($markFailed($process) instanceof \Generator)
                             $this->coroutine->createTask($markFailed($process));
                         else
-                            $markFailed($process);
+                            $this->coroutine->schedule($markFailed);
                     } 
                 }                
             }
@@ -104,10 +103,7 @@ class Process
         return $this->sleepTime;
     }
 	
-    public function init(
-        callable $timedOutCallback = null, 
-        callable $finishCallback = null, 
-        callable $failCallback = null)
+    public function init($timedOutCallback = null, $finishCallback = null, $failCallback = null)
     {
         $this->timedOutCallback = empty($timedOutCallback) ? [$this, 'callTimeout'] : $timedOutCallback;
         $this->finishCallback = empty($finishCallback) ? [$this, 'callSuccess'] : $finishCallback;
@@ -153,10 +149,10 @@ class Process
                     $this->remove($process);
                     $markFinished = $this->finishCallback;
 
-                    if (! \method_exists($markFinished, 'callSuccess'))
+                    if ($markFinished($process) instanceof \Generator)
                         $this->coroutine->createTask($markFinished($process));
                     else
-                        $markFinished($process);
+                        $this->coroutine->schedule($markFinished);
 
                     continue;
                 }
@@ -164,10 +160,10 @@ class Process
                 $this->remove($process);
                 $markFailed = $this->failCallback;
 
-                if (! \method_exists($markFailed, 'callError'))
+                if ($markFailed($process) instanceof \Generator)
                     $this->coroutine->createTask($markFailed($process));
                 else
-                    $markFailed($process);
+                    $this->coroutine->schedule($markFailed);
             }
         });
     }

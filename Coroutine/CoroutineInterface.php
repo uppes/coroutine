@@ -8,6 +8,7 @@ interface CoroutineInterface
 {
     /**
      * Creates a new task (using the next free task id).
+     * wraps coroutine into a Task and schedule its execution. Return the Task object/id.
      * 
      * @see https://docs.python.org/3.7/library/asyncio-task.html#creating-tasks
      * 

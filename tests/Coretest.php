@@ -8,6 +8,11 @@ class CoreTest extends TestCase
 {
     protected $task = null;
 
+	protected function setUp(): void
+    {
+        \coroutine_clear();
+    }
+
     public function childTask() 
     {
         $tid = yield \async_id();

@@ -7,13 +7,17 @@ use Async\Coroutine\TaskInterface;
 
 /**
  * Task is used to schedule coroutines concurrently.
+ * When a coroutine is wrapped into a Task with functions like Coroutine::createTask() 
+ * the coroutine is automatically scheduled to run soon.
+ * 
  */
 class Task implements TaskInterface
 {	
     protected $taskId;
     protected $coroutine;
-    protected $status;
+    protected $state = null;
     protected $result;
+    protected $error;
     protected $sendValue = null;
     protected $beforeFirstYield = true;
     protected $exception = null;
@@ -21,6 +25,7 @@ class Task implements TaskInterface
     public function __construct($taskId, \Generator $coroutine) 
 	{
         $this->taskId = $taskId;
+        $this->state = 'pending';
         $this->coroutine = Coroutine::create($coroutine);
     }
 
@@ -47,10 +52,12 @@ class Task implements TaskInterface
         } elseif ($this->exception) {
             $value = $this->coroutine->throw($this->exception);
             $this->exception = null;
+            $this->error = $value;
             return $value;
         } else {
             $value = $this->coroutine->send($this->sendValue);
             $this->sendValue = null;
+            $this->result = $value;
             return $value;
         }
     }
@@ -60,9 +67,9 @@ class Task implements TaskInterface
         return !$this->coroutine->valid();
     }
 
-    public function setStatus(string $status)
+    public function setState(string $status)
 	{
-        $this->status = $status;
+        $this->state = $status;
     }
 
     public function setResult($value)
@@ -70,25 +77,25 @@ class Task implements TaskInterface
         $this->result = $value;
     }
     
-    public function cancel()
-    {
-    }
-
     public function cancelled(): bool
     {
-        return ($this->status == 'terminated');
+        return ($this->state == 'terminated');
     }
 
     public function done(): bool
     {
-        return ($this->status == 'completed');
+        return ($this->state == 'completed');
     }
 
     public function result()
     {
         if ($this->done() && !empty($this->result))
             return $this->result;
+        elseif ($this->cancelled())
+            throw new \Exception("Cancelled Error");            
+        elseif (!$this->done() && empty($this->result))
+            throw new \Exception("Invalid State Error");
         else
-            throw new \Exception("Invalid State Error");            
-    }
+          throw $this->error;
+    } 
 }

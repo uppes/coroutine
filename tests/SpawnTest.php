@@ -17,10 +17,9 @@ class SpawnTest extends TestCase
     }
 
     /**
-     * @covers Async\Coroutine\Coroutine::initProcess
+     * @covers Async\Coroutine\Coroutine::processInstance
      * @covers Async\Coroutine\Process::add
      * @covers Async\Coroutine\Process::processing
-     * @covers Async\Coroutine\Process::init
      * @covers Async\Coroutine\Spawn::markAsFinished
      * @covers Async\Coroutine\Spawn::markAsTimedOut
      * @covers Async\Coroutine\Spawn::markAsFailed
@@ -50,7 +49,7 @@ class SpawnTest extends TestCase
 			$expect = (float) 1.0;
             $this->assertTrue($parallel->isPcntl());
         } else {
-            $expect = (float) 2.0;
+            $expect = (float) 1.5;
             $this->assertFalse($parallel->isPcntl());
         }
 
@@ -58,10 +57,9 @@ class SpawnTest extends TestCase
     }
 
     /**
-     * @covers Async\Coroutine\Coroutine::initProcess
+     * @covers Async\Coroutine\Coroutine::processInstance
      * @covers Async\Coroutine\Process::add
      * @covers Async\Coroutine\Process::processing
-     * @covers Async\Coroutine\Process::init
      * @covers Async\Coroutine\Spawn::markAsFinished
      * @covers Async\Coroutine\Spawn::markAsTimedOut
      * @covers Async\Coroutine\Spawn::markAsFailed
@@ -92,10 +90,9 @@ class SpawnTest extends TestCase
     }
 
     /**
-     * @covers Async\Coroutine\Coroutine::initProcess
+     * @covers Async\Coroutine\Coroutine::processInstance
      * @covers Async\Coroutine\Process::add
      * @covers Async\Coroutine\Process::processing
-     * @covers Async\Coroutine\Process::init
      * @covers Async\Coroutine\Spawn::markAsFinished
      * @covers Async\Coroutine\Spawn::markAsTimedOut
      * @covers Async\Coroutine\Spawn::markAsFailed
@@ -140,10 +137,9 @@ class SpawnTest extends TestCase
     }
 
     /**
-     * @covers Async\Coroutine\Coroutine::initProcess
+     * @covers Async\Coroutine\Coroutine::processInstance
      * @covers Async\Coroutine\Process::add
      * @covers Async\Coroutine\Process::processing
-     * @covers Async\Coroutine\Process::init
      * @covers Async\Coroutine\Spawn::markAsFinished
      * @covers Async\Coroutine\Spawn::markAsTimedOut
      * @covers Async\Coroutine\Spawn::markAsFailed
@@ -172,10 +168,9 @@ class SpawnTest extends TestCase
     }
 
     /**
-     * @covers Async\Coroutine\Coroutine::initProcess
+     * @covers Async\Coroutine\Coroutine::processInstance
      * @covers Async\Coroutine\Process::add
      * @covers Async\Coroutine\Process::processing
-     * @covers Async\Coroutine\Process::init
      * @covers Async\Coroutine\Spawn::markAsFinished
      * @covers Async\Coroutine\Spawn::markAsTimedOut
      * @covers Async\Coroutine\Spawn::markAsFailed
@@ -204,10 +199,9 @@ class SpawnTest extends TestCase
     }
 
     /**
-     * @covers Async\Coroutine\Coroutine::initProcess
+     * @covers Async\Coroutine\Coroutine::processInstance
      * @covers Async\Coroutine\Process::add
      * @covers Async\Coroutine\Process::processing
-     * @covers Async\Coroutine\Process::init
      * @covers Async\Coroutine\Spawn::markAsFinished
      * @covers Async\Coroutine\Spawn::markAsTimedOut
      * @covers Async\Coroutine\Spawn::markAsFailed
@@ -245,7 +239,6 @@ class SpawnTest extends TestCase
     /**
      * @covers Async\Coroutine\Process::add
      * @covers Async\Coroutine\Process::processing
-     * @covers Async\Coroutine\Process::init
      * @covers Async\Coroutine\Spawn::markAsFinished
      * @covers Async\Coroutine\Spawn::markAsTimedOut
      * @covers Async\Coroutine\Spawn::markAsFailed
@@ -288,10 +281,9 @@ class SpawnTest extends TestCase
     }
 
     /**
-     * @covers Async\Coroutine\Coroutine::initProcess
+     * @covers Async\Coroutine\Coroutine::processInstance
      * @covers Async\Coroutine\Process::add
      * @covers Async\Coroutine\Process::processing
-     * @covers Async\Coroutine\Process::init
      * @covers Async\Coroutine\Spawn::markAsFinished
      * @covers Async\Coroutine\Spawn::markAsTimedOut
      * @covers Async\Coroutine\Spawn::markAsFailed
@@ -319,10 +311,9 @@ class SpawnTest extends TestCase
     }
     
     /**
-     * @covers Async\Coroutine\Coroutine::initProcess
+     * @covers Async\Coroutine\Coroutine::processInstance
      * @covers Async\Coroutine\Process::add
      * @covers Async\Coroutine\Process::processing
-     * @covers Async\Coroutine\Process::init
      * @covers Async\Coroutine\Spawn::markAsFinished
      * @covers Async\Coroutine\Spawn::markAsTimedOut
      * @covers Async\Coroutine\Spawn::markAsFailed
@@ -357,10 +348,9 @@ class SpawnTest extends TestCase
     }    
     
     /**
-     * @covers Async\Coroutine\Coroutine::initProcess
+     * @covers Async\Coroutine\Coroutine::processInstance
      * @covers Async\Coroutine\Process::add
      * @covers Async\Coroutine\Process::processing
-     * @covers Async\Coroutine\Process::init
      * @covers Async\Coroutine\Spawn::markAsFinished
      * @covers Async\Coroutine\Spawn::markAsTimedOut
      * @covers Async\Coroutine\Spawn::markAsFailed
@@ -392,10 +382,9 @@ class SpawnTest extends TestCase
     }
 	
     /**
-     * @covers Async\Coroutine\Coroutine::initProcess
+     * @covers Async\Coroutine\Coroutine::processInstance
      * @covers Async\Coroutine\Process::add
      * @covers Async\Coroutine\Process::processing
-     * @covers Async\Coroutine\Process::init
      * @covers Async\Coroutine\Spawn::markAsFinished
      * @covers Async\Coroutine\Spawn::markAsTimedOut
      * @covers Async\Coroutine\Spawn::markAsFailed
@@ -415,9 +404,8 @@ class SpawnTest extends TestCase
     }
 
     /**
-     * @covers Async\Coroutine\Coroutine::initProcess
+     * @covers Async\Coroutine\Coroutine::processInstance
      * @covers Async\Coroutine\Process::add
-     * @covers Async\Coroutine\Process::init
      * @covers Async\Coroutine\Spawn::add
      * @covers \spawn_instance
      */
