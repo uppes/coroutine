@@ -2,17 +2,17 @@
 
 namespace Async\Coroutine;
 
-use Async\Coroutine\Spawn;
+use Async\Coroutine\Parallel;
 use Async\Processor\Launcher;
 use Async\Processor\SerializableException;
 
-class SpawnStatus
+class ParallelStatus
 {
-    protected $spawnPool;
+    protected $parallelPool;
 
-    public function __construct(Spawn $spawnPool)
+    public function __construct(Parallel $parallelPool)
     {
-        $this->spawnPool = $spawnPool;
+        $this->parallelPool = $parallelPool;
     }
 
     public function __toString(): string
@@ -30,10 +30,10 @@ class SpawnStatus
 
     protected function summaryToString(): string
     {
-        $queue = $this->spawnPool->getQueue();
-        $finished = $this->spawnPool->getFinished();
-        $failed = $this->spawnPool->getFailed();
-        $timeouts = $this->spawnPool->getTimeouts();
+        $queue = $this->parallelPool->getQueue();
+        $finished = $this->parallelPool->getFinished();
+        $failed = $this->parallelPool->getFailed();
+        $timeouts = $this->parallelPool->getTimeouts();
 
         return
             'queue: '.\count($queue)
@@ -44,7 +44,7 @@ class SpawnStatus
 
     protected function failedToString(): string
     {
-        return (string) \array_reduce($this->spawnPool->getFailed(), function ($currentStatus, Launcher $process) {			
+        return (string) \array_reduce($this->parallelPool->getFailed(), function ($currentStatus, Launcher $process) {			
 			$output = $process->getErrorOutput();
 
             if ($output instanceof SerializableException) {

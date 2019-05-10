@@ -4,7 +4,7 @@ namespace Async\Tests;
 
 use Error;
 use ParseError;
-use Async\Coroutine\Spawn;
+use Async\Coroutine\Parallel;
 use PHPUnit\Framework\TestCase;
 
 class ErrorHandlingTest extends TestCase
@@ -18,18 +18,18 @@ class ErrorHandlingTest extends TestCase
      * @covers Async\Coroutine\Coroutine::processInstance
      * @covers Async\Coroutine\Process::add
      * @covers Async\Coroutine\Process::processing
-     * @covers Async\Coroutine\Spawn::markAsFinished
-     * @covers Async\Coroutine\Spawn::markAsTimedOut
-     * @covers Async\Coroutine\Spawn::markAsFailed
-     * @covers Async\Coroutine\Spawn::add
-     * @covers Async\Coroutine\Spawn::__construct
-     * @covers Async\Coroutine\Spawn::wait
-     * @covers Async\Coroutine\Spawn::getFailed
-     * @covers Async\Coroutine\Spawn::status
+     * @covers Async\Coroutine\Parallel::markAsFinished
+     * @covers Async\Coroutine\Parallel::markAsTimedOut
+     * @covers Async\Coroutine\Parallel::markAsFailed
+     * @covers Async\Coroutine\Parallel::add
+     * @covers Async\Coroutine\Parallel::__construct
+     * @covers Async\Coroutine\Parallel::wait
+     * @covers Async\Coroutine\Parallel::getFailed
+     * @covers Async\Coroutine\Parallel::status
      */
     public function testIt_can_handle_exceptions_via_catch_callback()
     {
-        $parallel = new Spawn();
+        $parallel = new Parallel();
 
         foreach (range(1, 5) as $i) {
             $parallel->add(function () {
@@ -48,19 +48,19 @@ class ErrorHandlingTest extends TestCase
      * @covers Async\Coroutine\Coroutine::processInstance
      * @covers Async\Coroutine\Process::add
      * @covers Async\Coroutine\Process::processing
-     * @covers Async\Coroutine\Spawn::markAsFinished
-     * @covers Async\Coroutine\Spawn::markAsTimedOut
-     * @covers Async\Coroutine\Spawn::markAsFailed
-     * @covers Async\Coroutine\Spawn::add
-     * @covers Async\Coroutine\Spawn::__construct
-     * @covers Async\Coroutine\Spawn::wait
+     * @covers Async\Coroutine\Parallel::markAsFinished
+     * @covers Async\Coroutine\Parallel::markAsTimedOut
+     * @covers Async\Coroutine\Parallel::markAsFailed
+     * @covers Async\Coroutine\Parallel::add
+     * @covers Async\Coroutine\Parallel::__construct
+     * @covers Async\Coroutine\Parallel::wait
      */
     public function testIt_throws_the_exception_if_no_catch_callback()
     {
         $this->expectException(\Exception::class);
         $this->expectExceptionMessageRegExp('/test/');
 
-        $parallel = new Spawn();
+        $parallel = new Parallel();
 
         $parallel->add(function () {
             throw new \Exception('test');
@@ -73,16 +73,16 @@ class ErrorHandlingTest extends TestCase
      * @covers Async\Coroutine\Coroutine::processInstance
      * @covers Async\Coroutine\Process::add
      * @covers Async\Coroutine\Process::processing
-     * @covers Async\Coroutine\Spawn::markAsFinished
-     * @covers Async\Coroutine\Spawn::markAsTimedOut
-     * @covers Async\Coroutine\Spawn::markAsFailed
-     * @covers Async\Coroutine\Spawn::add
-     * @covers Async\Coroutine\Spawn::__construct
-     * @covers Async\Coroutine\Spawn::wait
+     * @covers Async\Coroutine\Parallel::markAsFinished
+     * @covers Async\Coroutine\Parallel::markAsTimedOut
+     * @covers Async\Coroutine\Parallel::markAsFailed
+     * @covers Async\Coroutine\Parallel::add
+     * @covers Async\Coroutine\Parallel::__construct
+     * @covers Async\Coroutine\Parallel::wait
      */
     public function testIt_keeps_the_original_trace()
     {
-        $parallel = new Spawn();
+        $parallel = new Parallel();
 
         $parallel->add(function () {
             $myClass = new MyClass();

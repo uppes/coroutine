@@ -64,7 +64,7 @@ class Process
 
                     if ($markTimedOuted($process) instanceof \Generator)
                         $this->coroutine->createTask($markTimedOuted($process));
-                    else
+                    elseif ($markTimedOuted instanceof TaskInterface)
                         $this->coroutine->schedule($markTimedOuted);
                 } 
                 
@@ -77,7 +77,7 @@ class Process
 
                         if ($markFinished($process) instanceof \Generator)
                             $this->coroutine->createTask($markFinished($process));
-                        else
+                        elseif ($markFinished instanceof TaskInterface)
                             $this->coroutine->schedule($markFinished);
                     } elseif ($process->isTerminated()) {
                         $this->remove($process);
@@ -85,7 +85,7 @@ class Process
 
                         if ($markFailed($process) instanceof \Generator)
                             $this->coroutine->createTask($markFailed($process));
-                        else
+                        elseif ($markFailed instanceof TaskInterface)
                             $this->coroutine->schedule($markFailed);
                     } 
                 }                
@@ -105,9 +105,9 @@ class Process
 	
     public function init($timedOutCallback = null, $finishCallback = null, $failCallback = null)
     {
-        $this->timedOutCallback = empty($timedOutCallback) ? [$this, 'callTimeout'] : $timedOutCallback;
-        $this->finishCallback = empty($finishCallback) ? [$this, 'callSuccess'] : $finishCallback;
-        $this->failCallback = empty($failCallback) ? [$this, 'callError'] : $failCallback;
+        $this->timedOutCallback = $timedOutCallback;
+        $this->finishCallback = $finishCallback;
+        $this->failCallback = $failCallback;
     }	
 	
     public function isEmpty(): bool
@@ -151,7 +151,7 @@ class Process
 
                     if ($markFinished($process) instanceof \Generator)
                         $this->coroutine->createTask($markFinished($process));
-                    else
+                    elseif ($markFinished instanceof TaskInterface)
                         $this->coroutine->schedule($markFinished);
 
                     continue;
@@ -162,24 +162,9 @@ class Process
 
                 if ($markFailed($process) instanceof \Generator)
                     $this->coroutine->createTask($markFailed($process));
-                else
+                elseif ($markFailed instanceof TaskInterface)
                     $this->coroutine->schedule($markFailed);
             }
         });
-    }
-	
-    private function callSuccess(ProcessInterface $process)
-    {
-		$process->triggerSuccess();
-    }
-
-    private function callError(ProcessInterface $process)
-    {
-		$process->triggerError();
-    }
-
-    private function callTimeout(ProcessInterface $process)
-    {
-		$process->triggerTimeout();
     }
 }

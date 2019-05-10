@@ -3,13 +3,13 @@ namespace Async\Coroutine;
 
 use ArrayAccess;
 use InvalidArgumentException;
-use Async\Coroutine\SpawnStatus;
-use Async\Coroutine\SpawnInterface;
+use Async\Coroutine\ParallelStatus;
+use Async\Coroutine\ParallelInterface;
 use Async\Coroutine\CoroutineInterface;
 use Async\Processor\Processor;
 use Async\Processor\ProcessInterface;
  
-class Spawn implements ArrayAccess, SpawnInterface
+class Parallel implements ArrayAccess, ParallelInterface
 {
     private $coroutine = null;
     private $processor = null;
@@ -21,7 +21,7 @@ class Spawn implements ArrayAccess, SpawnInterface
     private $finished = [];
     private $failed = [];
     private $timeouts = [];
-    private $spawn = [];
+    private $parallel = [];
 	
     public function __construct(CoroutineInterface $coroutine = null)
     {
@@ -31,18 +31,18 @@ class Spawn implements ArrayAccess, SpawnInterface
             [$this, 'markAsFailed']
         );
 
-        $this->status = new SpawnStatus($this);
+        $this->status = new ParallelStatus($this);
     }
 
     /**
      * @return static
      */
-    public static function create(): SpawnInterface
+    public static function create(): ParallelInterface
     {
         return new static();
     }
 	
-    public function concurrency(int $concurrency): SpawnInterface
+    public function concurrency(int $concurrency): ParallelInterface
     {
         $this->concurrency = $concurrency;
 
@@ -64,7 +64,7 @@ class Spawn implements ArrayAccess, SpawnInterface
         return $this->processor->isPcntl();
     }
 
-    public function status(): SpawnStatus
+    public function status(): ParallelStatus
     {
         return $this->status;
     }
@@ -77,7 +77,7 @@ class Spawn implements ArrayAccess, SpawnInterface
     public function add($process, int $timeout = 300): ProcessInterface
     {
         if (! is_callable($process) && ! $process instanceof ProcessInterface) {
-            throw new InvalidArgumentException('The process passed to Spawn::add should be callable.');
+            throw new InvalidArgumentException('The process passed to Parallel::add should be callable.');
         }
 		
         if (! $process instanceof ProcessInterface) {
@@ -86,7 +86,7 @@ class Spawn implements ArrayAccess, SpawnInterface
 		
         $this->putInQueue($process);
 
-        $this->spawn[] = $this->process = $process;
+        $this->parallel[] = $this->process = $process;
 
         return $process;
     }
@@ -197,12 +197,12 @@ class Spawn implements ArrayAccess, SpawnInterface
 	
     public function offsetExists($offset)
     {
-        return isset($this->spawn[$offset]);
+        return isset($this->parallel[$offset]);
     }
 
     public function offsetGet($offset)
     {
-        return isset($this->spawn[$offset]) ? $this->spawn[$offset] : null;
+        return isset($this->parallel[$offset]) ? $this->parallel[$offset] : null;
     }
 
     public function offsetSet($offset, $value, int $timeout = 300)
@@ -212,7 +212,7 @@ class Spawn implements ArrayAccess, SpawnInterface
 
     public function offsetUnset($offset)
     {
-        $this->processor->remove($this->spawn[$offset]);
-        unset($this->spawn[$offset]);
+        $this->processor->remove($this->parallel[$offset]);
+        unset($this->parallel[$offset]);
     }
 }

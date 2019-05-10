@@ -2,11 +2,11 @@
 
 namespace Async\Tests;
 
-use Async\Coroutine\Spawn;
+use Async\Coroutine\Parallel;
 use Async\Tests\MyTask;
 use PHPUnit\Framework\TestCase;
 
-class SpawnStatusTest extends TestCase
+class ParallelStatusTest extends TestCase
 {
 	protected function setUp(): void
     {
@@ -17,19 +17,19 @@ class SpawnStatusTest extends TestCase
      * @covers Async\Coroutine\Coroutine::processInstance
      * @covers Async\Coroutine\Process::add
      * @covers Async\Coroutine\Process::processing
-     * @covers Async\Coroutine\Spawn::markAsFinished
-     * @covers Async\Coroutine\Spawn::markAsTimedOut
-     * @covers Async\Coroutine\Spawn::markAsFailed
-     * @covers Async\Coroutine\Spawn::__construct
-     * @covers Async\Coroutine\Spawn::add
-     * @covers Async\Coroutine\Spawn::wait
-     * @covers Async\Coroutine\Spawn::status
-     * @covers Async\Coroutine\SpawnStatus::__construct
-     * @covers Async\Coroutine\SpawnStatus::summaryToString
+     * @covers Async\Coroutine\Parallel::markAsFinished
+     * @covers Async\Coroutine\Parallel::markAsTimedOut
+     * @covers Async\Coroutine\Parallel::markAsFailed
+     * @covers Async\Coroutine\Parallel::__construct
+     * @covers Async\Coroutine\Parallel::add
+     * @covers Async\Coroutine\Parallel::wait
+     * @covers Async\Coroutine\Parallel::status
+     * @covers Async\Coroutine\ParallelStatus::__construct
+     * @covers Async\Coroutine\ParallelStatus::summaryToString
      */
     public function testIt_can_show_a_textual_status()
     {
-        $parallel = new Spawn();
+        $parallel = new Parallel();
 
         $parallel->add(function () {
             sleep(5);
@@ -46,19 +46,19 @@ class SpawnStatusTest extends TestCase
      * @covers Async\Coroutine\Coroutine::processInstance
      * @covers Async\Coroutine\Process::add
      * @covers Async\Coroutine\Process::processing
-     * @covers Async\Coroutine\Spawn::markAsFinished
-     * @covers Async\Coroutine\Spawn::markAsTimedOut
-     * @covers Async\Coroutine\Spawn::markAsFailed
-     * @covers Async\Coroutine\Spawn::add
-     * @covers Async\Coroutine\Spawn::__construct
-     * @covers Async\Coroutine\Spawn::wait
-     * @covers Async\Coroutine\Spawn::status
-     * @covers Async\Coroutine\SpawnStatus::__construct
-     * @covers Async\Coroutine\SpawnStatus::summaryToString
+     * @covers Async\Coroutine\Parallel::markAsFinished
+     * @covers Async\Coroutine\Parallel::markAsTimedOut
+     * @covers Async\Coroutine\Parallel::markAsFailed
+     * @covers Async\Coroutine\Parallel::add
+     * @covers Async\Coroutine\Parallel::__construct
+     * @covers Async\Coroutine\Parallel::wait
+     * @covers Async\Coroutine\Parallel::status
+     * @covers Async\Coroutine\ParallelStatus::__construct
+     * @covers Async\Coroutine\ParallelStatus::summaryToString
      */
     public function testIt_can_show_a_textual_failed_status()
     {
-        $parallel = new Spawn();
+        $parallel = new Parallel();
 
         foreach (range(1, 5) as $i) {
             $parallel->add(function () {
@@ -79,19 +79,19 @@ class SpawnStatusTest extends TestCase
      * @covers Async\Coroutine\Coroutine::processInstance
      * @covers Async\Coroutine\Process::add
      * @covers Async\Coroutine\Process::processing
-     * @covers Async\Coroutine\Spawn::markAsFinished
-     * @covers Async\Coroutine\Spawn::markAsTimedOut
-     * @covers Async\Coroutine\Spawn::markAsFailed
-     * @covers Async\Coroutine\Spawn::add
-     * @covers Async\Coroutine\Spawn::__construct
-     * @covers Async\Coroutine\Spawn::wait
-     * @covers Async\Coroutine\Spawn::status
-     * @covers Async\Coroutine\SpawnStatus::__construct
-     * @covers Async\Coroutine\SpawnStatus::summaryToString
+     * @covers Async\Coroutine\Parallel::markAsFinished
+     * @covers Async\Coroutine\Parallel::markAsTimedOut
+     * @covers Async\Coroutine\Parallel::markAsFailed
+     * @covers Async\Coroutine\Parallel::add
+     * @covers Async\Coroutine\Parallel::__construct
+     * @covers Async\Coroutine\Parallel::wait
+     * @covers Async\Coroutine\Parallel::status
+     * @covers Async\Coroutine\ParallelStatus::__construct
+     * @covers Async\Coroutine\ParallelStatus::summaryToString
      */
     public function testIt_can_show_timeout_status()
     {
-        $parallel = new Spawn();
+        $parallel = new Parallel();
         
         foreach (range(1, 5) as $i) {
             $parallel->add(function () {

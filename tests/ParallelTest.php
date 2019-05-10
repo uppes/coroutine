@@ -3,13 +3,13 @@
 namespace Async\Tests;
 
 use InvalidArgumentException;
-use Async\Coroutine\Spawn;
+use Async\Coroutine\Parallel;
 use Async\Tests\MyClass;
 use Async\Tests\InvokableClass;
 use Async\Tests\NonInvokableClass;
 use PHPUnit\Framework\TestCase;
 
-class SpawnTest extends TestCase
+class ParallelTest extends TestCase
 {
 	protected function setUp(): void
     {
@@ -20,18 +20,18 @@ class SpawnTest extends TestCase
      * @covers Async\Coroutine\Coroutine::processInstance
      * @covers Async\Coroutine\Process::add
      * @covers Async\Coroutine\Process::processing
-     * @covers Async\Coroutine\Spawn::markAsFinished
-     * @covers Async\Coroutine\Spawn::markAsTimedOut
-     * @covers Async\Coroutine\Spawn::markAsFailed
-     * @covers Async\Coroutine\Spawn::add
-     * @covers Async\Coroutine\Spawn::__construct
-     * @covers Async\Coroutine\Spawn::wait
-     * @covers Async\Coroutine\Spawn::ispcntl
-     * @covers Async\Coroutine\Spawn::status
+     * @covers Async\Coroutine\Parallel::markAsFinished
+     * @covers Async\Coroutine\Parallel::markAsTimedOut
+     * @covers Async\Coroutine\Parallel::markAsFailed
+     * @covers Async\Coroutine\Parallel::add
+     * @covers Async\Coroutine\Parallel::__construct
+     * @covers Async\Coroutine\Parallel::wait
+     * @covers Async\Coroutine\Parallel::ispcntl
+     * @covers Async\Coroutine\Parallel::status
      */
     public function testIt_can_check_for_asynchronous_support_speed()
     {
-        $parallel = new Spawn();
+        $parallel = new Parallel();
 
         $stopwatch = \microtime(true);
 
@@ -60,18 +60,18 @@ class SpawnTest extends TestCase
      * @covers Async\Coroutine\Coroutine::processInstance
      * @covers Async\Coroutine\Process::add
      * @covers Async\Coroutine\Process::processing
-     * @covers Async\Coroutine\Spawn::markAsFinished
-     * @covers Async\Coroutine\Spawn::markAsTimedOut
-     * @covers Async\Coroutine\Spawn::markAsFailed
-     * @covers Async\Coroutine\Spawn::add
-     * @covers Async\Coroutine\Spawn::create
-     * @covers Async\Coroutine\Spawn::wait
-     * @covers Async\Coroutine\Spawn::results
-     * @covers Async\Coroutine\Spawn::status
+     * @covers Async\Coroutine\Parallel::markAsFinished
+     * @covers Async\Coroutine\Parallel::markAsTimedOut
+     * @covers Async\Coroutine\Parallel::markAsFailed
+     * @covers Async\Coroutine\Parallel::add
+     * @covers Async\Coroutine\Parallel::create
+     * @covers Async\Coroutine\Parallel::wait
+     * @covers Async\Coroutine\Parallel::results
+     * @covers Async\Coroutine\Parallel::status
      */
     public function testIt_can_create_and_return_results()
     {
-        $parallel = Spawn::create();
+        $parallel = Parallel::create();
 
         $counter = 0;
 
@@ -93,19 +93,19 @@ class SpawnTest extends TestCase
      * @covers Async\Coroutine\Coroutine::processInstance
      * @covers Async\Coroutine\Process::add
      * @covers Async\Coroutine\Process::processing
-     * @covers Async\Coroutine\Spawn::markAsFinished
-     * @covers Async\Coroutine\Spawn::markAsTimedOut
-     * @covers Async\Coroutine\Spawn::markAsFailed
-     * @covers Async\Coroutine\Spawn::add
-     * @covers Async\Coroutine\Spawn::create
-     * @covers Async\Coroutine\Spawn::wait
-     * @covers Async\Coroutine\Spawn::results
-     * @covers Async\Coroutine\Spawn::status
-     * @covers Async\Coroutine\Spawn::retry
+     * @covers Async\Coroutine\Parallel::markAsFinished
+     * @covers Async\Coroutine\Parallel::markAsTimedOut
+     * @covers Async\Coroutine\Parallel::markAsFailed
+     * @covers Async\Coroutine\Parallel::add
+     * @covers Async\Coroutine\Parallel::create
+     * @covers Async\Coroutine\Parallel::wait
+     * @covers Async\Coroutine\Parallel::results
+     * @covers Async\Coroutine\Parallel::status
+     * @covers Async\Coroutine\Parallel::retry
      */
     public function testIt_can_retry()
     {
-        $parallel = Spawn::create();
+        $parallel = Parallel::create();
 
         $counter = 0;
 
@@ -140,17 +140,17 @@ class SpawnTest extends TestCase
      * @covers Async\Coroutine\Coroutine::processInstance
      * @covers Async\Coroutine\Process::add
      * @covers Async\Coroutine\Process::processing
-     * @covers Async\Coroutine\Spawn::markAsFinished
-     * @covers Async\Coroutine\Spawn::markAsTimedOut
-     * @covers Async\Coroutine\Spawn::markAsFailed
-     * @covers Async\Coroutine\Spawn::add
-     * @covers Async\Coroutine\Spawn::__construct
-     * @covers Async\Coroutine\Spawn::wait
-     * @covers Async\Coroutine\Spawn::status
+     * @covers Async\Coroutine\Parallel::markAsFinished
+     * @covers Async\Coroutine\Parallel::markAsTimedOut
+     * @covers Async\Coroutine\Parallel::markAsFailed
+     * @covers Async\Coroutine\Parallel::add
+     * @covers Async\Coroutine\Parallel::__construct
+     * @covers Async\Coroutine\Parallel::wait
+     * @covers Async\Coroutine\Parallel::status
      */
     public function testIt_can_handle_success()
     {
-        $parallel = new Spawn();
+        $parallel = new Parallel();
 
         $counter = 0;
 
@@ -171,17 +171,17 @@ class SpawnTest extends TestCase
      * @covers Async\Coroutine\Coroutine::processInstance
      * @covers Async\Coroutine\Process::add
      * @covers Async\Coroutine\Process::processing
-     * @covers Async\Coroutine\Spawn::markAsFinished
-     * @covers Async\Coroutine\Spawn::markAsTimedOut
-     * @covers Async\Coroutine\Spawn::markAsFailed
-     * @covers Async\Coroutine\Spawn::add
-     * @covers Async\Coroutine\Spawn::__construct
-     * @covers Async\Coroutine\Spawn::wait
-     * @covers Async\Coroutine\Spawn::status
+     * @covers Async\Coroutine\Parallel::markAsFinished
+     * @covers Async\Coroutine\Parallel::markAsTimedOut
+     * @covers Async\Coroutine\Parallel::markAsFailed
+     * @covers Async\Coroutine\Parallel::add
+     * @covers Async\Coroutine\Parallel::__construct
+     * @covers Async\Coroutine\Parallel::wait
+     * @covers Async\Coroutine\Parallel::status
      */
     public function testIt_can_handle_timeout()
     {
-        $parallel = new Spawn();
+        $parallel = new Parallel();
         
         $counter = 0;
 
@@ -202,19 +202,19 @@ class SpawnTest extends TestCase
      * @covers Async\Coroutine\Coroutine::processInstance
      * @covers Async\Coroutine\Process::add
      * @covers Async\Coroutine\Process::processing
-     * @covers Async\Coroutine\Spawn::markAsFinished
-     * @covers Async\Coroutine\Spawn::markAsTimedOut
-     * @covers Async\Coroutine\Spawn::markAsFailed
-     * @covers Async\Coroutine\Spawn::concurrency
-     * @covers Async\Coroutine\Spawn::add
-     * @covers Async\Coroutine\Spawn::__construct
-     * @covers Async\Coroutine\Spawn::wait
-     * @covers Async\Coroutine\Spawn::status
-     * @covers Async\Coroutine\Spawn::getFinished
+     * @covers Async\Coroutine\Parallel::markAsFinished
+     * @covers Async\Coroutine\Parallel::markAsTimedOut
+     * @covers Async\Coroutine\Parallel::markAsFailed
+     * @covers Async\Coroutine\Parallel::concurrency
+     * @covers Async\Coroutine\Parallel::add
+     * @covers Async\Coroutine\Parallel::__construct
+     * @covers Async\Coroutine\Parallel::wait
+     * @covers Async\Coroutine\Parallel::status
+     * @covers Async\Coroutine\Parallel::getFinished
      */
     public function testIt_can_handle_a_maximum_of_concurrent_processes()
     {
-        $parallel = (new Spawn());
+        $parallel = (new Parallel());
 
         $parallel->concurrency(2);
 
@@ -239,35 +239,35 @@ class SpawnTest extends TestCase
     /**
      * @covers Async\Coroutine\Process::add
      * @covers Async\Coroutine\Process::processing
-     * @covers Async\Coroutine\Spawn::markAsFinished
-     * @covers Async\Coroutine\Spawn::markAsTimedOut
-     * @covers Async\Coroutine\Spawn::markAsFailed
-     * @covers Async\Coroutine\Spawn::offsetExists
-     * @covers Async\Coroutine\Spawn::offsetSet
-     * @covers Async\Coroutine\Spawn::__construct
-     * @covers Async\Coroutine\Spawn::sleepTime
-     * @covers Async\Coroutine\Spawn::offsetGet
-     * @covers Async\Coroutine\Spawn::offsetUnset
-     * @covers \spawn_add
-     * @covers \spawn_wait
+     * @covers Async\Coroutine\Parallel::markAsFinished
+     * @covers Async\Coroutine\Parallel::markAsTimedOut
+     * @covers Async\Coroutine\Parallel::markAsFailed
+     * @covers Async\Coroutine\Parallel::offsetExists
+     * @covers Async\Coroutine\Parallel::offsetSet
+     * @covers Async\Coroutine\Parallel::__construct
+     * @covers Async\Coroutine\Parallel::sleepTime
+     * @covers Async\Coroutine\Parallel::offsetGet
+     * @covers Async\Coroutine\Parallel::offsetUnset
+     * @covers \parallel_add
+     * @covers \parallel_wait
      */
     public function testIt_can_handle_sleep_array_access()
     {
-        $parallel = new Spawn();
+        $parallel = new Parallel();
 
         $counter = 0;
 
         $parallel->sleepTime(10000);
 
         foreach (range(1, 5) as $i) {
-            $parallel[] = \spawn_add(function () {
+            $parallel[] = \parallel_add(function () {
                 usleep(random_int(100, 1000));
 
                 return 2;
             });
         }
 
-        \spawn_wait();
+        \parallel_wait();
 
         $this->assertTrue(isset($parallel[0]));
 
@@ -284,22 +284,22 @@ class SpawnTest extends TestCase
      * @covers Async\Coroutine\Coroutine::processInstance
      * @covers Async\Coroutine\Process::add
      * @covers Async\Coroutine\Process::processing
-     * @covers Async\Coroutine\Spawn::markAsFinished
-     * @covers Async\Coroutine\Spawn::markAsTimedOut
-     * @covers Async\Coroutine\Spawn::markAsFailed
-     * @covers Async\Coroutine\Spawn::offsetSet
-     * @covers Async\Coroutine\Spawn::__construct
-     * @covers Async\Coroutine\Spawn::wait
-     * @covers \spawn_add
+     * @covers Async\Coroutine\Parallel::markAsFinished
+     * @covers Async\Coroutine\Parallel::markAsTimedOut
+     * @covers Async\Coroutine\Parallel::markAsFailed
+     * @covers Async\Coroutine\Parallel::offsetSet
+     * @covers Async\Coroutine\Parallel::__construct
+     * @covers Async\Coroutine\Parallel::wait
+     * @covers \parallel_add
      */
     public function testIt_returns_all_the_output_as_an_array()
     {
-        $parallel = new Spawn();
+        $parallel = new Parallel();
 
         $result = null;
 
         foreach (range(1, 5) as $i) {
-            $parallel[] = \spawn_add(function () {
+            $parallel[] = \parallel_add(function () {
                 return 2;
             });
         }
@@ -314,24 +314,24 @@ class SpawnTest extends TestCase
      * @covers Async\Coroutine\Coroutine::processInstance
      * @covers Async\Coroutine\Process::add
      * @covers Async\Coroutine\Process::processing
-     * @covers Async\Coroutine\Spawn::markAsFinished
-     * @covers Async\Coroutine\Spawn::markAsTimedOut
-     * @covers Async\Coroutine\Spawn::markAsFailed
-     * @covers Async\Coroutine\Spawn::offsetSet
-     * @covers Async\Coroutine\Spawn::__construct
-     * @covers Async\Coroutine\Spawn::wait
-     * @covers \spawn_add
-     * @covers \spawn_wait
-     * @covers \spawn_instance
+     * @covers Async\Coroutine\Parallel::markAsFinished
+     * @covers Async\Coroutine\Parallel::markAsTimedOut
+     * @covers Async\Coroutine\Parallel::markAsFailed
+     * @covers Async\Coroutine\Parallel::offsetSet
+     * @covers Async\Coroutine\Parallel::__construct
+     * @covers Async\Coroutine\Parallel::wait
+     * @covers \parallel_add
+     * @covers \parallel_wait
+     * @covers \parallel_instance
      */
     public function testIt_can_use_a_class_from_the_parent_process()
     {
-        $parallel = \spawn_instance();
+        $parallel = \parallel_instance();
 
         /** @var MyClass $result */
         $result = null;
 
-        $parallel[] = \spawn_add(function () {
+        $parallel[] = \parallel_add(function () {
             $class = new MyClass();
 
             $class->property = true;
@@ -341,7 +341,7 @@ class SpawnTest extends TestCase
             $result = $class;
         });
 
-        \spawn_wait();
+        \parallel_wait();
 
         $this->assertInstanceOf(MyClass::class, $result);
         $this->assertTrue($result->property);
@@ -351,23 +351,23 @@ class SpawnTest extends TestCase
      * @covers Async\Coroutine\Coroutine::processInstance
      * @covers Async\Coroutine\Process::add
      * @covers Async\Coroutine\Process::processing
-     * @covers Async\Coroutine\Spawn::markAsFinished
-     * @covers Async\Coroutine\Spawn::markAsTimedOut
-     * @covers Async\Coroutine\Spawn::markAsFailed
-     * @covers Async\Coroutine\Spawn::offsetSet
-     * @covers Async\Coroutine\Spawn::wait
-     * @covers \spawn_add
-     * @covers \spawn_wait
-     * @covers \spawn_instance
+     * @covers Async\Coroutine\Parallel::markAsFinished
+     * @covers Async\Coroutine\Parallel::markAsTimedOut
+     * @covers Async\Coroutine\Parallel::markAsFailed
+     * @covers Async\Coroutine\Parallel::offsetSet
+     * @covers Async\Coroutine\Parallel::wait
+     * @covers \parallel_add
+     * @covers \parallel_wait
+     * @covers \parallel_instance
      */
     public function testIt_works_with_global_helper_functions()
     {
-        $workers = \spawn_instance();
+        $workers = \parallel_instance();
 
         $counter = 0;
 
         foreach (range(1, 5) as $i) {
-            $workers[] = \spawn_add(function () {
+            $workers[] = \parallel_add(function () {
                 usleep(random_int(10, 1000));
 
                 return 2;
@@ -376,7 +376,7 @@ class SpawnTest extends TestCase
             });
         }
 
-        \spawn_wait();
+        \parallel_wait();
 
         $this->assertEquals(10, $counter, (string) $workers->status());
     }
@@ -385,20 +385,20 @@ class SpawnTest extends TestCase
      * @covers Async\Coroutine\Coroutine::processInstance
      * @covers Async\Coroutine\Process::add
      * @covers Async\Coroutine\Process::processing
-     * @covers Async\Coroutine\Spawn::markAsFinished
-     * @covers Async\Coroutine\Spawn::markAsTimedOut
-     * @covers Async\Coroutine\Spawn::markAsFailed
-     * @covers Async\Coroutine\Spawn::add
-     * @covers \spawn_wait
-     * @covers \spawn_instance
+     * @covers Async\Coroutine\Parallel::markAsFinished
+     * @covers Async\Coroutine\Parallel::markAsTimedOut
+     * @covers Async\Coroutine\Parallel::markAsFailed
+     * @covers Async\Coroutine\Parallel::add
+     * @covers \parallel_wait
+     * @covers \parallel_instance
      */
     public function testIt_can_run_invokable_classes()
     {
-        $parallel = \spawn_instance();
+        $parallel = \parallel_instance();
 
         $parallel->add(new InvokableClass());
 
-        $results = \spawn_wait();
+        $results = \parallel_wait();
 
         $this->assertEquals(2, $results[0]);
     }
@@ -406,14 +406,14 @@ class SpawnTest extends TestCase
     /**
      * @covers Async\Coroutine\Coroutine::processInstance
      * @covers Async\Coroutine\Process::add
-     * @covers Async\Coroutine\Spawn::add
-     * @covers \spawn_instance
+     * @covers Async\Coroutine\Parallel::add
+     * @covers \parallel_instance
      */
     public function testIt_reports_error_for_non_invokable_classes()
     {
         $this->expectException(\InvalidArgumentException::class);
 
-        $parallel = \spawn_instance();
+        $parallel = \parallel_instance();
 
         $parallel->add(new NonInvokableClass());
     }

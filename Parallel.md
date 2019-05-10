@@ -1,4 +1,4 @@
-Spawn
+Parallel
 =====
 
 An Asynchronous Parallel PHP process manager API.
@@ -27,9 +27,9 @@ Usage
 ```php
 include 'vendor/autoload.php';
 
-use Async\Coroutine\Spawn;
+use Async\Coroutine\Parallel;
 
-$parallel = new Spawn();
+$parallel = new Parallel();
 
 foreach ($things as $thing) {
         // the second argument is optional, it sets The maximum amount of time a process may take to finish in seconds.
@@ -81,11 +81,11 @@ $parallel
 ;
 ```
 
-If there's no error handler added, the error will be thrown in the parent process when calling `Spawn::await()` or `$parallel->wait()`.
+If there's no error handler added, the error will be thrown in the parent process when calling `parallel_wait()` or `$parallel->wait()`.
 
 If the child process would unexpectedly stop without throwing an `Throwable`, the output written to `stderr` will be wrapped and thrown as `Async\Processor\ProcessorError` in the parent process.
 
-Spawn pool configuration
+Parallel pool configuration
 ----
 
 You're free to create as many parallel process pools as you want, each parallel pool has its own queue of processes it will handle.
@@ -93,9 +93,9 @@ You're free to create as many parallel process pools as you want, each parallel 
 A parallel pool is configurable by the developer:
 
 ```php
-use Async\Coroutine\Spawn;
+use Async\Coroutine\Parallel;
 
-$parallel = (new Spawn())
+$parallel = (new Parallel())
 
 // The maximum amount of processes which can run simultaneously.
     ->concurrency(20)
@@ -104,8 +104,7 @@ $parallel = (new Spawn())
     ->sleepTime(50000);
 ```
 
-Behind the curtains
-=====
+___Behind the curtains___
 
 When using this package, you're probably wondering what's happening underneath the surface.
 
@@ -117,7 +116,7 @@ which don't really need to wait for each other.
 By giving these tasks a separate process to run on, the underlying operating system can take care of running them in parallel.
 
 There's a caveat when dynamically spawning processes: you need to make sure that there won't be too many processes at once, or the application might crash.
-The `Spawn` class provided by this package takes care of handling as many processes as you want by scheduling and running them when it's possible.
+The `Parallel` class provided by this package takes care of handling as many processes as you want by scheduling and running them when it's possible.
 
 When multiple processes are spawned, each can have a separate time to completion.
 One process might eg. have to wait for a HTTP call, while the other has to process large amounts of data.

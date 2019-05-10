@@ -2,17 +2,16 @@
 
 namespace Async\Coroutine;
 
-use Async\Coroutine\SpawnInterface;
 use Async\Processor\ProcessInterface;
 
-interface SpawnInterface 
+interface ParallelInterface 
 {
     /**
      * @return static
      */
-    public static function create(): SpawnInterface;
+    public static function create(): ParallelInterface;
 	
-    public function concurrency(int $concurrency): SpawnInterface;
+    public function concurrency(int $concurrency): ParallelInterface;
 
     public function sleepTime(int $sleepTime);
     
@@ -20,7 +19,7 @@ interface SpawnInterface
 
     public function isPcntl(): bool;
 
-    public function status(): SpawnStatus;
+    public function status(): ParallelStatus;
 	
     /**
      * @param ProcessInterface|callable $process

@@ -1,7 +1,7 @@
 <?php
 
 use Async\Coroutine\Kernel;
-use Async\Coroutine\SpawnInterface;
+use Async\Coroutine\ParallelInterface;
 use Async\Coroutine\StreamSocket;
 use Async\Coroutine\StreamSocketInterface;
 use Async\Coroutine\Coroutine;
@@ -218,7 +218,7 @@ if (! \function_exists('coroutine_run')) {
      *
      * @return ProcessInterface
      */
-	function spawn($callable, int $timeout = 300): ProcessInterface
+	function parallel($callable, int $timeout = 300): ProcessInterface
     {
 		$coroutine = \coroutine_instance();
 
@@ -227,27 +227,27 @@ if (! \function_exists('coroutine_run')) {
 	}
 
     /**
-     * Get/create process worker pool of an spawn instance.
+     * Get/create process worker pool of an parallel instance.
 	 * 
      * @return ProcessInterface
      */
-    function spawn_instance(): SpawnInterface
+    function parallel_instance(): ParallelInterface
     {
 		$coroutine = \coroutine_instance();
 
 		if ($coroutine instanceof CoroutineInterface)			
-			return $coroutine->spawnInstance();
+			return $coroutine->parallelInstance();
 	}
 
     /**
-     * Add something/callable to spawn instance process pool.
+     * Add something/callable to parallel instance process pool.
 	 * 
      * @param callable $somethingToRun
      * @param int $timeout 
      *
      * @return ProcessInterface
      */
-    function spawn_add($somethingToRun, int $timeout = 300): ProcessInterface
+    function parallel_add($somethingToRun, int $timeout = 300): ProcessInterface
     {
 		return Processor::create($somethingToRun, $timeout);
 	}
@@ -257,11 +257,11 @@ if (! \function_exists('coroutine_run')) {
 	 * 
      * @return array
      */
-    function spawn_wait(): ?array
+    function parallel_wait(): ?array
     {
-		$pool = \spawn_instance();
+		$pool = \parallel_instance();
 		
-		if ($pool instanceof SpawnInterface)	
+		if ($pool instanceof ParallelInterface)	
 			return $pool->wait();
 		
 		return array();

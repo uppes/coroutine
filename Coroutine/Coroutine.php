@@ -4,7 +4,7 @@ namespace Async\Coroutine;
 
 use Async\Coroutine\Kernel;
 use Async\Coroutine\Task;
-use Async\Coroutine\Spawn;
+use Async\Coroutine\Parallel;
 use Async\Coroutine\Process;
 use Async\Coroutine\TaskInterface;
 use Async\Coroutine\ReturnValueCoroutine;
@@ -65,20 +65,20 @@ class Coroutine implements CoroutineInterface
 
     protected $pcntl = null;
     protected $process = null;
-    protected $spawn = null;
+    protected $parallel = null;
 
     public function __construct()
 	{
         global $__coroutine__;
         $__coroutine__ = $this;
         
-        $this->spawn = new Spawn($this);
+        $this->parallel = new Parallel($this);
         $this->taskQueue = new \SplQueue();
     }
 
-    public function spawnInstance(): Spawn
+    public function parallelInstance(): Parallel
     {
-        return $this->spawn;
+        return $this->parallel;
     }
 
     public function processInstance($timedOutCallback = null, $finishCallback = null, $failCallback = null)
@@ -102,7 +102,7 @@ class Coroutine implements CoroutineInterface
      */
 	public function createProcess($callable, int $timeout = 300): ProcessInterface
     {		
-		return $this->spawn->add($callable, $timeout);
+		return $this->parallel->add($callable, $timeout);
     }
     
     public function isPcntl(): bool
