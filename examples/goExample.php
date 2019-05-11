@@ -18,10 +18,12 @@ function f(int $n) {
   
   function main() {
     for ($i = 0; $i < 10; $i++) {
-      yield \await('f',  $i);
+      $func = yield \await('f',  $i);
+      print ("\nCreated function: f($i), Task id: $func - ");
     }
 
-    //yield \read_input();
+    print("\nPress enter to exit,\nbut i will be still running,\ngot more tasks iterations to do!\n");
+    yield \read_input();
   }
 
 \coroutine_create( \main() );
