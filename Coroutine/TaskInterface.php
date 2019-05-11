@@ -12,9 +12,24 @@ interface TaskInterface
 
     public function sendValue($sendValue);
 
-    public function exception($exception);
+    /**
+     * Mark the task as done and set an exception.
+     * 
+     * @param \Exception
+     */
+    public function setException($exception);
 
     public function run();
+    
+    public function isFinished(): bool;
 
-    public function isFinished();
+    public function setState(string $status);
+
+    public function setResult($value);
+    
+    public function cancelled(): bool;
+
+    public function done(): bool;
+
+    public function result();
 }

@@ -45,6 +45,8 @@ interface CoroutineInterface
      * stream/file descriptor for read availability and invoke callback
      * once stream is available for reading.
      * 
+     * @see https://docs.python.org/3.7/library/asyncio-eventloop.html#asyncio.loop.add_reader
+     * 
      * @param resource $stream
      * @param callable $task
      */
@@ -55,6 +57,8 @@ interface CoroutineInterface
      * stream/file descriptor for write availability and invoke callback
      * once stream is available for writing.
      * 
+     * @see https://docs.python.org/3.7/library/asyncio-eventloop.html#asyncio.loop.add_writer
+     * 
      * @param resource $stream
      * @param callable $task
      */
@@ -63,6 +67,8 @@ interface CoroutineInterface
     /**
      * Stop monitoring the stream/file descriptor for read availability.
      * 
+     * @see https://docs.python.org/3.7/library/asyncio-eventloop.html#asyncio.loop.remove_reader
+     * 
      * @param resource $stream
      */
     public function removeReader($stream);
@@ -70,6 +76,7 @@ interface CoroutineInterface
     /**
      * Stop monitoring the stream/file descriptor for write availability.
      * 
+     * @see https://docs.python.org/3.7/library/asyncio-eventloop.html#asyncio.loop.remove_writer
      * @param resource $stream
      */
     public function removeWriter($stream);

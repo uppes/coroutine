@@ -10,7 +10,7 @@ This works under Windows OS, which differs in it's fork of [spatie/async
 
 > This package is an complete rewrite of `spatie/async`. The old package following there implementation, but with windows support can be found [here](https://github.com/techno-express/async/tree/windows-patch).
 
-This package is part of an bigger library in development [uppes/promiseplus](https://github.com/uppes/promiseplus), [uppes/coroutine](https://github.com/uppes/coroutine), and should be used when wanting non-blocking with an function normally blocking.
+This package should be used when wanting non-blocking with an function normally blocking.
 
 Installation
 -------

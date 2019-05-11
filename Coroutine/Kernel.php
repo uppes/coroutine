@@ -72,7 +72,7 @@ class Kernel
 	{
 		return new Kernel(
 			function(TaskInterface $task, Coroutine $coroutine) use ($callable, $args) {
-				$task->sendValue($coroutine->createTask(\awaitAble($callable, $args)));				
+				$task->sendValue($coroutine->createTask(\awaitAble($callable, ...$args)));				
 				$coroutine->schedule($task);
 			}
 		);
@@ -172,7 +172,9 @@ class Kernel
 						$coroutine->cancelTask($taskId);
 						$task->exception(new \RuntimeException('The operation has exceeded the given deadline'));
 						$coroutine->schedule($task);
-					}
+					} else
+						$coroutine->schedule($task);
+						
 				}, $timeout);
 			}
 		);

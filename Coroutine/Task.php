@@ -103,7 +103,7 @@ class Task implements TaskInterface
         $this->sendValue = $sendValue;
     }
 
-    public function exception($exception) 
+    public function setException($exception) 
 	{
         $this->exception = $exception;
     }

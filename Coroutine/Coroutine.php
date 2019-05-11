@@ -95,12 +95,14 @@ class Coroutine implements CoroutineInterface
     /**
      * Add callable for parallel processing, in an separate php process
 	 * 
+     * @see https://docs.python.org/3.8/library/asyncio-subprocess.html#creating-subprocesses
+     * 
      * @param callable $callable
      * @param int $timeout 
      *
      * @return ProcessInterface
      */
-	public function createProcess($callable, int $timeout = 300): ProcessInterface
+	public function createSubProcess($callable, int $timeout = 300): ProcessInterface
     {		
 		return $this->parallel->add($callable, $timeout);
     }
@@ -166,7 +168,7 @@ class Coroutine implements CoroutineInterface
 				try {
 					$value($task, $this);
 				} catch (\Exception $e) {
-					$task->exception($e);
+					$task->setException($e);
 					$this->schedule($task);
 				}
 				continue;
