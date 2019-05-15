@@ -280,14 +280,14 @@ class StreamSocket implements StreamSocketInterface
         \stream_set_blocking($this->socket, true);
         $this->secure  = $this->acceptConnection($this->socket);
         \stream_set_blocking($this->socket, false);
-        yield Coroutine::value(new StreamSocket($this->acceptSecure($this->secure)));
+        return Coroutine::value(new StreamSocket($this->acceptSecure($this->secure)));
     }
 
     public function accept() 
 	{
         yield Kernel::readWait($this->socket);
         if (self::$isSecure) {
-            return $this->handshake();
+            yield $this->handshake();
         } else
             yield Coroutine::value(new StreamSocket($this->acceptConnection($this->socket)));
     }

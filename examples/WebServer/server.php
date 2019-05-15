@@ -12,22 +12,22 @@ include 'vendor/autoload.php';
 
 error_reporting(-1);
 ini_set("display_errors", 1);
-echo "CO-ROUTINE EXAMPLE. WEBSERVER" . PHP_EOL;
+echo "CO-ROUTINE EXAMPLE. WEBSERVER" . EOL;
 
 chdir(__DIR__);
 
-echo "LIBS LOADED" . PHP_EOL;
+echo "LIBS LOADED" . EOL;
 
 function server($port)
 {
     global $i;
-    echo "SERVER LISTENING ON: $port" . PHP_EOL . PHP_EOL;;
+    echo "SERVER LISTENING ON: $port" . EOL . EOL;;
 
     $socket = \secure_server($port);
     //$socket = \create_server($port);
     $i=1;
     while (true) {
-        yield from \async('handleClient', yield \accept_socket($socket));
+        yield \await('handleClient', yield \accept_socket($socket));
     }
 }
 
@@ -104,7 +104,7 @@ function handleClient($socket)
             if (\file_exists($input) && \is_readable($input)) {
                 print "Serving $input\n";
 
-                if (strstr($input, '.php')) {
+                if (\strstr($input, '.php')) {
                     $contents = \loadTemplateFile($input, []);
                 } else {
                     $contents = \file_get_contents($input);
@@ -122,5 +122,4 @@ function handleClient($socket)
     yield \close_socket($socket);
 }
 
-\coroutine_create(\server(5000));
-\coroutine_run();
+\coroutine_run(\server(5000));
