@@ -390,6 +390,8 @@ This ___`Coroutine`___ package differs, mainly because it just managing the flow
 
 [Raymond Hettinger, Keynote on Concurrency, PyBay 2017](https://youtu.be/9zinZmE3Ogk) __video__
 
+[Understand Kotlin Coroutines on Android](https://youtu.be/BOHK_w09pVA) __video__
+
 ---
 
 ## Contributing
