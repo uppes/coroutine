@@ -6,8 +6,6 @@ clone_folder: c:\projects\php-project-workspace
 ## Build matrix for lowest and highest possible targets
 environment:
   matrix:
-  - dependencies: lowest
-    php_ver_target: 7.1
   - dependencies: current
     php_ver_target: 7.2
   - dependencies: highest
@@ -51,7 +49,6 @@ install:
     - IF %PHP%==1 echo @php %%~dp0composer.phar %%* > composer.bat
     - appveyor-retry appveyor DownloadFile https://getcomposer.org/composer.phar
     - cd c:\projects\php-project-workspace
-    - IF %dependencies%==lowest appveyor-retry composer update --prefer-lowest --no-progress --profile -n
     - IF %dependencies%==current appveyor-retry composer install --no-progress --profile
     - IF %dependencies%==highest appveyor-retry composer update --no-progress --profile -n
    ## - composer show
