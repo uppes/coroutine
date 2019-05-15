@@ -23,8 +23,8 @@ function server($port)
     global $i;
     echo "SERVER LISTENING ON: $port" . EOL . EOL;;
 
-    $socket = \secure_server($port);
-    //$socket = \create_server($port);
+    //$socket = \secure_server($port);
+    $socket = \create_server($port);
     $i=1;
     while (true) {
         yield \await('handleClient', yield \accept_socket($socket));

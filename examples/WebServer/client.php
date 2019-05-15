@@ -17,7 +17,7 @@ ini_set("display_errors", 1);
 $hostname = \gethostname();
 $ip = \gethostbyname($hostname); //Set the TCP IP Address to connect too
 $port="5000"; //Set the TCP PORT to connect too
-$command="exit"; //Command to run
+$command="hi"; //Command to run
 
 function client($ip, $port, $command) {    
     $contextOptions = array(
@@ -31,7 +31,7 @@ function client($ip, $port, $command) {
 
     #Connect to Server
     #Start SSL
-    $socket = \create_client("tcp://{$ip}:{$port}", $contextOptions);
+    $socket = \create_client("tcp://{$ip}:{$port}");
 
     #Send a command
     yield \client_write($socket, $command);

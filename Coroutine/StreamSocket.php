@@ -65,9 +65,12 @@ class StreamSocket implements StreamSocketInterface
 
         if (!$socket)
             throw new \RuntimeException('Failed to connect to "' . $uri . '": ' . $errStr, $errNo);
-    
-	    \stream_set_blocking ($socket, true);
-	    \stream_socket_enable_crypto ($socket, true, \STREAM_CRYPTO_METHOD_TLS_CLIENT);
+        
+        if (!empty($context)) {
+	        \stream_set_blocking ($socket, true);
+	        \stream_socket_enable_crypto ($socket, true, \STREAM_CRYPTO_METHOD_TLS_CLIENT);
+        }
+        
         \stream_set_blocking ($socket, false);
                 
 		return ($skipInterface === false) ? new self($socket, true) : $socket;
@@ -161,9 +164,9 @@ class StreamSocket implements StreamSocketInterface
         \stream_context_set_option($context, 'ssl', 'passphrase', null); // Private key Password
         \stream_context_set_option($context, 'ssl', 'allow_self_signed', true);
         \stream_context_set_option($context, 'ssl', 'verify_peer', false);
-        \stream_context_set_option($context, 'ssl', 'verify_peer_name', false);
+        //\stream_context_set_option($context, 'ssl', 'verify_peer_name', false);
         \stream_context_set_option($context, 'ssl', 'capath', '.'.self::$caPath);
-        \stream_context_set_option($context, 'ssl', 'SNI_enabled', true);
+        //\stream_context_set_option($context, 'ssl', 'SNI_enabled', true);
         \stream_context_set_option($context, 'ssl', 'disable_compression', true);
 
         // get crypto method from context options
