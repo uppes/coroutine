@@ -3,9 +3,10 @@
 ### Table of Contents
 
 * [Coroutine - Introduction & Background](#Coroutine)
+* [Functions](#Functions)
 * [Installation](#Installation)
 * [Usage](#usage)
-* [Functions](#Functions)
+* [Development](#Development)
 * [Todo](#Todo)
 * [Package/Comparison](#Package/Comparison)
 * [Credits/References](#Credits/References)
@@ -69,15 +70,15 @@ The steps, that's taking place when an `yield` is introduced.
 6. You **`run`** your `function`, putting everything in motion. *Here you are not starting any **event loop***. What could be seen as an event loop, is the work being done *before* or *after* the `task` is place into **action** by the `scheduler`.
 7. Where will this `task` land/return to? *Answer*: The same location that called it, there are **no callbacks**.
 
+> Step **1**, is implemented in other languages with an specific keyword, `async`.
+
+> Steps **2** to **6**, is preformed in other languages with an specific keyword, `await`.
+
 The terminology/naming used here is more in line with [Python's Asyncio](https://www.python.org/dev/peps/pep-0492/) and [Curio](https://curio.readthedocs.io/en/latest/index.html#) usage. In fact, most of the source code method calls has been change to match theres.
-
-## Installation
-
-    composer require uppes/coroutine
 
 ## Functions
 
-Only the functions located here and in the `Core.php` file should be used. Direct access to object class libraries is discouraged, the names might change, or altogether drop if not listed here.
+Only the functions located here and in the `Core.php` file should be used. Direct access to object class libraries is discouraged, the names might change, or altogether drop if not listed here. Library package [development](#Development) is the exception.
 
 ```php
 const MILLISECOND = 0.001;
@@ -173,7 +174,9 @@ yield \async_id();
 yield \async_read_wait($stream);
 
 yield \async_write_wait($stream);
+```
 
+```php
 yield \secure_server($uri, $options, $privatekeyFil, $certificateFile, $signingFile, $ssl_path, $details);
 
 yield \create_server($uri, $options);
@@ -194,9 +197,10 @@ yield \write_socket($socket, $response);
 
 yield \close_Socket($socket);
 
-yield \remote_ip($socket);
-
 yield \read_input($size = 1024);
+
+// no yield
+\remote_ip($socket);
 ```
 
 ```php
@@ -230,6 +234,10 @@ yield \read_input($size = 1024);
  */
 \parallel_wait();
 ```
+
+## Installation
+
+    composer require uppes/coroutine
 
 ## Usage
 
@@ -331,6 +339,36 @@ function main() {
 \coroutine_run(\main());
 ```
 
+## Development
+
+```php
+/**
+ * Template for developing an library package for access
+ */
+public static function someName($whatever, ...$args)
+{
+    return new Kernel(
+        function(TaskInterface $task, Coroutine $coroutine) use ($whatever, $args){
+            // Use/Execute/call some $whatever(...$args);
+
+
+            // will return $someValue back to the caller
+            $task->sendValue($someValue);
+            // will return back to the caller, the callback
+            $coroutine->schedule($task);
+        }
+    );
+}
+
+// Setup to call
+function some_name($whatever, ...$args) {
+    return Kernel::someName($whatever, ...$args);
+}
+
+// To use
+yield \some_name($whatever, ...$args);
+```
+
 ## Todo
 
 * Add more standard examples from other languages, converted over.
@@ -339,6 +377,7 @@ function main() {
 * Add/implement Asyncio `gather` method. Look over there Socket Stream methods for insertion.
 * Add/implement Curio `spawn` method, and debugging/monitoring features.
 * Turn some Http PSR-7, and PSR-17, package to something like Pythons aioHttp.
+* Create an specific error/exception class for `coroutines`.
 * Add/Update phpunit tests.
 
 ## Package/Comparison
