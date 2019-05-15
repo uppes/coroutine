@@ -33,7 +33,7 @@ function main() {
     yield \keyboard();
     
     try {
-        // Wait for at most 1 second
+        // Wait for at most 0.5 second
         yield \async_wait_for('eternity', 0.5);
 	} catch (\RuntimeException $e) {
         print("\ntimeout!");
@@ -45,5 +45,4 @@ function main() {
 	}
 }
 
-\coroutine_create(\main());
-\coroutine_run();
+\coroutine_run(\main());

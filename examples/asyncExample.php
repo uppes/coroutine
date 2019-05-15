@@ -1,8 +1,6 @@
 <?php
 include 'vendor/autoload.php';
 
-use Async\Coroutine\Coroutine;
-
 function childTask() 
 {
     $tid = yield async_id();
@@ -25,5 +23,4 @@ function parentTask()
     }
 };
 
-\coroutine_create( \parentTask() );
-\coroutine_run();
+\coroutine_run(\parentTask());
