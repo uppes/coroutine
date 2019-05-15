@@ -35,7 +35,7 @@ class Task implements TaskInterface
      *
      * @var int
      */
-    protected $cycles;
+    protected $cycles = 0;
 
     /**
      * The underlying coroutine associated with the task.
@@ -96,6 +96,11 @@ class Task implements TaskInterface
     public function taskId(): int 
 	{
         return $this->taskId;
+    }
+
+    public function cyclesAdd() 
+	{
+        $this->cycles++;
     }
 
     public function sendValue($sendValue) 

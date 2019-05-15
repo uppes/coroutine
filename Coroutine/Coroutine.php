@@ -146,6 +146,15 @@ class Coroutine implements CoroutineInterface
     
         return true;
     }
+
+    public function taskList() 
+	{
+        if (!isset($this->taskMap)) {
+            return null;
+        }
+    
+        return $this->taskMap;
+    }
 		
     public function gather(...$taskId) 
 	{
@@ -162,12 +171,15 @@ class Coroutine implements CoroutineInterface
 	{
 		while (!$this->taskQueue->isEmpty()) {
 			$task = $this->taskQueue->dequeue();
+            $task->setState('running');
+            $task->cyclesAdd();
 			$value = $task->run();
 
 			if ($value instanceof Kernel) {
 				try {
 					$value($task, $this);
 				} catch (\Exception $e) {
+                    $task->setState('Exception');
 					$task->setException($e);
 					$this->schedule($task);
 				}
@@ -178,6 +190,7 @@ class Coroutine implements CoroutineInterface
                 $task->setState('completed');
 				unset($this->taskMap[$task->taskId()]);
 			} else {
+                $task->setState('rescheduled');
 				$this->schedule($task);
             }
 		}

@@ -2,6 +2,7 @@
 
 namespace Async\Coroutine;
 
+use Async\Coroutine\Channel;
 use Async\Coroutine\Coroutine;
 use Async\Coroutine\TaskInterface;
 
@@ -60,6 +61,77 @@ class Kernel
 			function(TaskInterface $task, Coroutine $coroutine) use ($coroutines) {
 				$task->sendValue($coroutine->createTask($coroutines));
 				$coroutine->schedule($task);
+			}
+		);
+	}
+
+	/**
+	 * Creates an Channel similar to Google's Go language
+	 * 
+	 * @return object
+	 */
+	public static function make() 
+	{
+		return new Kernel(
+			function(TaskInterface $task, Coroutine $coroutine) {
+				$task->sendValue(Channel::make($task, $coroutine));
+				$coroutine->schedule($task);
+			}
+		);
+	}
+
+	/**
+	 * Set Channel by task id, similar to Google Go language
+	 * 
+     * @param Channel $channel
+	 */
+	public static function receiver(Channel $channel)
+	{
+		return new Kernel(
+			function(TaskInterface $task, Coroutine $coroutine) use ($channel) {
+				$channel->receiver($task->taskId());
+				$coroutine->schedule($task);
+			}
+		);
+	}
+
+	/**
+	 * Set Channel by task id, similar to Google Go language
+	 * 
+     * @param mixed $message
+	 * @param int $taskId
+	 */
+	public static function receive(Channel $channel)
+	{
+		return new Kernel(
+			function(TaskInterface $task, Coroutine $coroutine) use ($channel) {
+				$channel->receive();
+			}
+		);
+	}
+
+	/**
+	 * Send an message to Channel by task id, similar to Google Go language
+	 * 
+     * @param mixed $message
+	 * @param int $taskId
+	 */
+
+	public static function sender(Channel $channel, $message = null, int $taskId = 0) 
+	{
+		return new Kernel(
+			function(TaskInterface $task, Coroutine $coroutine) use ($channel, $message, $taskId) {
+				$taskList = $coroutine->taskList();				    
+		
+				if (isset($taskList[$channel->receiverId()]))
+					$newTask = $taskList[$channel->receiverId()];
+				elseif (isset($taskList[$taskId]))
+					$newTask = $taskList[$taskId];
+				else
+					$newTask = $channel->senderTask();
+
+				$newTask->sendValue($message);
+				$coroutine->schedule($newTask);
 			}
 		);
 	}

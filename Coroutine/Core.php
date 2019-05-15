@@ -1,6 +1,7 @@
 <?php
 
 use Async\Coroutine\Kernel;
+use Async\Coroutine\Channel;
 use Async\Coroutine\ParallelInterface;
 use Async\Coroutine\StreamSocket;
 use Async\Coroutine\StreamSocketInterface;
@@ -9,13 +10,15 @@ use Async\Coroutine\CoroutineInterface;
 use Async\Processor\Processor;
 use Async\Processor\ProcessInterface;
 
-if (! \function_exists('coroutine_run')) {
+if (! \function_exists('coroutine_run')) {	
+	define('MILLISECOND', 0.001);
+	define('EOL', \PHP_EOL);
+
+
 	/**
-	 * Add/schedule an `yield`-ing `function/callable/task` for execution.
+	 * 
 	 * The passed in `function/callable/task` is wrapped within `awaitAble`
 	 * - This function needs to be prefixed with `yield from`
-	 * 
-	 * @see https://docs.python.org/3.7/library/asyncio-task.html#asyncio.create_task
 	 * 
 	 * @param Generator|callable $asyncFunction
 	 * @param mixed $args
@@ -28,15 +31,15 @@ if (! \function_exists('coroutine_run')) {
 	}	
 
 	/**
-	 * Use to obtain the result of coroutine execution
+	 * Add/schedule an `yield`-ing `function/callable/task` for execution.
 	 * - This function needs to be prefixed with `yield`
 	 * 
-	 * @see https://www.python.org/dev/peps/pep-0492/#id56
+	 * @see https://docs.python.org/3.7/library/asyncio-task.html#asyncio.create_task
 	 * 
 	 * @param Generator|callable $awaitableFunction
 	 * @param mixed $args
 	 * 
-	 * @return mixed
+	 * @return int $task id
 	 */
 	function await(callable $awaitedFunction, ...$args) 
 	{
@@ -63,6 +66,7 @@ if (! \function_exists('coroutine_run')) {
 	/**
 	 * Block/sleep for delay seconds.
 	 * Suspends the calling task, allowing other tasks to run.
+	 * - This function needs to be prefixed with `yield`
 	 * 
 	 * @see https://docs.python.org/3.7/library/asyncio-task.html#sleeping
 	 * 
@@ -70,6 +74,93 @@ if (! \function_exists('coroutine_run')) {
 	 * @param mixed $result - If provided, it is returned to the caller when the coroutine complete
 	 */
 	function async_sleep(float $delay = 0.0, $result = null) 
+	{
+		return Kernel::sleepFor($delay, $result); 
+	}
+
+	/**
+	 * Creates an communications Channel between coroutines
+	 * - This function needs to be prefixed with `yield`
+	 * 
+	 * @return Channel $channel
+	 */
+	function async_channel() 
+	{
+		return Kernel::make();
+	}
+
+	/**
+	 * Creates an Channel similar to Google Go language
+	 * - This function needs to be prefixed with `yield`
+	 * 
+	 * @return Channel $channel
+	 */
+	function go_make() 
+	{
+		return Kernel::make();
+	}
+
+	/**
+	 * Send message to an Channel
+	 * - This function needs to be prefixed with `yield`
+	 * 
+	 * @param Channel $channel
+   	 * @param mixed $message
+	 * @param int $taskId
+	 */
+	function go_sender(Channel $channel, $message = null, int $taskId = 0)
+	{
+		return Kernel::sender($channel, $message, $taskId);
+	}
+
+	/**
+	 * Set task as Channel receiver
+	 * - This function needs to be prefixed with `yield`
+	 * 
+	 * @param Channel $channel
+	 */
+	function go_receiver(Channel $channel)
+	{
+		return Kernel::receiver($channel); 
+	}
+
+	/**
+	 * Receive Channel message
+	 * - This function needs to be prefixed with `yield`
+	 * 
+	 * @param Channel $channel
+	 * @return mixed
+	 */
+	function go_receive(Channel $channel)
+	{
+		return Kernel::receive($channel);
+	}
+	
+	/**
+	 * A goroutine is a function that is capable of running concurrently with other functions. 
+	 * To create a goroutine we use the keyword `go` followed by a function invocation
+	 * - This function needs to be prefixed with `yield`
+	 * 
+	 * @see https://www.golang-book.com/books/intro/10#section1
+	 * 
+	 * @param callable $goFunction
+	 * @param mixed $args
+	 * @return int task id
+	 */
+	function go(callable $goFunction, ...$args) 
+	{
+		return Kernel::await($goFunction, ...$args);
+	}
+
+	/**
+	 * Block/sleep for delay seconds.
+	 * Suspends the calling task, allowing other tasks to run.
+	 * - This function needs to be prefixed with `yield`
+	 *  
+	 * @param float $delay
+	 * @param mixed $result - If provided, it is returned to the caller when the coroutine complete
+	 */
+	function go_sleep(float $delay = 0.0, $result = null) 
 	{
 		return Kernel::sleepFor($delay, $result); 
 	}
@@ -193,14 +284,14 @@ if (! \function_exists('coroutine_run')) {
 			$__coroutine__ = new Coroutine();
 
 		if (! empty($coroutine))
-			return $__coroutine__->createTask($coroutine);
+			$__coroutine__->createTask($coroutine);
 
 		return $__coroutine__;
 	}
 	
-	function coroutine_run()
+	function coroutine_run(\Generator $coroutine = null)
 	{
-		$coroutine = \coroutine_instance();
+		$coroutine = \coroutine_create($coroutine);
 
 		if ($coroutine instanceof CoroutineInterface) {			
 			$coroutine->run();
