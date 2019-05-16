@@ -167,6 +167,7 @@ if (! \function_exists('coroutine_run')) {
 	
 	/**
 	 * Wait for the callable to complete with a timeout.
+	 * - This function needs to be prefixed with `yield`
 	 * 
 	 * @see https://docs.python.org/3.7/library/asyncio-task.html#timeouts
 	 * 
@@ -176,23 +177,35 @@ if (! \function_exists('coroutine_run')) {
 	function async_wait_for(callable $callable, float $timeout = 0.0) 
 	{
 		return Kernel::waitFor($callable, $timeout); 
-	}	
+	}
 
+	/**
+	 * - This function needs to be prefixed with `yield`
+	 */
 	function async_cancel(int $tid)
 	{
 		return Kernel::cancelTask($tid); 
 	}	
 
+	/**
+	 * - This function needs to be prefixed with `yield`
+	 */
 	function async_id()
 	{
 		return Kernel::taskId();
 	}	
 
+	/**
+	 * - This function needs to be prefixed with `yield`
+	 */
 	function async_read_wait($stream)
 	{
 		return Kernel::readWait($stream); 
 	}
 
+	/**
+	 * - This function needs to be prefixed with `yield`
+	 */
 	function async_write_wait($stream)
 	{
 		return Kernel::writeWait($stream);
@@ -220,37 +233,58 @@ if (! \function_exists('coroutine_run')) {
 		return StreamSocket::createClient($uri, $options, $isRequest);
 	}
 
+	/**
+	 * - This function needs to be prefixed with `yield`
+	 */
 	function client_read(StreamSocketInterface $socket, int $size = 20240) 
 	{
 		return $socket->response($size);
 	}
 
+	/**
+	 * - This function needs to be prefixed with `yield`
+	 */
 	function client_write(StreamSocketInterface $socket, string $response = null) 
 	{
-		return \write_Socket($socket, $response);
+		return \write_socket($socket, $response);
 	}
 
+	/**
+	 * - This function needs to be prefixed with `yield`
+	 */
 	function close_client(StreamSocketInterface $socket)
 	{
-		return \close_Socket($socket);
+		return \close_socket($socket);
 	}	
 
+	/**
+	 * - This function needs to be prefixed with `yield`
+	 */
 	function accept_socket(StreamSocketInterface $socket)
 	{
 		return $socket->accept();
 	}	
 
+	/**
+	 * - This function needs to be prefixed with `yield`
+	 */
 	function read_socket(StreamSocketInterface $socket, int $size = 8192)
 	{
 		return $socket->read($size);
 	}	
 
+	/**
+	 * - This function needs to be prefixed with `yield`
+	 */
 	function write_socket(StreamSocketInterface $socket, string $response = null)
 	{
 		return $socket->write($response);
 	}	
 
-	function close_Socket(StreamSocketInterface $socket)
+	/**
+	 * - This function needs to be prefixed with `yield`
+	 */
+	function close_socket(StreamSocketInterface $socket)
 	{
 		return $socket->close();
 	}
@@ -318,6 +352,9 @@ if (! \function_exists('coroutine_run')) {
 		return $socket->address();
 	}
 
+	/**
+	 * - This function needs to be prefixed with `yield`
+	 */
 	function read_input(int $size = 1024)
 	{
 		 return StreamSocket::input($size);
