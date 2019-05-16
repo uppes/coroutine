@@ -253,7 +253,65 @@ if (! \function_exists('coroutine_run')) {
 	function close_Socket(StreamSocketInterface $socket)
 	{
 		return $socket->close();
+	}
+
+	/**
+	 * Open file or url.
+	 * 
+	 * @param resource $socket
+	 * @param string $filename|url
+	 * @param string $mode|port
+	 * @return object
+	 */
+	function open_file(StreamSocketInterface $socket = null, string $filenameUrl = null, $modePort = 'r'): StreamSocketInterface
+	{
+		if (empty($socket))
+			$socket = new StreamSocket(null);
+
+		$socket->openFile($filenameUrl, $modePort);
+
+		return $socket;
+	}
+
+	function close_file(StreamSocketInterface $socket)
+	{
+		return $socket->closeFile();
+	}
+
+	/**
+	 * Check if valid open file handle, which file exists and readable.
+	 * 
+	 * @param resource $socket
+	 * @return bool
+	 */
+	function file_valid(StreamSocketInterface $socket): bool
+	{
+		return $socket->fileValid();
 	}	
+
+	/**
+	 * Get file contents from open file handle, reading by size chucks, with timeout
+	 * - This function needs to be prefixed with `yield`
+	 * 
+	 * @param resource $socket
+	 * @param int $size
+	 * @param float $timeout_seconds
+	 * @return mixed
+	 */
+	function file_contents(StreamSocketInterface $socket, int $size = 256, float $timeout_seconds = 0.5)
+	{
+		return $socket->fileContents($size, $timeout_seconds);
+	}
+
+	function file_meta(StreamSocketInterface $socket, $handle = null)
+	{
+		return $socket->getMeta($handle);
+	}
+
+	function file_status(StreamSocketInterface $socket, $url = null)
+	{
+		return $socket->getStatus($url);
+	}
 
 	function remote_ip(StreamSocketInterface $socket)
 	{

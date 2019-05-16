@@ -242,7 +242,7 @@ class Kernel
 				$coroutine->addTimeout(function () use ($taskId, $timeout, $task, $coroutine) {
 					if (!empty($timeout)) {
 						$coroutine->cancelTask($taskId);
-						$task->exception(new \RuntimeException('The operation has exceeded the given deadline'));
+						$task->setException(new \RuntimeException('The operation has exceeded the given deadline'));
 						$coroutine->schedule($task);
 					} else
 						$coroutine->schedule($task);

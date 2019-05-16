@@ -49,7 +49,7 @@ class ParallelTest extends TestCase
 			$expect = (float) 1.0;
             $this->assertTrue($parallel->isPcntl());
         } else {
-            $expect = (float) 1.5;
+            $expect = (float) 1.1;
             $this->assertFalse($parallel->isPcntl());
         }
 

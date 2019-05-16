@@ -9,9 +9,15 @@ use Async\Coroutine\StreamSocketInterface;
 class StreamSocket implements StreamSocketInterface
 {
     protected $socket;
+    protected $handle;
     protected $secure;
     protected $client;
     protected $buffer = null;
+    protected $meta = [];
+    protected $host = '';
+    protected $status = null;
+    protected $url = null;
+    protected $isValid = false;
     protected static $isClient = false;
     protected static $remote = null;
     protected static $caPath = \DIRECTORY_SEPARATOR;
@@ -327,7 +333,7 @@ class StreamSocket implements StreamSocketInterface
 		//Check on STDIN stream
 		\stream_set_blocking(\STDIN, false);
 		yield Kernel::readWait(\STDIN);
-		yield Coroutine::value(\trim(\stream_get_line(\STDIN, $size, \PHP_EOL)));
+		yield Coroutine::value(\trim(\stream_get_line(\STDIN, $size, \EOL)));
     }
 
     public function read(int $size = 8192) 
@@ -335,6 +341,98 @@ class StreamSocket implements StreamSocketInterface
         yield Kernel::readWait($this->socket);
         yield Coroutine::value(\fread($this->socket, $size));
         \stream_set_blocking($this->socket, false);
+    }
+
+    public function openFile(string $url = null, $modePort = 'r') 
+	{
+        $this->url = $url;
+        // assume default scheme if none has been given
+        if (\strpos($url, '://') !== false) {
+            // Explode out the parameters.
+            $url_array = \explode("/", $url);
+            // Is it http or https?
+            \array_shift($url_array);
+            // Pop off an array blank.
+            \array_shift($url_array);
+            // Get the host.
+            $this->host = \array_shift($url_array);
+            $url = \gethostbyname($this->host);
+        } 
+
+        if (!empty($modePort) && \is_int($modePort))
+            $handle = \create_client("tcp://{$url}:$modePort", [], true);
+        else
+            $handle = @\fopen($this->url, $modePort);
+        
+        if (\is_resource($handle)) {
+            $this->isValid = true;
+            \stream_set_blocking($handle, false);
+            $this->meta = \stream_get_meta_data($handle);
+            $this->status = $this->getStatus($this->url);
+            $this->handle = $handle;
+        }
+
+        return $this->handle;
+    }
+
+    public function fileContents(int $size = 256, float $timeout_seconds = 0.5)
+    {
+        $contents = '';
+        while (true) {
+            yield Kernel::readWait($this->handle);
+            $startTime = \microtime(true);
+            $new = \stream_get_contents($this->handle, $size);
+            $endTime = \microtime(true);
+            if (\is_string($new) && \strlen($new) >= 1) {
+                $contents .= $new;
+            }
+            
+            $time_used = $endTime - $startTime;
+            if (($time_used >= $timeout_seconds) 
+                || ! \is_string($new) || (\is_string($new) && \strlen($new) < 1)) {
+                break;
+            }
+        }
+    
+        yield Coroutine::value($contents);
+    }
+
+    public function getMeta($stream = null)
+    {
+        if (\is_resource($stream))
+            return \stream_get_meta_data($stream);
+            
+        return $this->meta;
+    }
+
+    public function fileValid(): bool
+    {
+        return $this->isValid;
+    }
+
+    public function getStatus(string $url = null) 
+    {
+        if (empty($url))
+            return $this->status;
+
+        $headers = @\get_headers($url, true);
+        $value = NULL;
+        if ($headers === false) {
+            return $headers;
+        }
+        foreach ($headers as $k => $v) {
+            if (!is_int($k)) {
+                continue;
+            }
+            $value = $v;
+        }
+
+        return (int) \substr($value, \strpos($value, ' ', 8) + 1, 3);
+    }
+    
+    public function closeFile() 
+	{
+        @\fclose($this->handle);
     }
 
     public function write(string $string) 
