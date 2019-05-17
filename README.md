@@ -384,6 +384,8 @@ yield \some_name($whatever, ...$args);
 
 The closest thing would be [Swoole PHP](https://www.swoole.co.uk/coroutine). However, it's not an standard installation, needs to be compiled, does not work on Windows, enforces there complete framework usage.
 
+There is also [Facebook's Hack](https://hhvm.com/). However, this too not an standard installation, but instead nearly an whole different language.
+
 ____Other main asynchronous PHP libraries____
 
 [Amp](https://github.com/amphp)
