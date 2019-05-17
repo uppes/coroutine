@@ -317,13 +317,13 @@ class StreamSocket implements StreamSocketInterface
         return $this->buffer;
     }
 
-    public function response(int $size = 20240) 
+    public function response(int $size = -1) 
 	{
         if (self::$isClient) {
             $this->buffer = '';
-            while (!\feof($this->client)) {
-                $this->buffer .= \fread($this->client, $size);
-                yield;
+            while (!\feof($this->client)) {                
+		        yield Kernel::readWait($this->client);
+                $this->buffer .= \stream_get_contents($this->client, $size);
             }
         }
     }
@@ -336,10 +336,10 @@ class StreamSocket implements StreamSocketInterface
 		yield Coroutine::value(\trim(\stream_get_line(\STDIN, $size, \EOL)));
     }
 
-    public function read(int $size = 8192) 
+    public function read(int $size = -1) 
 	{
         yield Kernel::readWait($this->socket);
-        yield Coroutine::value(\fread($this->socket, $size));
+        yield Coroutine::value(\stream_get_contents($this->socket, $size));
         \stream_set_blocking($this->socket, false);
     }
 

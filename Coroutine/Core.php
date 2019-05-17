@@ -236,7 +236,7 @@ if (! \function_exists('coroutine_run')) {
 	/**
 	 * - This function needs to be prefixed with `yield`
 	 */
-	function client_read(StreamSocketInterface $socket, int $size = 20240) 
+	function client_read(StreamSocketInterface $socket, int $size = -1) 
 	{
 		return $socket->response($size);
 	}
@@ -268,7 +268,7 @@ if (! \function_exists('coroutine_run')) {
 	/**
 	 * - This function needs to be prefixed with `yield`
 	 */
-	function read_socket(StreamSocketInterface $socket, int $size = 8192)
+	function read_socket(StreamSocketInterface $socket, int $size = -1)
 	{
 		return $socket->read($size);
 	}	
@@ -355,7 +355,7 @@ if (! \function_exists('coroutine_run')) {
 	/**
 	 * - This function needs to be prefixed with `yield`
 	 */
-	function read_input(int $size = 1024)
+	function read_input(int $size = 256)
 	{
 		 return StreamSocket::input($size);
 	}
