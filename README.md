@@ -373,7 +373,6 @@ yield \some_name($whatever, ...$args);
 
 * Add more standard examples from other languages, converted over.
 * Update docs in reference to similar sections of functionally in Python, Go or any other languages.
-* Test `createSubProcess`, need to be inline with `task`s, Add/implement `wait` method on it.
 * Add/implement Asyncio `gather` method. Look over there Socket Stream methods for insertion.
 * Add/implement Curio `spawn` method, and debugging/monitoring features.
 * Turn some Http PSR-7, and PSR-17, package to something like Pythons aioHttp.

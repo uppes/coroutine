@@ -89,7 +89,7 @@ class Kernel
 	{
 		return new Kernel(
 			function(TaskInterface $task, Coroutine $coroutine) use ($channel) {
-				$channel->receiver($task->taskId());
+				$channel->receiver((int) $task->taskId());
 				$coroutine->schedule($task);
 			}
 		);
@@ -120,7 +120,7 @@ class Kernel
 	public static function sender(Channel $channel, $message = null, int $taskId = 0) 
 	{
 		return new Kernel(
-			function(TaskInterface $task, Coroutine $coroutine) use ($channel, $message, $taskId) {
+			function(Coroutine $coroutine) use ($channel, $message, $taskId) {
 				$taskList = $coroutine->taskList();				    
 		
 				if (isset($taskList[$channel->receiverId()]))
@@ -217,6 +217,28 @@ class Kernel
 						$task->sendValue($result);
 					$coroutine->schedule($task);
 				}, $delay);
+			}
+		);
+	}
+
+	public static function awaitProcess($callable, $timeout = 300) 
+	{
+		return new Kernel(
+			function(TaskInterface $task, Coroutine $coroutine) use ($callable, $timeout) {
+				$subProcess = $coroutine->createSubProcess($callable, $timeout);
+
+				$subProcess->then( function ($result) use ($task, $coroutine) {
+					$task->sendValue($result);
+					$coroutine->schedule($task);
+				})
+				->catch(function(\Exception $error) use ($task, $coroutine) {
+					$task->setException(new \RuntimeException($error->getMessage()));
+					$coroutine->schedule($task);
+				});
+				//->timeout(function($timeout) use ($task, $coroutine){
+				//	$task->setException(new \OutOfBoundsException($timeout));
+				//	$coroutine->schedule($task);
+				//});
 			}
 		);
 	}

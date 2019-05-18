@@ -47,6 +47,22 @@ if (! \function_exists('coroutine_run')) {
 	}
 
 	/**
+	 * Add and wait for result of and subprocess, running in parallel.
+	 * - This function needs to be prefixed with `yield`
+	 * 
+	 * @see https://docs.python.org/3.7/library/asyncio-subprocess.html#creating-subprocesses
+	 * 
+	 * @param callable|shell $command
+	 * @param int $timeout
+	 * 
+	 * @return mixed
+	 */
+	function await_Process($command, $timeout)
+	{
+		return Kernel::awaitProcess($command, $timeout);
+	}
+
+	/**
 	 * Wrap the callable with `yield`, this makes sure every callable is a generator function,
 	 * and will switch at least once without actually executing.
 	 * - This function needs to be prefixed with `yield`
