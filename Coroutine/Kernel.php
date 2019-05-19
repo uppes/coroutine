@@ -234,11 +234,11 @@ class Kernel
 				->catch(function(\Exception $error) use ($task, $coroutine) {
 					$task->setException(new \RuntimeException($error->getMessage()));
 					$coroutine->schedule($task);
+				})
+				->timeout(function() use ($task, $coroutine){
+					$task->setException(new \OutOfBoundsException('Timed Out!'));
+					$coroutine->schedule($task);
 				});
-				//->timeout(function($timeout) use ($task, $coroutine){
-				//	$task->setException(new \OutOfBoundsException($timeout));
-				//	$coroutine->schedule($task);
-				//});
 			}
 		);
 	}

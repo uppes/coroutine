@@ -16,7 +16,7 @@ if (! \function_exists('coroutine_run')) {
 
 
 	/**
-	 * 
+	 * @do not use an placeholder!
 	 * The passed in `function/callable/task` is wrapped within `awaitAble`
 	 * - This function needs to be prefixed with `yield from`
 	 * 
@@ -47,17 +47,18 @@ if (! \function_exists('coroutine_run')) {
 	}
 
 	/**
-	 * Add and wait for result of and subprocess, running in parallel.
+	 * Add and wait for result of an blocking io subprocess, will run in parallel.
 	 * - This function needs to be prefixed with `yield`
 	 * 
-	 * @see https://docs.python.org/3.7/library/asyncio-subprocess.html#creating-subprocesses
+	 * @see https://docs.python.org/3.7/library/asyncio-subprocess.html#subprocesses
+	 * @see https://docs.python.org/3.7/library/asyncio-dev.html#running-blocking-code
 	 * 
 	 * @param callable|shell $command
 	 * @param int $timeout
 	 * 
 	 * @return mixed
 	 */
-	function await_Process($command, $timeout)
+	function await_blocking($command, $timeout)
 	{
 		return Kernel::awaitProcess($command, $timeout);
 	}

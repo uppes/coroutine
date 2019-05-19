@@ -177,6 +177,17 @@ yield \async_write_wait($stream);
 ```
 
 ```php
+/**
+ * Add and wait for result of an blocking io subprocess, will run in parallel.
+ * - This function needs to be prefixed with `yield`
+ *
+ * @see https://docs.python.org/3.7/library/asyncio-subprocess.html#subprocesses
+ * @see https://docs.python.org/3.7/library/asyncio-dev.html#running-blocking-code
+ */
+yield \await_blocking($command, $timeout)
+```
+
+```php
 yield \secure_server($uri, $options, $privatekeyFil, $certificateFile, $signingFile, $ssl_path, $details);
 
 yield \create_server($uri, $options);
