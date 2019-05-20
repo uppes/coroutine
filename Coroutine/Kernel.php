@@ -243,6 +243,63 @@ class Kernel
 		);
 	}
 
+	/**
+	 * Run awaitable objects in the taskId sequence concurrently.
+	 * If any awaitable in taskId is a coroutine, it is automatically scheduled as a Task.
+	 * 
+	 * If all awaitables are completed successfully, the result is an aggregate list of returned values. 
+	 * The order of result values corresponds to the order of awaitables in taskId.
+	 * 
+	 * The first raised exception is immediately propagated to the task that awaits on gather(). 
+	 * Other awaitables in the sequence won’t be cancelled and will continue to run.
+	 * 
+	 * @see https://docs.python.org/3.7/library/asyncio-task.html#asyncio.gather
+	 * 
+	 * @param int|array $taskId
+	 * @return array
+	 */
+    public static function gather(...$taskId)
+	{
+		return new Kernel(
+			function(TaskInterface $task, Coroutine $coroutine) use ($taskId) {
+				$taskIdList = [];
+				foreach($taskId as $id) {
+					if($id instanceof \Generator)
+						array_push($taskIdList, $coroutine->createTask($id));
+					else 
+						array_push($taskIdList, $id[0]);
+				}
+
+				$results = [];
+				$taskList = $coroutine->taskList();
+				$count = \count($taskId);
+				while ($count != 0) {
+					foreach($taskIdList as $id) {
+						if (isset($taskList[$id])) {
+							$tasks = $taskList[$id];
+							if ($tasks->isPending()) {
+								$coroutine->runCoroutines();
+							} elseif ($tasks->done()) {
+								$results[$id] = $tasks->result();
+								$count--;
+								unset($taskList[$id]);
+							} elseif ($tasks->erred()) {
+								$count--;
+								unset($taskList[$id]);								
+								$coroutine->cancelTask($id);
+								$task->setException($tasks->getError());
+								$coroutine->schedule($tasks);
+							}
+						}
+					}
+				}
+
+				$task->sendValue($results);
+				$coroutine->schedule($task);
+			}
+		);
+	}
+
     /**
      * Wait for the callable to complete with a timeout.
      * 

@@ -221,6 +221,13 @@ yield \read_input($size = 1024);
 
 \coroutine_create($coroutine);
 
+/**
+ * This function runs the passed coroutine, taking care of managing the scheduler and
+ * finalizing asynchronous generators. It should be used as a main entry point for programs, and
+ * should ideally only be called once.
+ *
+ * @see https://docs.python.org/3.7/library/asyncio-task.html#asyncio.run
+ */
 \coroutine_run($coroutine);
 ```
 
@@ -442,6 +449,10 @@ This ___`Coroutine`___ package differs, mainly because it just managing the flow
 [Raymond Hettinger, Keynote on Concurrency, PyBay 2017](https://youtu.be/9zinZmE3Ogk) __video__
 
 [Understand Kotlin Coroutines on Android](https://youtu.be/BOHK_w09pVA) __video__
+
+[Python 3.5+ Async: An Easier Way to do Concurrency](https://youtu.be/qfY2cqjJMdw) __video__
+
+[The C# async await Workout](https://youtu.be/eV45ZgXU1Mk) __video__
 
 ---
 

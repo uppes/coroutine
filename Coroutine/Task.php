@@ -146,6 +146,21 @@ class Task implements TaskInterface
         $this->result = $value;
     }
     
+    public function erred(): bool
+    {
+        return ($this->state == 'exception');
+    }
+
+    public function getError(): Exception
+    {
+        return $this->error;
+    }
+
+    public function isPending(): bool
+    {
+        return ($this->state == 'pending');
+    }
+
     public function cancelled(): bool
     {
         return ($this->state == 'terminated');
@@ -158,13 +173,13 @@ class Task implements TaskInterface
 
     public function result()
     {
-        if ($this->done() && !empty($this->result))
+        if ($this->done())
             return $this->result;
         elseif ($this->cancelled())
             throw new \Exception("Cancelled Error");            
-        elseif (!$this->done() && empty($this->result))
-            throw new \Exception("Invalid State Error");
+        elseif ($this->erred())
+            throw $this->error;
         else
-          throw $this->error;
+            throw new \Exception("Invalid State Error");
     } 
 }

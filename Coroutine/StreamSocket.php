@@ -343,6 +343,32 @@ class StreamSocket implements StreamSocketInterface
         \stream_set_blocking($this->socket, false);
     }
 
+    public function get(string $getPath = '/', $format = 'text/html')
+    {
+        $headers = "GET $getPath HTTP/1.1\r\n";
+        $headers .= "Host: $this->host\r\n";
+        $headers .= "Accept: */*\r\n";
+        $headers .= "Content-type: $format; charset=utf8\r\n";
+        $headers .= "Connection: close\r\n\r\n";
+        yield Kernel::writeWait($this->handle);
+        yield Coroutine::value(\fwrite($this->handle, $headers));
+    }
+/*
+    public function post(string $path)
+    {
+        return $path;
+    }
+
+    public function update(string $path)
+    {
+        return $path;
+    }
+
+    public function delete(string $path)
+    {
+        return $path;
+    }
+*/
     public function openFile(string $url = null, $modePort = 'r') 
 	{
         $this->url = $url;

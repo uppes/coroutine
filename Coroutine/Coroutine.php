@@ -138,7 +138,8 @@ class Coroutine implements CoroutineInterface
         unset($this->taskMap[$tid]);
     
         foreach ($this->taskQueue as $i => $task) {
-            if ($task->taskId() === $tid) {
+            if ($task->taskId() === $tid) {                
+                $task->setState('terminated');
                 unset($this->taskQueue[$i]);
                 break;
             }
@@ -155,19 +156,14 @@ class Coroutine implements CoroutineInterface
     
         return $this->taskMap;
     }
-		
-    public function gather(...$taskId) 
-	{
-        // @todo
-    }
-
+        
     public function run() 
 	{
         $this->createTask($this->ioWaiting());
 		return $this->runCoroutines();
     }
 
-    protected function runCoroutines() 
+    public function runCoroutines() 
 	{
 		while (!$this->taskQueue->isEmpty()) {
 			$task = $this->taskQueue->dequeue();

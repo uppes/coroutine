@@ -47,6 +47,26 @@ if (! \function_exists('coroutine_run')) {
 	}
 
 	/**
+	 * Run awaitable objects in the taskId sequence concurrently.
+	 * If any awaitable in taskId is a coroutine, it is automatically scheduled as a Task.
+	 * 
+	 * If all awaitables are completed successfully, the result is an aggregate list of returned values. 
+	 * The order of result values corresponds to the order of awaitables in taskId.
+	 * 
+	 * The first raised exception is immediately propagated to the task that awaits on gather(). 
+	 * Other awaitables in the sequence won’t be cancelled and will continue to run.
+	 * 
+	 * @see https://docs.python.org/3.7/library/asyncio-task.html#asyncio.gather
+	 * 
+	 * @param int|array $taskId
+	 * @return array
+	 */
+	function gather(...$taskId)
+	{
+		return Kernel::gather(...$taskId) ;
+	}
+
+	/**
 	 * Add and wait for result of an blocking io subprocess, will run in parallel.
 	 * - This function needs to be prefixed with `yield`
 	 * 
@@ -324,6 +344,11 @@ if (! \function_exists('coroutine_run')) {
 		return $socket;
 	}
 
+	function file_get(StreamSocketInterface $socket, string $getPath = '/', $format = 'text/html')
+	{
+		return $socket->get($getPath, $format);
+	}
+
 	function close_file(StreamSocketInterface $socket)
 	{
 		return $socket->closeFile();
@@ -401,6 +426,15 @@ if (! \function_exists('coroutine_run')) {
 		return $__coroutine__;
 	}
 	
+	/**
+	 * This function runs the passed coroutine, taking care of managing the scheduler and 
+	 * finalizing asynchronous generators. It should be used as a main entry point for programs, and 
+	 * should ideally only be called once.
+	 * 
+	 * @see https://docs.python.org/3.8/library/asyncio-task.html#asyncio.run
+	 * 
+	 * @param Generator $coroutine
+	 */
 	function coroutine_run(\Generator $coroutine = null)
 	{
 		$coroutine = \coroutine_create($coroutine);
@@ -426,7 +460,7 @@ if (! \function_exists('coroutine_run')) {
 		$coroutine = \coroutine_instance();
 
 		if ($coroutine instanceof CoroutineInterface)			
-			return $coroutine->addProcess($callable, $timeout);
+			return $coroutine->createSubProcess($callable, $timeout);
 	}
 
     /**
