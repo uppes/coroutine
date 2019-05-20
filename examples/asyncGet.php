@@ -1,6 +1,10 @@
 <?php
 include 'vendor/autoload.php';
 
+/**
+ * Converted example of https://github.com/jimmysong/asyncio-examples from: 
+ * @see https://youtu.be/qfY2cqjJMdw
+ */
 function get_statuses($websites) 
 {
     $statuses = [];
@@ -25,7 +29,7 @@ function get_website_status($url)
     $status = \file_status($handle);
     print $response.' : '.$status.EOL;
     \close_file($handle);
-    yield $status;
+    return $status;
 };
 
 function main() 
