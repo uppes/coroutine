@@ -46,20 +46,6 @@ class Task implements TaskInterface
     protected $coroutine;
 
     /**
-     * A flag that indicates whether or not the task was cancelled.
-     *
-     * @var bool
-     */
-    protected $cancelled;
-
-    /**
-     * A flag that indicates whether or not the task has run to completion.
-     *
-     * @var bool
-     */
-    protected $terminated;
-
-    /**
      * The name of the task’s current state. Printing it can be potentially useful for debugging.
      *
      * @var string
@@ -121,7 +107,7 @@ class Task implements TaskInterface
         } elseif ($this->exception) {
             $value = $this->coroutine->throw($this->exception);
             $this->exception = null;
-            $this->error = $value;
+            $this->error = $this->exception;
             return $value;
         } else {
             $value = $this->coroutine->send($this->sendValue);
@@ -145,35 +131,40 @@ class Task implements TaskInterface
 	{
         $this->result = $value;
     }
-    
-    public function erred(): bool
-    {
-        return ($this->state == 'exception');
-    }
 
     public function getError(): Exception
     {
         return $this->error;
     }
 
-    public function isPending(): bool
+    public function erred(): bool
+    {
+        return ($this->state == 'erred');
+    }
+
+    public function pending(): bool
     {
         return ($this->state == 'pending');
     }
 
     public function cancelled(): bool
     {
-        return ($this->state == 'terminated');
+        return ($this->state == 'cancelled');
     }
 
-    public function done(): bool
+    public function completed(): bool
     {
         return ($this->state == 'completed');
     }
 
+    public function rescheduled(): bool
+    {
+        return ($this->state == 'rescheduled');
+    }
+
     public function result()
     {
-        if ($this->done())
+        if ($this->completed())
             return $this->result;
         elseif ($this->cancelled())
             throw new \Exception("Cancelled Error");            

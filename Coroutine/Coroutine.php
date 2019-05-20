@@ -21,7 +21,7 @@ class Coroutine implements CoroutineInterface
 {	
     protected $maxTaskId = 0;
     protected $taskMap = []; // taskId => task
-    protected $completeMap = [];
+    protected $completedMap = [];
     protected $taskQueue;
 
     /**
@@ -139,7 +139,7 @@ class Coroutine implements CoroutineInterface
     
         foreach ($this->taskQueue as $i => $task) {
             if ($task->taskId() === $tid) {                
-                $task->setState('terminated');
+                $task->setState('cancelled');
                 unset($this->taskQueue[$i]);
                 break;
             }
@@ -149,12 +149,22 @@ class Coroutine implements CoroutineInterface
     }
 
     public function taskList() 
+
 	{
         if (!isset($this->taskMap)) {
             return null;
         }
     
         return $this->taskMap;
+    }
+
+    public function completedList() 
+	{
+        if (!isset($this->completedMap)) {
+            return null;
+        }
+    
+        return $this->completedMap;
     }
         
     public function run() 
@@ -175,7 +185,7 @@ class Coroutine implements CoroutineInterface
 				try {
 					$value($task, $this);
 				} catch (\Exception $e) {
-                    $task->setState('Exception');
+                    $task->setState('erred');
 					$task->setException($e);
 					$this->schedule($task);
 				}
@@ -184,7 +194,9 @@ class Coroutine implements CoroutineInterface
 
 			if ($task->isFinished()) {
                 $task->setState('completed');
-				unset($this->taskMap[$task->taskId()]);
+                $id = $task->taskId();
+                $this->completedMap[$id] = $task;
+				unset($this->taskMap[$id]);
 			} else {
                 $task->setState('rescheduled');
 				$this->schedule($task);
@@ -234,8 +246,8 @@ class Coroutine implements CoroutineInterface
                     if ($readCb instanceof TaskInterface) {
                         $this->removeReader($readStream);
                         $this->schedule($readCb);
-                    } else {
-                        $readCb();
+                    } elseif ($readCb() instanceof \Generator) {
+                        $this->createTask($readCb());
                     }
                 }
 
@@ -244,8 +256,8 @@ class Coroutine implements CoroutineInterface
                     if ($writeCb instanceof TaskInterface) {
                         $this->removeWriter($writeStream);
                         $this->schedule($writeCb);
-                    } else {
-                        $writeCb();
+                    } elseif ($writeCb() instanceof \Generator) {
+                        $this->createTask($writeCb());
                     }
                 }
             }

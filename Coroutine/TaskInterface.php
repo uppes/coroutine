@@ -26,10 +26,34 @@ interface TaskInterface
     public function setState(string $status);
 
     public function setResult($value);
-    
+
+    /**
+     * A flag that indicates whether or not the task has an error.
+     *
+     * @return bool
+     */     
+    public function erred(): bool;
+
+    /**
+     * A flag that indicates whether or not the task has started.
+     *
+     * @return bool
+     */
+    public function pending(): bool;
+
+    /**
+     * A flag that indicates whether or not the task was cancelled.
+     *
+     * @return bool
+     */
     public function cancelled(): bool;
 
-    public function done(): bool;
+    /**
+     * A flag that indicates whether or not the task has run to completion.
+     *
+     * @return bool
+     */
+    public function completed(): bool;
 
     public function result();
 }

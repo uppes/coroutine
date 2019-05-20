@@ -162,7 +162,7 @@ class Kernel
 			function(TaskInterface $task, Coroutine $coroutine) use ($tid) {
 				if ($coroutine->cancelTask($tid)) {					
 					$task->sendValue(true);
-					$task->setState('terminated');
+					$task->setState('cancelled');
 					$coroutine->schedule($task);
 				} else {
 					throw new \InvalidArgumentException('Invalid task ID!');
@@ -235,7 +235,7 @@ class Kernel
 					$task->setException(new \RuntimeException($error->getMessage()));
 					$coroutine->schedule($task);
 				})
-				->timeout(function() use ($task, $coroutine){
+				->timeout(function() use ($task, $coroutine) {
 					$task->setException(new \OutOfBoundsException('Timed Out!'));
 					$coroutine->schedule($task);
 				});
@@ -263,23 +263,39 @@ class Kernel
 		return new Kernel(
 			function(TaskInterface $task, Coroutine $coroutine) use ($taskId) {
 				$taskIdList = [];
-				foreach($taskId as $id) {
-					if($id instanceof \Generator)
-						array_push($taskIdList, $coroutine->createTask($id));
-					else 
-						array_push($taskIdList, $id[0]);
+				$newIdList =(\is_array($taskId[0])) ? $taskId[0] : $taskId;
+
+				foreach($newIdList as $id => $value) {
+					if($value instanceof \Generator) {
+						$id = $coroutine->createTask($value);
+						$taskIdList[$id] = $id;
+					} else 
+						$taskIdList[$value] = $value;
 				}
 
 				$results = [];
+				$count = \count($taskId);				
 				$taskList = $coroutine->taskList();
-				$count = \count($taskId);
+
+				$completeList = $coroutine->completedList();		
+				$countComplete = \count($completeList);
+				if ($countComplete > 0) {
+					foreach($completeList as $id => $tasks) {
+						$results[$id] = $tasks->result();
+						$count--;
+						if (isset($taskIdList[$id])) {								
+							unset($taskIdList[$id]);
+						}
+					}
+				}
+
 				while ($count != 0) {
 					foreach($taskIdList as $id) {
 						if (isset($taskList[$id])) {
 							$tasks = $taskList[$id];
-							if ($tasks->isPending()) {
+							if ($tasks->pending()) {
 								$coroutine->runCoroutines();
-							} elseif ($tasks->done()) {
+							} elseif ($tasks->completed()) {
 								$results[$id] = $tasks->result();
 								$count--;
 								unset($taskList[$id]);
@@ -289,6 +305,10 @@ class Kernel
 								$coroutine->cancelTask($id);
 								$task->setException($tasks->getError());
 								$coroutine->schedule($tasks);
+							} elseif ($tasks->rescheduled()) {								
+								$count = 0;
+								unset($taskList[$id]);
+								break;
 							}
 						}
 					}
