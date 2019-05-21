@@ -78,7 +78,7 @@ if (! \function_exists('coroutine_run')) {
 	 * 
 	 * @return mixed
 	 */
-	function await_blocking($command, $timeout)
+	function await_blocking($command, $timeout = 300)
 	{
 		return Kernel::awaitProcess($command, $timeout);
 	}

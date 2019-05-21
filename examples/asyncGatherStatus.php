@@ -1,7 +1,11 @@
 <?php
 include 'vendor/autoload.php';
 
+use Async\Coroutine\StreamSocket;
 /**
+ * Does not work, same as native, no speed improvement. 
+ * And need to get results before entering `gather` method.
+ * 
  * Converted example of https://github.com/jimmysong/asyncio-examples from: 
  * @see https://youtu.be/qfY2cqjJMdw
  */
@@ -15,9 +19,9 @@ function get_statuses($websites)
     $taskStatus = yield \gather($tasks);
 	foreach($taskStatus as  $id => $status) {
         if (!$status)
-            $statuses[$id] = 0;
+            $statuses[$status] = 0;
 		else
-			$statuses[$id] = 1;
+			$statuses[$status] += 1;
     }
     
     return json_encode($statuses);
@@ -26,10 +30,12 @@ function get_statuses($websites)
 function get_website_status($url) 
 {
     $id = yield \async_id();
-    $handle = \open_file(null, $url, 80);
-    $status = \file_status($handle);
+    //$handle = \open_file(null, $url);
+    $status = StreamSocket::getStatus($url);
+    //$status = \file_status($handle);
+    //print \file_meta($handle)['wrapper_data'][0];
     print "task: $id, status code: $status".EOL;
-    \close_file($handle);
+    //\close_file($handle);
     return $status;
 };
 

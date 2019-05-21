@@ -15,7 +15,7 @@ class StreamSocket implements StreamSocketInterface
     protected $buffer = null;
     protected $meta = [];
     protected $host = '';
-    protected $status = null;
+    protected static $status = null;
     protected $url = null;
     protected $isValid = false;
     protected static $isClient = false;
@@ -394,7 +394,7 @@ class StreamSocket implements StreamSocketInterface
             $this->isValid = true;
             \stream_set_blocking($handle, false);
             $this->meta = \stream_get_meta_data($handle);
-            $this->status = $this->getStatus($this->url);
+            self::$status = $this->getStatus($this->url);
             $this->handle = $handle;
         }
 
@@ -436,10 +436,10 @@ class StreamSocket implements StreamSocketInterface
         return $this->isValid;
     }
 
-    public function getStatus(string $url = null) 
+    public static function getStatus(string $url = null) 
     {
         if (empty($url))
-            return $this->status;
+            return self::$status;
 
         $headers = @\get_headers($url, true);
         $value = NULL;
