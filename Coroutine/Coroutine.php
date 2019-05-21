@@ -188,7 +188,7 @@ class Coroutine implements CoroutineInterface
                     $task->setState('erred');
 					$task->setException($e);
 					$this->schedule($task);
-				}
+                }
 				continue;
 			}
 
@@ -215,8 +215,8 @@ class Coroutine implements CoroutineInterface
         while (($timer = \array_pop($this->timers)) && $timer[0] < $now) {
             if ($timer[1] instanceof TaskInterface) {
                 $this->schedule($timer[1]);
-            } else {
-                $timer[1]();
+            }  elseif ($timer[1]() instanceof \Generator) {
+                $this->createTask($timer[1]());
             }
         }
 
@@ -228,7 +228,7 @@ class Coroutine implements CoroutineInterface
         }
     }
 
-    protected function runStreams($timeout)
+    protected function ioStreams($timeout)
     {
         if ($this->readStreams || $this->writeStreams) {
             $read = $this->readStreams;
@@ -289,7 +289,7 @@ class Coroutine implements CoroutineInterface
                     // There's a running 'process', wait some before rechecking.
                     $streamWait = $this->process->sleepingTime();
 
-                $this->runStreams($streamWait);
+                $this->ioStreams($streamWait);
             }
             yield;
         }

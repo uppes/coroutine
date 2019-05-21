@@ -274,26 +274,26 @@ class Kernel
 				}
 
 				$results = [];
-				$count = \count($taskId);				
+				$count = \count($taskIdList);
 				$taskList = $coroutine->taskList();
 
 				$completeList = $coroutine->completedList();		
 				$countComplete = \count($completeList);
 				if ($countComplete > 0) {
 					foreach($completeList as $id => $tasks) {
-						$results[$id] = $tasks->result();
-						$count--;
-						if (isset($taskIdList[$id])) {								
+						if (isset($taskIdList[$id])) {
+							$results[$id] = $tasks->result();
+							$count--;							
 							unset($taskIdList[$id]);
 						}
 					}
 				}
 
-				while ($count != 0) {
+				while ($count > 0) {
 					foreach($taskIdList as $id) {
 						if (isset($taskList[$id])) {
 							$tasks = $taskList[$id];
-							if ($tasks->pending()) {
+							if ($tasks->pending() || $tasks->rescheduled()) {
 								$coroutine->runCoroutines();
 							} elseif ($tasks->completed()) {
 								$results[$id] = $tasks->result();
@@ -301,15 +301,11 @@ class Kernel
 								unset($taskList[$id]);
 							} elseif ($tasks->erred()) {
 								$count--;
-								unset($taskList[$id]);								
+								unset($taskList[$id]);						
 								$coroutine->cancelTask($id);
 								$task->setException($tasks->getError());
 								$coroutine->schedule($tasks);
-							} elseif ($tasks->rescheduled()) {								
-								$count = 0;
-								unset($taskList[$id]);
-								break;
-							}
+							} 
 						}
 					}
 				}

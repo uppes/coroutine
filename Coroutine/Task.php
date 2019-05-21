@@ -112,7 +112,10 @@ class Task implements TaskInterface
         } else {
             $value = $this->coroutine->send($this->sendValue);
             $this->sendValue = null;
-            $this->result = $value;
+            if (!$this->coroutine->valid()) {
+                //$this->coroutine->next();
+                $this->result = $this->coroutine->getReturn();
+            }
             return $value;
         }
     }
@@ -172,5 +175,13 @@ class Task implements TaskInterface
             throw $this->error;
         else
             throw new \Exception("Invalid State Error");
-    } 
+    }
+
+    /**
+     * Gets the caller of the function where this function is called from
+     * @see: http://php.net/manual/en/function.debug-backtrace.php
+     */
+    public function callerFunction() {
+        return debug_backtrace( DEBUG_BACKTRACE_IGNORE_ARGS, 3)[2]['function'];
+    }
 }

@@ -86,7 +86,6 @@ if (! \function_exists('coroutine_run')) {
 	/**
 	 * Wrap the callable with `yield`, this makes sure every callable is a generator function,
 	 * and will switch at least once without actually executing.
-	 * - This function needs to be prefixed with `yield`
 	 * 
 	 * @see https://docs.python.org/3.7/library/asyncio-task.html#awaitables
 	 * 
@@ -97,7 +96,7 @@ if (! \function_exists('coroutine_run')) {
 	 */
 	function awaitAble(callable $awaitableFunction, ...$args) 
 	{
-		return yield $awaitableFunction(...$args);
+		yield yield $awaitableFunction(...$args);
 	}	
 
 	/**

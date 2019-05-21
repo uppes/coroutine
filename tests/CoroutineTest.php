@@ -162,7 +162,7 @@ class CoroutineTest extends TestCase
      * @covers Async\Coroutine\Coroutine::createTask
      * @covers Async\Coroutine\Coroutine::schedule
      * @covers Async\Coroutine\Coroutine::create
-     * @covers Async\Coroutine\Coroutine::runStreams
+     * @covers Async\Coroutine\Coroutine::ioStreams
      * @covers Async\Coroutine\Coroutine::run
      */
     public function testKernel() 
@@ -192,7 +192,7 @@ class CoroutineTest extends TestCase
     /**
      * @covers Async\Coroutine\Coroutine::addWriter
      * @covers Async\Coroutine\Coroutine::removeWriter
-     * @covers Async\Coroutine\Coroutine::runStreams
+     * @covers Async\Coroutine\Coroutine::ioStreams
      * @covers Async\Coroutine\Coroutine::ioWaiting
      * @covers Async\Coroutine\Coroutine::run
      * @covers Async\Coroutine\Task::taskId
@@ -214,7 +214,7 @@ class CoroutineTest extends TestCase
     /**
      * @covers Async\Coroutine\Coroutine::addReader
      * @covers Async\Coroutine\Coroutine::removeReader
-     * @covers Async\Coroutine\Coroutine::runStreams
+     * @covers Async\Coroutine\Coroutine::ioStreams
      * @covers Async\Coroutine\Coroutine::ioWaiting
      * @covers Async\Coroutine\Coroutine::run
      * @covers Async\Coroutine\Task::taskId

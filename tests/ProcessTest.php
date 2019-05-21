@@ -91,7 +91,7 @@ class ProcessTest extends TestCase
      * @covers Async\Coroutine\Coroutine::createTask
      * @covers Async\Coroutine\Coroutine::schedule
      * @covers Async\Coroutine\Coroutine::create
-     * @covers Async\Coroutine\Coroutine::runStreams
+     * @covers Async\Coroutine\Coroutine::ioStreams
      * @covers Async\Coroutine\Coroutine::run
      * @covers Async\Coroutine\Coroutine::parallelInstance
      * @covers Async\Coroutine\Coroutine::processInstance

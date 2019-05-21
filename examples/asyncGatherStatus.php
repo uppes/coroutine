@@ -10,24 +10,25 @@ function get_statuses($websites)
     $statuses = [];
 	foreach($websites as $website) {
 		$tasks[] = yield \await('get_website_status', $website);
-	}
+    }
+    
     $taskStatus = yield \gather($tasks);
-    print_r($taskStatus);
-	foreach($taskStatus as $status) {
+	foreach($taskStatus as  $id => $status) {
         if (!$status)
-            $statuses[$status] = 0;
+            $statuses[$id] = 0;
 		else
-			$statuses[$status] += 1;
-	}
-    print_r($statuses);
+			$statuses[$id] = 1;
+    }
+    
+    return json_encode($statuses);
 };
 
 function get_website_status($url) 
 {
+    $id = yield \async_id();
     $handle = \open_file(null, $url, 80);
-    //$response = yield \file_get($handle);
     $status = \file_status($handle);
-    print ' : '.$status.EOL;
+    print "task: $id, status code: $status".EOL;
     \close_file($handle);
     return $status;
 };
@@ -38,8 +39,9 @@ function main()
     $websites = \file('.\\'.'list.txt', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
     if ($websites !== false) {
         $t0 = \microtime(true);
-        yield get_statuses($websites);
+        $data = yield from get_statuses($websites);
         $t1 = \microtime(true);
+        print $data.EOL;
         print("getting website statuses took ".(float) ($t1-$t0)." seconds");
     }
 };
