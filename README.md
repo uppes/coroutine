@@ -109,6 +109,21 @@ yield \await($awaitedFunction, ...$args) ;
 yield \awaitAble($awaitableFunction, ...$args);
 
 /**
+ * Run awaitable objects in the taskId sequence concurrently.
+ * If any awaitable in taskId is a coroutine, it is automatically scheduled as a Task.
+ *
+ * If all awaitables are completed successfully, the result is an aggregate list of returned values.
+ * The order of result values corresponds to the order of awaitables in taskId.
+ *
+ * The first raised exception is immediately propagated to the task that awaits on gather().
+ * Other awaitables in the sequence won’t be cancelled and will continue to run.
+ * - This function needs to be prefixed with `yield`
+ *
+ * @see https://docs.python.org/3.7/library/asyncio-task.html#asyncio.gather
+ */
+yield \gather(...$taskId);
+
+/**
  * Block/sleep for delay seconds.
  * Suspends the calling task, allowing other tasks to run.
  * A result is returned If provided back to the caller
@@ -389,7 +404,6 @@ yield \some_name($whatever, ...$args);
 
 * Add more standard examples from other languages, converted over.
 * Update docs in reference to similar sections of functionally in Python, Go or any other languages.
-* Add/implement Asyncio `gather` method. Look over there Socket Stream methods for insertion.
 * Add/implement Curio `spawn` method, and debugging/monitoring features.
 * Turn some Http PSR-7, and PSR-17, package to something like Pythons aioHttp.
 * Create an specific error/exception class for `coroutines`.
@@ -451,6 +465,8 @@ This ___`Coroutine`___ package differs, mainly because it just managing the flow
 [Python 3.5+ Async: An Easier Way to do Concurrency](https://youtu.be/qfY2cqjJMdw) __video__
 
 [The C# async await Workout](https://youtu.be/eV45ZgXU1Mk) __video__
+
+[Generators: The Final Frontier - ScreenCast](https://youtu.be/5-qadlG7tWo) __video__
 
 ---
 
