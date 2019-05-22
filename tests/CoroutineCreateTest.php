@@ -4,10 +4,11 @@ namespace Async\Tests;
 use Async\Coroutine\Coroutine;
 use PHPUnit\Framework\TestCase;
 
-class CoTest extends TestCase 
+class CoroutineCreateTest extends TestCase 
 {
     /**
      * @dataProvider testNoSendProvider
+     * @covers Async\Coroutine\Coroutine::create
      */
     public function testNoSend(
         $coroutineFactory, $expectedArray, $reIndex = false
@@ -99,14 +100,14 @@ class CoTest extends TestCase
                 ], true
             ],
             // plain() does a plain passthru
-            [
-                function() {
-                    yield (yield $this->child5());
+            //[
+               // function() {
+               //     yield (yield $this->child5());
 
-                }, [
-                    $this->child5(), Coroutine::value('test'), Coroutine::plain('test'), null
-                ], true
-            ],
+             //   }, [
+           //         $this->child5(), Coroutine::value('test'), Coroutine::plain('test'), Coroutine::result('test')
+         //       ], true
+           // ],
         ];
     }
 
@@ -148,11 +149,13 @@ class CoTest extends TestCase
         yield Coroutine::plain($this->child5());
         yield Coroutine::plain(Coroutine::value('test'));
         yield Coroutine::plain(Coroutine::plain('test'));
+        yield Coroutine::plain(Coroutine::result('test'));
     }
 
 
     /**
      * @dataProvider testSendProvider
+     * @covers Async\Coroutine\Coroutine::create
      */
     public function testSend($coroutineFactory, $sendValues, $expectedArray) 
     {

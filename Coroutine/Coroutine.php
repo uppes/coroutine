@@ -441,15 +441,14 @@ class Coroutine implements CoroutineInterface
 						return;
 					}
 
+                    $return = null;
                     if (!$gen->valid() && !$isReturnValue) {
                         $return = $gen->getReturn();
-                        $gen = $stack->pop();
-                        $gen->send(Coroutine::result($return));                        
-					    continue;
+                        $return = Coroutine::result($return);
                     }
 
 					$gen = $stack->pop();
-					$gen->send($isReturnValue ? $value->getValue() : null);
+					$gen->send($isReturnValue ? $value->getValue() : $return);
 					continue;
 				}
 
