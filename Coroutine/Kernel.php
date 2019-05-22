@@ -135,20 +135,6 @@ class Kernel
 			}
 		);
 	}
-
-	public static function async($callable, ...$args) 
-	{
-	}
-
-	public static function await($callable, ...$args) 
-	{
-		return new Kernel(
-			function(TaskInterface $task, Coroutine $coroutine) use ($callable, $args) {
-				$task->sendValue($coroutine->createTask(\awaitAble($callable, ...$args)));				
-				$coroutine->schedule($task);
-			}
-		);
-	}
 	
 	/**
 	 * kill/remove an task using task id
@@ -345,5 +331,50 @@ class Kernel
 				}, $timeout);
 			}
 		);
+	}
+
+	/**
+	 * Makes an resolvable function from label name that's callable with `await`
+	 * The passed in `function/callable/task` is wrapped to be `awaitAble`
+	 * 
+	 * @param string $labelFunction
+	 * @param Generator|callable $asyncFunction
+	 */
+	public static function async(string $labelFunction = '__f', callable $asyncFunction)
+	{
+		$GLOBALS[$labelFunction] = function (...$args) use ($asyncFunction) {
+			$return = yield $asyncFunction(...$args);
+			return yield Coroutine::plain($return);
+		};
+
+		global ${$labelFunction};
+		${$labelFunction} = $GLOBALS[$labelFunction];
+	}	
+
+	/**
+	 * Add/schedule an `yield`-ing `function/callable/task` for execution.
+	 * - This function needs to be prefixed with `yield`
+	 * 
+	 * @see https://docs.python.org/3.7/library/asyncio-task.html#asyncio.create_task
+	 * 
+	 * @param Generator|callable $asyncLabel
+	 * @param mixed $args
+	 * 
+	 * @return int $task id
+	 */
+	public static function await($asyncLabel, ...$args) 
+	{
+		if (!is_array($asyncLabel))
+			global ${$asyncLabel};
+
+		if (!is_array($asyncLabel) && isset(${$asyncLabel}))
+			return Kernel::createTask(${$asyncLabel}(...$args));
+		else
+			return new Kernel(
+				function(TaskInterface $task, Coroutine $coroutine) use ($asyncLabel, $args) {
+					$task->sendValue($coroutine->createTask(\awaitAble($asyncLabel, ...$args)));				
+					$coroutine->schedule($task);
+				}
+			);
 	}
 }

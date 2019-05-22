@@ -16,23 +16,19 @@ if (! \function_exists('coroutine_run')) {
 
 
 	/**
-	 * @do not use an placeholder!
-	 * The passed in `function/callable/task` is wrapped within `awaitAble`
-	 * - This function needs to be prefixed with `yield from`
+	 * Makes an resolvable function from label name that's callable with `await`
+	 * The passed in `function/callable/task` is wrapped to be `awaitAble`
 	 * 
+	 * @param string $labelFunction
 	 * @param Generator|callable $asyncFunction
-	 * @param mixed $args
-	 * 
-	 * @return int task id
 	 */
-	function async(callable $asyncFunction, ...$args)
+	function async(string $labelFunction = '__f', callable $asyncFunction)
 	{
-		return yield Kernel::createTask(\awaitAble($asyncFunction, ...$args));
+		Kernel::async($labelFunction, $asyncFunction);
 	}	
 
 	/**
 	 * Add/schedule an `yield`-ing `function/callable/task` for execution.
-	 * - This function needs to be prefixed with `yield`
 	 * 
 	 * @see https://docs.python.org/3.7/library/asyncio-task.html#asyncio.create_task
 	 * 
@@ -41,7 +37,7 @@ if (! \function_exists('coroutine_run')) {
 	 * 
 	 * @return int $task id
 	 */
-	function await(callable $awaitedFunction, ...$args) 
+	function await($awaitedFunction, ...$args) 
 	{
 		return Kernel::await($awaitedFunction, ...$args);
 	}
@@ -96,7 +92,8 @@ if (! \function_exists('coroutine_run')) {
 	 */
 	function awaitAble(callable $awaitableFunction, ...$args) 
 	{
-		yield yield $awaitableFunction(...$args);
+		$return = yield $awaitableFunction(...$args);
+		return yield Coroutine::plain($return);
 	}	
 
 	/**

@@ -86,11 +86,9 @@ const EOL = PHP_EOL;
 
 
 /**
- * @do not use this function just an placeholder
- * The passed in `function/callable/task` is wrapped within `awaitAble`
- * - This function needs to be prefixed with `yield from`
+ * Makes an resolvable function from label name that's callable with `await`
  */
-yield from \async($asyncFunction, ...$args);
+\async(string $labelFunction, $asyncFunction);
 
 /**
  * Add/schedule an `yield`-ing `function/callable/task` for execution.
