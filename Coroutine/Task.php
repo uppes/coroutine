@@ -4,6 +4,7 @@ namespace Async\Coroutine;
 
 use Async\Coroutine\Coroutine;
 use Async\Coroutine\TaskInterface;
+use Async\Coroutine\ResultValueCoroutine;
 
 /**
  * Task is used to schedule coroutines concurrently.
@@ -111,11 +112,10 @@ class Task implements TaskInterface
             return $value;
         } else {
             $value = $this->coroutine->send($this->sendValue);
+            if ($value instanceof ResultValueCoroutine)
+                $this->result = $value;
+
             $this->sendValue = null;
-            if (!$this->coroutine->valid()) {
-                //$this->coroutine->next();
-                $this->result = $this->coroutine->getReturn();
-            }
             return $value;
         }
     }
@@ -128,11 +128,6 @@ class Task implements TaskInterface
     public function setState(string $status)
 	{
         $this->state = $status;
-    }
-
-    public function setResult($value)
-	{
-        $this->result = $value;
     }
 
     public function getError(): Exception
@@ -168,7 +163,7 @@ class Task implements TaskInterface
     public function result()
     {
         if ($this->completed())
-            return $this->result;
+            return $this->result->getValue();
         elseif ($this->cancelled())
             throw new \Exception("Cancelled Error");            
         elseif ($this->erred())

@@ -25,8 +25,6 @@ interface TaskInterface
 
     public function setState(string $status);
 
-    public function setResult($value);
-
     /**
      * A flag that indicates whether or not the task has an error.
      *

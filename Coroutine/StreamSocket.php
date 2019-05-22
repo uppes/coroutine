@@ -15,7 +15,7 @@ class StreamSocket implements StreamSocketInterface
     protected $buffer = null;
     protected $meta = [];
     protected $host = '';
-    protected static $status = null;
+    protected $status = null;
     protected $url = null;
     protected $isValid = false;
     protected static $isClient = false;
@@ -393,8 +393,9 @@ class StreamSocket implements StreamSocketInterface
         if (\is_resource($handle)) {
             $this->isValid = true;
             \stream_set_blocking($handle, false);
+		    //yield Kernel::readWait($handle);
             $this->meta = \stream_get_meta_data($handle);
-            self::$status = $this->getStatus($this->url);
+            $this->status = $this->getStatus();
             $this->handle = $handle;
         }
 
@@ -436,24 +437,23 @@ class StreamSocket implements StreamSocketInterface
         return $this->isValid;
     }
 
-    public static function getStatus(string $url = null) 
+    public function getStatus() 
     {
-        if (empty($url))
-            return self::$status;
-
-        $headers = @\get_headers($url, true);
-        $value = NULL;
-        if ($headers === false) {
-            return $headers;
-        }
-        foreach ($headers as $k => $v) {
-            if (!is_int($k)) {
-                continue;
+        $result = array();
+        foreach ($this->meta['wrapper_data'] as $headerLine) {
+            if (preg_match('/^HTTP\/(\d+\.\d+)\s+(\d+)\s*(.+)?$/', $headerLine, $result)) {
+                $http_version = $result[1];
+                $http_statusCode = $result[2];
+                $http_statusString = $result[3];
             }
-            $value = $v;
         }
 
-        return (int) \substr($value, \strpos($value, ' ', 8) + 1, 3);
+        return (int) $http_statusCode;
+    }
+
+    public function status() 
+    {
+        return $this->status;
     }
     
     public function closeFile() 

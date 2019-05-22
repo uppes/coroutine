@@ -9,6 +9,7 @@ use Async\Coroutine\Process;
 use Async\Coroutine\TaskInterface;
 use Async\Coroutine\ReturnValueCoroutine;
 use Async\Coroutine\PlainValueCoroutine;
+use Async\Coroutine\ResultValueCoroutine;
 use Async\Coroutine\CoroutineInterface;
 use Async\Processor\ProcessInterface;
 
@@ -395,6 +396,11 @@ class Coroutine implements CoroutineInterface
 	public static function value($value) 
 	{
 		return new ReturnValueCoroutine($value);
+    }
+    
+	public static function result($value) 
+	{
+        return new ResultValueCoroutine($value);
 	}
 
     /**
@@ -435,8 +441,15 @@ class Coroutine implements CoroutineInterface
 						return;
 					}
 
+                    if (!$gen->valid() && !$isReturnValue) {
+                        $return = $gen->getReturn();
+                        $gen = $stack->pop();
+                        $gen->send(Coroutine::result($return));                        
+					    continue;
+                    }
+
 					$gen = $stack->pop();
-					$gen->send($isReturnValue ? $value->getValue() : NULL);
+					$gen->send($isReturnValue ? $value->getValue() : null);
 					continue;
 				}
 

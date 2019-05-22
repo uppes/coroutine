@@ -5,6 +5,7 @@ use Async\Coroutine\Channel;
 use Async\Coroutine\ParallelInterface;
 use Async\Coroutine\StreamSocket;
 use Async\Coroutine\StreamSocketInterface;
+use Async\Coroutine\TaskInterface;
 use Async\Coroutine\Coroutine;
 use Async\Coroutine\CoroutineInterface;
 use Async\Processor\Processor;
@@ -37,9 +38,9 @@ if (! \function_exists('coroutine_run')) {
 	 * 
 	 * @return int $task id
 	 */
-	function await($awaitedFunction, ...$args) 
+	function await($awaitableFunction, ...$args) 
 	{
-		return Kernel::await($awaitedFunction, ...$args);
+		return Kernel::await($awaitableFunction, ...$args);
 	}
 
 	/**
@@ -85,6 +86,7 @@ if (! \function_exists('coroutine_run')) {
 	 * 
 	 * @see https://docs.python.org/3.7/library/asyncio-task.html#awaitables
 	 * 
+	 * @param TaskInterface $task
 	 * @param Generator|callable $awaitableFunction
 	 * @param mixed $args
 	 * 
@@ -92,8 +94,7 @@ if (! \function_exists('coroutine_run')) {
 	 */
 	function awaitAble(callable $awaitableFunction, ...$args) 
 	{
-		$return = yield $awaitableFunction(...$args);
-		return yield Coroutine::plain($return);
+		return yield yield $awaitableFunction(...$args);
 	}	
 
 	/**
@@ -380,9 +381,9 @@ if (! \function_exists('coroutine_run')) {
 		return $socket->getMeta($handle);
 	}
 
-	function file_status(StreamSocketInterface $socket, $url = null)
+	function file_status(StreamSocketInterface $socket)
 	{
-		return $socket->getStatus($url);
+		return $socket->status();
 	}
 
 	function remote_ip(StreamSocketInterface $socket)

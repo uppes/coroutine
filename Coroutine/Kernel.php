@@ -263,7 +263,7 @@ class Kernel
 				$count = \count($taskIdList);
 				$taskList = $coroutine->taskList();
 
-				$completeList = $coroutine->completedList();		
+				$completeList = $coroutine->completedList();
 				$countComplete = \count($completeList);
 				if ($countComplete > 0) {
 					foreach($completeList as $id => $tasks) {
@@ -367,7 +367,10 @@ class Kernel
 		if (!is_array($asyncLabel))
 			global ${$asyncLabel};
 
-		if (!is_array($asyncLabel) && isset(${$asyncLabel}))
+		if (!is_array($asyncLabel) 
+			&& isset(${$asyncLabel}) 
+			&& (${$asyncLabel}() instanceof \Generator)
+		)
 			return Kernel::createTask(${$asyncLabel}(...$args));
 		else
 			return new Kernel(
