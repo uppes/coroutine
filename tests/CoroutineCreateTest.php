@@ -100,14 +100,14 @@ class CoroutineCreateTest extends TestCase
                 ], true
             ],
             // plain() does a plain passthru
-            //[
-               // function() {
-               //     yield (yield $this->child5());
+            [
+                function() {
+                    yield (yield $this->child5());
 
-             //   }, [
-           //         $this->child5(), Coroutine::value('test'), Coroutine::plain('test'), Coroutine::result('test')
-         //       ], true
-           // ],
+                }, [
+                    $this->child5(), Coroutine::value('test'), Coroutine::plain('test'), Coroutine::result(null)
+                ], true
+            ],
         ];
     }
 
@@ -149,7 +149,6 @@ class CoroutineCreateTest extends TestCase
         yield Coroutine::plain($this->child5());
         yield Coroutine::plain(Coroutine::value('test'));
         yield Coroutine::plain(Coroutine::plain('test'));
-        yield Coroutine::plain(Coroutine::result('test'));
     }
 
 

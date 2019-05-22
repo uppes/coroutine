@@ -114,7 +114,7 @@ class Task implements TaskInterface
             $value = $this->coroutine->send($this->sendValue);
             if ($value instanceof ResultValueCoroutine) {
                 $this->result = $value;
-                $value = null;
+                $value = $value->getValue();
             }
 
             $this->sendValue = null;
