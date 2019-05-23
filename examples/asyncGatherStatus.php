@@ -28,15 +28,11 @@ function get_website_status($url)
 {
     $id = yield \async_id();
     $class = yield \open_file(null, $url);
-    $handle = \file_handle($class);
-    if (\is_resource($handle)) {    
-        yield \async_write_wait($handle);
-        \file_meta($class);
-        $status = \file_status($class);
-        print "task: $id, code: $status".EOL;
-        \close_file($class);
-        return $status;
-    }
+    yield \file_meta($class);
+    $status = \file_status($class);
+    print "task: $id, code: $status".EOL;
+    \close_file($class);
+    return $status;
 };
 
 function main() 

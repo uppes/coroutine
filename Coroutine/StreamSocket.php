@@ -423,10 +423,14 @@ class StreamSocket implements StreamSocketInterface
 
     public function getMeta($stream = null)
     {
-        if (empty($stream) && !empty($this->handle))
-            $this->meta = \stream_get_meta_data($this->handle);
-        elseif (\is_resource($stream))
-            return \stream_get_meta_data($stream);
+        $check = empty($stream) ? $this->handle : $stream;
+        if (\is_resource($check))
+            yield Kernel::writeWait($check);
+
+        if (empty($stream) && \is_resource($check))
+            $this->meta = \stream_get_meta_data($check);
+        elseif (\is_resource($check))
+            return \stream_get_meta_data($check);
 
         return $this->meta;
     }
