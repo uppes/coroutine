@@ -364,13 +364,13 @@ class Kernel
 	 */
 	public static function await($asyncLabel, ...$args) 
 	{
-		if (!is_array($asyncLabel))
+		$isLabel = false;
+		if (!is_array($asyncLabel) && !is_callable($asyncLabel)) {
 			global ${$asyncLabel};
+			$isLabel = isset(${$asyncLabel});
+		}
 
-		if (!is_array($asyncLabel) 
-			&& isset(${$asyncLabel}) 
-			&& (${$asyncLabel}() instanceof \Generator)
-		)
+		if ($isLabel && (${$asyncLabel}() instanceof \Generator))
 			return Kernel::createTask(${$asyncLabel}(...$args));
 		else
 			return new Kernel(

@@ -17,29 +17,22 @@ function f(string $from) {
   }
 }
 
-function anonymous(string $msg) {
-  print($msg.EOL);
-  yield;
-}
-  
   function main() {
     // Suppose we have a function call `e(s)`. Here's how
     // we'd call that in the usual way, running it
     // synchronously.
-    e("direct");
+    yield e("direct");
 
     // To invoke this function in a goroutine, use
     // `go f(s)`. This new goroutine will execute
-    // concurrently with the calling one.
+    // concurrently with the calling one. will not if `yield` is not present!
     yield \go('f', "goroutine");
 
-    // - Needs to implemented correctly -
     // You can also start a goroutine for an anonymous
     // function call.
-    //yield \go(function(string $msg) {
-    //    print($msg);
-    //}, "going");
-    yield \go('anonymous', "going");
+    yield \go(function(string $msg) {
+        print($msg.EOL);
+    }, "going");
 
     // Our two function calls are running asynchronously in
     // separate goroutines now, so execution falls through
