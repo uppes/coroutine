@@ -164,21 +164,15 @@ class Task implements TaskInterface
 
     public function result()
     {
-        if ($this->completed())
+        if ($this->completed()) {
+            if (empty($this->result))
+                return;
             return $this->result->getValue();
-        elseif ($this->cancelled())
+        } elseif ($this->cancelled())
             throw new \Exception("Cancelled Error");            
         elseif ($this->erred())
             throw $this->error;
         else
             throw new \Exception("Invalid State Error");
-    }
-
-    /**
-     * Gets the caller of the function where this function is called from
-     * @see: http://php.net/manual/en/function.debug-backtrace.php
-     */
-    public function callerFunction() {
-        return debug_backtrace( DEBUG_BACKTRACE_IGNORE_ARGS, 3)[2]['function'];
     }
 }
