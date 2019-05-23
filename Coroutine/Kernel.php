@@ -380,4 +380,18 @@ class Kernel
 				}
 			);
 	}
+
+	public static function openFile(StreamSocketInterface $socket = null, string $filenameUrl = null, $modePort = 'r') 
+	{
+		return new Kernel(
+			function(TaskInterface $task, Coroutine $coroutine) use ($socket, $filenameUrl, $modePort) {				
+				if (empty($socket))
+					$socket = new StreamSocket(null);
+
+				$socket->openFile($filenameUrl, $modePort);				
+				$task->sendValue($socket);				
+				$coroutine->schedule($task);
+			}
+		);
+	}
 }

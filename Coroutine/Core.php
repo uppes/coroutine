@@ -325,20 +325,16 @@ if (! \function_exists('coroutine_run')) {
 
 	/**
 	 * Open file or url.
+	 * - This function needs to be prefixed with `yield`
 	 * 
-	 * @param resource $socket
+	 * @param resource|null $socket - create socket if null
 	 * @param string $filename|url
 	 * @param string $mode|port
 	 * @return object
 	 */
-	function open_file(StreamSocketInterface $socket = null, string $filenameUrl = null, $modePort = 'r'): StreamSocketInterface
-	{
-		if (empty($socket))
-			$socket = new StreamSocket(null);
-
-		$socket->openFile($filenameUrl, $modePort);
-
-		return $socket;
+	function open_file(StreamSocketInterface $socket = null, string $filenameUrl = null, $modePort = 'r')
+	{		
+		return Kernel::openFile($socket, $filenameUrl, $modePort); 
 	}
 
 	function file_get(StreamSocketInterface $socket, string $getPath = '/', $format = 'text/html')
@@ -376,14 +372,19 @@ if (! \function_exists('coroutine_run')) {
 		return $socket->fileContents($size, $timeout_seconds);
 	}
 
-	function file_meta(StreamSocketInterface $socket, $handle = null)
+	function file_meta(StreamSocketInterface $socket, $stream = null)
 	{
-		return $socket->getMeta($handle);
+		return $socket->getMeta($stream);
 	}
 
-	function file_status(StreamSocketInterface $socket)
+	function file_status(StreamSocketInterface $socket, $meta = null)
 	{
-		return $socket->status();
+		return $socket->getStatus($meta);
+	}
+
+	function file_handle(StreamSocketInterface $socket)
+	{
+		return $socket->getHandle();
 	}
 
 	function remote_ip(StreamSocketInterface $socket)

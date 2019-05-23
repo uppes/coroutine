@@ -3,9 +3,6 @@ include 'vendor/autoload.php';
 
 use Async\Coroutine\StreamSocket;
 /**
- * Does not work, same as native, no speed improvement. 
- * And need to get results before entering `gather` method.
- * 
  * Converted example of https://github.com/jimmysong/asyncio-examples from: 
  * @see https://youtu.be/qfY2cqjJMdw
  */
@@ -30,11 +27,16 @@ function get_statuses($websites)
 function get_website_status($url) 
 {
     $id = yield \async_id();
-    $handle = \open_file(null, $url);
-    $status = \file_status($handle);
-    print "task: $id, code: $status".EOL;
-    \close_file($handle);
-    return $status;
+    $class = yield \open_file(null, $url);
+    $handle = \file_handle($class);
+    if (\is_resource($handle)) {    
+        yield \async_write_wait($handle);
+        \file_meta($class);
+        $status = \file_status($class);
+        print "task: $id, code: $status".EOL;
+        \close_file($class);
+        return $status;
+    }
 };
 
 function main() 

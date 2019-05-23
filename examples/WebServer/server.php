@@ -101,7 +101,7 @@ function handleClient($socket)
 
             $input = '.'.$input;
 
-            \open_file($socket, $input);
+            yield \open_file($socket, $input);
             if (\file_valid($socket)) {
                 print "Serving $input\n";
 

@@ -393,9 +393,6 @@ class StreamSocket implements StreamSocketInterface
         if (\is_resource($handle)) {
             $this->isValid = true;
             \stream_set_blocking($handle, false);
-		    //yield Kernel::readWait($handle);
-            $this->meta = \stream_get_meta_data($handle);
-            $this->status = $this->getStatus();
             $this->handle = $handle;
         }
 
@@ -426,9 +423,11 @@ class StreamSocket implements StreamSocketInterface
 
     public function getMeta($stream = null)
     {
-        if (\is_resource($stream))
+        if (empty($stream) && !empty($this->handle))
+            $this->meta = \stream_get_meta_data($this->handle);
+        elseif (\is_resource($stream))
             return \stream_get_meta_data($stream);
-            
+
         return $this->meta;
     }
 
@@ -437,14 +436,27 @@ class StreamSocket implements StreamSocketInterface
         return $this->isValid;
     }
 
-    public function getStatus() 
+    public function getHandle()
     {
+        return $this->handle;
+    }
+
+    public function getStatus($meta = null) 
+    {
+        if (empty($meta))
+            $meta = $this->meta;
+
         $result = array();
-        foreach ($this->meta['wrapper_data'] as $headerLine) {
-            if (preg_match('/^HTTP\/(\d+\.\d+)\s+(\d+)\s*(.+)?$/', $headerLine, $result)) {
-                $http_version = $result[1];
-                $http_statusCode = $result[2];
-                $http_statusString = $result[3];
+        $http_version = null;
+        $http_statusCode = 400;
+        $http_statusString = null;
+        if (isset($meta['wrapper_data'])) {
+            foreach ($meta['wrapper_data'] as $headerLine) {
+                if (preg_match('/^HTTP\/(\d+\.\d+)\s+(\d+)\s*(.+)?$/', $headerLine, $result)) {
+                    $http_version = $result[1];
+                    $http_statusCode = $result[2];
+                    $http_statusString = $result[3];
+                }
             }
         }
 
