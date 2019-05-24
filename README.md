@@ -1,4 +1,4 @@
-[![Build status](https://ci.appveyor.com/api/projects/status/0sc1bycffhmu2ioo/branch/master?svg=true)](https://ci.appveyor.com/project/techno-express/coroutine/branch/master)[![Build Status](https://travis-ci.org/uppes/coroutine.svg?branch=master)](https://travis-ci.org/uppes/coroutine)[![codecov](https://codecov.io/gh/uppes/coroutine/branch/master/graph/badge.svg)](https://codecov.io/gh/uppes/coroutine)[![Codacy Badge](https://api.codacy.com/project/badge/Grade/fbd1d327f0d14164833396e2fbdf492b)](https://app.codacy.com/app/techno-express/coroutine?utm_source=github.com&utm_medium=referral&utm_content=uppes/coroutine&utm_campaign=Badge_Grade_Dashboard)
+[![Build status](https://ci.appveyor.com/api/projects/status/0sc1bycffhmu2ioo/branch/master?svg=true)](https://ci.appveyor.com/project/techno-express/coroutine/branch/master)[![Build Status](https://travis-ci.org/symplely/coroutine.svg?branch=master)](https://travis-ci.org/symplely/coroutine)[![codecov](https://codecov.io/gh/symplely/coroutine/branch/master/graph/badge.svg)](https://codecov.io/gh/symplely/coroutine)[![Codacy Badge](https://api.codacy.com/project/badge/Grade/fbd1d327f0d14164833396e2fbdf492b)](https://app.codacy.com/app/techno-express/coroutine?utm_source=github.com&utm_medium=referral&utm_content=symplely/coroutine&utm_campaign=Badge_Grade_Dashboard)
 
 ### Table of Contents
 
@@ -102,7 +102,7 @@ yield \await($awaitedFunction, ...$args) ;
 /**
  * Wrap the callable with `yield`, this makes sure every callable is a generator function,
  * and will switch at least once without actually executing.
- * Then function is used by `await` not really called directly.
+ * This function is used by `await` not really called directly.
  *
  * @see https://docs.python.org/3.7/library/asyncio-task.html#awaitables
  */
@@ -256,7 +256,7 @@ yield \read_input($size = 1024);
 
 ## Installation
 
-    composer require uppes/coroutine
+    composer require symplely/coroutine
 
 ## Usage
 
@@ -413,7 +413,7 @@ ____Other main asynchronous PHP libraries____
 
 [ReactPHP](https://github.com/reactphp) and [Guzzle Promises](https://github.com/guzzle/promises)
 
-* Using *`Promises`*, which mandates the normal *Event Loop*. Neither can run each other promises without issues, if they following specs, the logic, they should be getting the same results, regardless of the internal code routines used. That necessitated my own [uppes/promiseplus](https://github.com/uppes/promiseplus), that runs both, which is archived.
+* Using *`Promises`*, which mandates the normal *Event Loop*. Neither can run each other promises without issues, if they following specs, the logic, they should be getting the same results, regardless of the internal code routines used. That necessitated my own [techno-express/promiseplus](https://github.com/techno-express/promiseplus), that runs both, which is archived.
 
 [Recoil](https://github.com/recoilphp/recoil)
 
@@ -432,7 +432,7 @@ This ___`Coroutine`___ package differs, mainly because it just managing the flow
 
 **Parallel** class package here is a restructured/rewrite of [spatie/async](https://github.com/spatie/async). The old package following there implementation, but with _Windows_ support can be found [here](https://github.com/techno-express/async/tree/windows-patch).
 
-**Parallel** class also pulls in [uppes/processor](https://github.com/uppes/processor) as an dependency which includes, [symfony/process](https://github.com/symfony/process) class, which is going to be used instead of my own implementation for **subprocess** management/execution. It has better **Windows** support, no issues running parallel PHP processes, not seeing any blocking issues.
+**Parallel** class also pulls in [symplely/processor](https://github.com/symplely/processor) as an dependency which includes, [symfony/process](https://github.com/symfony/process) class, which is going to be used instead of my own implementation for **subprocess** management/execution. It has better **Windows** support, no issues running parallel PHP processes, not seeing any blocking issues.
 
 ---
 [Concurrency in Go](https://youtu.be/LvgVSSpwND8) __video__
@@ -459,7 +459,7 @@ This ___`Coroutine`___ package differs, mainly because it just managing the flow
 
 ## Contributing
 
-Contributions are encouraged and welcome; *_I especially need input/help with the ToDo's._* I am always happy to get feedback or pull requests on Github :) Create [Github Issues](https://github.com/uppes/coroutine/issues) for bugs and new features and comment on the ones you are interested in.
+Contributions are encouraged and welcome; I am always happy to get feedback or pull requests on Github :) Create [Github Issues](https://github.com/symplely/coroutine/issues) for bugs and new features and comment on the ones you are interested in.
 
 ## License
 
