@@ -26,7 +26,7 @@ function get_statuses($websites)
 
 function get_website_status($url) 
 {
-    $id = yield \async_id();
+    $id = yield \task_id();
     $class = yield \open_file(null, $url);
     yield \file_meta($class);
     $status = \file_status($class);

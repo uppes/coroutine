@@ -10,7 +10,7 @@ function f(int $n) {
       $amt = ($n + \mt_rand(500, 2000)) * \MILLISECOND;
       if ($i == 9)
         print("\n");
-      yield \go_sleep($amt);
+      yield \sleep_for($amt);
     }
   }
   

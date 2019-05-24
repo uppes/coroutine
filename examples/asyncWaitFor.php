@@ -4,7 +4,7 @@ include 'vendor/autoload.php';
 function eternity() {
     // Sleep for one hour
     print("\nAll good!\n");
-    yield \async_sleep(3600);
+    yield \sleep_for(3600);
     print(' yay!');
 }
 
@@ -16,7 +16,7 @@ function keyboard() {
 
 function needName() {
     $i = 1;
-    yield \async_sleep(1);
+    yield \sleep_for(1);
     while(true) {
         echo $i;
         yield;
@@ -34,13 +34,13 @@ function main() {
     
     try {
         // Wait for at most 0.5 second
-        yield \async_wait_for('eternity', 0.5);
+        yield \wait_for('eternity', 0.5);
 	} catch (\RuntimeException $e) {
         print("\ntimeout!");
         // this script should have exited automatically, since 
         // there are no streams open, nor tasks running, this exception killed `eternity` task
         // currently, will continue to run
-        yield \async_cancel(2); // task id 2 is `ioSocketPoll` task, the scheduler added for listening for streams
+        yield \cancel_task(2); // task id 2 is `ioSocketPoll` task, the scheduler added for listening for streams
         //exit();
 	}
 }

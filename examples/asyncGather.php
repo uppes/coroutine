@@ -7,7 +7,7 @@ function factorial($name, $number) {
     $f = 1;
     foreach (range(2, $number + 1) as $i) {
         print(\EOL."Task {$name}: Compute factorial({$i})...");
-        yield async_sleep(1);
+        yield \sleep_for(1);
         $f *= $i;
     }
     print(\EOL."Task {$name}: factorial({$number}) = {$f}");

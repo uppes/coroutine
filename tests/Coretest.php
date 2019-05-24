@@ -15,7 +15,7 @@ class CoreTest extends TestCase
 
     public function childTask() 
     {
-        $tid = yield \async_id();
+        $tid = yield \task_id();
         while (true) {
             $this->task .= "Child task $tid still alive!\n";
             yield;
@@ -24,7 +24,7 @@ class CoreTest extends TestCase
 
     public function parentTask() 
     {
-        $tid = yield \async_id();
+        $tid = yield \task_id();
         $childTid = yield \await([$this, 'childTask']);
         
         for ($i = 1; $i <= 6; ++$i) {
@@ -32,7 +32,7 @@ class CoreTest extends TestCase
             yield;
         
             if ($i == 3) {
-                $bool = yield \async_cancel($childTid);
+                $bool = yield \cancel_task($childTid);
                 $this->assertTrue($bool);
             }
         }
@@ -46,10 +46,10 @@ class CoreTest extends TestCase
      * @covers Async\Coroutine\Coroutine::run
      * @covers Async\Coroutine\Task::taskId
      * @covers Async\Coroutine\Task::run
-     * @covers \async_id
+     * @covers \task_id
      * @covers \async
      * @covers \awaitAble
-     * @covers \async_cancel
+     * @covers \cancel_task
      * @covers \coroutine_instance
      * @covers \coroutine_create
      * @covers \coroutine_run

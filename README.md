@@ -102,11 +102,11 @@ yield \await($awaitedFunction, ...$args) ;
 /**
  * Wrap the callable with `yield`, this makes sure every callable is a generator function,
  * and will switch at least once without actually executing.
- * - This function needs to be prefixed with `yield`
+ * Then function is used by `await` not really called directly.
  *
  * @see https://docs.python.org/3.7/library/asyncio-task.html#awaitables
  */
-yield \awaitAble($awaitableFunction, ...$args);
+\awaitAble($awaitableFunction, ...$args);
 
 /**
  * Run awaitable objects in the taskId sequence concurrently.
@@ -129,37 +129,32 @@ yield \gather(...$taskId);
  * A result is returned If provided back to the caller
  * - This function needs to be prefixed with `yield`
  */
-yield \async_sleep($delay, $result);
+yield \sleep_for($delay, $result);
 
 /**
  * Creates an communications Channel between coroutines, returns an object
+ * Similar to Google Go language - basic, still needs additional functions
  * - This function needs to be prefixed with `yield`
  */
-yield \async_channel();
-
-/**
- * Creates an Channel similar to Google Go language, returns an object
- * - This function needs to be prefixed with `yield`
- */
-yield \go_make();
+yield \make();
 
 /**
  * Send message to an Channel
  * - This function needs to be prefixed with `yield`
  */
-yield \go_sender($channel, $message, $taskId);
+yield \sender($channel, $message, $taskId);
 
 /**
  * Set task as Channel receiver
  * - This function needs to be prefixed with `yield`
  */
-yield \go_receiver($channel);
+yield \receiver($channel);
 
 /**
- * Receive Channel message, returns a message
+ * Receive Channel message, returns the message
  * - This function needs to be prefixed with `yield`
  */
-yield \go_receive($channel);
+yield \receive($channel);
 
 /**
  * A goroutine is a function that is capable of running concurrently with other functions.
@@ -169,24 +164,17 @@ yield \go_receive($channel);
 yield \go($goFunction, ...$args);
 
 /**
- * Block/sleep for delay seconds.
- * Suspends the calling task, allowing other tasks to run.
- * Returns $result back to caller
+ * Wait for the callable/task to complete with a timeout.
  */
-yield \go_sleep($delay, $result);
+yield \wait_for($callable, $timeout);
 
-/**
- * Wait for the callable to complete with a timeout.
- */
-yield \async_wait_for($callable, $timeout);
+yield \cancel_task($tid);
 
-yield \async_cancel($tid);
+yield \task_id();
 
-yield \async_id();
+yield \read_wait($stream);
 
-yield \async_read_wait($stream);
-
-yield \async_write_wait($stream);
+yield \write_wait($stream);
 ```
 
 ```php
@@ -197,7 +185,7 @@ yield \async_write_wait($stream);
  * @see https://docs.python.org/3.7/library/asyncio-subprocess.html#subprocesses
  * @see https://docs.python.org/3.7/library/asyncio-dev.html#running-blocking-code
  */
-yield \await_blocking($command, $timeout)
+yield \await_process($command, $timeout)
 ```
 
 ```php
@@ -283,7 +271,7 @@ include 'vendor/autoload.php';
 function eternity() {
     // Sleep for one hour
     print("\nAll good!\n");
-    yield \async_sleep(3600);
+    yield \sleep_for(3600);
     print(' yay!');
 }
 
@@ -304,7 +292,7 @@ function keyboard() {
 
 function needName() {
     $i = 1;
-    yield \async_sleep(1);
+    yield \sleep_for(1);
     while(true) {
         echo $i;
         yield;
@@ -322,7 +310,7 @@ function main() {
 
     try {
         // Wait for at most 0.5 second
-        yield \async_wait_for('eternity', 0.5);
+        yield \wait_for('eternity', 0.5);
     } catch (\RuntimeException $e) {
         print("\ntimeout!");
         // this script should have exited automatically, since
@@ -330,7 +318,7 @@ function main() {
         // currently, will continue to run
         // task id 2 is `ioWaiting` task, the scheduler added for listening 
         // for stream socket connections
-        yield \async_cancel(2);
+        yield \cancel_task(2);
         // This might just be because `main` is task 1, 
         // and still running by the exception throw, need more testing
     }
@@ -348,14 +336,14 @@ include 'vendor/autoload.php';
 
 function numbers() {
     for ($i = 1; $i <= 5; $i++) {
-        yield \go_sleep(250 * \MILLISECOND);
+        yield \sleep_for(250 * \MILLISECOND);
         print(' '.$i);
     }
 }
 
 function alphabets() {
     for ($i = 'a'; $i <= 'e'; $i++) {
-        yield \go_sleep(400 * \MILLISECOND);
+        yield \sleep_for(400 * \MILLISECOND);
         print(' '.$i);
     }
 }
@@ -363,7 +351,7 @@ function alphabets() {
 function main() {
     yield \go('numbers');
     yield \go('alphabets');
-    yield \go_sleep(3000 * \MILLISECOND);
+    yield \sleep_for(3000 * \MILLISECOND);
     print(" main terminated");
 }
 
@@ -404,7 +392,6 @@ yield \some_name($whatever, ...$args);
 
 * Add more standard examples from other languages, converted over.
 * Update docs in reference to similar sections of functionally in Python, Go or any other languages.
-* Add/implement Curio `spawn` method, and debugging/monitoring features.
 * Turn some Http PSR-7, and PSR-17, package to something like Pythons aioHttp.
 * Create an specific error/exception class for `coroutines`.
 * Add/Update phpunit tests.

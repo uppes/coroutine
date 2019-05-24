@@ -75,7 +75,7 @@ if (! \function_exists('coroutine_run')) {
 	 * 
 	 * @return mixed
 	 */
-	function await_blocking($command, $timeout = 300)
+	function await_process($command, $timeout = 300)
 	{
 		return Kernel::awaitProcess($command, $timeout);
 	}
@@ -83,6 +83,7 @@ if (! \function_exists('coroutine_run')) {
 	/**
 	 * Wrap the callable with `yield`, this makes sure every callable is a generator function,
 	 * and will switch at least once without actually executing.
+ 	 * Then function is used by `await` not really called directly.
 	 * 
 	 * @see https://docs.python.org/3.7/library/asyncio-task.html#awaitables
 	 * 
@@ -107,29 +108,19 @@ if (! \function_exists('coroutine_run')) {
 	 * @param float $delay
 	 * @param mixed $result - If provided, it is returned to the caller when the coroutine complete
 	 */
-	function async_sleep(float $delay = 0.0, $result = null) 
+	function sleep_for(float $delay = 0.0, $result = null) 
 	{
 		return Kernel::sleepFor($delay, $result); 
 	}
 
 	/**
 	 * Creates an communications Channel between coroutines
+	 * Similar to Google Go language - basic, still needs additional functions
 	 * - This function needs to be prefixed with `yield`
 	 * 
 	 * @return Channel $channel
 	 */
-	function async_channel() 
-	{
-		return Kernel::make();
-	}
-
-	/**
-	 * Creates an Channel similar to Google Go language
-	 * - This function needs to be prefixed with `yield`
-	 * 
-	 * @return Channel $channel
-	 */
-	function go_make() 
+	function make() 
 	{
 		return Kernel::make();
 	}
@@ -142,7 +133,7 @@ if (! \function_exists('coroutine_run')) {
    	 * @param mixed $message
 	 * @param int $taskId
 	 */
-	function go_sender(Channel $channel, $message = null, int $taskId = 0)
+	function sender(Channel $channel, $message = null, int $taskId = 0)
 	{
 		return Kernel::sender($channel, $message, $taskId);
 	}
@@ -153,7 +144,7 @@ if (! \function_exists('coroutine_run')) {
 	 * 
 	 * @param Channel $channel
 	 */
-	function go_receiver(Channel $channel)
+	function receiver(Channel $channel)
 	{
 		return Kernel::receiver($channel); 
 	}
@@ -165,7 +156,7 @@ if (! \function_exists('coroutine_run')) {
 	 * @param Channel $channel
 	 * @return mixed
 	 */
-	function go_receive(Channel $channel)
+	function receive(Channel $channel)
 	{
 		return Kernel::receive($channel);
 	}
@@ -185,19 +176,6 @@ if (! \function_exists('coroutine_run')) {
 	{
 		return Kernel::await($goFunction, ...$args);
 	}
-
-	/**
-	 * Block/sleep for delay seconds.
-	 * Suspends the calling task, allowing other tasks to run.
-	 * - This function needs to be prefixed with `yield`
-	 *  
-	 * @param float $delay
-	 * @param mixed $result - If provided, it is returned to the caller when the coroutine complete
-	 */
-	function go_sleep(float $delay = 0.0, $result = null) 
-	{
-		return Kernel::sleepFor($delay, $result); 
-	}
 	
 	/**
 	 * Wait for the callable to complete with a timeout.
@@ -208,7 +186,7 @@ if (! \function_exists('coroutine_run')) {
 	 * @param callable $callable
 	 * @param float $timeout
 	 */
-	function async_wait_for(callable $callable, float $timeout = 0.0) 
+	function wait_for(callable $callable, float $timeout = 0.0) 
 	{
 		return Kernel::waitFor($callable, $timeout); 
 	}
@@ -216,7 +194,7 @@ if (! \function_exists('coroutine_run')) {
 	/**
 	 * - This function needs to be prefixed with `yield`
 	 */
-	function async_cancel(int $tid)
+	function cancel_task(int $tid)
 	{
 		return Kernel::cancelTask($tid); 
 	}	
@@ -224,7 +202,7 @@ if (! \function_exists('coroutine_run')) {
 	/**
 	 * - This function needs to be prefixed with `yield`
 	 */
-	function async_id()
+	function task_id()
 	{
 		return Kernel::taskId();
 	}	
@@ -232,7 +210,7 @@ if (! \function_exists('coroutine_run')) {
 	/**
 	 * - This function needs to be prefixed with `yield`
 	 */
-	function async_read_wait($stream)
+	function read_wait($stream)
 	{
 		return Kernel::readWait($stream); 
 	}
@@ -240,7 +218,7 @@ if (! \function_exists('coroutine_run')) {
 	/**
 	 * - This function needs to be prefixed with `yield`
 	 */
-	function async_write_wait($stream)
+	function write_wait($stream)
 	{
 		return Kernel::writeWait($stream);
 	}	
