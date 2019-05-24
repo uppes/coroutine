@@ -1,6 +1,6 @@
 {
-    "name": "uppes/coroutine",
-    "description": "Coroutine task library to implement cooperative multitasking by yields & generators, and offering with parallel processing",
+    "name": "symplely/coroutine",
+    "description": "Cooperative multitasking using generators. The basics of coroutines, async and await!",
 	"keywords": [
 		"cooperative",
 		"multitasking",
@@ -12,7 +12,7 @@
 		"generator",
         "async"
 	],
-    "homepage": "https://github.com/uppes/coroutine",
+    "homepage": "https://github.com/symplely/coroutine",
     "type": "library",
     "license": "MIT",
     "authors": [
@@ -27,7 +27,7 @@
     ],
     "require": {
         "php": ">7.0",
-        "uppes/processor": "^1.0.7"
+        "symplely/processor": "^1.0.7"
     },
     "autoload": {
         "files": [
