@@ -27,7 +27,7 @@
     ],
     "require": {
         "php": ">7.0",
-        "symplely/processor": "^1.0.7"
+        "symplely/processor": "^1.0.8"
     },
     "autoload": {
         "files": [
