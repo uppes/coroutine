@@ -317,32 +317,6 @@ class StreamSocket implements StreamSocketInterface
         return $this->buffer;
     }
 
-    public function response(int $size = -1) 
-	{
-        if (self::$isClient) {
-            $this->buffer = '';
-            while (!\feof($this->client)) {                
-		        yield Kernel::readWait($this->client);
-                $this->buffer .= \stream_get_contents($this->client, $size);
-            }
-        }
-    }
-
-    public static function input(int $size = 256) 
-	{
-		//Check on STDIN stream
-		\stream_set_blocking(\STDIN, false);
-		yield Kernel::readWait(\STDIN);
-		yield Coroutine::value(\trim(\stream_get_line(\STDIN, $size, \EOL)));
-    }
-
-    public function read(int $size = -1) 
-	{
-        yield Kernel::readWait($this->socket);
-        yield Coroutine::value(\stream_get_contents($this->socket, $size));
-        \stream_set_blocking($this->socket, false);
-    }
-
     public function get(string $getPath = '/', $format = 'text/html')
     {
         $headers = "GET $getPath HTTP/1.1\r\n";
@@ -421,6 +395,18 @@ class StreamSocket implements StreamSocketInterface
         yield Coroutine::value($contents);
     }
 
+    public function fileLines()
+    {
+        $contents = [];
+        while(! \feof($this->handle)) {
+            yield Kernel::readWait($this->handle);
+            $new = \fgets($this->handle);
+            $contents[] = \trim($new, \EOL);
+        }
+    
+        yield Coroutine::value($contents);
+    }
+
     public function getMeta($stream = null)
     {
         $check = empty($stream) ? $this->handle : $stream;
@@ -475,6 +461,32 @@ class StreamSocket implements StreamSocketInterface
     public function closeFile() 
 	{
         @\fclose($this->handle);
+    }
+
+    public function response(int $size = -1) 
+	{
+        if (self::$isClient) {
+            $this->buffer = '';
+            while (!\feof($this->client)) {                
+		        yield Kernel::readWait($this->client);
+                $this->buffer .= \stream_get_contents($this->client, $size);
+            }
+        }
+    }
+
+    public static function input(int $size = 256) 
+	{
+		//Check on STDIN stream
+		\stream_set_blocking(\STDIN, false);
+		yield Kernel::readWait(\STDIN);
+		yield Coroutine::value(\trim(\stream_get_line(\STDIN, $size, \EOL)));
+    }
+
+    public function read(int $size = -1) 
+	{
+        yield Kernel::readWait($this->socket);
+        yield Coroutine::value(\stream_get_contents($this->socket, $size));
+        \stream_set_blocking($this->socket, false);
     }
 
     public function write(string $string) 

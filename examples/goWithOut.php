@@ -22,7 +22,7 @@ function f(int $n) {
     }
 
     print("\nPress enter to exit,\nbut i will be still running,\ngot more tasks iterations to do!\n");
-    yield \read_input();
+    yield \input_wait();
   }
 
 \coroutine_create( \main() );

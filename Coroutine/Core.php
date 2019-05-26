@@ -12,8 +12,9 @@ use Async\Processor\Processor;
 use Async\Processor\ProcessInterface;
 
 if (! \function_exists('coroutine_run')) {	
-	define('MILLISECOND', 0.001);
-	define('EOL', \PHP_EOL);
+	\define('MILLISECOND', 0.001);
+	\define('EOL', \PHP_EOL);
+	\define('DS', \DIRECTORY_SEPARATOR);
 
 
 	/**
@@ -350,6 +351,11 @@ if (! \function_exists('coroutine_run')) {
 		return $socket->fileContents($size, $timeout_seconds);
 	}
 
+	function file_lines(StreamSocketInterface $socket)
+	{
+		return $socket->fileLines();
+	}
+
 	function file_meta(StreamSocketInterface $socket, $stream = null)
 	{
 		return $socket->getMeta($stream);
@@ -373,7 +379,7 @@ if (! \function_exists('coroutine_run')) {
 	/**
 	 * - This function needs to be prefixed with `yield`
 	 */
-	function read_input(int $size = 256)
+	function input_wait(int $size = 256)
 	{
 		 return StreamSocket::input($size);
 	}

@@ -38,7 +38,7 @@ function f(string $from) {
     // separate goroutines now, so execution falls through
     // to here. This `Scanln` requires we press a key
     // before the program exits.
-    yield \read_input();
+    yield \input_wait();
     print("done".EOL);
   }
 

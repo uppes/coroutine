@@ -163,18 +163,21 @@ yield \receive($channel);
  */
 yield \go($goFunction, ...$args);
 
+yield \task_id();
+
+yield \cancel_task($tid);
+
 /**
  * Wait for the callable/task to complete with a timeout.
  */
 yield \wait_for($callable, $timeout);
 
-yield \cancel_task($tid);
-
-yield \task_id();
-
 yield \read_wait($stream);
 
 yield \write_wait($stream);
+
+yield \input_wait($size = 256);
+
 ```
 
 ```php
@@ -208,8 +211,6 @@ yield \read_socket($socket, $size);
 yield \write_socket($socket, $response);
 
 yield \close_Socket($socket);
-
-yield \read_input($size = 1024);
 
 // no yield
 \remote_ip($socket);

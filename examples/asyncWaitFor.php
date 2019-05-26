@@ -11,7 +11,7 @@ function eternity() {
 function keyboard() {
     // will begin outputs of `needName` in 1 second
     print("What's your name: ");
-    yield \read_input();
+    yield \input_wait();
 }
 
 function needName() {
