@@ -311,9 +311,9 @@ if (! \function_exists('coroutine_run')) {
 	 * @param string $mode|port
 	 * @return object
 	 */
-	function open_file(StreamSocketInterface $socket = null, string $filenameUrl = null, $modePort = 'r')
+	function open_file(StreamSocketInterface $socket = null, string $filenameUrl = null, $modePort = 'r', array $options = [])
 	{		
-		return Kernel::openFile($socket, $filenameUrl, $modePort); 
+		return Kernel::openFile($socket, $filenameUrl, $modePort, $options); 
 	}
 
 	function file_get(StreamSocketInterface $socket, string $getPath = '/', $format = 'text/html')

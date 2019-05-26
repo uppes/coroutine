@@ -15,7 +15,6 @@ class StreamSocket implements StreamSocketInterface
     protected $buffer = null;
     protected $meta = [];
     protected $host = '';
-    protected $status = null;
     protected $url = null;
     protected $isValid = false;
     protected static $isClient = false;
@@ -343,7 +342,7 @@ class StreamSocket implements StreamSocketInterface
         return $path;
     }
 */
-    public function openFile(string $url = null, $modePort = 'r') 
+    public function openFile(string $url = null, $modePort = 'r', $options = []) 
 	{
         $this->url = $url;
         // assume default scheme if none has been given
@@ -360,7 +359,7 @@ class StreamSocket implements StreamSocketInterface
         } 
 
         if (!empty($modePort) && \is_int($modePort))
-            $handle = \create_client("tcp://{$url}:$modePort", [], true);
+            $handle = \create_client("tcp://{$url}:$modePort", $options, true);
         else
             $handle = @\fopen($this->url, $modePort);
         
@@ -375,6 +374,9 @@ class StreamSocket implements StreamSocketInterface
 
     public function fileContents(int $size = 256, float $timeout_seconds = 0.5)
     {
+        if (! \is_resource($this->handle))
+            yield Coroutine::value(false);
+
         $contents = '';
         while (true) {
             yield Kernel::readWait($this->handle);
@@ -397,11 +399,15 @@ class StreamSocket implements StreamSocketInterface
 
     public function fileLines()
     {
+        if (! \is_resource($this->handle))
+            yield Coroutine::value(false);
+
         $contents = [];
         while(! \feof($this->handle)) {
             yield Kernel::readWait($this->handle);
-            $new = \fgets($this->handle);
-            $contents[] = \trim($new, \EOL);
+            $new = \trim(\fgets($this->handle), \EOL);
+            if (!empty($new))
+                $contents[] = $new;
         }
     
         yield Coroutine::value($contents);
@@ -453,11 +459,6 @@ class StreamSocket implements StreamSocketInterface
         return (int) $http_statusCode;
     }
 
-    public function status() 
-    {
-        return $this->status;
-    }
-    
     public function closeFile() 
 	{
         @\fclose($this->handle);
@@ -465,6 +466,9 @@ class StreamSocket implements StreamSocketInterface
 
     public function response(int $size = -1) 
 	{
+        if (! \is_resource($this->client))
+            yield Coroutine::value(false);
+
         if (self::$isClient) {
             $this->buffer = '';
             while (!\feof($this->client)) {                
