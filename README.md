@@ -2,14 +2,15 @@
 
 ### Table of Contents
 
-* [Coroutine - Introduction & Background](#Coroutine)
-* [Functions](#Functions)
-* [Installation](#Installation)
+* [Coroutine - Introduction & Background](#coroutine)
+* [Functions](#functions)
+* [Installation](#installation)
 * [Usage](#usage)
-* [Development](#Development)
-* [Todo](#Todo)
-* [Package/Comparison](#Package/Comparison)
-* [Credits/References](#Credits/References)
+* [Development](#development)
+* [Todo](#todo)
+* [Package/Comparison](#package/comparison)
+* [Credits/References](#credits/references)
+* [Contributing](#contributing)
 * [License](#license)
 
 # Coroutine
