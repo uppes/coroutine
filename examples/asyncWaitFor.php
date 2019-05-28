@@ -19,10 +19,13 @@ function needName() {
     yield \sleep_for(1);
     while(true) {
         echo $i;
-        yield;
+        yield \sleep_for(0.05);
         $i++;
-        if ($i == 10) {
-            print(' hey! try again: ');
+        if ($i == 15) {
+            print(\EOL.'hey! try again: ');
+        }
+        if ($i == 100) {
+            print(\EOL.'hey! try again, one more time: ');
             break;
         }
     }

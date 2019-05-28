@@ -122,7 +122,7 @@ class ProcessTest extends TestCase
 
         $this->assertNotEquals(0, $this->mainResult);
         $this->assertNotEquals(0, $this->childId);
-        $this->assertGreaterThan(50, $this->counterResult);
+        $this->assertGreaterThan(30, $this->counterResult);
         $this->assertEquals($this->mainResult, $this->childId, (string) $parallel->status());
         $this->assertEquals($this->mainResult, $parallel->results()[0], (string) $parallel->status());
     }
@@ -142,7 +142,7 @@ class ProcessTest extends TestCase
 
         $this->assertNotEquals(0, $this->mainResult);
         $this->assertNotEquals(0, $this->childId);
-        $this->assertGreaterThan(50, $this->counterResult);
+        $this->assertGreaterThan(30, $this->counterResult);
         $this->assertTrue ($this->errorResult instanceof \RuntimeException);
         $this->assertEquals($this->mainResult, $this->childId, (string) $parallel->status());
     }
@@ -162,7 +162,7 @@ class ProcessTest extends TestCase
 
         $this->assertNotEquals(0, $this->mainResult);
         $this->assertNotEquals(0, $this->childId);
-        $this->assertGreaterThan(50, $this->counterResult);
+        $this->assertGreaterThan(30, $this->counterResult);
         $this->assertTrue ($this->errorResult instanceof \OutOfBoundsException, (string) $parallel->status());
         $this->assertEquals($this->mainResult, $this->childId, (string) $parallel->status());
     }*/

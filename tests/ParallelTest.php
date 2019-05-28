@@ -46,10 +46,10 @@ class ParallelTest extends TestCase
         $stopwatchResult = \microtime(true) - $stopwatch;
 		
 		if ('\\' !== \DIRECTORY_SEPARATOR) {
-			$expect = (float) 1.0;
+			$expect = (float) 0.6;
             $this->assertTrue($parallel->isPcntl());
         } else {
-            $expect = (float) 1.1;
+            $expect = (float) 0.7;
             $this->assertFalse($parallel->isPcntl());
         }
 
