@@ -38,7 +38,7 @@ function main() {
     try {
         // Wait for at most 0.5 second
         yield \wait_for('eternity', 0.5);
-	} catch (\RuntimeException $e) {
+	} catch (\Async\Coroutine\Exceptions\TimeoutError $e) {
         print("\ntimeout!");
         // this script should have exited automatically, since 
         // there are no streams open, nor tasks running, this exception killed `eternity` task

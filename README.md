@@ -395,7 +395,6 @@ yield \some_name($whatever, ...$args);
 * Add more standard examples from other languages, converted over.
 * Update docs in reference to similar sections of functionally in Python, Go or any other languages.
 * Turn some Http PSR-7, and PSR-17, package to something like Pythons aioHttp.
-* Create an specific error/exception class for `coroutines`.
 * Add/Update phpunit tests.
 
 ## Package/Comparison

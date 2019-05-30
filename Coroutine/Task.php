@@ -5,6 +5,8 @@ namespace Async\Coroutine;
 use Async\Coroutine\Coroutine;
 use Async\Coroutine\TaskInterface;
 use Async\Coroutine\ResultValueCoroutine;
+use Async\Coroutine\Exceptions\CancelledError;
+use Async\Coroutine\Exceptions\InvalidStateError;
 
 /**
  * Task is used to schedule coroutines concurrently.
@@ -191,10 +193,10 @@ class Task implements TaskInterface
                 return;
             return $this->result->getValue();
         } elseif ($this->cancelled())
-            throw new \Exception("Cancelled Error");            
+            throw new CancelledError();            
         elseif ($this->erred())
             throw $this->error;
         else
-            throw new \Exception("Invalid State Error");
+            throw new InvalidStateError();
     }
 }
