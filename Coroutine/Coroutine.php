@@ -107,6 +107,11 @@ class Coroutine implements CoroutineInterface
     {		
 		return $this->parallel->add($callable, $timeout);
     }
+
+	public function waitProcess()
+    {		
+		$this->parallel->await();
+    }
     
     public function isPcntl(): bool
     {

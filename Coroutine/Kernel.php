@@ -211,13 +211,17 @@ class Kernel
 	{
 		return new Kernel(
 			function(TaskInterface $task, Coroutine $coroutine) use ($callable, $timeout) {
+				$task->parallelTask();
+				$task->setState('process');
 				$subProcess = $coroutine->createSubProcess($callable, $timeout);
 
 				$subProcess->then( function ($result) use ($task, $coroutine) {
+					$task->setState('completed');
 					$task->sendValue($result);
 					$coroutine->schedule($task);
 				})
 				->catch(function(\Exception $error) use ($task, $coroutine) {
+					$task->setState('erred');
 					$task->setException(new \RuntimeException($error->getMessage()));
 					$coroutine->schedule($task);
 				})
@@ -279,7 +283,9 @@ class Kernel
 					foreach($taskIdList as $id) {
 						if (isset($taskList[$id])) {
 							$tasks = $taskList[$id];
-							if ($tasks->pending() || $tasks->rescheduled()) {
+							if (($tasks->getState() === 'process') && $tasks->isParallel()) {
+								$coroutine->waitProcess();
+							} elseif ($tasks->pending() || $tasks->rescheduled()) {
 								$coroutine->runCoroutines();
 							} elseif ($tasks->completed()) {
 								$results[$id] = $tasks->result();

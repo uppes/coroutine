@@ -30,6 +30,13 @@ class Task implements TaskInterface
     protected $daemon;
 
     /**
+     * A flag that indicates whether or not a task is an is parallel process.
+     *
+     * @var bool
+     */
+    protected $subprocess = false;
+
+    /**
      * The number of scheduling cycles the task has completed. 
      * This might be useful if you’re trying to figure out if a task is running or not. 
      * Or if you’re trying to monitor a task’s progress.
@@ -131,10 +138,25 @@ class Task implements TaskInterface
 	{
         $this->state = $status;
     }
+    
+    public function getState(): string
+	{
+        return $this->state;
+    }
 
     public function getError(): Exception
     {
         return $this->error;
+    }
+
+    public function parallelTask()
+    {
+        $this->subprocess = true;
+    }
+
+    public function isParallel(): bool
+    {
+        return $this->subprocess;
     }
 
     public function erred(): bool

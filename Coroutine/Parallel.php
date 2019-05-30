@@ -122,8 +122,6 @@ class Parallel implements ArrayAccess, ParallelInterface
 
             yield;
         }
-
-        return $this->results;
     }
 
     public function wait(): array
