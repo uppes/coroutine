@@ -26,12 +26,12 @@ function get_statuses($websites)
 
 function get_website_status($url) 
 {
-    $id = yield \task_id();
+    //$id = yield \task_id();
     $object = yield \open_file(null, $url);
     yield \file_meta($object);
     $status = \file_status($object);
     \close_file($object);
-    print "task: $id, code: $status".EOL;
+    //print "task: $id, code: $status".EOL;
     return $status;
 };
 
