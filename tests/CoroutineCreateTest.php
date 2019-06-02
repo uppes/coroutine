@@ -105,7 +105,7 @@ class CoroutineCreateTest extends TestCase
                     yield (yield $this->child5());
 
                 }, [
-                    $this->child5(), Coroutine::value('test'), Coroutine::plain('test'), Coroutine::result(null)
+                    $this->child5(), Coroutine::value('test'), Coroutine::plain('test'), null
                 ], true
             ],
         ];

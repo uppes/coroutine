@@ -121,7 +121,7 @@ class Kernel
 	public static function sender(Channel $channel, $message = null, int $taskId = 0) 
 	{
 		return new Kernel(
-			function(Coroutine $coroutine) use ($channel, $message, $taskId) {
+			function(TaskInterface $task, Coroutine $coroutine) use ($channel, $message, $taskId) {
 				$taskList = $coroutine->taskList();				    
 		
 				if (isset($taskList[$channel->receiverId()]))
@@ -276,6 +276,8 @@ class Kernel
 							$results[$id] = $tasks->result();
 							$count--;							
 							unset($taskIdList[$id]);
+							unset($completeList[$id]);
+							$coroutine->updateCompleted($completeList);
 						}
 					}
 				}
@@ -284,8 +286,20 @@ class Kernel
 					foreach($taskIdList as $id) {
 						if (isset($taskList[$id])) {
 							$tasks = $taskList[$id];
-							if (($tasks->getState() === 'process') && $tasks->isParallel()) {
-								$coroutine->waitProcess();
+							if ($tasks->isParallel()) {
+								$completeList = $coroutine->completedList();
+								if (isset($completeList[$id])) {
+									$tasks = $completeList[$id];
+									$results[$id] = $tasks->result();
+									$count--;							
+									unset($taskIdList[$id]);
+									unset($completeList[$id]);
+									$coroutine->updateCompleted($completeList);
+								}
+
+								if ($tasks->getState() === 'process') {
+									$coroutine->runCoroutines();
+								}
 							} elseif ($tasks->pending() || $tasks->rescheduled()) {
 								$coroutine->runCoroutines();
 							} elseif ($tasks->completed()) {
@@ -332,8 +346,15 @@ class Kernel
 						$coroutine->cancelTask($taskId);
 						$task->setException(new TimeoutError($timeout));
 						$coroutine->schedule($task);
-					} else
+					} else {
+						$completeList = $coroutine->completedList();
+						if (isset($completeList[$taskId])) {
+							$tasks = $completeList[$taskId];
+							$result = $tasks->result();
+							$task->sendValue($result);
+						}
 						$coroutine->schedule($task);
+					}
 						
 				}, $timeout);
 			}

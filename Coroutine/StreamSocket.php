@@ -360,8 +360,8 @@ class StreamSocket implements StreamSocketInterface
 
         if (!empty($modePort) && \is_int($modePort))
             $handle = \create_client("tcp://{$url}:$modePort", $options, true);
-        else
-            $handle = @\fopen($this->url, $modePort);
+        elseif (\in_array($modePort, ['r', 'r+', 'w', 'w+', 'a', 'a+', 'x', 'x+', 'c', 'c+']))
+            $handle = @\fopen($this->url, $modePort.'b');
         
         if (\is_resource($handle)) {
             $this->isValid = true;

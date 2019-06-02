@@ -108,11 +108,6 @@ class Coroutine implements CoroutineInterface
 		return $this->parallel->add($callable, $timeout);
     }
 
-	public function waitProcess()
-    {		
-		$this->parallel->await();
-    }
-    
     public function isPcntl(): bool
     {
         $this->pcntl = \extension_loaded('pcntl') && \function_exists('pcntl_async_signals')
@@ -172,7 +167,12 @@ class Coroutine implements CoroutineInterface
     
         return $this->completedMap;
     }
-        
+
+    public function updateCompleted($taskMap = []) 
+	{
+        $this->completedMap = $taskMap;
+    }
+
     public function run() 
 	{
         $this->createTask($this->ioWaiting());
@@ -449,7 +449,6 @@ class Coroutine implements CoroutineInterface
                     $return = null;
                     if (!$gen->valid() && !$isReturnValue) {
                         $return = $gen->getReturn();
-                        $return = Coroutine::result($return);
                     }
 
 					$gen = $stack->pop();

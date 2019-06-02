@@ -121,10 +121,8 @@ class Task implements TaskInterface
             return $value;
         } else {
             $value = $this->coroutine->send($this->sendValue);
-            if ($value instanceof ResultValueCoroutine) {
+            if (!empty($value))
                 $this->result = $value;
-                $value = $value->getValue();
-            }
 
             $this->sendValue = null;
             return $value;
@@ -191,7 +189,7 @@ class Task implements TaskInterface
         if ($this->completed()) {
             if (empty($this->result))
                 return;
-            return $this->result->getValue();
+            return $this->result;
         } elseif ($this->cancelled())
             throw new CancelledError();            
         elseif ($this->erred())

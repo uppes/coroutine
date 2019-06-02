@@ -11,7 +11,7 @@ function eternity() {
 function keyboard() {
     // will begin outputs of `needName` in 1 second
     print("What's your name: ");
-    yield \input_wait();
+    return yield \input_wait();
 }
 
 function needName() {
@@ -33,7 +33,7 @@ function needName() {
 
 function main() {
     yield \await('needName');
-    yield \keyboard();
+    echo \EOL.'You typed: '.(yield \keyboard()).\EOL;
     
     try {
         // Wait for at most 0.5 second
