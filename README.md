@@ -262,6 +262,16 @@ yield \close_Socket($socket);
 
 ## Usage
 
+In general any method/function having the `yield` keyword, will operate as an interruption point, suspend current routine, do something else, then return/resume.
+
+```php
+function main() {
+    // Your initialization code will need to be enclose inside an function, start proper operations.
+}
+
+\coroutine_run(\main());
+```
+
 Theses are in the examples folder.
 
 ```php
@@ -289,7 +299,7 @@ function keyboard() {
     // ZTS does not block, only after typing something it blocks
     // I need to file bug report, i see there are some old ones posted on the issue, there should be an fix for this.
     // Haven't tried any workarounds.
-    yield \read_input();
+    return yield \input_wait();
 }
 
 function needName() {
@@ -297,10 +307,13 @@ function needName() {
     yield \sleep_for(1);
     while(true) {
         echo $i;
-        yield;
+        yield \sleep_for(0.05);
         $i++;
-        if ($i == 10) {
-            print(' hey! try again: ');
+        if ($i == 15) {
+            print(\EOL.'hey! try again: ');
+        }
+        if ($i == 100) {
+            print(\EOL.'hey! try again, one more time: ');
             break;
         }
     }
@@ -308,7 +321,7 @@ function needName() {
 
 function main() {
     yield \await('needName');
-    yield \keyboard();
+    echo \EOL.'You typed: '.(yield \keyboard()).\EOL;
 
     try {
         // Wait for at most 0.5 second
@@ -403,7 +416,7 @@ The closest thing would be [Swoole PHP](https://www.swoole.co.uk/coroutine). How
 
 You can also use [Facebook's Hack](https://hhvm.com/). However, this too not an standard installation, but instead nearly an whole different language.
 
-The **PHP Internals** team has recently released [Parallel](https://www.php.net/manual/en/book.parallel.php). It's available on [PECL](https://pecl.php.net/package/parallel), [krakjoe/parallel](https://github.com/krakjoe/parallel). Looks promising, however this ___`Coroutine`___ package does everything listed in there **Parallel concurrency API** without the unnecessary restrictions, PHP 7.2, and limits on **Tasks**. They too modeling after Google's Go ease of use, but still directly handling the **Future/Promise** concepts. Whenever, some examples are produced, will recreate and benchmark the examples here. Will also create alias function calls for items with the same functionality.
+The [**PHP Internals**](https://phpinternals.news/11) team has recently released [Parallel](https://www.php.net/manual/en/book.parallel.php). It's available on [PECL](https://pecl.php.net/package/parallel), [krakjoe/parallel](https://github.com/krakjoe/parallel). Looks promising, however this ___`Coroutine`___ package does everything listed in there **Parallel concurrency API** without the unnecessary restrictions, PHP 7.2, and limits on **Tasks**. They too modeling after Google's Go ease of use, but still directly handling the **Future/Promise** concepts. Whenever, some examples are produced, will recreate and benchmark the examples here. Will also create alias function calls for items with the same functionality.
 
 There is also [Async Extension for PHP](https://github.com/concurrent-php/ext-async#async-extension-for-php). Haven't seen this before starting this project, similar concepts but require a lot more coding to do simply things, require *PHP 7.3*, no *PECL* module yet. Has *Async* and *Await* keywords, but definitely not following the norms in usage as other languages. No way near the way Google's Go, Pythons, or C# work, seeing there [examples](https://github.com/concurrent-php/ext-async/tree/master/examples).
 
@@ -437,7 +450,7 @@ This ___`Coroutine`___ package differs, mainly because it just managing the flow
 
 **Parallel** class package here is a restructured/rewrite of [spatie/async](https://github.com/spatie/async). The old package following there implementation, but with _Windows_ support can be found [here](https://github.com/techno-express/async/tree/windows-patch).
 
-**Parallel** class also pulls in [symplely/processor](https://github.com/symplely/processor) as an dependency which includes, [symfony/process](https://github.com/symfony/process) class, which is going to be used instead of my own implementation for **subprocess** management/execution. It has better **Windows** support, no issues running parallel PHP processes, not seeing any blocking issues.
+**Parallel** class also pulls in [symplely/processor](https://github.com/symplely/processor) as an dependency which includes, [symfony/process](https://github.com/symfony/process) class, which is going to be used instead of my own implementation for **subprocess** management/execution. It has better **Windows** support, no issues running parallel PHP processes, not seeing any blocking issues. The **Processor** package also has [opis/closure](https://github.com/opis/closure) as an dependency. Used to overcome **PHP** serialization limitations.
 
 ---
 [Concurrency in Go](https://youtu.be/LvgVSSpwND8) __video__
