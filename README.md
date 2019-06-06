@@ -262,11 +262,12 @@ yield \close_Socket($socket);
 
 ## Usage
 
-In general any method/function having the `yield` keyword, will operate as an interruption point, suspend current routine, do something else, then return/resume.
+In general, any method/function having the `yield` keyword, will operate as an interruption point, suspend current routine, do something else, then return/resume.
 
 ```php
 function main() {
-    // Your initialization code will need to be enclose inside an function, start proper operations.
+    // Your initialization/startup code will need to be enclosed inside an function.
+    // This is required for proper operations to start.
 }
 
 \coroutine_run(\main());
