@@ -397,6 +397,23 @@ class StreamSocket implements StreamSocketInterface
         yield Coroutine::value($contents);
     }
 
+    public function fileCreate($contents)
+    {
+        if (! \is_resource($this->handle))
+            yield Coroutine::value(false);
+
+        for ($written = 0; $written < \strlen($contents); $written += $fwrite) {
+            yield Kernel::writeWait($this->handle);
+            $fwrite = \fwrite($this->handle, \substr($contents, $written));
+            // see https://www.php.net/manual/en/function.fwrite.php#96951
+            if (($fwrite === false) || ($fwrite == 0)) {
+                break;
+            }
+        }
+
+        yield Coroutine::value($written);
+    }
+
     public function fileLines()
     {
         if (! \is_resource($this->handle))

@@ -321,6 +321,30 @@ if (! \function_exists('coroutine_run')) {
 		return $socket->get($getPath, $format);
 	}
 
+	function get_file(string $filenameUrl = null, $modePort = 'r', array $options = [])
+	{
+		$object = yield \open_file(null, $filenameUrl, $modePort, $options);
+		if (\file_valid($object)) {
+			$contents = yield \file_contents($object, 1024);			
+			\close_file($object);
+			return $contents;
+		}
+
+		return false;
+	}
+
+	function put_file(string $filename = null, $contents)
+	{
+		$object = yield \open_file(null, $filename, 'w');
+		if (\file_valid($object)) {
+			$written = yield \file_create($object, $contents);			
+			\close_file($object);
+			return $written;
+		}
+
+		return false;
+	}
+
 	function close_file(StreamSocketInterface $socket)
 	{
 		return $socket->closeFile();
@@ -349,6 +373,10 @@ if (! \function_exists('coroutine_run')) {
 	function file_contents(StreamSocketInterface $socket, int $size = 256, float $timeout_seconds = 0.5)
 	{
 		return $socket->fileContents($size, $timeout_seconds);
+	}
+	function file_create(StreamSocketInterface $socket, $contents)
+	{
+		return $socket->fileCreate($contents);
 	}
 
 	function file_lines(StreamSocketInterface $socket)
