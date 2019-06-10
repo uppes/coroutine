@@ -292,14 +292,11 @@ function keyboard() {
     // will begin outputs of `needName` in 1 second
     print("What's your name: ");
     // Note: I have three Windows systems
-    // - Windows 10 using PHP 7.2.16 (cli) (built: Mar  6 2019 21:52:05) ( NTS MSVC15 (Visual C++ 2017) x64 )
+    // - Windows 10 using PHP 7.2.18 (cli) (built: Apr 30 2019 23:32:39) ( ZTS MSVC15 (Visual C++ 2017) x64 )
     // - Windows 10 using PHP 7.1.19 (cli) (built: Jun 20 2018 23:37:54) ( NTS MSVC14 (Visual C++ 2015) x86 )
-    // NTS version blocks STDIN from the beginning on Windows
-    // Windows can have non-blocking STDIN, ZTS has it, if no input attempted.
     // - Windows 7 using PHP 7.1.16 (cli) (built: Mar 28 2018 21:15:31) ( ZTS MSVC14 (Visual C++ 2015) x64 )
-    // ZTS does not block, only after typing something it blocks
-    // I need to file bug report, i see there are some old ones posted on the issue, there should be an fix for this.
-    // Haven't tried any workarounds.
+    // Windows 10 blocks STDIN from the beginning with no key press.
+    // Windows 7 does non-blocking STDIN, if no input attempted. only after typing something it blocks.
     return yield \input_wait();
 }
 
