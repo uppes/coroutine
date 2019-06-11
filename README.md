@@ -1,6 +1,6 @@
 # Coroutine
 
-[![Build status](https://ci.appveyor.com/api/projects/status/0sc1bycffhmu2ioo/branch/master?svg=true)](https://ci.appveyor.com/project/techno-express/coroutine/branch/master)[![Build Status](https://travis-ci.org/symplely/coroutine.svg?branch=master)](https://travis-ci.org/symplely/coroutine)[![codecov](https://codecov.io/gh/symplely/coroutine/branch/master/graph/badge.svg)](https://codecov.io/gh/symplely/coroutine)[![Codacy Badge](https://api.codacy.com/project/badge/Grade/fbd1d327f0d14164833396e2fbdf492b)](https://app.codacy.com/app/techno-express/coroutine?utm_source=github.com&utm_medium=referral&utm_content=symplely/coroutine&utm_campaign=Badge_Grade_Dashboard)
+[![Build status](https://ci.appveyor.com/api/projects/status/0sc1bycffhmu2ioo/branch/master?svg=true)](https://ci.appveyor.com/project/techno-express/coroutine/branch/master)[![Build Status](https://travis-ci.org/symplely/coroutine.svg?branch=master)](https://travis-ci.org/symplely/coroutine)[![codecov](https://codecov.io/gh/symplely/coroutine/branch/master/graph/badge.svg)](https://codecov.io/gh/symplely/coroutine)[![Codacy Badge](https://api.codacy.com/project/badge/Grade/44a6f32f03194872b7d4cd6a2411ff79)](https://www.codacy.com/app/techno-express/coroutine?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=symplely/coroutine&amp;utm_campaign=Badge_Grade)
 
 ## Table of Contents
 
