@@ -1,8 +1,10 @@
+# Coroutine
+
 [![Build status](https://ci.appveyor.com/api/projects/status/0sc1bycffhmu2ioo/branch/master?svg=true)](https://ci.appveyor.com/project/techno-express/coroutine/branch/master)[![Build Status](https://travis-ci.org/symplely/coroutine.svg?branch=master)](https://travis-ci.org/symplely/coroutine)[![codecov](https://codecov.io/gh/symplely/coroutine/branch/master/graph/badge.svg)](https://codecov.io/gh/symplely/coroutine)[![Codacy Badge](https://api.codacy.com/project/badge/Grade/fbd1d327f0d14164833396e2fbdf492b)](https://app.codacy.com/app/techno-express/coroutine?utm_source=github.com&utm_medium=referral&utm_content=symplely/coroutine&utm_campaign=Badge_Grade_Dashboard)
 
-### Table of Contents
+## Table of Contents
 
-* [Coroutine - Introduction & Background](#coroutine)
+* [Introduction](#introduction)
 * [Functions](#functions)
 * [Installation](#installation)
 * [Usage](#usage)
@@ -13,7 +15,7 @@
 * [Contributing](#contributing)
 * [License](#license)
 
-# Coroutine
+## Introduction
 
 A Coroutine are special functions that are based on __generators__, with the use of `yield` and `yield from`. When used they release the flow of control back to the calling function, with bring with an object.
 
@@ -29,9 +31,11 @@ The scheduler is responsible for 'ticking' the scheduled tasks, with each schedu
 
 A `task` can become complete in one of three ways:
 
-    The task reaches successful completion, and optionally produces a result
-    The task encounters an error and fails
-    The task is cancelled by calling cancel()
+```text
+The task reaches successful completion, and optionally produces a result
+The task encounters an error and fails
+The task is cancelled by calling cancel()
+```
 
 When using this package, and the code you are working on contain `yield` points, these define points is where a *context switch* can happen if other tasks are pending, but will not if no other task is pending. This can also be seen as **breakpoints/traps**, like when using an debugger, when triggered, the debugger steps in, an you can view state and step thought the remainder of your code.
 
@@ -49,15 +53,17 @@ The **mechanics** of an event loop is already present when an a *generator* is p
 
 Take a read of this post, [What are coroutines in C++20?](https://stackoverflow.com/questions/43503656/what-are-coroutines-in-c20)
 
-    There are two kinds of coroutines; stackful and stackless.
+```text
+There are two kinds of coroutines; stackful and stackless.
 
-    A stackless coroutine only stores local variables in its state and its location of execution.
+A stackless coroutine only stores local variables in its state and its location of execution.
 
-    A stackful coroutine stores an entire stack (like a thread).
+A stackful coroutine stores an entire stack (like a thread).
 
-    Stackless coroutines can be extremely light weight. The last proposal I read involved basically rewriting your function into something a bit like a lambda; all local variables go into the state of an object, and labels are used to jump to/from the location where the coroutine "produces" intermediate results.
+Stackless coroutines can be extremely light weight. The last proposal I read involved basically rewriting your function into something a bit like a lambda; all local variables go into the state of an object, and labels are used to jump to/from the location where the coroutine "produces" intermediate results.
 
-    The process of producing a value is called "yield", as coroutines are bit like cooperative multithreading; you are yielding the point of execution back to the caller.
+The process of producing a value is called "yield", as coroutines are bit like cooperative multithreading; you are yielding the point of execution back to the caller.
+```
 
 This package performs cooperative scheduling, the basics for multitasking, asynchronous programming.
 
@@ -84,7 +90,7 @@ Only the functions located here and in the `Core.php` file should be used. Direc
 ```php
 const MILLISECOND = 0.001;
 const EOL = PHP_EOL;
-
+const DS = DIRECTORY_SEPARATOR;
 
 /**
  * Makes an resolvable function from label name that's callable with `await`
@@ -95,7 +101,7 @@ const EOL = PHP_EOL;
  * Add/schedule an `yield`-ing `function/callable/task` for execution.
  * Returns an task Id
  * - This function needs to be prefixed with `yield`
- * 
+ *
  * @see https://docs.python.org/3.7/library/asyncio-task.html#asyncio.create_task
  */
 yield \await($awaitedFunction, ...$args) ;
@@ -258,11 +264,15 @@ yield \close_Socket($socket);
 
 ## Installation
 
-    composer require symplely/coroutine
+```cmd
+composer require symplely/coroutine
+```
 
 ## Usage
 
 In general, any method/function having the `yield` keyword, will operate as an interruption point, suspend current routine, do something else, then return/resume.
+
+It's advisable to watch this [introduction, 4 hour video](https://youtu.be/D1twn9kLmYg), the concepts, the internals of the talk is what's taking place here.
 
 ```php
 function main() {
@@ -273,7 +283,7 @@ function main() {
 \coroutine_run(\main());
 ```
 
-Theses are in the examples folder.
+There after, review as below, the scripts in the [examples](https://github.com/symplely/coroutine/tree/master/examples) folder.
 
 ```php
 /**
@@ -329,10 +339,10 @@ function main() {
         // this script should have exited automatically, since
         // there are no streams open, nor tasks running, this exception killed `eternity` task
         // currently, will continue to run
-        // task id 2 is `ioWaiting` task, the scheduler added for listening 
+        // task id 2 is `ioWaiting` task, the scheduler added for listening
         // for stream socket connections
         yield \cancel_task(2);
-        // This might just be because `main` is task 1, 
+        // This might just be because `main` is task 1,
         // and still running by the exception throw, need more testing
     }
 }
@@ -405,7 +415,7 @@ yield \some_name($whatever, ...$args);
 
 * Add more standard examples from other languages, converted over.
 * Update docs in reference to similar sections of functionally in Python, Go or any other languages.
-* Turn some Http PSR-7, and PSR-17, package to something like Pythons aioHttp.
+* Turn some Http PSR-7, and PSR-17, or PSR-18 package to something totally asynchronous like Pythons aioHttp.
 * Add/Update phpunit tests.
 
 ## Package/Comparison
@@ -423,7 +433,7 @@ ____Other main asynchronous PHP libraries____
 [Amp](https://github.com/amphp)
 
 * Using *`yield`* generators. However, using *`Promises`* also, which mandates the normal *Event Loop*.
-* Users would need to totally restructure the normal way they develope with there package. 
+* Users would need to totally restructure the normal way they develope with there package.
 * There package necessitate there framework, all there packages bring in many files.
 * Try creating the **Google's `Go`** like example with this package as I have an example of above, in the same number of lines.
 
