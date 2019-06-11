@@ -25,12 +25,13 @@ class StreamSocket implements StreamSocketInterface
     protected static $certificate = 'certificate.crt';
     protected static $method = null;
 
-    public function __construct($socket, bool $isClient = false) 
+    public function __construct($socket, bool $isClient = false, $ip = null) 
 	{
         $this->socket = $socket;
         if ($isClient) {
             self::$isClient = true;
             $this->client = $socket;
+            $this->host = !empty($ip) ? \gethostbyaddr($ip): $ip;
         }
     }
 
@@ -53,19 +54,36 @@ class StreamSocket implements StreamSocketInterface
 
     public static function createClient(string $uri = null, array $context = [], bool $skipInterface = false) 
 	{
-        // assume default scheme if none has been given
-        if (\strpos($uri, '://') === false) {
-            $uri = 'tcp://' . $uri;
+        $url = $uri;
+        if (\strpos($url, '://') !== false) {
+            // Explode out the parameters.
+            $url_array = \parse_url($url);
+            // Is it http or https?
+            $method = $url_array['scheme'];
+            // Pop off an port.
+            $port = $url_array['port'];
+            // Get the host.
+            $host = $url_array['host'];
+            $ip = \gethostbyname($host);
+            if (empty($port))
+                $port = ($method == 'https') || !empty($options) ? 443 : 80;
+
+            $url = "tcp://{$ip}:$port";
+        } elseif (\strpos($uri, '://') === false) {
+            // assume default scheme if none has been given
+            if (!\is_numeric($uri))
+                $ip = \gethostbyname($uri);
+            $url = 'tcp://' . $ip.(!empty($options) ? ':443' : ':80');
         }
 
         #Connect to Server
         $socket = @\stream_socket_client(
-            $uri, 
+            $url, 
             $errNo,
             $errStr, 
             30, 
             \STREAM_CLIENT_CONNECT | \STREAM_CLIENT_ASYNC_CONNECT, 
-            stream_context_create($context)
+            \stream_context_create($context)
         );
 
         if (!$socket)
@@ -78,7 +96,7 @@ class StreamSocket implements StreamSocketInterface
         
         \stream_set_blocking ($socket, false);
                 
-		return ($skipInterface === false) ? new self($socket, true) : $socket;
+		return ($skipInterface === false) ? new self($socket, true, $ip) : $socket;
     }
 
     /**
@@ -194,6 +212,7 @@ class StreamSocket implements StreamSocketInterface
      * @param array $details - certificate details 
      * 
      * Example: 
+     * ```
      *  array $details = [
      *      "countryName" =>  '',
      *      "stateOrProvinceName" => '',
@@ -203,14 +222,9 @@ class StreamSocket implements StreamSocketInterface
      *      "commonName" => '',
      *      "emailAddress" => ''
      *  ];
+     * ```
      */
-    public static function createCert(
-        string $privatekeyFile = 'privatekey.pem', 
-        string $certificateFile = 'certificate.crt', 
-        string $signingFile = 'signing.csr',
-        string $ssl_path = null, 
-        array $details = []
-    ) 
+    public static function createCert(string $privatekeyFile = 'privatekey.pem', string $certificateFile = 'certificate.crt', string $signingFile = 'signing.csr', string $ssl_path = null, array $details = []) 
     {
         if (empty($ssl_path)) {
             $ssl_path = \getcwd();
@@ -342,26 +356,10 @@ class StreamSocket implements StreamSocketInterface
         return $path;
     }
 */
-    public function openFile(string $url = null, $modePort = 'r', $options = []) 
+    public function openFile(string $url = null, $mode = 'r') 
 	{
-        $this->url = $url;
-        // assume default scheme if none has been given
-        if (\strpos($url, '://') !== false) {
-            // Explode out the parameters.
-            $url_array = \explode("/", $url);
-            // Is it http or https?
-            \array_shift($url_array);
-            // Pop off an array blank.
-            \array_shift($url_array);
-            // Get the host.
-            $this->host = \array_shift($url_array);
-            $url = \gethostbyname($this->host);
-        } 
-
-        if (!empty($modePort) && \is_int($modePort))
-            $handle = \create_client("tcp://{$url}:$modePort", $options, true);
-        elseif (\in_array($modePort, ['r', 'r+', 'w', 'w+', 'a', 'a+', 'x', 'x+', 'c', 'c+']))
-            $handle = @\fopen($this->url, $modePort.'b');
+        if (\in_array($mode, ['r', 'r+', 'w', 'w+', 'a', 'a+', 'x', 'x+', 'c', 'c+']))
+            $handle = @\fopen($url, $mode.'b');
         
         if (\is_resource($handle)) {
             $this->isValid = true;
