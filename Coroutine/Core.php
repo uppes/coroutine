@@ -316,11 +316,24 @@ if (! \function_exists('coroutine_run')) {
 		return Kernel::openFile($socket, $filenameUrl, $modePort, $options); 
 	}
 
-	function file_get(StreamSocketInterface $socket, string $getPath = '/', $format = 'text/html')
+	function get_uri(StreamSocketInterface $socket, string $getPath = '/', $format = 'text/html')
 	{
 		return $socket->get($getPath, $format);
 	}
 
+/*	
+	function update_uri(StreamSocketInterface $socket)
+	{
+	}
+
+	function delete_uri(StreamSocketInterface $socket)
+	{
+	}
+
+	function post_uri(StreamSocketInterface $socket)
+	{
+	}
+*/
 	function get_file(string $filenameUrl = null, $modePort = 'r', array $options = [])
 	{
 		$object = yield \open_file(null, $filenameUrl, $modePort, $options);
