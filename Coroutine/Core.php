@@ -267,7 +267,7 @@ if (! \function_exists('coroutine_run')) {
 	 */
 	function close_client(StreamSocketInterface $socket)
 	{
-		return \close_socket($socket);
+		return $socket->closeClient();
 	}	
 
 	/**
@@ -334,11 +334,11 @@ if (! \function_exists('coroutine_run')) {
 	{
 	}
 */
-	function get_file(string $filenameUrl = null, $modePort = 'r', array $options = [])
+	function get_file(string $filenameUrl = null, $mode = 'r', array $options = [])
 	{
-		$object = yield \open_file(null, $filenameUrl, $modePort, $options);
+		$object = yield \open_file(null, $filenameUrl, $mode, $options);
 		if (\file_valid($object)) {
-			$contents = yield \file_contents($object, 1024);			
+			$contents = yield \file_Contents($object);
 			\close_file($object);
 			return $contents;
 		}
@@ -383,10 +383,11 @@ if (! \function_exists('coroutine_run')) {
 	 * @param float $timeout_seconds
 	 * @return mixed
 	 */
-	function file_contents(StreamSocketInterface $socket, int $size = 256, float $timeout_seconds = 0.5)
+	function file_contents(StreamSocketInterface $socket, int $size = -1, float $timeout_seconds = 0.5)
 	{
 		return $socket->fileContents($size, $timeout_seconds);
-	}
+    }
+
 	function file_create(StreamSocketInterface $socket, $contents)
 	{
 		return $socket->fileCreate($contents);
