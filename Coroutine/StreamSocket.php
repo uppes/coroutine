@@ -4,6 +4,7 @@ namespace Async\Coroutine;
 
 use Async\Coroutine\Kernel;
 use Async\Coroutine\Coroutine;
+use Async\Coroutine\SecureStreamSocket;
 use Async\Coroutine\StreamSocketInterface;
 
 class StreamSocket implements StreamSocketInterface
@@ -12,30 +13,24 @@ class StreamSocket implements StreamSocketInterface
     protected $handle;
     protected $secure;
     protected $client;
-    protected $buffer = null;
     protected $meta = [];
     protected $host = '';
-    protected $url = null;
     protected $isValid = false;
     protected static $isClient = false;
-    protected static $remote = null;
-    protected static $caPath = \DIRECTORY_SEPARATOR;
     protected static $isSecure = false;
-    protected static $privatekey = 'privatekey.pem';
-    protected static $certificate = 'certificate.crt';
-    protected static $method = null;
+    protected static $remote = null;
 
-    public function __construct($socket, bool $isClient = false, $ip = null) 
+    public function __construct($socket, bool $isClient = false, $host = null) 
 	{
         $this->socket = $socket;
         if ($isClient) {
             self::$isClient = true;
             $this->client = $socket;
-            $this->host = !empty($ip) ? \gethostbyaddr($ip): $ip;
+            $this->host = $host;
         }
     }
 
-    private static function checkUri(array $parts = [], string $uri = '') 
+    protected static function checkUri(array $parts = [], string $uri = '') 
     {
         if (empty($parts))
             $parts = \parse_url($uri);
@@ -61,19 +56,20 @@ class StreamSocket implements StreamSocketInterface
             // Is it http or https?
             $method = $url_array['scheme'];
             // Pop off an port.
-            $port = $url_array['port'];
-            // Get the host.
-            $host = $url_array['host'];
-            $ip = \gethostbyname($host);
+            if (isset($url_array['port']))
+                $port = $url_array['port'];
+
             if (empty($port))
                 $port = ($method == 'https') || !empty($options) ? 443 : 80;
 
-            $url = "tcp://{$ip}:$port";
+            // Get the host.
+            $host = $url_array['host'];
+            $ip = \gethostbyname($host);
+
+            $url = "tcp://{$host}:$port";
         } elseif (\strpos($uri, '://') === false) {
             // assume default scheme if none has been given
-            if (!\is_numeric($uri))
-                $ip = \gethostbyname($uri);
-            $url = 'tcp://' . $ip.(!empty($options) ? ':443' : ':80');
+            $url = 'tcp://' . $uri.(!empty($options) ? ':443' : ':80');
         }
 
         #Connect to Server
@@ -82,21 +78,23 @@ class StreamSocket implements StreamSocketInterface
             $errNo,
             $errStr, 
             30, 
-            \STREAM_CLIENT_CONNECT | \STREAM_CLIENT_ASYNC_CONNECT, 
+            \STREAM_CLIENT_CONNECT, 
             \stream_context_create($context)
         );
 
         if (!$socket)
             throw new \RuntimeException('Failed to connect to "' . $uri . '": ' . $errStr, $errNo);
+
+        \stream_set_blocking($socket, false);        
         
-        if (!empty($context)) {
-	        \stream_set_blocking ($socket, true);
-	        \stream_socket_enable_crypto ($socket, true, \STREAM_CRYPTO_METHOD_TLS_CLIENT);
-        }
+        yield Kernel::socketWait($socket);
         
-        \stream_set_blocking ($socket, false);
-                
-		return ($skipInterface === false) ? new self($socket, true, $ip) : $socket;
+
+		return ($skipInterface === false) ? new self($socket, true, $host) : $socket;
+    }
+
+    public function clientHandshct() {
+        yield Kernel::socketWait($socket);
     }
 
     /**
@@ -166,146 +164,20 @@ class StreamSocket implements StreamSocketInterface
 		return (self::$isSecure) ? $socket : new self($socket);
     }
 
-    public static function secureServer(
-        $uri = null, 
-        array $options = [],
-        string $privatekeyFile = 'privatekey.pem', 
-        string $certificateFile = 'certificate.crt', 
-        string $signingFile = 'signing.csr',
-        string $ssl_path = null, 
-        array $details = [])
-	{
-        $context = \stream_context_create($options);
-
-        if (! self::$isSecure) {
-            StreamSocket::createCert($privatekeyFile, $certificateFile, $signingFile, $ssl_path, $details);
-        }
-
-        #Setup the SSL Options 
-        \stream_context_set_option($context, 'ssl', 'local_cert', self::$certificate); // Our SSL Cert in PEM format
-        \stream_context_set_option($context, 'ssl', 'local_pk', self::$privatekey); // Our RSA key in PEM format
-        \stream_context_set_option($context, 'ssl', 'passphrase', null); // Private key Password
-        \stream_context_set_option($context, 'ssl', 'allow_self_signed', true);
-        \stream_context_set_option($context, 'ssl', 'verify_peer', false);
-        //\stream_context_set_option($context, 'ssl', 'verify_peer_name', false);
-        \stream_context_set_option($context, 'ssl', 'capath', '.'.self::$caPath);
-        //\stream_context_set_option($context, 'ssl', 'SNI_enabled', true);
-        \stream_context_set_option($context, 'ssl', 'disable_compression', true);
-
-        // get crypto method from context options
-        self::$method = \STREAM_CRYPTO_METHOD_SSLv23_SERVER | \STREAM_CRYPTO_METHOD_TLS_SERVER | \STREAM_CRYPTO_METHOD_TLSv1_1_SERVER | \STREAM_CRYPTO_METHOD_TLSv1_2_SERVER;
-
-        #create a stream socket on IP:Port
-        $socket = StreamSocket::createServer($uri, $context);
-        \stream_socket_enable_crypto($socket, false, self::$method);
-
-		return new self($socket);
-    }
-
-    /**
-     * Creates self signed certificate
-     * 
-     * @param string $privatekeyFile
-     * @param string $certificateFile
-     * @param string $signingFile
-     * @param string $ssl_path
-     * @param array $details - certificate details 
-     * 
-     * Example: 
-     * ```
-     *  array $details = [
-     *      "countryName" =>  '',
-     *      "stateOrProvinceName" => '',
-     *      "localityName" => '',
-     *      "organizationName" => '',
-     *      "organizationalUnitName" => '',
-     *      "commonName" => '',
-     *      "emailAddress" => ''
-     *  ];
-     * ```
-     */
-    public static function createCert(string $privatekeyFile = 'privatekey.pem', string $certificateFile = 'certificate.crt', string $signingFile = 'signing.csr', string $ssl_path = null, array $details = []) 
-    {
-        if (empty($ssl_path)) {
-            $ssl_path = \getcwd();
-            $ssl_path = \preg_replace('/\\\/', \DIRECTORY_SEPARATOR, $ssl_path). \DIRECTORY_SEPARATOR;
-        } elseif (\strpos($ssl_path, \DIRECTORY_SEPARATOR, -1) === false)
-            $ssl_path = $ssl_path. \DIRECTORY_SEPARATOR;
-
-        self::$privatekey = $privatekeyFile;
-        self::$certificate = $certificateFile;
-        self::$caPath = $ssl_path;
-        self::$isSecure = true;
-        
-        if (! \file_exists('.'.$ssl_path.$privatekeyFile)) {
-            $opensslConfig = array("config" => $ssl_path.'openssl.cnf');
-
-            // Generate a new private (and public) key pair
-            $privatekey = \openssl_pkey_new($opensslConfig);
-
-            if (empty($details))
-                $details = ["commonName" => \gethostname()];
-
-            // Generate a certificate signing request
-            $csr = \openssl_csr_new($details, $privatekey, $opensslConfig);
-        
-            // Create a self-signed certificate valid for 365 days
-            $sslcert = \openssl_csr_sign($csr, null, $privatekey, 365, $opensslConfig);
-        
-            // Create key file. Note no passphrase
-            \openssl_pkey_export_to_file($privatekey, $ssl_path.$privatekeyFile, null, $opensslConfig);
-        
-            // Create server certificate 
-            \openssl_x509_export_to_file($sslcert, $ssl_path.$certificateFile, false);
-            
-            // Create a signing request file 
-            \openssl_csr_export_to_file($csr, $ssl_path.$signingFile);
-        }
-    }
-        
     public function address()
     {
         return self::$remote;
-    }
-    
-    public function acceptSecure($socket) 
-	{
-        $error = null;
-        \set_error_handler(function ($_, $errstr) use (&$error) {
-            $error = \str_replace(array("\r", "\n"), ' ', $errstr);
-            // remove useless function name from error message
-            if (($pos = \strpos($error, "): ")) !== false) {
-                $error = \substr($error, $pos + 3);
-            }
-        });
+    }    
 
-        \stream_set_blocking($socket, true);
-        $result = @\stream_socket_enable_crypto($socket, true, self::$method);
-
-        \restore_error_handler();
-
-        if (false === $result) {
-            if (\feof($socket) || $error === null) {
-                // EOF or failed without error => connection closed during handshake
-                print 'Connection lost during TLS handshake with: '. self::$remote . "\n";
-            } else {
-                // handshake failed with error message
-                print 'Unable to complete TLS handshake: ' . $error . "\n";
-            }
-        }
- 
-        return $socket;
-    }
-
-    public function handshake() 
+    public function handshake()
 	{
         \stream_set_blocking($this->socket, true);
         $this->secure  = $this->acceptConnection($this->socket);
         \stream_set_blocking($this->socket, false);
-        return Coroutine::value(new StreamSocket($this->acceptSecure($this->secure)));
+        return Coroutine::value(new SecureStreamSocket(SecureStreamSocket::acceptSecure($this->secure)));
     }
 
-    public function accept() 
+    public function accept()
 	{
         yield Kernel::readWait($this->socket);
         if (self::$isSecure) {
@@ -314,7 +186,7 @@ class StreamSocket implements StreamSocketInterface
             yield Coroutine::value(new StreamSocket($this->acceptConnection($this->socket)));
     }
 
-    public function acceptConnection($socket) 
+    protected function acceptConnection($socket)
 	{
         $newSocket = \stream_socket_accept($socket, 0, self::$remote);
 
@@ -325,11 +197,6 @@ class StreamSocket implements StreamSocketInterface
         return $newSocket;
     }
     
-    public function getBuffer()
-    {
-        return $this->buffer;
-    }
-
     public function get(string $getPath = '/', $format = 'text/html')
     {
         $headers = "GET $getPath HTTP/1.1\r\n";
@@ -337,12 +204,39 @@ class StreamSocket implements StreamSocketInterface
         $headers .= "Accept: */*\r\n";
         $headers .= "Content-type: $format; charset=utf8\r\n";
         $headers .= "Connection: close\r\n\r\n";
-        yield Kernel::writeWait($this->handle);
-        yield Coroutine::value(\fwrite($this->handle, $headers));
+        
+        yield Kernel::writeWait($this->client);
+        $response = \fwrite($this->client, $headers);
+        yield Kernel::readWait($this->client);
+        yield Coroutine::value(\stream_get_contents($this->client));
     }
 /*
-    public function post(string $path)
+    public function post(string $path, $data_to_send, $format = 'text/html', $auth =array('username'=>"", 'password'=>"", 'type'=>"")
     {
+        $headers = "POST $path HTTP/1.1\r\n";
+        $headers .= "Host: $this->host\r\n";
+        if ($auth['type']=='basic' && !empty($auth['username'])) {
+            $headers .= "Authorization: Basic ";
+            $headers .= base64_encode($auth['username'].':'.$auth['password'])."\r\n";
+        } elseif ($auth['type']=='digest' && !empty($auth['username'])) {
+            $headers .= 'Authorization: Digest ';
+            foreach ($auth as $k => $v) {
+                if (empty($k) || empty($v)) 
+                    continue;
+                if ($k=='password') 
+                    continue;
+                $headers .= $k.'="'.$v.'", ';
+            }
+            $headers .= "\r\n";
+        }
+
+        $headers .= "Content-type: $format\r\n";
+        $headers .= 'Content-length: '. strlen($data_to_send) ."\r\n";
+        $headers .= "Connection: close\r\n\r\n";
+        $headers .= $data_to_send;
+        yield Kernel::writeWait($this->client);
+        \fwrite($this->client, $headers);
+
         return $path;
     }
 
@@ -372,6 +266,7 @@ class StreamSocket implements StreamSocketInterface
 
     public function fileContents(int $size = 256, float $timeout_seconds = 0.5)
     {
+        yield;
         if (! \is_resource($this->handle))
             yield Coroutine::value(false);
 
@@ -431,8 +326,6 @@ class StreamSocket implements StreamSocketInterface
     public function getMeta($stream = null)
     {
         $check = empty($stream) ? $this->handle : $stream;
-        if (\is_resource($check))
-            yield Kernel::writeWait($check);
 
         if (empty($stream) && \is_resource($check))
             $this->meta = \stream_get_meta_data($check);
@@ -450,6 +343,11 @@ class StreamSocket implements StreamSocketInterface
     public function getHandle()
     {
         return $this->handle;
+    }
+
+    public function getClient()
+    {
+        return $this->client;
     }
 
     public function getStatus($meta = null) 
@@ -474,22 +372,19 @@ class StreamSocket implements StreamSocketInterface
         return (int) $http_statusCode;
     }
 
-    public function closeFile() 
-	{
-        @\fclose($this->handle);
-    }
-
-    public function response(int $size = -1) 
+    public function response(int $size = 2048)
 	{
         if (! \is_resource($this->client))
             yield Coroutine::value(false);
 
         if (self::$isClient) {
-            $this->buffer = '';
-            while (!\feof($this->client)) {                
+            $buffer = '';
+            while (!\feof($this->client)) {
 		        yield Kernel::readWait($this->client);
-                $this->buffer .= \stream_get_contents($this->client, $size);
+                $buffer .= \stream_get_contents($this->client, $size);
             }
+
+		    yield Coroutine::value($buffer);
         }
     }
 
@@ -517,5 +412,20 @@ class StreamSocket implements StreamSocketInterface
     public function close() 
 	{
         @\fclose($this->socket);
+        $this->socket = null;
+        $this->secure = null;
+    }
+    
+    public function closeClient() 
+	{
+        @\fclose($this->client);
+        self::$isClient = false;
+        $this->client = null;
+    }
+
+    public function closeFile() 
+	{
+        @\fclose($this->handle);
+        $this->handle = null;
     }
 }

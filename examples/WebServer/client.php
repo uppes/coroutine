@@ -37,19 +37,19 @@ function client($ip, $port, $command) {
 
     #Connect to Server
     #Start SSL
-    $socket = \create_client("tcp://{$ip}:{$port}", $contextOptions);
+    $socket = \create_client("$hostname:$port", $contextOptions);
 
     #Send a command
     yield \client_write($socket, $command);
 
     #Receive response from server. Loop until the response is finished
-    yield \client_read($socket);
+    $response = yield \client_read($socket);
 
     #close connection
     yield \close_client($socket);
 
     #echo our command response
-    echo $socket->getBuffer();
+    echo $response;
 }
 
 \coroutine_create(\client($ip, $port, $command));
