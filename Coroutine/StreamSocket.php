@@ -195,7 +195,149 @@ class StreamSocket implements StreamSocketInterface
 
         return $newSocket;
     }
-    
+
+   /**
+     * @param string $url - URI for the request.
+     * @param array $auth
+     * @param string $userAgent
+     * @param int $redirect
+     * @param int $timeout
+     * @return array
+     */
+    public function get(string $url, array $auth = ['username' => "", 'password' => "", 'type' => ""], string $userAgent = 'Symplely Http', int $redirect = 5, int $timeout = 30)
+    {
+        $headers = '';
+        if ($auth['type'] =='basic' && !empty($auth['username'])) {
+            $headers .= "Authorization: Basic ";
+            $headers .= \base64_encode($auth['username'].':'.$auth['password'])."\r\n";
+        } elseif ($auth['type']=='digest' && !empty($auth['username'])) {
+            $headers .= 'Authorization: Digest ';
+            foreach ($auth as $k => $v) {
+                if (empty($k) || empty($v)) 
+                    continue;
+                if ($k=='password') 
+                    continue;
+                $headers .= $k.'="'.$v.'", ';
+            }
+            $headers .= "\r\n";
+        }
+
+        $context = ['http' =>
+            ['method' => "GET",
+             'header' => $headers,
+             'user_agent' => $userAgent,
+             'max_redirects' => $redirect,  // stop after 5 redirects
+             'timeout'       => $timeout]   // timeout in seconds on response
+        ];
+        
+        yield Kernel::openFile($this, $url, 'r', $context);
+		if (\is_resource($this->handle)) {
+            $meta = $this->meta;
+            $body = yield $this->fileContents($size, $timeout_seconds);
+            $this->closeFile();
+            
+            return [$meta, $body];            
+        }
+        
+        return false;
+    }
+
+    /**
+     * @param string $url - URI for the request.
+     * @param array $headers
+     * @param string $contents
+     * @return array
+     */
+    public function post($url, array $headers = array(), $contents = '')
+    {
+        return ['POST', $url, $headers, $contents];
+    }
+
+    /**
+     * @param string $url - URI for the request.
+     * @param array $headers
+     * @return array
+     */
+    public function head($url)
+    {
+        $context = ['http' =>
+            ['method' => 'HEAD']
+        ];
+
+        yield Kernel::openFile($this, $url, 'r', $context);
+		if (\is_resource($this->handle)) {
+            $meta = yield $this->getMeta();
+            $status = $this->getStatus();
+            $this->closeFile();
+            
+            return [$status, $meta];            
+        }
+        
+        return false;
+    }
+
+    /**
+     * @param string $url - URI for the request.
+     * @param array $headers
+     * @param string $contents
+     * @return array
+     */
+    public function patch($url, array $headers = array(), $contents = '')
+    {
+        return ['PATCH', $url , $headers, $contents];
+    }
+
+    /**
+     * @param string $url - URI for the request.
+     * @param array $headers
+     * @param string $contents
+     * @return array
+     */
+    public function put($url, array $headers = array(), $contents = '')
+    {
+        return ['PUT', $url, $headers, $contents];
+    }
+
+    /**
+     * @param string $url - URI for the request.
+     * @param array $headers
+     * @param string $contents
+     * @return array
+     */
+    public function delete($url, array $headers = array(), $contents = '')
+    {
+        return ['DELETE', $url, $headers, $contents];
+    }
+
+    /**
+     * Submits an array of field values similar to submitting a form 
+     *
+     * @param string $url - URI for the request.
+     * @param array $data
+     * @param string $format
+     * @return array
+     */
+    public function submit($url, array $data = [], string $format = 'application/x-www-form-urlencoded')
+    {        
+        $contents = \http_build_query($data);
+        $context = ['http' =>
+            ['method' => 'POST',
+             'header' => "Content-type: $format\r\nContent-length: ". \strlen($contents) ."\r\n",
+             'content' => $contents]
+        ];
+
+        yield Kernel::openFile($this, $url, 'r', $context);
+		if (\is_resource($this->handle)) {
+            $meta = $this->meta;
+            $body = yield $this->fileContents();
+            $this->closeFile();
+            
+            return [$meta, $body];            
+        }
+        
+        return false;
+    }
+
     public function openFile(string $uri = null, string $mode = 'r', array $context = []) 
 	{
         if (\in_array($mode, ['r', 'r+', 'w', 'w+', 'a', 'a+', 'x', 'x+', 'c', 'c+']))
@@ -221,7 +363,7 @@ class StreamSocket implements StreamSocketInterface
         $handle = empty($stream) ? $this->handle : $stream;
 
         if (! \is_resource($handle))
-            yield Coroutine::value(false);
+            return  Coroutine::value(false);
 
         $contents = '';
         while (true) {
@@ -249,7 +391,7 @@ class StreamSocket implements StreamSocketInterface
         $handle = empty($stream) ? $this->handle : $stream;
 
         if (! \is_resource($handle))
-            yield Coroutine::value(false);
+            return Coroutine::value(false);
 
         for ($written = 0; $written < \strlen($contents); $written += $fwrite) {
             yield Kernel::writeWait($handle);
@@ -268,7 +410,7 @@ class StreamSocket implements StreamSocketInterface
         $handle = empty($stream) ? $this->handle : $stream;
 
         if (! \is_resource($handle))
-            yield Coroutine::value(false);
+            return Coroutine::value(false);
 
         $contents = [];
         while(! \feof($handle)) {
@@ -369,5 +511,6 @@ class StreamSocket implements StreamSocketInterface
 	{
         @\fclose($this->handle);
         $this->handle = null;
+        $this->meta = null;
     }
 }
