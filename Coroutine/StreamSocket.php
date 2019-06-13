@@ -233,7 +233,7 @@ class StreamSocket implements StreamSocketInterface
         yield Kernel::openFile($this, $url, 'r', $context);
 		if (\is_resource($this->handle)) {
             $meta = $this->meta;
-            $body = yield $this->fileContents($size, $timeout_seconds);
+            $body = yield $this->fileContents();
             $this->closeFile();
             
             return [$meta, $body];            
