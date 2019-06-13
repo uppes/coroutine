@@ -315,13 +315,11 @@ if (! \function_exists('coroutine_run')) {
 	{		
 		return Kernel::openFile($socket, $filename, $mode, $options); 
 	}
-
-	function get_uri(StreamSocketInterface $socket, string $getPath = '/', $format = 'text/html')
+/*	
+	function get_uri(StreamSocketInterface $socket)
 	{
-		return $socket->get($getPath, $format);
 	}
 
-/*	
 	function update_uri(StreamSocketInterface $socket)
 	{
 	}

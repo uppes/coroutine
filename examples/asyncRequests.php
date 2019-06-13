@@ -4,19 +4,17 @@
  */
 include 'vendor/autoload.php';
 
-$uris = [
-    "https://google.com/",
-    "https://github.com/",
-    "https://stackoverflow.com/"
-];
-
 function requestHandler(string $uri) {
     $contents = yield \get_file($uri);
     return [$uri, $contents];
 };
 
 function main() {
-    global $uris;
+    $uris = [
+        "https://google.com/",
+        "https://github.com/",
+        "https://stackoverflow.com/"
+    ];
 
     try {
         $uriId = [];

@@ -409,14 +409,14 @@ class Kernel
 			);
 	}
 
-	public static function openFile(StreamSocketInterface $socket = null, string $filenameUrl = null, $modePort = 'r') 
+	public static function openFile(StreamSocketInterface $socket = null, string $uri = null, string $mode = 'r', array $options = []) 
 	{
 		return new Kernel(
-			function(TaskInterface $task, Coroutine $coroutine) use ($socket, $filenameUrl, $modePort) {				
+			function(TaskInterface $task, Coroutine $coroutine) use ($socket, $uri, $mode, $options) {				
 				if (empty($socket))
 					$socket = new StreamSocket(null);
 
-				$socket->openFile($filenameUrl, $modePort);				
+				$socket->openFile($uri, $mode, $options);				
 				$task->sendValue($socket);				
 				$coroutine->schedule($task);
 			}

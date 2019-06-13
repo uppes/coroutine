@@ -73,12 +73,13 @@ class StreamSocket implements StreamSocketInterface
         }
 
         #Connect to Server
+        $flag = empty($context) ? \STREAM_CLIENT_CONNECT : \STREAM_CLIENT_CONNECT | \STREAM_CLIENT_ASYNC_CONNECT;
         $socket = @\stream_socket_client(
             $url, 
             $errNo,
             $errStr, 
             30, 
-            \STREAM_CLIENT_CONNECT, 
+            $flag, 
             \stream_context_create($context)
         );
 
@@ -87,14 +88,12 @@ class StreamSocket implements StreamSocketInterface
 
         \stream_set_blocking($socket, false);        
         
-        yield Kernel::socketWait($socket);
-        
+        if (!empty($context)) {
+            yield Kernel::writeWait($socket);
+	        \stream_socket_enable_crypto ($socket, true, \STREAM_CRYPTO_METHOD_TLS_CLIENT);
+        }        
 
-		return ($skipInterface === false) ? new self($socket, true, $host) : $socket;
-    }
-
-    public function clientHandshct() {
-        yield Kernel::socketWait($socket);
+		yield Coroutine::value(($skipInterface === false) ? new self($socket, true, $host) : $socket);
     }
 
     /**
@@ -197,84 +196,38 @@ class StreamSocket implements StreamSocketInterface
         return $newSocket;
     }
     
-    public function get(string $getPath = '/', $format = 'text/html')
-    {
-        $headers = "GET $getPath HTTP/1.1\r\n";
-        $headers .= "Host: $this->host\r\n";
-        $headers .= "Accept: */*\r\n";
-        $headers .= "Content-type: $format; charset=utf8\r\n";
-        $headers .= "Connection: close\r\n\r\n";
-        
-        yield Kernel::writeWait($this->client);
-        $response = \fwrite($this->client, $headers);
-        yield Kernel::readWait($this->client);
-        yield Coroutine::value(\stream_get_contents($this->client));
-    }
-/*
-    public function post(string $path, $data_to_send, $format = 'text/html', $auth =array('username'=>"", 'password'=>"", 'type'=>"")
-    {
-        $headers = "POST $path HTTP/1.1\r\n";
-        $headers .= "Host: $this->host\r\n";
-        if ($auth['type']=='basic' && !empty($auth['username'])) {
-            $headers .= "Authorization: Basic ";
-            $headers .= base64_encode($auth['username'].':'.$auth['password'])."\r\n";
-        } elseif ($auth['type']=='digest' && !empty($auth['username'])) {
-            $headers .= 'Authorization: Digest ';
-            foreach ($auth as $k => $v) {
-                if (empty($k) || empty($v)) 
-                    continue;
-                if ($k=='password') 
-                    continue;
-                $headers .= $k.'="'.$v.'", ';
-            }
-            $headers .= "\r\n";
-        }
-
-        $headers .= "Content-type: $format\r\n";
-        $headers .= 'Content-length: '. strlen($data_to_send) ."\r\n";
-        $headers .= "Connection: close\r\n\r\n";
-        $headers .= $data_to_send;
-        yield Kernel::writeWait($this->client);
-        \fwrite($this->client, $headers);
-
-        return $path;
-    }
-
-    public function update(string $path)
-    {
-        return $path;
-    }
-
-    public function delete(string $path)
-    {
-        return $path;
-    }
-*/
-    public function openFile(string $url = null, $mode = 'r') 
+    public function openFile(string $uri = null, string $mode = 'r', array $context = []) 
 	{
         if (\in_array($mode, ['r', 'r+', 'w', 'w+', 'a', 'a+', 'x', 'x+', 'c', 'c+']))
-            $handle = @\fopen($url, $mode.'b');
+            $handle = @\fopen($uri, 
+                $mode.'b', 
+                false, 
+                \stream_context_create($context)
+            );
         
         if (\is_resource($handle)) {
             $this->isValid = true;
             \stream_set_blocking($handle, false);
             $this->handle = $handle;
+            $this->meta = $this->getMeta($handle);
         }
 
         return $this->handle;
     }
 
-    public function fileContents(int $size = 256, float $timeout_seconds = 0.5)
+    public function fileContents(int $size = 256, float $timeout_seconds = 0.5, $stream = null)
     {
         yield;
-        if (! \is_resource($this->handle))
+        $handle = empty($stream) ? $this->handle : $stream;
+
+        if (! \is_resource($handle))
             yield Coroutine::value(false);
 
         $contents = '';
         while (true) {
-            yield Kernel::readWait($this->handle);
+            yield Kernel::readWait($handle);
             $startTime = \microtime(true);
-            $new = \stream_get_contents($this->handle, $size);
+            $new = \stream_get_contents($handle, $size);
             $endTime = \microtime(true);
             if (\is_string($new) && \strlen($new) >= 1) {
                 $contents .= $new;
@@ -290,14 +243,17 @@ class StreamSocket implements StreamSocketInterface
         yield Coroutine::value($contents);
     }
 
-    public function fileCreate($contents)
+    public function fileCreate($contents, $stream = null)
     {
-        if (! \is_resource($this->handle))
+        yield;
+        $handle = empty($stream) ? $this->handle : $stream;
+
+        if (! \is_resource($handle))
             yield Coroutine::value(false);
 
         for ($written = 0; $written < \strlen($contents); $written += $fwrite) {
-            yield Kernel::writeWait($this->handle);
-            $fwrite = \fwrite($this->handle, \substr($contents, $written));
+            yield Kernel::writeWait($handle);
+            $fwrite = \fwrite($handle, \substr($contents, $written));
             // see https://www.php.net/manual/en/function.fwrite.php#96951
             if (($fwrite === false) || ($fwrite == 0)) {
                 break;
@@ -307,15 +263,17 @@ class StreamSocket implements StreamSocketInterface
         yield Coroutine::value($written);
     }
 
-    public function fileLines()
+    public function fileLines($stream = null)
     {
-        if (! \is_resource($this->handle))
+        $handle = empty($stream) ? $this->handle : $stream;
+
+        if (! \is_resource($handle))
             yield Coroutine::value(false);
 
         $contents = [];
-        while(! \feof($this->handle)) {
-            yield Kernel::readWait($this->handle);
-            $new = \trim(\fgets($this->handle), \EOL);
+        while(! \feof($handle)) {
+            yield Kernel::readWait($handle);
+            $new = \trim(\fgets($handle), \EOL);
             if (!empty($new))
                 $contents[] = $new;
         }
@@ -370,22 +328,6 @@ class StreamSocket implements StreamSocketInterface
         }
 
         return (int) $http_statusCode;
-    }
-
-    public function response(int $size = 2048)
-	{
-        if (! \is_resource($this->client))
-            yield Coroutine::value(false);
-
-        if (self::$isClient) {
-            $buffer = '';
-            while (!\feof($this->client)) {
-		        yield Kernel::readWait($this->client);
-                $buffer .= \stream_get_contents($this->client, $size);
-            }
-
-		    yield Coroutine::value($buffer);
-        }
     }
 
     public static function input(int $size = 256) 
