@@ -240,15 +240,20 @@ class StreamSocket implements StreamSocketInterface
         $headers = $this->authorization($authorize);
         $contents = \is_array($data) ? \http_build_query($data) : $data;
         $extra = !empty($header) ? "\r\n" : '';
-        $context = ['http' =>
-            ['method' => $method,
-            'protocol_version' => $protocolVersion,
-            'user_agent' => $userAgent,
-            'max_redirects' => $redirect, // stop after 5 redirects
-            'timeout' => $timeout, // timeout in seconds on response
-            'header' => $header.$extra.$headers."Content-type: $format\r\nContent-length: ". \strlen($contents) ."\r\nConnection: close\r\n",
-            'content' => $contents] 
+        $context = [
+            'http' =>
+            [
+                'method' => $method,
+                'protocol_version' => $protocolVersion, 
+                'header' => $header.$extra.$headers."Content-type: $format\r\nContent-length: ".\strlen($contents)."\r\nConnection: close\r\n",
+                'user_agent' => $userAgent,
+                'max_redirects' => $redirect, // stop after 5 redirects
+                'timeout' => $timeout // timeout in seconds on response
+            ]
         ];
+
+        if (!empty($contents))
+            \stream_context_set_option($context, 'http', 'content', $contents);
 
         yield Kernel::openFile($this, $url, 'r', $context);
         if (\is_resource($this->handle)) {
