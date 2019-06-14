@@ -6,6 +6,7 @@ use Async\Coroutine\Channel;
 use Async\Coroutine\Coroutine;
 use Async\Coroutine\TaskInterface;
 use Async\Coroutine\Exceptions\TimeoutError;
+use Async\Coroutine\Exceptions\CancelledError;
 
 /**
  * The Kernel
@@ -260,7 +261,7 @@ class Kernel
 					if($value instanceof \Generator) {
 						$id = $coroutine->createTask($value);
 						$taskIdList[$id] = $id;
-					} else 
+					} else
 						$taskIdList[$value] = $value;
 				}
 
@@ -274,7 +275,8 @@ class Kernel
 					foreach($completeList as $id => $tasks) {
 						if (isset($taskIdList[$id])) {
 							$results[$id] = $tasks->result();
-							$count--;							
+							$count--;			
+                            $tasks->clearResult();				
 							unset($taskIdList[$id]);
 							unset($completeList[$id]);
 							$coroutine->updateCompleted($completeList);
@@ -291,7 +293,8 @@ class Kernel
 								if (isset($completeList[$id])) {
 									$tasks = $completeList[$id];
 									$results[$id] = $tasks->result();
-									$count--;							
+									$count--;
+                                    $tasks->clearResult();
 									unset($taskIdList[$id]);
 									unset($completeList[$id]);
 									$coroutine->updateCompleted($completeList);
@@ -305,12 +308,23 @@ class Kernel
 							} elseif ($tasks->completed()) {
 								$results[$id] = $tasks->result();
 								$count--;
-								unset($taskList[$id]);
+                                $tasks->clearResult();
+                                unset($taskList[$id]);
+								$completeList = $coroutine->completedList();
+                                unset($completeList[$id]);
+                                $coroutine->updateCompleted($completeList);
 							} elseif ($tasks->erred()) {
 								$count--;
-								unset($taskList[$id]);						
+                                $tasks->clearResult();
+                                unset($taskList[$id]);
 								$coroutine->cancelTask($id);
 								$task->setException($tasks->getError());
+								$coroutine->schedule($tasks);
+							}  elseif ($tasks->cancelled()) {
+								$count--;
+                                $tasks->clearResult();
+                                unset($taskList[$id]);
+								$task->setException(new CancelledError());
 								$coroutine->schedule($tasks);
 							} 
 						}
@@ -417,7 +431,7 @@ class Kernel
 					$socket = new StreamSocket(null);
 
 				$socket->openFile($uri, $mode, $options);				
-				$task->sendValue($socket);				
+				$task->sendValue($socket);
 				$coroutine->schedule($task);
 			}
 		);

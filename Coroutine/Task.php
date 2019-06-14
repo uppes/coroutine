@@ -184,6 +184,11 @@ class Task implements TaskInterface
         return ($this->state == 'rescheduled');
     }
 
+    public function clearResult()
+    {
+        $this->result = null;
+    }
+
     public function result()
     {
         if ($this->completed()) {
