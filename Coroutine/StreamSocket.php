@@ -196,23 +196,15 @@ class StreamSocket implements StreamSocketInterface
         return $newSocket;
     }
 
-   /**
-     * @param string $url - URI for the request.
-     * @param array $auth
-     * @param string $userAgent
-     * @param int $redirect
-     * @param int $timeout
-     * @return array
-     */
-    public function get(string $url, array $auth = ['username' => "", 'password' => "", 'type' => ""], string $userAgent = 'Symplely Http', int $redirect = 5, int $timeout = 30)
+    protected function authorization(array $authorize)
     {
         $headers = '';
-        if ($auth['type'] =='basic' && !empty($auth['username'])) {
+        if ($authorize['type'] =='basic' && !empty($authorize['username'])) {
             $headers .= "Authorization: Basic ";
-            $headers .= \base64_encode($auth['username'].':'.$auth['password'])."\r\n";
-        } elseif ($auth['type']=='digest' && !empty($auth['username'])) {
+            $headers .= \base64_encode($authorize['username'].':'.$authorize['password'])."\r\n";
+        } elseif ($authorize['type']=='digest' && !empty($authorize['username'])) {
             $headers .= 'Authorization: Digest ';
-            foreach ($auth as $k => $v) {
+            foreach ($authorize as $k => $v) {
                 if (empty($k) || empty($v)) 
                     continue;
                 if ($k=='password') 
@@ -222,9 +214,32 @@ class StreamSocket implements StreamSocketInterface
             $headers .= "\r\n";
         }
 
+        return $headers;
+    }
+
+    /**
+     * @param string $url - URI for the request.
+     * @param array $authorize
+     * @param array $format
+     * @param string $userAgent
+     * @param float $protocolVersion
+     * @param int $redirect
+     * @param int $timeout
+     * @return array|bool
+     */
+    public function get(string $url, 
+        array $authorize = ['username' => "", 'password' => "", 'type' => ""],
+        string $format = 'text/html',
+        string $userAgent = 'Symplely Http',
+        float $protocolVersion = 1.1,
+        int $redirect = 5,
+        int $timeout = 30)
+    {
+        $headers = $this->authorization($authorize);
         $context = ['http' =>
             ['method' => "GET",
-             'header' => $headers,
+             'protocol_version' => $protocolVersion,
+             'header' => $headers."Content-type: $format\r\nConnection: close\r\n",
              'user_agent' => $userAgent,
              'max_redirects' => $redirect,  // stop after 5 redirects
              'timeout'       => $timeout]   // timeout in seconds on response
@@ -244,90 +259,33 @@ class StreamSocket implements StreamSocketInterface
 
     /**
      * @param string $url - URI for the request.
-     * @param array $headers
-     * @param string $contents
-     * @return array
-     */
-    public function post($url, array $headers = array(), $contents = '')
-    {
-        return ['POST', $url, $headers, $contents];
-    }
-
-    /**
-     * @param string $url - URI for the request.
-     * @param array $headers
-     * @return array
-     */
-    public function head($url)
-    {
-        $context = ['http' =>
-            ['method' => 'HEAD']
-        ];
-
-        yield Kernel::openFile($this, $url, 'r', $context);
-		if (\is_resource($this->handle)) {
-            $meta = yield $this->getMeta();
-            $status = $this->getStatus();
-            $this->closeFile();
-            
-            return [$status, $meta];            
-        }
-        
-        return false;
-    }
-
-    /**
-     * @param string $url - URI for the request.
-     * @param array $headers
-     * @param string $contents
-     * @return array
-     */
-    public function patch($url, array $headers = array(), $contents = '')
-    {
-        return ['PATCH', $url , $headers, $contents];
-    }
-
-    /**
-     * @param string $url - URI for the request.
-     * @param array $headers
-     * @param string $contents
-     * @return array
-     */
-    public function put($url, array $headers = array(), $contents = '')
-    {
-        return ['PUT', $url, $headers, $contents];
-    }
-
-    /**
-     * @param string $url - URI for the request.
-     * @param array $headers
-     * @param string $contents
-     * @return array
-     */
-    public function delete($url, array $headers = array(), $contents = '')
-    {
-        return ['DELETE', $url, $headers, $contents];
-    }
-
-    /**
-     * Submits an array of field values similar to submitting a form 
-     *
-     * @param string $url - URI for the request.
      * @param array $data
+     * @param array $authorize
      * @param string $format
-     * @return array
+     * @param string $userAgent
+     * @param float $protocolVersion
+     * @param string $method - POST, PUT, PATCH, DELETE
+     * @return array|bool
      */
-    public function submit($url, array $data = [], string $format = 'application/x-www-form-urlencoded')
+    public function post(string $url, array $data = [], 
+        array $authorize = ['username' => "", 'password' => "", 'type' => ""],
+        string $format = 'application/x-www-form-urlencoded',
+        string $userAgent = 'Symplely Http',
+        float $protocolVersion = 1.1, 
+        string $method = 'POST')
     {        
+        $headers = $this->authorization($authorize);
         $contents = \http_build_query($data);
         $context = ['http' =>
-            ['method' => 'POST',
-             'header' => "Content-type: $format\r\nContent-length: ". \strlen($contents) ."\r\n",
-             'content' => $contents]
+            ['method' => $method,
+            'protocol_version' => $protocolVersion,
+            'header' => $headers."Content-type: $format\r\nContent-length: ". \strlen($contents) ."\r\nConnection: close\r\n",
+            'user_agent' => $userAgent,
+            'content' => $contents]
         ];
 
         yield Kernel::openFile($this, $url, 'r', $context);
-		if (\is_resource($this->handle)) {
+        if (\is_resource($this->handle)) {
             $meta = $this->meta;
             $body = yield $this->fileContents();
             $this->closeFile();
@@ -336,6 +294,92 @@ class StreamSocket implements StreamSocketInterface
         }
         
         return false;
+    }
+
+    /**
+     * @param string $url - URI for the request.
+     * @param array $authorize
+     * @param string $userAgent
+     * @param float $protocolVersion
+     * @return array|bool
+     */
+    public function head(string $url, 
+        array $authorize = ['username' => "", 'password' => "", 'type' => ""],
+        string $userAgent = 'Symplely Http',
+        float $protocolVersion = 1.1)
+    {
+        $headers = $this->authorization($authorize);
+        $context = ['http' =>
+            ['method' => 'HEAD',
+             'protocol_version' => $protocolVersion,
+             'header' => $headers."Connection: close\r\n",
+             'user_agent' => $userAgent]
+        ];
+
+        yield Kernel::openFile($this, $url, 'r', $context);
+		if (\is_resource($this->handle)) {
+            $meta = yield $this->getMeta();
+            $status = $this->getStatus();
+            $this->closeFile();
+            
+            return [$meta, $status];            
+        }
+        
+        return false;
+    }
+
+    /**
+     * @param string $url - URI for the request.
+     * @param array $data
+     * @param array $authorize
+     * @param string $format
+     * @param string $userAgent
+     * @param float $protocolVersion
+     * @return array|bool
+     */
+    public function patch(string $url, array $data = [], 
+        array $authorize = ['username' => "", 'password' => "", 'type' => ""],
+        string $format = 'text/plain',
+        string $userAgent = 'Symplely Http',
+        float $protocolVersion = 1.1)
+    {
+        return yield $this->post($url, $data, $authorize, $format, $userAgent, $protocolVersion, 'PATCH');
+    }
+
+    /**
+     * @param string $url - URI for the request.
+     * @param array $data
+     * @param array $authorize
+     * @param string $format
+     * @param string $userAgent
+     * @param float $protocolVersion
+     * @return array|bool
+     */
+    public function put(string $url, array $data = [], 
+        array $authorize = ['username' => "", 'password' => "", 'type' => ""],
+        string $format = 'application/octet-stream',
+        string $userAgent = 'Symplely Http',
+        float $protocolVersion = 1.1)
+    {
+        return yield $this->post($url, $data, $authorize, $format, $userAgent, $protocolVersion, 'PUT');
+    }
+
+    /**
+     * @param string $url - URI for the request.
+     * @param array $data
+     * @param array $authorize
+     * @param string $format
+     * @param string $userAgent
+     * @param float $protocolVersion
+     * @return array|bool
+     */
+    public function delete(string $url, array $data = [], 
+        array $authorize = ['username' => "", 'password' => "", 'type' => ""],
+        string $format = 'application/octet-stream',
+        string $userAgent = 'Symplely Http',
+        float $protocolVersion = 1.1)
+    {
+        return yield $this->post($url, $data, $authorize, $format, $userAgent, $protocolVersion, 'DELETE');
     }
 
     public function openFile(string $uri = null, string $mode = 'r', array $context = []) 
