@@ -10,7 +10,7 @@ interface StreamSocketInterface
 
     public function write(string $string);
 
-    public function openFile(string $uri = null, string $mode = 'r', array $context = []);
+    public function openFile(string $uri = null, string $mode = 'r', $context = []);
 
     public function handshake();
 

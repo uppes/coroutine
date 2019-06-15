@@ -8,7 +8,7 @@ use Async\Coroutine\StreamSocket;
  */
 function get_statuses($websites) 
 {
-    $statuses = ['200' => 0, '400' => 0];
+    $statuses = ['200' => 0, '400' => 0, '405' => 0];
 	foreach($websites as $website) {
 		$tasks[] = yield \await('get_website_status', $website);
     }
@@ -26,12 +26,9 @@ function get_statuses($websites)
 
 function get_website_status($url) 
 {
-    //$id = yield \task_id();
-    $object = yield \open_file(null, $url);
-    yield \file_meta($object);
-    $status = \file_status($object);
-    \close_file($object);
-    //print "task: $id, code: $status".EOL;
+    $id = yield \task_id();
+    [$meta, $status] = yield \head_uri($url);
+    print "task: $id, code: $status".EOL;
     return $status;
 };
 

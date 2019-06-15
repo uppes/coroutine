@@ -249,90 +249,122 @@ if (! \function_exists('coroutine_run')) {
 	/**
 	 * - This function needs to be prefixed with `yield`
 	 */
-	function client_read(StreamSocketInterface $socket, int $size = -1) 
+	function client_read(StreamSocketInterface $instance, int $size = -1) 
 	{
-		return $socket->response($size);
+		return $instance->response($size);
 	}
 
 	/**
 	 * - This function needs to be prefixed with `yield`
 	 */
-	function client_write(StreamSocketInterface $socket, string $response = null) 
+	function client_write(StreamSocketInterface $instance, string $response = null) 
 	{
-		return \write_socket($socket, $response);
+		return \write_socket($instance, $response);
 	}
 
 	/**
 	 * - This function needs to be prefixed with `yield`
 	 */
-	function close_client(StreamSocketInterface $socket)
+	function close_client(StreamSocketInterface $instance)
 	{
-		return $socket->closeClient();
+		return $instance->closeClient();
 	}	
 
 	/**
 	 * - This function needs to be prefixed with `yield`
 	 */
-	function accept_socket(StreamSocketInterface $socket)
+	function accept_socket(StreamSocketInterface $instance)
 	{
-		return $socket->accept();
+		return $instance->accept();
 	}	
 
 	/**
 	 * - This function needs to be prefixed with `yield`
 	 */
-	function read_socket(StreamSocketInterface $socket, int $size = -1)
+	function read_socket(StreamSocketInterface $instance, int $size = -1)
 	{
-		return $socket->read($size);
+		return $instance->read($size);
 	}	
 
 	/**
 	 * - This function needs to be prefixed with `yield`
 	 */
-	function write_socket(StreamSocketInterface $socket, string $response = null)
+	function write_socket(StreamSocketInterface $instance, string $response = null)
 	{
-		return $socket->write($response);
+		return $instance->write($response);
 	}	
 
 	/**
 	 * - This function needs to be prefixed with `yield`
 	 */
-	function close_socket(StreamSocketInterface $socket)
+	function close_socket(StreamSocketInterface $instance)
 	{
-		return $socket->close();
+		return $instance->close();
 	}
 
 	/**
 	 * Open file or url.
 	 * - This function needs to be prefixed with `yield`
 	 * 
-	 * @param resource|null $socket - create socket if null
+	 * @param resource|null $instance - create socket if null
 	 * @param string $filename|url
 	 * @param string $mode|port
 	 * @return object
 	 */
-	function open_file(StreamSocketInterface $socket = null, string $filename = null, $mode = 'r', array $options = [])
+	function open_file(StreamSocketInterface $instance = null, string $filename = null, $mode = 'r', $options = [])
 	{		
-		return Kernel::openFile($socket, $filename, $mode, $options); 
+		return Kernel::openFile($instance, $filename, $mode, $options); 
 	}
-/*	
-	function get_uri(StreamSocketInterface $socket)
+
+	function create_uri(): StreamSocketInterface
+	{
+		global $__uri__;
+
+		if (!$__uri__ instanceof StreamSocketInterface)
+			$__uri__ = new StreamSocket(null);
+
+		return $__uri__;
+	}
+
+	function clear_uri()
+	{
+		global $__uri__;
+
+		$__uri__ = null;
+		unset($GLOBALS['__uri__']);
+	}
+
+	function get_uri(StreamSocketInterface $instance)
 	{
 	}
 
-	function update_uri(StreamSocketInterface $socket)
+	function put_uri(StreamSocketInterface $instance)
 	{
 	}
 
-	function delete_uri(StreamSocketInterface $socket)
+	function delete_uri(StreamSocketInterface $instance)
 	{
 	}
 
-	function post_uri(StreamSocketInterface $socket)
+	function post_uri(StreamSocketInterface $instance)
 	{
 	}
-*/
-	function get_file(string $filenameUrl = null, $mode = 'r', array $options = [])
+
+	function patch_uri(StreamSocketInterface $instance)
+	{
+	}
+
+	function head_uri(string $url, 
+		array $authorize = ['username' => "", 'password' => "", 'type' => ""],
+		string $userAgent = 'Symplely Http',
+		float $protocolVersion = 1.1)
+	{
+		$response = yield \create_uri()->head($url, $authorize, $userAgent, $protocolVersion);
+		\clear_uri();
+		return $response;
+	}
+
+	function get_file(string $filenameUrl = null, $mode = 'r', $options = [])
 	{
 		$object = yield \open_file(null, $filenameUrl, $mode, $options);
 		if (\file_valid($object)) {
@@ -356,64 +388,64 @@ if (! \function_exists('coroutine_run')) {
 		return false;
 	}
 
-	function close_file(StreamSocketInterface $socket)
+	function close_file(StreamSocketInterface $instance)
 	{
-		return $socket->closeFile();
+		return $instance->closeFile();
 	}
 
 	/**
 	 * Check if valid open file handle, which file exists and readable.
 	 * 
-	 * @param resource $socket
+	 * @param resource $instance
 	 * @return bool
 	 */
-	function file_valid(StreamSocketInterface $socket): bool
+	function file_valid(StreamSocketInterface $instance): bool
 	{
-		return $socket->fileValid();
+		return $instance->fileValid();
 	}	
 
 	/**
 	 * Get file contents from open file handle, reading by size chucks, with timeout
 	 * - This function needs to be prefixed with `yield`
 	 * 
-	 * @param resource $socket
+	 * @param resource $instance
 	 * @param int $size
 	 * @param float $timeout_seconds
 	 * @return mixed
 	 */
-	function file_contents(StreamSocketInterface $socket, int $size = -1, float $timeout_seconds = 0.5)
+	function file_contents(StreamSocketInterface $instance, int $size = -1, float $timeout_seconds = 0.5, $stream = null)
 	{
-		return $socket->fileContents($size, $timeout_seconds);
+		return $instance->fileContents($size, $timeout_seconds, $stream);
     }
 
-	function file_create(StreamSocketInterface $socket, $contents)
+	function file_create(StreamSocketInterface $instance, $contents, $stream = null)
 	{
-		return $socket->fileCreate($contents);
+		return $instance->fileCreate($contents, $stream);
 	}
 
-	function file_lines(StreamSocketInterface $socket)
+	function file_lines(StreamSocketInterface $instance, $stream = null)
 	{
-		return $socket->fileLines();
+		return $instance->fileLines($stream);
 	}
 
-	function file_meta(StreamSocketInterface $socket, $stream = null)
+	function file_meta(StreamSocketInterface $instance, $stream = null)
 	{
-		return $socket->getMeta($stream);
+		return $instance->getMeta($stream);
 	}
 
-	function file_status(StreamSocketInterface $socket, $meta = null)
+	function file_status(StreamSocketInterface $instance, $meta = null)
 	{
-		return $socket->getStatus($meta);
+		return $instance->getStatus($meta);
 	}
 
-	function file_handle(StreamSocketInterface $socket)
+	function file_handle(StreamSocketInterface $instance)
 	{
-		return $socket->getHandle();
+		return $instance->getHandle();
 	}
 
-	function remote_ip(StreamSocketInterface $socket)
+	function remote_ip(StreamSocketInterface $instance)
 	{
-		return $socket->address();
+		return $instance->address();
 	}
 
 	/**

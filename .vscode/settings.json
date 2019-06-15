@@ -3,7 +3,6 @@
         "autoload",
         "phpunit",
         "symfony",
-        "symplely",
-        "uppes"
+        "symplely"
     ]
 }

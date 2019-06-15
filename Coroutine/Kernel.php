@@ -18,6 +18,7 @@ use Async\Coroutine\Exceptions\CancelledError;
 class Kernel 
 {
     protected $callback;
+    protected static $gatherResumer = null;
 
     public function __construct(callable $callback) 
 	{
@@ -254,32 +255,36 @@ class Kernel
 	{
 		return new Kernel(
 			function(TaskInterface $task, Coroutine $coroutine) use ($taskId) {
-				$taskIdList = [];
-				$newIdList =(\is_array($taskId[0])) ? $taskId[0] : $taskId;
-
-				foreach($newIdList as $id => $value) {
-					if($value instanceof \Generator) {
-						$id = $coroutine->createTask($value);
-						$taskIdList[$id] = $id;
-					} else
-						$taskIdList[$value] = $value;
-				}
-
-				$results = [];
-				$count = \count($taskIdList);
-				$taskList = $coroutine->taskList();
-
-				$completeList = $coroutine->completedList();
-				$countComplete = \count($completeList);
-				if ($countComplete > 0) {
-					foreach($completeList as $id => $tasks) {
-						if (isset($taskIdList[$id])) {
-							$results[$id] = $tasks->result();
-							$count--;			
-                            $tasks->clearResult();				
-							unset($taskIdList[$id]);
-							unset($completeList[$id]);
-							$coroutine->updateCompleted($completeList);
+				if (!empty(self::$gatherResumer))
+					[$taskIdList, $count, $results, $taskList] = self::$gatherResumer;
+				else {
+					$taskIdList = [];
+					$newIdList =(\is_array($taskId[0])) ? $taskId[0] : $taskId;
+	
+					foreach($newIdList as $id => $value) {
+						if($value instanceof \Generator) {
+							$id = $coroutine->createTask($value);
+							$taskIdList[$id] = $id;
+						} else
+							$taskIdList[$value] = $value;
+					}
+	
+					$results = [];
+					$count = \count($taskIdList);
+					$taskList = $coroutine->taskList();
+	
+					$completeList = $coroutine->completedList();
+					$countComplete = \count($completeList);
+					if ($countComplete > 0) {
+						foreach($completeList as $id => $tasks) {
+							if (isset($taskIdList[$id])) {
+								$results[$id] = $tasks->result();
+								$count--;			
+								$tasks->clearResult();				
+								unset($taskIdList[$id]);
+								unset($completeList[$id]);
+								$coroutine->updateCompleted($completeList);
+							}
 						}
 					}
 				}
@@ -318,12 +323,15 @@ class Kernel
                                 $tasks->clearResult();
                                 unset($taskList[$id]);
 								$coroutine->cancelTask($id);
+								self::$gatherResumer = [$taskIdList, $count, $results, $taskList];
 								$task->setException($tasks->getError());
 								$coroutine->schedule($tasks);
 							}  elseif ($tasks->cancelled()) {
 								$count--;
                                 $tasks->clearResult();
                                 unset($taskList[$id]);
+								$coroutine->cancelTask($id);
+								self::$gatherResumer = [$taskIdList, $count, $results, $taskList];
 								$task->setException(new CancelledError());
 								$coroutine->schedule($tasks);
 							} 
@@ -331,6 +339,7 @@ class Kernel
 					}
 				}
 
+				self::$gatherResumer = null;
 				$task->sendValue($results);
 				$coroutine->schedule($task);
 			}
@@ -407,7 +416,7 @@ class Kernel
 	public static function await($asyncLabel, ...$args) 
 	{
 		$isLabel = false;
-		if (!is_array($asyncLabel) && !is_callable($asyncLabel)) {
+		if (!\is_array($asyncLabel) && !\is_callable($asyncLabel)) {
 			global ${$asyncLabel};
 			$isLabel = isset(${$asyncLabel});
 		}
@@ -423,15 +432,15 @@ class Kernel
 			);
 	}
 
-	public static function openFile(StreamSocketInterface $socket = null, string $uri = null, string $mode = 'r', array $options = []) 
+	public static function openFile(StreamSocketInterface $instance = null, string $uri = null, string $mode = 'r', $options = []) 
 	{
 		return new Kernel(
-			function(TaskInterface $task, Coroutine $coroutine) use ($socket, $uri, $mode, $options) {				
-				if (empty($socket))
-					$socket = new StreamSocket(null);
+			function(TaskInterface $task, Coroutine $coroutine) use ($instance, $uri, $mode, $options) {				
+				if (empty($instance))
+					$instance = new StreamSocket(null);
 
-				$socket->openFile($uri, $mode, $options);				
-				$task->sendValue($socket);
+				$instance->openFile($uri, $mode, $options);				
+				$task->sendValue($instance);
 				$coroutine->schedule($task);
 			}
 		);

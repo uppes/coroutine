@@ -232,25 +232,30 @@ class StreamSocket implements StreamSocketInterface
      * @param int $timeout
      * @return array|bool
      */
-    protected function request(string $method = null, string $url = null, $data = null, array $authorize = ['username' => "", 'password' => "", 'type' => ""], string $format = null, string $header = null, string $userAgent = 'Symplely Http', float $protocolVersion = 1.1, int $redirect = 5, int $timeout = 30)
+    protected function request(string $method = null, string $url = null, $data = null, array $authorize = ['username' => "", 'password' => "", 'type' => ""], string $format = null, string $header = null, string $userAgent = 'Symplely Http', float $protocolVersion = 1.1, int $redirect = 20, int $timeout = 60)
     {
-        if (empty($method) || empty($url) || empty($format))
+        if (empty($url) || empty($format) 
+            || !\in_array($method, ['CONNECT', 'DELETE', 'GET', 'HEAD', 'OPTIONS', 'PATCH', 'POST', 'PUT', 'TRACE'])
+        )
             return false;
 
         $headers = $this->authorization($authorize);
         $contents = \is_array($data) ? \http_build_query($data) : $data;
+        $length = !empty($contents) ? "Content-length: ".\strlen($contents)."\r\n" : '';
         $extra = !empty($header) ? "\r\n" : '';
         $context = [
             'http' =>
             [
                 'method' => $method,
-                'protocol_version' => $protocolVersion, 
-                'header' => $header.$extra.$headers."Content-type: $format\r\nContent-length: ".\strlen($contents)."\r\nConnection: close\r\n",
+                'protocol_version' => $protocolVersion,
+                'header' => $header.$extra.$headers."Content-type: $format\r\n".$length."Connection: close\r\n",
                 'user_agent' => $userAgent,
                 'max_redirects' => $redirect, // stop after 5 redirects
-                'timeout' => $timeout // timeout in seconds on response
+                'timeout' => $timeout, // timeout in seconds on response
             ]
         ];
+
+        $context = \stream_context_create($context);
 
         if (!empty($contents))
             \stream_context_set_option($context, 'http', 'content', $contents);
@@ -285,7 +290,7 @@ class StreamSocket implements StreamSocketInterface
         string $format = 'text/html',
         string $userAgent = 'Symplely Http',
         float $protocolVersion = 1.1,
-        int $redirect = 5,
+        int $redirect = 10,
         int $timeout = 30)
     {
         yield $this->request('GET', $url, null, $authorize, $format, null, $userAgent, $protocolVersion, $redirect, $timeout);
@@ -309,7 +314,7 @@ class StreamSocket implements StreamSocketInterface
         string $header = null,
         string $userAgent = 'Symplely Http',
         float $protocolVersion = 1.1,
-        int $redirect = 5,
+        int $redirect = 10,
         int $timeout = 30)
     {
         yield $this->request('POST', $url, $data, $authorize, $format, $header, $userAgent, $protocolVersion, $redirect, $timeout);
@@ -327,7 +332,16 @@ class StreamSocket implements StreamSocketInterface
         string $userAgent = 'Symplely Http',
         float $protocolVersion = 1.1)
     {
-        yield $this->request('HEAD', $url, null, $authorize, 'text/html', null, $userAgent, $protocolVersion);
+        $response = yield $this->request('HEAD', $url, null, $authorize, 'text/html', null, $userAgent, $protocolVersion);
+        if ($response === false) {
+            $handle = $this->openFile($url);
+            if (\is_resource($handle)) {
+                $response = [$this->meta, $this->getStatus()];
+                $this->closeFile();
+            }
+        }
+        
+        return $response;
     }
 
     /**
@@ -402,13 +416,13 @@ class StreamSocket implements StreamSocketInterface
         yield $this->request('DELETE', $url, $data, $authorize, $format, $header, $userAgent, $protocolVersion, $redirect, $timeout);
     }
 
-    public function openFile(string $uri = null, string $mode = 'r', array $context = []) 
+    public function openFile(string $uri = null, string $mode = 'r', $context = []) 
 	{
         if (\in_array($mode, ['r', 'r+', 'w', 'w+', 'a', 'a+', 'x', 'x+', 'c', 'c+']))
             $handle = @\fopen($uri, 
                 $mode.'b', 
                 false, 
-                \stream_context_create($context)
+                \is_resource($context) ? $context : \stream_context_create($context)
             );
         
         if (\is_resource($handle)) {
@@ -497,6 +511,17 @@ class StreamSocket implements StreamSocketInterface
             return \stream_get_meta_data($check);
 
         return $this->meta;
+    }
+
+    public function getMetadata(string $key = null, $stream = null)
+    {
+        
+        $metadata = $this->getMeta($stream);
+        if ($key) {
+            $metadata = isset($metadata[$key]) ? $metadata[$key] : null;
+        }
+
+        return $metadata;
     }
 
     public function fileValid(): bool
