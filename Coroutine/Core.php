@@ -34,6 +34,8 @@ if (! \function_exists('coroutine_run')) {
 	 * 
 	 * @see https://docs.python.org/3.7/library/asyncio-task.html#asyncio.create_task
 	 * 
+	 * - This function needs to be prefixed with `yield`
+	 * 
 	 * @param Generator|callable $awaitableFunction
 	 * @param mixed $args
 	 * 
@@ -55,6 +57,8 @@ if (! \function_exists('coroutine_run')) {
 	 * Other awaitables in the sequence won’t be cancelled and will continue to run.
 	 * 
 	 * @see https://docs.python.org/3.7/library/asyncio-task.html#asyncio.gather
+	 * 
+	 * - This function needs to be prefixed with `yield`
 	 * 
 	 * @param int|array $taskId
 	 * @return array
@@ -88,7 +92,6 @@ if (! \function_exists('coroutine_run')) {
 	 * 
 	 * @see https://docs.python.org/3.7/library/asyncio-task.html#awaitables
 	 * 
-	 * @param TaskInterface $task
 	 * @param Generator|callable $awaitableFunction
 	 * @param mixed $args
 	 * 
@@ -241,6 +244,9 @@ if (! \function_exists('coroutine_run')) {
 		return StreamSocket::createServer($uri, $options);
 	}	
 
+	/**
+	 * - This function needs to be prefixed with `yield`
+	 */
 	function create_client($uri = null, array $options = [], bool $isRequest = false)
 	{
 		return StreamSocket::createClient($uri, $options, $isRequest);
@@ -254,14 +260,14 @@ if (! \function_exists('coroutine_run')) {
 		return $instance->response($size);
 	}
 
+	/**
+	 * - This function needs to be prefixed with `yield`
+	 */
 	function client_write(StreamSocketInterface $instance, string $response = null) 
 	{
 		return \write_socket($instance, $response);
 	}
 
-	/**
-	 * - This function needs to be prefixed with `yield`
-	 */
 	function client_Close(StreamSocketInterface $instance)
 	{
 		return $instance->clientClose();
@@ -291,9 +297,6 @@ if (! \function_exists('coroutine_run')) {
 		return $instance->write($response);
 	}	
 
-	/**
-	 * - This function needs to be prefixed with `yield`
-	 */
 	function close_socket(StreamSocketInterface $instance)
 	{
 		return $instance->close();
