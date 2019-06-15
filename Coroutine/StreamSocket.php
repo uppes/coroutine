@@ -260,16 +260,18 @@ class StreamSocket implements StreamSocketInterface
         if (!empty($contents))
             \stream_context_set_option($context, 'http', 'content', $contents);
 
-        yield Kernel::openFile($this, $url, 'r', $context);
+        yield Kernel::fileOpen($this, $url, 'r', $context);
         if (\is_resource($this->handle)) {
             $meta = $this->meta;
-            if ($method == 'HEAD')
+            if ($method == 'HEAD') {
                 $response = $this->getStatus();
-            else
+                $metaUpdated = false;
+            } else {
                 $response = yield $this->fileContents();
-            $this->closeFile();
+                $metaUpdated = $this->getMeta($this->handle);
+            }
             
-            return [$meta, $response];            
+            return [$meta, $response, $metaUpdated];            
         }
         
         return false;
@@ -334,10 +336,9 @@ class StreamSocket implements StreamSocketInterface
     {
         $response = yield $this->request('HEAD', $url, null, $authorize, 'text/html', null, $userAgent, $protocolVersion);
         if ($response === false) {
-            $handle = $this->openFile($url);
+            $handle = $this->fileOpen($url);
             if (\is_resource($handle)) {
-                $response = [$this->meta, $this->getStatus()];
-                $this->closeFile();
+                $response = [$this->meta, $this->getStatus(), true];
             }
         }
         
@@ -416,7 +417,7 @@ class StreamSocket implements StreamSocketInterface
         yield $this->request('DELETE', $url, $data, $authorize, $format, $header, $userAgent, $protocolVersion, $redirect, $timeout);
     }
 
-    public function openFile(string $uri = null, string $mode = 'r', $context = []) 
+    public function fileOpen(string $uri = null, string $mode = 'r', $context = []) 
 	{
         if (\in_array($mode, ['r', 'r+', 'w', 'w+', 'a', 'a+', 'x', 'x+', 'c', 'c+']))
             $handle = @\fopen($uri, 
@@ -429,7 +430,7 @@ class StreamSocket implements StreamSocketInterface
             $this->isValid = true;
             \stream_set_blocking($handle, false);
             $this->handle = $handle;
-            $this->meta = $this->getMeta($handle);
+            $this->meta = $this->fileMeta($handle);
         }
 
         return $this->handle;
@@ -501,7 +502,17 @@ class StreamSocket implements StreamSocketInterface
         yield Coroutine::value($contents);
     }
 
-    public function getMeta($stream = null)
+    public function getMetadata(string $key = null, $stream = null)
+    {        
+        $metadata = $this->getMeta($stream);
+        if ($key) {
+            $metadata = isset($metadata[$key]) ? $metadata[$key] : null;
+        }
+
+        return $metadata;
+    }
+
+    public function fileMeta($stream = null)
     {
         $check = empty($stream) ? $this->handle : $stream;
 
@@ -513,23 +524,12 @@ class StreamSocket implements StreamSocketInterface
         return $this->meta;
     }
 
-    public function getMetadata(string $key = null, $stream = null)
-    {
-        
-        $metadata = $this->getMeta($stream);
-        if ($key) {
-            $metadata = isset($metadata[$key]) ? $metadata[$key] : null;
-        }
-
-        return $metadata;
-    }
-
     public function fileValid(): bool
     {
         return $this->isValid;
     }
 
-    public function getHandle()
+    public function fileHandle()
     {
         return $this->handle;
     }
@@ -569,37 +569,47 @@ class StreamSocket implements StreamSocketInterface
 		yield Coroutine::value(\trim(\stream_get_line(\STDIN, $size, \EOL)));
     }
 
-    public function read(int $size = -1) 
+    public function read(int $size = -1, $stream = null) 
 	{
-        yield Kernel::readWait($this->socket);
-        yield Coroutine::value(\stream_get_contents($this->socket, $size));
-        \stream_set_blocking($this->socket, false);
+        $handle = empty($stream) ? $this->socket : $stream;
+
+        yield Kernel::readWait($handle);
+        yield Coroutine::value(\stream_get_contents($handle, $size));
+        \stream_set_blocking($handle, false);
     }
 
-    public function write(string $string) 
+    public function write(string $string, $stream = null) 
 	{
-        yield Kernel::writeWait($this->socket);
-        yield Coroutine::value(\fwrite($this->socket, $string));
+        $handle = empty($stream) ? $this->socket : $stream;
+
+        yield Kernel::writeWait($handle);
+        yield Coroutine::value(\fwrite($handle, $string));
     }
 
     public function close() 
 	{
-        @\fclose($this->socket);
-        $this->socket = null;
-        $this->secure = null;
+        $this->fileClose($this->socket);
     }
     
-    public function closeClient() 
+    public function clientClose() 
 	{
-        @\fclose($this->client);
-        self::$isClient = false;
-        $this->client = null;
+        $this->fileClose($this->client);
     }
 
-    public function closeFile() 
+    public function fileClose($stream = null) 
 	{
-        @\fclose($this->handle);
-        $this->handle = null;
-        $this->meta = null;
+        $handle = empty($stream) ? $this->handle : $stream;
+
+        @\fclose($handle);
+        if ($handle === $this->handle) {
+            $this->handle = null;
+            $this->meta = null;
+        } elseif ($handle === $this->client) {
+            self::$isClient = false;
+            $this->client = null;
+        } elseif ($handle === $this->socket) {
+            $this->socket = null;
+            $this->secure = null;
+        }
     }
 }

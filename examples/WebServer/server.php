@@ -101,7 +101,7 @@ function handleClient($socket)
 
             $input = '.'.$input;
 
-            yield \open_file($socket, $input);
+            yield \file_open($socket, $input);
             if (\file_valid($socket)) {
                 print "Serving $input\n";
 
@@ -110,7 +110,7 @@ function handleClient($socket)
                 } else {
                     $contents = yield \file_contents($socket);
                 }
-                \close_file($socket);
+                \file_close($socket);
                 $output = "HTTP/1.0 200 OK\r\nServer: APatchyServer\r\nConnection: close\r\nContent-Type: $mime\r\n\r\n$contents";
             } else {
                 $contents = "The file you requested does not exist. Sorry!";

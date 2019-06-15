@@ -46,7 +46,7 @@ function client($ip, $port, $command) {
     $response = yield \client_read($socket);
 
     #close connection
-    yield \close_client($socket);
+    yield \client_Close($socket);
 
     #echo our command response
     echo $response;

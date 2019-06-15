@@ -27,17 +27,20 @@ function get_statuses($websites)
 function get_website_status($url) 
 {
     $id = yield \task_id();
-    [$meta, $status] = yield \head_uri($url);
+    [$meta, $status, $retry] = yield \head_uri($url);
+    yield;
     print "task: $id, code: $status".EOL;
+    if ($retry === true)
+        print_r($meta);
     return $status;
 };
 
 function main() 
 {
     chdir(__DIR__);
-    $object = yield \open_file(null, '.'.\DS.'list.txt');
+    $object = yield \file_open(null, '.'.\DS.'list.txt');
     $websites = yield \file_lines($object);
-    \close_file($object);
+    \file_close($object);
     if ($websites !== false) {
         $t0 = \microtime(true);
         $data = yield from get_statuses($websites);
