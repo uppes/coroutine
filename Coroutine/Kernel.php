@@ -163,13 +163,13 @@ class Kernel
     /**
      * Wait on read stream socket to be ready read from.
      * 
-     * @param resource $socket
+     * @param resource $streamSocket
      */
-	public static function readWait($socket) 
+	public static function readWait($streamSocket) 
 	{
 		return new Kernel(
-			function(TaskInterface $task, Coroutine $coroutine) use ($socket) {
-				$coroutine->addReader($socket, $task);
+			function(TaskInterface $task, Coroutine $coroutine) use ($streamSocket) {
+				$coroutine->addReader($streamSocket, $task);
 			}
 		);
 	}
@@ -177,13 +177,13 @@ class Kernel
     /**
      * Wait on write stream socket to be ready to be written to.
      * 
-     * @param resource $socket
+     * @param resource $streamSocket
      */
-	public static function writeWait($socket) 
+	public static function writeWait($streamSocket) 
 	{
 		return new Kernel(
-			function(TaskInterface $task, Coroutine $coroutine) use ($socket) {
-				$coroutine->addWriter($socket, $task);
+			function(TaskInterface $task, Coroutine $coroutine) use ($streamSocket) {
+				$coroutine->addWriter($streamSocket, $task);
 			}
 		);
 	}
@@ -320,17 +320,13 @@ class Kernel
                                 $coroutine->updateCompleted($completeList);
 							} elseif ($tasks->erred()) {
 								$count--;
-                                $tasks->clearResult();
                                 unset($taskList[$id]);
-								$coroutine->cancelTask($id);
 								self::$gatherResumer = [$taskIdList, $count, $results, $taskList];
 								$task->setException($tasks->getError());
 								$coroutine->schedule($tasks);
 							}  elseif ($tasks->cancelled()) {
 								$count--;
-                                $tasks->clearResult();
                                 unset($taskList[$id]);
-								$coroutine->cancelTask($id);
 								self::$gatherResumer = [$taskIdList, $count, $results, $taskList];
 								$task->setException(new CancelledError());
 								$coroutine->schedule($tasks);

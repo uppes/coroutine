@@ -225,7 +225,15 @@ if (! \function_exists('coroutine_run')) {
 	function write_wait($stream)
 	{
 		return Kernel::writeWait($stream);
-	}	
+	}
+
+	/**
+	 * - This function needs to be prefixed with `yield`
+	 */
+	function input_wait(int $size = 256, bool $error = false)
+	{
+		return StreamSocket::input($size, $error);
+	}
 
 	function secure_server(
 		$uri = null, 
@@ -513,14 +521,6 @@ if (! \function_exists('coroutine_run')) {
 	function remote_ip(StreamSocketInterface $instance)
 	{
 		return $instance->address();
-	}
-
-	/**
-	 * - This function needs to be prefixed with `yield`
-	 */
-	function input_wait(int $size = 256)
-	{
-		 return StreamSocket::input($size);
 	}
 	
 	function coroutine_instance()

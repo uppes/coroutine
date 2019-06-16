@@ -561,10 +561,13 @@ class StreamSocket implements StreamSocketInterface
         return (int) $http_statusCode;
     }
 
-    public static function input(int $size = 256) 
+    public static function input(int $size = 256, bool $error = false) 
 	{
-		//Check on STDIN stream
-		\stream_set_blocking(\STDIN, false);
+        //Check on STDIN stream
+        $blocking = \stream_set_blocking(\STDIN, false);
+        if ($error && !$blocking) {
+            return new \InvalidArgumentException('Non-blocking STDIN, could not be enabled.');
+        }
 		yield Kernel::readWait(\STDIN);
 		yield Coroutine::value(\trim(\stream_get_line(\STDIN, $size, \EOL)));
     }

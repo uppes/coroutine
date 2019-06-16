@@ -139,7 +139,8 @@ class Coroutine implements CoroutineInterface
         unset($this->taskMap[$tid]);
     
         foreach ($this->taskQueue as $i => $task) {
-            if ($task->taskId() === $tid) {                
+            if ($task->taskId() === $tid) {
+                $task->clearResult();
                 $task->setState('cancelled');
                 unset($this->taskQueue[$i]);
                 break;
@@ -191,6 +192,7 @@ class Coroutine implements CoroutineInterface
 				try {
 					$value($task, $this);
 				} catch (\Exception $e) {
+                    $task->clearResult();
                     $task->setState('erred');
 					$task->setException($e);
 					$this->schedule($task);

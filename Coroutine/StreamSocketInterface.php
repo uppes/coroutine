@@ -16,5 +16,5 @@ interface StreamSocketInterface
 
     public function close();
     
-    public static function input(int $size);
+    public static function input(int $size, bool $error = false);
 }

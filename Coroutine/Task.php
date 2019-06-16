@@ -116,8 +116,8 @@ class Task implements TaskInterface
             return $this->coroutine->current();
         } elseif ($this->exception) {
             $value = $this->coroutine->throw($this->exception);
-            $this->exception = null;
             $this->error = $this->exception;
+            $this->exception = null;
             return $value;
         } else {
             $value = $this->coroutine->send($this->sendValue);
