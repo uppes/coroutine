@@ -22,7 +22,7 @@ function get_statuses($websites)
     }
     
     return json_encode($statuses);
-};
+}
 
 function get_website_status($url) 
 {
@@ -31,12 +31,25 @@ function get_website_status($url)
     yield;
     print "task: $id, code: $status".EOL;
     if ($retry === true)
-        print_r($meta);
+        echo "task $id, had to be retried!".EOL;
     return $status;
-};
+}
+
+function lapse() {
+    $i = 1;
+    while(true) {
+        echo '.';
+        $i++;
+        if ($i == 100) {
+            break;
+        }
+        yield;
+    }
+}
 
 function main() 
-{
+{    
+    yield \await('lapse');
     chdir(__DIR__);
     $object = yield \file_open(null, '.'.\DS.'list.txt');
     $websites = yield \file_lines($object);
@@ -48,6 +61,6 @@ function main()
         print $data.EOL;
         print("getting website statuses took ".(float) ($t1-$t0)." seconds");
     }
-};
+}
 
 \coroutine_run(\main());

@@ -113,17 +113,6 @@ class Parallel implements ArrayAccess, ParallelInterface
         return $this->process;
     }
 
-    public function await()
-    {
-        while (true) {
-            $this->processor->processing();
-            if ($this->processor->isEmpty())
-                break;
-
-            yield;
-        }
-    }
-
     public function wait(): array
     {
         while (true) {

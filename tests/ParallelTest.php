@@ -28,6 +28,8 @@ class ParallelTest extends TestCase
      * @covers Async\Coroutine\Parallel::wait
      * @covers Async\Coroutine\Parallel::ispcntl
      * @covers Async\Coroutine\Parallel::status
+     * @covers Async\Coroutine\Parallel::notify
+     * @covers Async\Coroutine\Parallel::putInProgress
      */
     public function testIt_can_check_for_asynchronous_support_speed()
     {
@@ -68,6 +70,8 @@ class ParallelTest extends TestCase
      * @covers Async\Coroutine\Parallel::wait
      * @covers Async\Coroutine\Parallel::results
      * @covers Async\Coroutine\Parallel::status
+     * @covers Async\Coroutine\Parallel::notify
+     * @covers Async\Coroutine\Parallel::putInProgress
      */
     public function testIt_can_create_and_return_results()
     {
@@ -102,6 +106,8 @@ class ParallelTest extends TestCase
      * @covers Async\Coroutine\Parallel::results
      * @covers Async\Coroutine\Parallel::status
      * @covers Async\Coroutine\Parallel::retry
+     * @covers Async\Coroutine\Parallel::notify
+     * @covers Async\Coroutine\Parallel::putInProgress
      */
     public function testIt_can_retry()
     {
@@ -147,6 +153,8 @@ class ParallelTest extends TestCase
      * @covers Async\Coroutine\Parallel::__construct
      * @covers Async\Coroutine\Parallel::wait
      * @covers Async\Coroutine\Parallel::status
+     * @covers Async\Coroutine\Parallel::notify
+     * @covers Async\Coroutine\Parallel::putInProgress
      */
     public function testIt_can_handle_success()
     {
@@ -178,6 +186,8 @@ class ParallelTest extends TestCase
      * @covers Async\Coroutine\Parallel::__construct
      * @covers Async\Coroutine\Parallel::wait
      * @covers Async\Coroutine\Parallel::status
+     * @covers Async\Coroutine\Parallel::notify
+     * @covers Async\Coroutine\Parallel::putInProgress
      */
     public function testIt_can_handle_timeout()
     {
@@ -211,6 +221,8 @@ class ParallelTest extends TestCase
      * @covers Async\Coroutine\Parallel::wait
      * @covers Async\Coroutine\Parallel::status
      * @covers Async\Coroutine\Parallel::getFinished
+     * @covers Async\Coroutine\Parallel::notify
+     * @covers Async\Coroutine\Parallel::putInProgress
      */
     public function testIt_can_handle_a_maximum_of_concurrent_processes()
     {
