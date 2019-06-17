@@ -8,6 +8,8 @@ use Async\Coroutine\StreamSocketInterface;
 use Async\Coroutine\TaskInterface;
 use Async\Coroutine\Coroutine;
 use Async\Coroutine\CoroutineInterface;
+use Async\Coroutine\HttpRequest;
+use Async\Coroutine\HttpRequestInterface;
 use Async\Processor\Processor;
 use Async\Processor\ProcessInterface;
 
@@ -345,16 +347,16 @@ if (! \function_exists('coroutine_run')) {
         return 'unknown';
     }
 
-	function create_uri(string $tag = null): StreamSocketInterface
+	function create_uri(string $tag = null): HttpRequestInterface
 	{
 		global $__uri__, $__uriTag__;
 
         if (empty($tag)) {
-            if (!$__uri__ instanceof StreamSocketInterface) 
-                $__uri__ = new StreamSocket(null);
+            if (!$__uri__ instanceof HttpRequestInterface) 
+                $__uri__ = new HttpRequest;
         } else {
-            if (!isset($__uriTag__[$tag]) || !$__uriTag__[$tag] instanceof StreamSocketInterface)
-                $__uriTag__[$tag] = new StreamSocket(null);
+            if (!isset($__uriTag__[$tag]) || !$__uriTag__[$tag] instanceof HttpRequestInterface)
+                $__uriTag__[$tag] = new HttpRequest;
         }
 
 		return empty($tag) ? $__uri__ : $__uriTag__[$tag];
@@ -365,14 +367,14 @@ if (! \function_exists('coroutine_run')) {
         global $__uri__, $__uriTag__;
         
         if (empty($tag)) {
-            if ($__uri__ instanceof StreamSocketInterface) 
-                $__uri__->fileClose();
+            if ($__uri__ instanceof HttpRequestInterface) 
+                $__uri__->close();
 
             $__uri__ = null;
             unset($GLOBALS['__uri__']);
         } else {
-            if (isset($__uriTag__[$tag]) && $__uriTag__[$tag] instanceof StreamSocketInterface)
-                $__uriTag__[$tag]->fileClose();
+            if (isset($__uriTag__[$tag]) && $__uriTag__[$tag] instanceof HttpRequestInterface)
+                $__uriTag__[$tag]->close();
 
             $__uriTag__[$tag] = null;
             unset($GLOBALS['__uriTag__'][$tag]);

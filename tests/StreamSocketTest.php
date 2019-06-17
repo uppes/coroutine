@@ -78,9 +78,9 @@ class StreamSocketTest extends TestCase
      * @covers Async\Coroutine\StreamSocket::fileValid
      * @covers Async\Coroutine\StreamSocket::fileHandle
      * @covers Async\Coroutine\StreamSocket::fileLines
-     * @covers Async\Coroutine\StreamSocket::head
-     * @covers Async\Coroutine\StreamSocket::request
-     * @covers Async\Coroutine\StreamSocket::fileMeta
+     * @covers Async\Coroutine\HttpRequest::head
+     * @covers Async\Coroutine\HttpRequest::request
+     * @covers Async\Coroutine\StreamSocket::getMeta
      * @covers Async\Coroutine\Task::result
      * @covers Async\Coroutine\Task::rescheduled
      * @covers Async\Coroutine\Task::clearResult

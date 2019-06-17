@@ -10,7 +10,7 @@ use Async\Coroutine\StreamSocketInterface;
 class StreamSocket implements StreamSocketInterface
 {
     protected $socket;
-    protected $handle;
+    protected $resource;
     protected $secure;
     protected $client;
     protected $instance;
@@ -198,257 +198,38 @@ class StreamSocket implements StreamSocketInterface
         return $newSocket;
     }
 
-    protected function authorization(array $authorize)
-    {
-        $headers = '';
-        if ($authorize['type'] =='basic' && !empty($authorize['username'])) {
-            $headers .= "Authorization: Basic ";
-            $headers .= \base64_encode($authorize['username'].':'.$authorize['password'])."\r\n";
-        } elseif ($authorize['type']=='digest' && !empty($authorize['username'])) {
-            $headers .= 'Authorization: Digest ';
-            foreach ($authorize as $k => $v) {
-                if (empty($k) || empty($v)) 
-                    continue;
-                if ($k=='password') 
-                    continue;
-                $headers .= $k.'="'.$v.'", ';
-            }
-            $headers .= "\r\n";
-        }
-
-        return $headers;
-    }
-
-    /**
-     * @param string $method - GET, POST, HEAD, PUT, PATCH, DELETE
-     * @param string $url - URI for the request.
-     * @param mixed $data
-     * @param array $authorize
-     * @param string $format
-     * @param string $header
-     * @param string $userAgent
-     * @param float $protocolVersion
-     * @param int $redirect
-     * @param int $timeout
-     * @return array|bool
-     */
-    protected function request(string $method = null, string $url = null, $data = null, array $authorize = ['username' => "", 'password' => "", 'type' => ""], string $format = null, string $header = null, string $userAgent = 'Symplely Http', float $protocolVersion = 1.1, int $redirect = 20, int $timeout = 60)
-    {
-        if (empty($url) || empty($format) 
-            || !\in_array($method, ['CONNECT', 'DELETE', 'GET', 'HEAD', 'OPTIONS', 'PATCH', 'POST', 'PUT', 'TRACE'])
-        )
-            return false;
-
-        $headers = $this->authorization($authorize);
-        $contents = \is_array($data) ? \http_build_query($data) : $data;
-        $length = !empty($contents) ? "Content-length: ".\strlen($contents)."\r\n" : '';
-        $extra = !empty($header) ? "\r\n" : '';
-        $context = [
-            'http' =>
-            [
-                'method' => $method,
-                'protocol_version' => $protocolVersion,
-                'header' => $header.$extra.$headers."Content-type: $format\r\n".$length."Connection: close\r\n",
-                'user_agent' => $userAgent,
-                'max_redirects' => $redirect, // stop after 5 redirects
-                'timeout' => $timeout, // timeout in seconds on response
-            ]
-        ];
-
-        $context = \stream_context_create($context);
-
-        if (!empty($contents))
-            \stream_context_set_option($context, 'http', 'content', $contents);
-
-        yield Kernel::fileOpen($this, $url, 'r', $context);
-        if (\is_resource($this->handle)) {
-            $meta = $this->meta;
-            if ($method == 'HEAD') {
-                $response = $this->getStatus();
-                $metaUpdated = false;
-            } else {
-                $response = yield $this->fileContents();
-                $metaUpdated = $this->getMeta($this->handle);
-            }
-            
-            return [$meta, $response, $metaUpdated];            
-        }
-        
-        return false;
-    }
-
-    /**
-     * @param string $url - URI for the request.
-     * @param array $authorize
-     * @param array $format
-     * @param string $userAgent
-     * @param float $protocolVersion
-     * @param int $redirect
-     * @param int $timeout
-     * @return array|bool
-     */
-    public function get(string $url = null, 
-        array $authorize = ['username' => "", 'password' => "", 'type' => ""],
-        string $format = 'text/html',
-        string $userAgent = 'Symplely Http',
-        float $protocolVersion = 1.1,
-        int $redirect = 10,
-        int $timeout = 30)
-    {
-        yield $this->request('GET', $url, null, $authorize, $format, null, $userAgent, $protocolVersion, $redirect, $timeout);
-    }
-
-    /**
-     * @param string $url - URI for the request.
-     * @param mixed $data
-     * @param array $authorize
-     * @param string $format
-     * @param string $header
-     * @param string $userAgent
-     * @param float $protocolVersion
-     * @param int $redirect
-     * @param int $timeout
-     * @return array|bool
-     */
-    public function post(string $url = null, $data = null, 
-        array $authorize = ['username' => "", 'password' => "", 'type' => ""],
-        string $format = 'application/x-www-form-urlencoded',
-        string $header = null,
-        string $userAgent = 'Symplely Http',
-        float $protocolVersion = 1.1,
-        int $redirect = 10,
-        int $timeout = 30)
-    {
-        yield $this->request('POST', $url, $data, $authorize, $format, $header, $userAgent, $protocolVersion, $redirect, $timeout);
-    }
-
-    /**
-     * @param string $url - URI for the request.
-     * @param array $authorize
-     * @param string $userAgent
-     * @param float $protocolVersion
-     * @return array|bool
-     */
-    public function head(string $url, 
-        array $authorize = ['username' => "", 'password' => "", 'type' => ""],
-        string $userAgent = 'Symplely Http',
-        float $protocolVersion = 1.1)
-    {
-        $response = yield $this->request('HEAD', $url, null, $authorize, 'text/html', null, $userAgent, $protocolVersion);
-        if ($response === false) {
-            $handle = $this->fileOpen($url);
-            if (\is_resource($handle)) {
-                $response = [$this->meta, $this->getStatus(), true];
-            }
-        }
-        
-        return $response;
-    }
-
-    /**
-     * @param string $url - URI for the request.
-     * @param mixed $data
-     * @param array $authorize
-     * @param string $format
-     * @param string $header
-     * @param string $userAgent
-     * @param float $protocolVersion
-     * @param int $redirect
-     * @param int $timeout
-     * @return array|bool
-     */
-    public function patch(string $url = null, $data = null, 
-        array $authorize = ['username' => "", 'password' => "", 'type' => ""],
-        string $format = 'text/plain',
-        string $header = null,
-        string $userAgent = 'Symplely Http',
-        float $protocolVersion = 1.1,
-        int $redirect = 5,
-        int $timeout = 30)
-    {
-        yield $this->request('PATCH', $url, $data, $authorize, $format, $header, $userAgent, $protocolVersion, $redirect, $timeout);
-    }
-
-    /**
-     * @param string $url - URI for the request.
-     * @param mixed $data
-     * @param array $authorize
-     * @param string $format
-     * @param string $header
-     * @param string $userAgent
-     * @param float $protocolVersion
-     * @param int $redirect
-     * @param int $timeout
-     * @return array|bool
-     */
-    public function put(string $url = null, $data = null, 
-        array $authorize = ['username' => "", 'password' => "", 'type' => ""],
-        string $format = 'application/octet-stream',
-        string $header = null,
-        string $userAgent = 'Symplely Http',
-        float $protocolVersion = 1.1,
-        int $redirect = 5,
-        int $timeout = 30)
-    {
-        yield $this->request('PUT', $url, $data, $authorize, $format, $header, $userAgent, $protocolVersion, $redirect, $timeout);
-    }
-
-    /**
-     * @param string $url - URI for the request.
-     * @param mixed $data
-     * @param array $authorize
-     * @param string $format
-     * @param string $header
-     * @param string $userAgent
-     * @param float $protocolVersion
-     * @param int $redirect
-     * @param int $timeout
-     * @return array|bool
-     */
-    public function delete(string $url = null, $data = null, 
-        array $authorize = ['username' => "", 'password' => "", 'type' => ""],
-        string $format = 'application/octet-stream',
-        string $header = null,
-        string $userAgent = 'Symplely Http',
-        float $protocolVersion = 1.1,
-        int $redirect = 5,
-        int $timeout = 30)
-    {
-        yield $this->request('DELETE', $url, $data, $authorize, $format, $header, $userAgent, $protocolVersion, $redirect, $timeout);
-    }
-
     public function fileOpen(string $uri = null, string $mode = 'r', $context = []) 
 	{
         if (\in_array($mode, ['r', 'r+', 'w', 'w+', 'a', 'a+', 'x', 'x+', 'c', 'c+']))
-            $handle = @\fopen($uri, 
+            $resource = @\fopen($uri, 
                 $mode.'b', 
                 false, 
                 \is_resource($context) ? $context : \stream_context_create($context)
             );
         
-        if (\is_resource($handle)) {
+        if (\is_resource($resource)) {
             $this->isValid = true;
-            \stream_set_blocking($handle, false);
-            $this->handle = $handle;
-            $this->meta = $this->fileMeta($handle);
+            \stream_set_blocking($resource, false);
+            $this->resource = $resource;
+            $this->meta = $this->fileMeta($resource);
         }
 
-        return $this->handle;
+        return $this->resource;
     }
 
     public function fileContents(int $size = 256, float $timeout_seconds = 0.5, $stream = null)
     {
         yield;
-        $handle = empty($stream) ? $this->handle : $stream;
+        $resource = empty($stream) ? $this->resource : $stream;
 
-        if (! \is_resource($handle))
+        if (! \is_resource($resource))
             return Coroutine::value(false);
 
         $contents = '';
         while (true) {
-            yield Kernel::readWait($handle);
+            yield Kernel::readWait($resource);
             $startTime = \microtime(true);
-            $new = \stream_get_contents($handle, $size);
+            $new = \stream_get_contents($resource, $size);
             $endTime = \microtime(true);
             if (\is_string($new) && \strlen($new) >= 1) {
                 $contents .= $new;
@@ -467,14 +248,14 @@ class StreamSocket implements StreamSocketInterface
     public function fileCreate($contents, $stream = null)
     {
         yield;
-        $handle = empty($stream) ? $this->handle : $stream;
+        $resource = empty($stream) ? $this->resource : $stream;
 
-        if (! \is_resource($handle))
+        if (! \is_resource($resource))
             return Coroutine::value(false);
 
         for ($written = 0; $written < \strlen($contents); $written += $fwrite) {
-            yield Kernel::writeWait($handle);
-            $fwrite = \fwrite($handle, \substr($contents, $written));
+            yield Kernel::writeWait($resource);
+            $fwrite = \fwrite($resource, \substr($contents, $written));
             // see https://www.php.net/manual/en/function.fwrite.php#96951
             if (($fwrite === false) || ($fwrite == 0)) {
                 break;
@@ -486,15 +267,15 @@ class StreamSocket implements StreamSocketInterface
 
     public function fileLines($stream = null)
     {
-        $handle = empty($stream) ? $this->handle : $stream;
+        $resource = empty($stream) ? $this->resource : $stream;
 
-        if (! \is_resource($handle))
+        if (! \is_resource($resource))
             return Coroutine::value(false);
 
         $contents = [];
-        while(! \feof($handle)) {
-            yield Kernel::readWait($handle);
-            $new = \trim(\fgets($handle), \EOL);
+        while(! \feof($resource)) {
+            yield Kernel::readWait($resource);
+            $new = \trim(\fgets($resource), \EOL);
             if (!empty($new))
                 $contents[] = $new;
         }
@@ -502,19 +283,14 @@ class StreamSocket implements StreamSocketInterface
         yield Coroutine::value($contents);
     }
 
-    public function getMetadata(string $key = null, $stream = null)
-    {        
-        $metadata = $this->getMeta($stream);
-        if ($key) {
-            $metadata = isset($metadata[$key]) ? $metadata[$key] : null;
-        }
-
-        return $metadata;
+    public function getMeta()
+     {
+        return $this->meta;
     }
 
     public function fileMeta($stream = null)
     {
-        $check = empty($stream) ? $this->handle : $stream;
+        $check = empty($stream) ? $this->resource : $stream;
 
         if (empty($stream) && \is_resource($check))
             $this->meta = \stream_get_meta_data($check);
@@ -531,34 +307,7 @@ class StreamSocket implements StreamSocketInterface
 
     public function fileHandle()
     {
-        return $this->handle;
-    }
-
-    public function getClient()
-    {
-        return $this->client;
-    }
-
-    public function getStatus($meta = null) 
-    {
-        if (empty($meta))
-            $meta = $this->meta;
-
-        $result = array();
-        $http_version = null;
-        $http_statusCode = 400;
-        $http_statusString = null;
-        if (isset($meta['wrapper_data'])) {
-            foreach ($meta['wrapper_data'] as $headerLine) {
-                if (preg_match('/^HTTP\/(\d+\.\d+)\s+(\d+)\s*(.+)?$/', $headerLine, $result)) {
-                    $http_version = $result[1];
-                    $http_statusCode = $result[2];
-                    $http_statusString = $result[3];
-                }
-            }
-        }
-
-        return (int) $http_statusCode;
+        return $this->resource;
     }
 
     public static function input(int $size = 256, bool $error = false) 
@@ -574,19 +323,19 @@ class StreamSocket implements StreamSocketInterface
 
     public function read(int $size = -1, $stream = null) 
 	{
-        $handle = empty($stream) ? $this->socket : $stream;
+        $resource = empty($stream) ? $this->socket : $stream;
 
-        yield Kernel::readWait($handle);
-        yield Coroutine::value(\stream_get_contents($handle, $size));
-        \stream_set_blocking($handle, false);
+        yield Kernel::readWait($resource);
+        yield Coroutine::value(\stream_get_contents($resource, $size));
+        \stream_set_blocking($resource, false);
     }
 
     public function write(string $string, $stream = null) 
 	{
-        $handle = empty($stream) ? $this->socket : $stream;
+        $resource = empty($stream) ? $this->socket : $stream;
 
-        yield Kernel::writeWait($handle);
-        yield Coroutine::value(\fwrite($handle, $string));
+        yield Kernel::writeWait($resource);
+        yield Coroutine::value(\fwrite($resource, $string));
     }
 
     public function close() 
@@ -601,16 +350,16 @@ class StreamSocket implements StreamSocketInterface
 
     public function fileClose($stream = null) 
 	{
-        $handle = empty($stream) ? $this->handle : $stream;
+        $resource = empty($stream) ? $this->resource : $stream;
 
-        @\fclose($handle);
-        if ($handle === $this->handle) {
-            $this->handle = null;
+        @\fclose($resource);
+        if ($resource === $this->resource) {
+            $this->resource = null;
             $this->meta = null;
-        } elseif ($handle === $this->client) {
+        } elseif ($resource === $this->client) {
             self::$isClient = false;
             $this->client = null;
-        } elseif ($handle === $this->socket) {
+        } elseif ($resource === $this->socket) {
             $this->socket = null;
             $this->secure = null;
         }
