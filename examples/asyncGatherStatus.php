@@ -9,6 +9,7 @@ use Async\Coroutine\StreamSocket;
 function get_statuses($websites) 
 {
     $statuses = ['200' => 0, '400' => 0, '405' => 0];
+    $tasks = [];
 	foreach($websites as $website) {
 		$tasks[] = yield \await('get_website_status', $website);
     }
@@ -25,13 +26,15 @@ function get_statuses($websites)
 }
 
 function get_website_status($url) 
-{
+{yield;
     $id = yield \task_id();
-    [$meta, $status, $retry] = yield \head_uri($url);
-    yield;
+    $object = yield \file_open(null, $url);
+    $status = \file_status($object);
+    \file_close($object);
+    //[$meta, $status, $retry] = yield \head_uri($url);
     print "task: $id, code: $status".EOL;
-    if ($retry === true)
-        echo "task $id, had to be retried!".EOL;
+    // if ($retry === true)
+       // echo "task $id, had to be retried!".EOL;
     return $status;
 }
 
