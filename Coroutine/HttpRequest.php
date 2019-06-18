@@ -163,17 +163,17 @@ class HttpRequest implements HttpRequestInterface
      * @param int $timeout - 30 
      * @return array|bool
      */
-    public function get(string $url = null, ...$args)
+    public function get(string $url = null, ...$options)
     {
-        if (empty($args))
+        if (empty($options))
             return false;
 
-        $authorize = isset($args[0]) ? $args[0] : ['username' => "", 'password' => "", 'type' => ""];
-        $format = isset($args[1]) ? $args[1] : 'text/html';
-        $userAgent = isset($args[2]) ? $args[2] : 'Symplely Http';
-        $protocolVersion = isset($args[3]) ? $args[3] : 1.1;
-        $redirect = isset($args[4]) ? $args[4] : 10;
-        $timeout = isset($args[5]) ? $args[5] : 30;
+        $authorize = isset($options[0]) ? $options[0] : ['username' => "", 'password' => "", 'type' => ""];
+        $format = isset($options[1]) ? $options[1] : 'text/html';
+        $userAgent = isset($options[2]) ? $options[2] : 'Symplely Http';
+        $protocolVersion = isset($options[3]) ? $options[3] : 1.1;
+        $redirect = isset($options[4]) ? $options[4] : 10;
+        $timeout = isset($options[5]) ? $options[5] : 30;
 
         yield $this->request('GET', $url, null, $authorize, $format, null, $userAgent, $protocolVersion, $redirect, $timeout);
     }
@@ -190,18 +190,18 @@ class HttpRequest implements HttpRequestInterface
      * @param int $timeout - 30 
      * @return array|bool
      */
-    public function post(string $url = null, $data = null, ...$args)
+    public function post(string $url = null, $data = null, ...$options)
     {
-        if (empty($args))
+        if (empty($options))
             return false;
 
-        $authorize = isset($args[0]) ? $args[0] : ['username' => "", 'password' => "", 'type' => ""];
-        $format = isset($args[1]) ? $args[1] : 'application/x-www-form-urlencoded';
-        $header = isset($args[2]) ? $args[2] : null;
-        $userAgent = isset($args[3]) ? $args[3] : 'Symplely Http';
-        $protocolVersion = isset($args[5]) ? $args[5] : 1.1;
-        $redirect = isset($args[5]) ? $args[5] : 10;
-        $timeout = isset($args[6]) ? $args[6] : 30;
+        $authorize = isset($options[0]) ? $options[0] : ['username' => "", 'password' => "", 'type' => ""];
+        $format = isset($options[1]) ? $options[1] : 'application/x-www-form-urlencoded';
+        $header = isset($options[2]) ? $options[2] : null;
+        $userAgent = isset($options[3]) ? $options[3] : 'Symplely Http';
+        $protocolVersion = isset($options[5]) ? $options[5] : 1.1;
+        $redirect = isset($options[5]) ? $options[5] : 10;
+        $timeout = isset($options[6]) ? $options[6] : 30;
         
         yield $this->request('POST', $url, $data, $authorize, $format, $header, $userAgent, $protocolVersion, $redirect, $timeout);
     }
@@ -213,14 +213,14 @@ class HttpRequest implements HttpRequestInterface
      * @param float $protocolVersion - 1.1
      * @return array|bool
      */
-    public function head(string $url, ...$args)
+    public function head(string $url, ...$options)
     {
-        if (empty($args))
+        if (empty($options))
             return false;
 
-        $authorize = isset($args[0]) ? $args[0] : ['username' => "", 'password' => "", 'type' => ""];
-        $userAgent = isset($args[1]) ? $args[1] : 'Symplely Http';
-        $protocolVersion = isset($args[2]) ? $args[2] : 1.1;
+        $authorize = isset($options[0]) ? $options[0] : ['username' => "", 'password' => "", 'type' => ""];
+        $userAgent = isset($options[1]) ? $options[1] : 'Symplely Http';
+        $protocolVersion = isset($options[2]) ? $options[2] : 1.1;
 
         $response = yield $this->request('HEAD', $url, null, $authorize, 'text/html', null, $userAgent, $protocolVersion);
         if ($response === false) {
@@ -248,18 +248,18 @@ class HttpRequest implements HttpRequestInterface
      * @param int $timeout - 30 
      * @return array|bool
      */
-    public function patch(string $url = null, $data = null, ...$args)
+    public function patch(string $url = null, $data = null, ...$options)
     {
-        if (empty($args))
+        if (empty($options))
             return false;
 
-        $authorize = isset($args[0]) ? $args[0] : ['username' => "", 'password' => "", 'type' => ""];
-        $format = isset($args[1]) ? $args[1] : 'text/plain';
-        $header = isset($args[2]) ? $args[2] : null;
-        $userAgent = isset($args[3]) ? $args[3] : 'Symplely Http';
-        $protocolVersion = isset($args[5]) ? $args[5] : 1.1;
-        $redirect = isset($args[5]) ? $args[5] : 10;
-        $timeout = isset($args[6]) ? $args[6] : 30;
+        $authorize = isset($options[0]) ? $options[0] : ['username' => "", 'password' => "", 'type' => ""];
+        $format = isset($options[1]) ? $options[1] : 'text/plain';
+        $header = isset($options[2]) ? $options[2] : null;
+        $userAgent = isset($options[3]) ? $options[3] : 'Symplely Http';
+        $protocolVersion = isset($options[5]) ? $options[5] : 1.1;
+        $redirect = isset($options[5]) ? $options[5] : 10;
+        $timeout = isset($options[6]) ? $options[6] : 30;
 
         yield $this->request('PATCH', $url, $data, $authorize, $format, $header, $userAgent, $protocolVersion, $redirect, $timeout);
     }
@@ -276,18 +276,18 @@ class HttpRequest implements HttpRequestInterface
      * @param int $timeout - 30 
      * @return array|bool
      */
-    public function put(string $url = null, $data = null, ...$args)
+    public function put(string $url = null, $data = null, ...$options)
     {
-        if (empty($args))
+        if (empty($options))
             return false;
 
-        $authorize = isset($args[0]) ? $args[0] : ['username' => "", 'password' => "", 'type' => ""];
-        $format = isset($args[1]) ? $args[1] : 'application/octet-stream';
-        $header = isset($args[2]) ? $args[2] : null;
-        $userAgent = isset($args[3]) ? $args[3] : 'Symplely Http';
-        $protocolVersion = isset($args[5]) ? $args[5] : 1.1;
-        $redirect = isset($args[5]) ? $args[5] : 10;
-        $timeout = isset($args[6]) ? $args[6] : 30;
+        $authorize = isset($options[0]) ? $options[0] : ['username' => "", 'password' => "", 'type' => ""];
+        $format = isset($options[1]) ? $options[1] : 'application/octet-stream';
+        $header = isset($options[2]) ? $options[2] : null;
+        $userAgent = isset($options[3]) ? $options[3] : 'Symplely Http';
+        $protocolVersion = isset($options[5]) ? $options[5] : 1.1;
+        $redirect = isset($options[5]) ? $options[5] : 10;
+        $timeout = isset($options[6]) ? $options[6] : 30;
 
         yield $this->request('PUT', $url, $data, $authorize, $format, $header, $userAgent, $protocolVersion, $redirect, $timeout);
     }
@@ -304,18 +304,18 @@ class HttpRequest implements HttpRequestInterface
      * @param int $timeout - 30 
      * @return array|bool
      */
-    public function delete(string $url = null, $data = null, ...$args)
+    public function delete(string $url = null, $data = null, ...$options)
     {
-        if (empty($args))
+        if (empty($options))
             return false;
 
-        $authorize = isset($args[0]) ? $args[0] : ['username' => "", 'password' => "", 'type' => ""];
-        $format = isset($args[1]) ? $args[1] : 'application/octet-stream';
-        $header = isset($args[2]) ? $args[2] : null;
-        $userAgent = isset($args[3]) ? $args[3] : 'Symplely Http';
-        $protocolVersion = isset($args[5]) ? $args[5] : 1.1;
-        $redirect = isset($args[5]) ? $args[5] : 10;
-        $timeout = isset($args[6]) ? $args[6] : 30;
+        $authorize = isset($options[0]) ? $options[0] : ['username' => "", 'password' => "", 'type' => ""];
+        $format = isset($options[1]) ? $options[1] : 'application/octet-stream';
+        $header = isset($options[2]) ? $options[2] : null;
+        $userAgent = isset($options[3]) ? $options[3] : 'Symplely Http';
+        $protocolVersion = isset($options[5]) ? $options[5] : 1.1;
+        $redirect = isset($options[5]) ? $options[5] : 10;
+        $timeout = isset($options[6]) ? $options[6] : 30;
 
         yield $this->request('DELETE', $url, $data, $authorize, $format, $header, $userAgent, $protocolVersion, $redirect, $timeout);
     }

@@ -38,7 +38,7 @@ use Async\Coroutine\StreamSocketInterface;
      * @param int $timeout - 30 
      * @return array|bool
      */
-    public function get(string $url = null, ...$args);
+    public function get(string $url = null, ...$options);
 
     /**
      * @param string $url - URI for the request.
@@ -52,7 +52,7 @@ use Async\Coroutine\StreamSocketInterface;
      * @param int $timeout - 30 
      * @return array|bool
      */
-    public function post(string $url = null, $data = null, ...$args);
+    public function post(string $url = null, $data = null, ...$options);
 
     /**
      * @param string $url - URI for the request.
@@ -61,7 +61,7 @@ use Async\Coroutine\StreamSocketInterface;
      * @param float $protocolVersion - 1.1
      * @return array|bool
      */
-    public function head(string $url, ...$args);
+    public function head(string $url, ...$options);
 
     /**
      * @param string $url - URI for the request.
@@ -75,7 +75,7 @@ use Async\Coroutine\StreamSocketInterface;
      * @param int $timeout
      * @return array|bool
      */
-    public function patch(string $url = null, $data = null, ...$args);
+    public function patch(string $url = null, $data = null, ...$options);
 
     /**
      * @param string $url - URI for the request.
@@ -89,7 +89,7 @@ use Async\Coroutine\StreamSocketInterface;
      * @param int $timeout
      * @return array|bool
      */
-    public function put(string $url = null, $data = null, ...$args);
+    public function put(string $url = null, $data = null, ...$options);
 
     /**
      * @param string $url - URI for the request.
@@ -103,7 +103,7 @@ use Async\Coroutine\StreamSocketInterface;
      * @param int $timeout
      * @return array|bool
      */
-    public function delete(string $url = null, $data = null, ...$args);
+    public function delete(string $url = null, $data = null, ...$options);
 
     /**
      * {@inheritdoc}
