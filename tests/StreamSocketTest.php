@@ -39,6 +39,7 @@ class StreamSocketTest extends TestCase
     public function get_website_status($url) 
     {
         $response = yield \head_uri($url);
+        \clear_uri();
         $this->assertEquals(3, \count($response));
         [$meta, $status, $retry] = $response;
         $this->assertNotNull($meta);
@@ -89,6 +90,7 @@ class StreamSocketTest extends TestCase
      * @covers \gather
      * @covers \head_uri
      * @covers \create_uri
+     * @covers \clear_uri
      */
     public function testFileOpen() 
     {

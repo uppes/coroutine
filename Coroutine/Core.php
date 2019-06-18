@@ -267,7 +267,7 @@ if (! \function_exists('coroutine_run')) {
 	 */
 	function client_read(StreamSocketInterface $instance, int $size = -1) 
 	{
-		return $instance->response($size);
+		return $instance->read($size);
 	}
 
 	/**
@@ -384,49 +384,62 @@ if (! \function_exists('coroutine_run')) {
 	/**
 	 * - This function needs to be prefixed with `yield`
 	 */
-	function get_uri(StreamSocketInterface $instance)
+	function get_uri(string $tagUri, ...$options)
 	{
 	}
 
 	/**
 	 * - This function needs to be prefixed with `yield`
 	 */
-	function put_uri(StreamSocketInterface $instance)
+	function put_uri(string $tagUri, ...$options)
 	{
 	}
 
 	/**
 	 * - This function needs to be prefixed with `yield`
 	 */
-	function delete_uri(StreamSocketInterface $instance)
+	function delete_uri(string $tagUri, ...$options)
 	{
 	}
 
 	/**
 	 * - This function needs to be prefixed with `yield`
 	 */
-	function post_uri(StreamSocketInterface $instance)
+	function post_uri(string $tagUri, ...$options)
 	{
 	}
 
 	/**
 	 * - This function needs to be prefixed with `yield`
 	 */
-	function patch_uri(StreamSocketInterface $instance)
+	function patch_uri(string $tagUri, ...$options)
 	{
 	}
 
 	/**
 	 * - This function needs to be prefixed with `yield`
 	 */
-	function head_uri(string $url, 
-		array $authorize = ['username' => "", 'password' => "", 'type' => ""],
-		string $userAgent = 'Symplely Http',
-		float $protocolVersion = 1.1)
+	function head_uri(string $tagUri, ...$options)
 	{
-		$response = yield \create_uri()->head($url, $authorize, $userAgent, $protocolVersion);
-		\clear_uri();
-		return $response;
+        if (\strpos($tagUri, '://') !== false) {
+            $url = $tagUri;
+            $instance = \create_uri();
+        } elseif (!empty($options)) {
+            $url = \array_shift($options);
+            $instance = \create_uri($tagUri);
+        }
+
+        if ($instance instanceof HttpRequestInterface) {
+            $authorize = isset($options[0]) ? $options[0] : ['username' => "", 'password' => "", 'type' => ""];
+            $userAgent = isset($options[1]) ? $options[1] : 'Symplely Http';
+            $protocolVersion = isset($options[2]) ? $options[2] : 1.1;
+
+            $response = yield $instance->head($url, $authorize, $userAgent, $protocolVersion);
+
+            return $response;
+        }
+
+        return false;
 	}
 
 	/**
