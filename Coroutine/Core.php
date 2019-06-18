@@ -327,7 +327,8 @@ if (! \function_exists('coroutine_run')) {
 		return Kernel::fileOpen($instance, $filename, $mode, $options); 
     }
 
-    function type($var) {
+    function type($var) 
+    {
         $checks = [
             'is_callable' => 'callable',
             'is_string' => 'string',
@@ -525,7 +526,7 @@ if (! \function_exists('coroutine_run')) {
 
 	function file_status(StreamSocketInterface $instance, $meta = null)
 	{
-		return $instance->getStatus($meta);
+		return $instance->fileStatus($meta);
 	}
 
 	function file_handle(StreamSocketInterface $instance)
@@ -579,8 +580,6 @@ if (! \function_exists('coroutine_run')) {
 			$coroutine->run();
 			return true;
 		}
-
-		return false;
 	}
 
     /**
@@ -636,7 +635,5 @@ if (! \function_exists('coroutine_run')) {
 		
 		if ($pool instanceof ParallelInterface)	
 			return $pool->wait();
-		
-		return array();
     }
 }

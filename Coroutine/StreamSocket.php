@@ -452,6 +452,28 @@ class StreamSocket implements StreamSocketInterface
         return $this->meta;
     }
 
+    public function fileStatus($meta = null) 
+    {
+        if (empty($meta))
+            $meta = $this->meta;
+
+        $result = array();
+        $http_version = null;
+        $http_statusCode = 400;
+        $http_statusString = null;
+        if (isset($meta['wrapper_data'])) {
+            foreach ($meta['wrapper_data'] as $headerLine) {
+                if (preg_match('/^HTTP\/(\d+\.\d+)\s+(\d+)\s*(.+)?$/', $headerLine, $result)) {
+                    $http_version = $result[1];
+                    $http_statusCode = $result[2];
+                    $http_statusString = $result[3];
+                }
+            }
+        }
+
+        return (int) $http_statusCode;
+    }
+
     public function fileValid(): bool
     {
         return $this->isValid;
