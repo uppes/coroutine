@@ -19,23 +19,31 @@ class HttpRequest implements HttpRequestInterface
      */
     protected $protocolVersions = ["1.0", "1.1", "2.0"];
 
-    /** 
+    /**
+	 * The request method
+     * 
      * @var string 
      */
     protected $method;
 
     /** 
+	 * The requested uri
+     * 
      * @var string 
      */
     protected $uri;
 
-    /** 
-     * @var array headers with lowercase keys 
+    /**
+     * headers with lowercase keys
+     * 
+     * @var array  
      */
     protected $headers = [];
 
     /**
-     *  @var array lowercase header to actual case map 
+     * lowercase header to actual case map 
+     * 
+     * @var array 
      */
     protected $headerCaseMap = [];
 
@@ -47,8 +55,16 @@ class HttpRequest implements HttpRequestInterface
     protected $resource;
 
     protected $instance;
+
     protected $meta = [];
 
+	/**
+	 * The request params
+	 *
+	 * @var array
+	 */
+    protected $parameters = [];
+        
     protected function authorization(array $authorize)
     {
         $headers = '';
@@ -90,6 +106,12 @@ class HttpRequest implements HttpRequestInterface
         )
             return false;
 
+		// split uri and parameters string
+		@list( $this->uri, $params ) = explode( '?', $uri );
+
+		// parse the parameters
+        \parse_str( $params, $this->parameters );
+        
         $headers = $this->authorization($authorize);
         $contents = \is_array($data) ? \http_build_query($data) : $data;
         $length = !empty($contents) ? "Content-length: ".\strlen($contents)."\r\n" : '';

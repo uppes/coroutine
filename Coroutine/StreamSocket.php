@@ -17,18 +17,101 @@ class StreamSocket implements StreamSocketInterface
     protected $meta = [];
     protected $host = '';
     protected $isValid = false;
+
     protected static $isClient = false;
     protected static $isSecure = false;
     protected static $remote = null;
 
-    public function __construct($socket, bool $isClient = false, $host = null) 
+	/**
+	 * An array of the available HTTP response codes
+	 *
+	 * @var array
+	 */
+	protected static $statusCodes = [
+		// Informational 1xx
+		100 => 'Continue',
+		101 => 'Switching Protocols',
+	
+		// Success 2xx
+		200 => 'OK',
+		201 => 'Created',
+		202 => 'Accepted',
+		203 => 'Non-Authoritative Information',
+		204 => 'No Content',
+		205 => 'Reset Content',
+		206 => 'Partial Content',
+	
+		// Redirection 3xx
+		300 => 'Multiple Choices',
+		301 => 'Moved Permanently',
+		302 => 'Found', // 1.1
+		303 => 'See Other',
+		304 => 'Not Modified',
+		305 => 'Use Proxy',
+		// 306 is deprecated but reserved
+		307 => 'Temporary Redirect',
+	
+		// Client Error 4xx
+		400 => 'Bad Request',
+		401 => 'Unauthorized',
+		402 => 'Payment Required',
+		403 => 'Forbidden',
+		404 => 'Not Found',
+		405 => 'Method Not Allowed',
+		406 => 'Not Acceptable',
+		407 => 'Proxy Authentication Required',
+		408 => 'Request Timeout',
+		409 => 'Conflict',
+		410 => 'Gone',
+		411 => 'Length Required',
+		412 => 'Precondition Failed',
+		413 => 'Request Entity Too Large',
+		414 => 'Request-URI Too Long',
+		415 => 'Unsupported Media Type',
+		416 => 'Requested Range Not Satisfiable',
+		417 => 'Expectation Failed',
+	
+		// Server Error 5xx
+		500 => 'Internal Server Error',
+		501 => 'Not Implemented',
+		502 => 'Bad Gateway',
+		503 => 'Service Unavailable',
+		504 => 'Gateway Timeout',
+		505 => 'HTTP Version Not Supported',
+		509 => 'Bandwidth Limit Exceeded'
+    ];
+
+	/**
+	 * The current response status
+	 *
+	 * @var int
+	 */
+	protected $status = 200;
+	
+	/**
+	 * The current response body
+	 *
+	 * @var string
+	 */
+	protected $body = '';
+	
+	/**
+	 * The current response headers
+	 *
+	 * @var array
+	 */
+    protected $headers = [];
+    
+    public function __construct($server, bool $isClient = false, $host = null) 
 	{
         $this->instance = $this;
-        $this->socket = $socket;
+
         if ($isClient) {
             self::$isClient = true;
-            $this->client = $socket;
+            $this->client = $server;
             $this->host = $host;
+        } else {
+            $this->socket = $server;
         }
     }
 
@@ -76,7 +159,7 @@ class StreamSocket implements StreamSocketInterface
 
         #Connect to Server
         $flag = empty($context) ? \STREAM_CLIENT_CONNECT : \STREAM_CLIENT_CONNECT | \STREAM_CLIENT_ASYNC_CONNECT;
-        $socket = @\stream_socket_client(
+        $client = @\stream_socket_client(
             $url, 
             $errNo,
             $errStr, 
@@ -85,17 +168,17 @@ class StreamSocket implements StreamSocketInterface
             \stream_context_create($context)
         );
 
-        if (!$socket)
+        if (!$client)
             throw new \RuntimeException('Failed to connect to "' . $uri . '": ' . $errStr, $errNo);
 
-        \stream_set_blocking($socket, false);        
+        \stream_set_blocking($client, false);        
         
         if (!empty($context)) {
-            yield Kernel::writeWait($socket);
-	        \stream_socket_enable_crypto ($socket, true, \STREAM_CRYPTO_METHOD_TLS_CLIENT);
+            yield Kernel::writeWait($client);
+	        \stream_socket_enable_crypto ($client, true, \STREAM_CRYPTO_METHOD_TLS_CLIENT);
         }        
 
-		yield Coroutine::value(($skipInterface === false) ? new self($socket, true, $host) : $socket);
+		yield Coroutine::value(($skipInterface === false) ? new self($client, true, $host) : $client);
     }
 
     /**
@@ -146,8 +229,8 @@ class StreamSocket implements StreamSocketInterface
         if (empty($context))
             $context = \stream_context_create($context);
 
-        #create a stream socket on IP:Port
-        $socket = @\stream_socket_server(
+        #create a stream server on IP:Port
+        $server = @\stream_socket_server(
             $uri, 
             $errNo, 
             $errStr,
@@ -155,14 +238,14 @@ class StreamSocket implements StreamSocketInterface
             $context
         );
 
-        if (!$socket)
+        if (!$server)
             throw new \RuntimeException('Failed to listen on "' . $uri . '": ' . $errStr, $errNo);
         
         print "Listening to {$uri} for connections\n";
 
-		\stream_set_blocking($socket, false);
+		\stream_set_blocking($server, false);
 
-		return (self::$isSecure) ? $socket : new self($socket);
+		return (self::$isSecure) ? $server : new self($server);
     }
 
     public function address()
@@ -197,6 +280,75 @@ class StreamSocket implements StreamSocketInterface
 
         return $newSocket;
     }
+
+	/**
+	 * Construct a new response
+	 *
+	 * @param string 		$body
+	 * @param int 			$status
+	 * @return string
+	 */
+	public function response($body, $status = null )
+	{
+		if ( !is_null( $status ) )
+		{
+			$this->status = $status;
+		}
+		
+		$this->body = $body;
+		
+		// set initial headers
+        $this->header( 'Date', gmdate( 'D, d M Y H:i:s T' ) );
+        $this->header( 'Content-Type', 'text/html; charset=utf-8' );
+        $this->header( 'Server', 'Symplely Server' );
+
+        // Create a string out of the response data
+        return (string) $this->buildHeaderString() . (string) $this->body;
+    }
+
+	/**
+	 * Returns a simple response based on a status code
+	 *
+	 * @param int $status
+	 * @return string
+	 */
+	public function error($status)
+	{
+		return $this->response("<h1>Symplely Server: ".$status." - ".static::$statusCodes[$status]."</h1>", $status );
+    }
+    	
+	/**
+	 * Add or overwrite an header parameter header 
+	 *
+	 * @param string 			$key
+	 * @param string 			$value
+	 * @return void
+	 */
+	public function header( $key, $value )
+	{
+		$this->headers[\ucfirst($key)] = $value;
+	}
+	
+	/**
+	 * Build a header string based on the current object
+	 *
+	 * @return string
+	 */
+	public function buildHeaderString()
+	{
+		$lines = [];
+		
+		// response status 
+		$lines[] = 'HTTP/1.1 '.$this->status.' '.static::$statusCodes[$this->status];
+		
+		// add the headers
+		foreach( $this->headers as $key => $value )
+		{
+			$lines[] = $key.': '.$value;
+		}
+		
+		return \implode( " \r\n", $lines )."\r\n\r\n";
+	}
 
     public function fileOpen(string $uri = null, string $mode = 'r', $context = []) 
 	{
@@ -352,7 +504,6 @@ class StreamSocket implements StreamSocketInterface
 	{
         $resource = empty($stream) ? $this->resource : $stream;
 
-        @\fclose($resource);
         if ($resource === $this->resource) {
             $this->resource = null;
             $this->meta = null;
@@ -362,6 +513,10 @@ class StreamSocket implements StreamSocketInterface
         } elseif ($resource === $this->socket) {
             $this->socket = null;
             $this->secure = null;
+            $this->body = null;
         }
+
+        if (\is_resource($resource))
+            @\fclose($resource);
     }
 }
