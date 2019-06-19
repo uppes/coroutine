@@ -75,7 +75,7 @@ class ProcessTest extends TestCase
         try {
             yield Kernel::awaitProcess(function () {
                 \usleep(5000);
-                throw new \Async\Coroutine\Exceptions\TimeoutError('3');
+                throw new \Async\Coroutine\Exceptions\TimeoutError();
             }, 1);
         } catch (\Async\Coroutine\Exceptions\TimeoutError $error) {
             $this->mainResult = $childId;
