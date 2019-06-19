@@ -517,7 +517,6 @@ class StreamSocket implements StreamSocketInterface
 
         $resource = empty($stream) ? $handle : $stream;
 
-        print_r($this->fileMeta($resource));
         yield Kernel::writeWait($resource);
         yield Coroutine::value(\fwrite($resource, $string));
     }
