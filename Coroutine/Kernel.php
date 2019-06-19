@@ -371,6 +371,9 @@ class Kernel
 						if (isset($completeList[$taskId])) {
 							$tasks = $completeList[$taskId];
 							$result = $tasks->result();
+							$tasks->clearResult();
+                            unset($completeList[$taskId]);
+                            $coroutine->updateCompleted($completeList);
 							$task->sendValue($result);
 						}
 						$coroutine->schedule($task);
@@ -388,7 +391,7 @@ class Kernel
 	 * @param string $labelFunction
 	 * @param Generator|callable $asyncFunction
 	 */
-	public static function async(string $labelFunction = '__f', callable $asyncFunction)
+	public static function async(string $labelFunction = '__f', callable $asyncFunction = null)
 	{
 		$GLOBALS[$labelFunction] = function (...$args) use ($asyncFunction) {
 			$return = yield $asyncFunction(...$args);

@@ -149,7 +149,7 @@ class StreamSocket implements StreamSocketInterface
 
             // Get the host.
             $host = $url_array['host'];
-            $ip = \gethostbyname($host);
+            //$ip = \gethostbyname($host);
 
             $url = "tcp://{$host}:$port";
         } elseif (\strpos($uri, '://') === false) {
@@ -158,13 +158,12 @@ class StreamSocket implements StreamSocketInterface
         }
 
         #Connect to Server
-        $flag = empty($context) ? \STREAM_CLIENT_CONNECT : \STREAM_CLIENT_CONNECT | \STREAM_CLIENT_ASYNC_CONNECT;
         $client = @\stream_socket_client(
             $url, 
             $errNo,
             $errStr, 
             30, 
-            $flag, 
+            \STREAM_CLIENT_CONNECT, 
             \stream_context_create($context)
         );
 
@@ -176,9 +175,9 @@ class StreamSocket implements StreamSocketInterface
         if (!empty($context)) {
             yield Kernel::writeWait($client);
 	        \stream_socket_enable_crypto ($client, true, \STREAM_CRYPTO_METHOD_TLS_CLIENT);
-        }        
+        }
 
-		yield Coroutine::value(($skipInterface === false) ? new self($client, true, $host) : $client);
+        yield Coroutine::value(($skipInterface === false) ? new self($client, true, $host) : $client);
     }
 
     /**
@@ -497,7 +496,12 @@ class StreamSocket implements StreamSocketInterface
 
     public function read(int $size = -1, $stream = null) 
 	{
-        $resource = empty($stream) ? $this->socket : $stream;
+        if (self::$isClient) 
+            $handle = $this->client;
+        else 
+            $handle = $this->socket;
+
+        $resource = empty($stream) ? $handle : $stream;
 
         yield Kernel::readWait($resource);
         yield Coroutine::value(\stream_get_contents($resource, $size));
@@ -506,8 +510,14 @@ class StreamSocket implements StreamSocketInterface
 
     public function write(string $string, $stream = null) 
 	{
-        $resource = empty($stream) ? $this->socket : $stream;
+        if (self::$isClient) 
+            $handle = $this->client;
+        else 
+            $handle = $this->socket;
 
+        $resource = empty($stream) ? $handle : $stream;
+
+        print_r($this->fileMeta($resource));
         yield Kernel::writeWait($resource);
         yield Coroutine::value(\fwrite($resource, $string));
     }

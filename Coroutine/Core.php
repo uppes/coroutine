@@ -327,7 +327,7 @@ if (! \function_exists('coroutine_run')) {
 		return Kernel::fileOpen($instance, $filename, $mode, $options); 
     }
 
-    function type($var) 
+    function is_type($var): string
     {
         $checks = [
             'is_callable' => 'callable',
@@ -385,42 +385,42 @@ if (! \function_exists('coroutine_run')) {
 	/**
 	 * - This function needs to be prefixed with `yield`
 	 */
-	function get_uri(string $tagUri, ...$options)
+	function get_uri(string $tagUri = null, ...$options)
 	{
 	}
 
 	/**
 	 * - This function needs to be prefixed with `yield`
 	 */
-	function put_uri(string $tagUri, ...$options)
+	function put_uri(string $tagUri = null, ...$options)
 	{
 	}
 
 	/**
 	 * - This function needs to be prefixed with `yield`
 	 */
-	function delete_uri(string $tagUri, ...$options)
+	function delete_uri(string $tagUri = null, ...$options)
 	{
 	}
 
 	/**
 	 * - This function needs to be prefixed with `yield`
 	 */
-	function post_uri(string $tagUri, ...$options)
+	function post_uri(string $tagUri = null, ...$options)
 	{
 	}
 
 	/**
 	 * - This function needs to be prefixed with `yield`
 	 */
-	function patch_uri(string $tagUri, ...$options)
+	function patch_uri(string $tagUri = null, ...$options)
 	{
 	}
 
 	/**
 	 * - This function needs to be prefixed with `yield`
 	 */
-	function head_uri(string $tagUri, ...$options)
+	function head_uri(string $tagUri = null, ...$options)
 	{
         if (\strpos($tagUri, '://') !== false) {
             $url = $tagUri;
@@ -430,7 +430,7 @@ if (! \function_exists('coroutine_run')) {
             $instance = \create_uri($tagUri);
         }
 
-        if ($instance instanceof HttpRequestInterface) {
+        if (isset($instance) && $instance instanceof HttpRequestInterface) {
             $authorize = isset($options[0]) ? $options[0] : ['username' => "", 'password' => "", 'type' => ""];
             $userAgent = isset($options[1]) ? $options[1] : 'Symplely Http';
             $protocolVersion = isset($options[2]) ? $options[2] : 1.1;
@@ -548,6 +548,7 @@ if (! \function_exists('coroutine_run')) {
 	{
 		global $__coroutine__;
 		$__coroutine__ = null;
+        unset($GLOBALS['__coroutine__']);
 	}
 
 	function coroutine_create(\Generator $coroutine = null)

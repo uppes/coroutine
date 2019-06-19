@@ -17,27 +17,31 @@ $hostname = \gethostname();
 $ip = \gethostbyname($hostname); //Set the TCP IP Address to connect too
 $port="5000"; //Set the TCP PORT to connect too
 //Command to run
-if (isset($argc) && isset($argv[1]))
-    $command=$argv[1];
-else 
+if (isset($argc) && isset($argv[1])) {
+    if ($argv[1] == '--host') {
+        $hostname = $argv[2];
+        $port = 80;
+        $command = '/';
+    } else {
+        $hostname = $ip;
+        $command=$argv[1];
+    }
+} else 
     $command="hi"; 
 
-function client($ip, $port, $command) {
+function client($hostname, $port, $command) {
     global $argv;
     $contextOptions = [];
     if (isset($argv[2]))
         $contextOptions = array(
-            'ssl' => array(                    
-                'verify_peer' => false,
-                'verify_peer_name' => false,
-                'disable_compression' => true,
+            'ssl' => array(
                 'allow_self_signed' => true
             )
         );
 
     #Connect to Server
     #Start SSL
-    $socket = \create_client("$hostname:$port", $contextOptions);
+    $socket = yield \create_client("$hostname:$port", $contextOptions);
 
     #Send a command
     yield \client_write($socket, $command);
@@ -52,5 +56,5 @@ function client($ip, $port, $command) {
     echo $response;
 }
 
-\coroutine_create(\client($ip, $port, $command));
+\coroutine_create(\client($hostname, $port, $command));
 \coroutine_run();

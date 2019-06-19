@@ -58,11 +58,14 @@ class StreamSocketTest extends TestCase
     
     public function get_website_status($url) 
     {
+        $response = yield \head_uri();
+        $this->assertFalse($response);
         $response = yield \head_uri($url);
         \clear_uri();
         $this->assertEquals(3, \count($response));
         [$meta, $status, $retry] = $response;
-        $this->assertNotNull($meta);
+        $this->assertEquals('array', \is_type($meta));
+        $this->assertEquals('bool', \is_type($retry));
         $this->assertEquals(200, $status);
         return $status;
     }
@@ -115,6 +118,15 @@ class StreamSocketTest extends TestCase
         }
     }
 
+    public function taskFileOpen_Get_File() 
+    {
+        $contents = yield \get_file('.'.\DS.'list.txt');        
+        $this->assertEquals('bool', \is_type($contents));
+        chdir(__DIR__);
+        $contents = yield \get_file('.'.\DS.'list.txt');        
+        $this->assertEquals('string', \is_type($contents));
+    }
+
     /**
      * @covers Async\Coroutine\Kernel::createTask
      * @covers Async\Coroutine\Kernel::fileOpen
@@ -126,6 +138,7 @@ class StreamSocketTest extends TestCase
      * @covers Async\Coroutine\Coroutine::run
      * @covers Async\Coroutine\StreamSocket::fileOpen
      * @covers Async\Coroutine\StreamSocket::fileClose
+     * @covers Async\Coroutine\StreamSocket::fileContents
      * @covers Async\Coroutine\StreamSocket::fileValid
      * @covers Async\Coroutine\StreamSocket::fileHandle
      * @covers Async\Coroutine\StreamSocket::fileLines
@@ -148,6 +161,9 @@ class StreamSocketTest extends TestCase
      * @covers \file_handle
      * @covers \file_status
      * @covers \file_lines
+     * @covers \file_Contents
+     * @covers \get_file
+     * @covers \is_type
      */
     public function testFileOpen() 
     {
@@ -157,5 +173,10 @@ class StreamSocketTest extends TestCase
     public function testFileOpen_Again() 
     {
         \coroutine_run($this->taskFileOpen_Again());
+    }
+
+    public function testFileOpen_Get_File() 
+    {
+        \coroutine_run($this->taskFileOpen_Get_File());
     }
 }
