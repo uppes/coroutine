@@ -72,16 +72,15 @@ class ProcessTest extends TestCase
     public function taskProcessTimeOut() 
     {
         $childId = yield await([$this, 'childTask']);
-        //$result = null;
         try {
             yield Kernel::awaitProcess(function () {
-                usleep(2000);
+                \usleep(5000);
             }, 1);
         } catch (\Async\Coroutine\Exceptions\TimeoutError $error) {
             $this->mainResult = $childId;
             $this->errorResult = $error;
         }
-        //$this->assertNull($result);
+
         $this->assertEquals($this->mainResult, $childId);
         yield;
     }
