@@ -107,7 +107,7 @@ class HttpRequest implements HttpRequestInterface
             return false;
 
 		// split uri and parameters string
-		@list( $this->uri, $params ) = explode( '?', $uri );
+		@list( $this->uri, $params ) = \explode( '?', $uri );
 
 		// parse the parameters
         \parse_str( $params, $this->parameters );
@@ -165,7 +165,7 @@ class HttpRequest implements HttpRequestInterface
      */
     public function get(string $url = null, ...$options)
     {
-        if (empty($options))
+        if (empty($url))
             return false;
 
         $authorize = isset($options[0]) ? $options[0] : ['username' => "", 'password' => "", 'type' => ""];
@@ -192,7 +192,7 @@ class HttpRequest implements HttpRequestInterface
      */
     public function post(string $url = null, $data = null, ...$options)
     {
-        if (empty($options))
+        if (empty($url))
             return false;
 
         $authorize = isset($options[0]) ? $options[0] : ['username' => "", 'password' => "", 'type' => ""];
@@ -213,9 +213,9 @@ class HttpRequest implements HttpRequestInterface
      * @param float $protocolVersion - 1.1
      * @return array|bool
      */
-    public function head(string $url, ...$options)
+    public function head(string $url = null, ...$options)
     {
-        if (empty($options))
+        if (empty($url))
             return false;
 
         $authorize = isset($options[0]) ? $options[0] : ['username' => "", 'password' => "", 'type' => ""];
@@ -250,7 +250,7 @@ class HttpRequest implements HttpRequestInterface
      */
     public function patch(string $url = null, $data = null, ...$options)
     {
-        if (empty($options))
+        if (empty($url))
             return false;
 
         $authorize = isset($options[0]) ? $options[0] : ['username' => "", 'password' => "", 'type' => ""];
@@ -278,7 +278,7 @@ class HttpRequest implements HttpRequestInterface
      */
     public function put(string $url = null, $data = null, ...$options)
     {
-        if (empty($options))
+        if (empty($url))
             return false;
 
         $authorize = isset($options[0]) ? $options[0] : ['username' => "", 'password' => "", 'type' => ""];
@@ -306,7 +306,7 @@ class HttpRequest implements HttpRequestInterface
      */
     public function delete(string $url = null, $data = null, ...$options)
     {
-        if (empty($options))
+        if (empty($url))
             return false;
 
         $authorize = isset($options[0]) ? $options[0] : ['username' => "", 'password' => "", 'type' => ""];

@@ -272,7 +272,7 @@ composer require symplely/coroutine
 
 In general, any method/function having the `yield` keyword, will operate as an interruption point, suspend current routine, do something else, then return/resume.
 
-It's advisable to watch this [introduction, 4 hour video](https://youtu.be/D1twn9kLmYg), the concepts, the internals of the talk is what's taking place here.
+It's advisable to watch this [introduction, 4 hour video](https://youtu.be/D1twn9kLmYg), the concepts, the internals of the talk is what's taking place here. Another good article, [Kotlin: Diving in to Coroutines and Channels](https://proandroiddev.com/kotlin-coroutines-channels-csp-android-db441400965f), **Android** and **Java** base, it's take on coroutines, is what this package attempts to implement.
 
 ```php
 function main() {

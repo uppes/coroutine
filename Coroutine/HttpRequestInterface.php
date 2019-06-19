@@ -61,7 +61,7 @@ use Async\Coroutine\StreamSocketInterface;
      * @param float $protocolVersion - 1.1
      * @return array|bool
      */
-    public function head(string $url, ...$options);
+    public function head(string $url = null, ...$options);
 
     /**
      * @param string $url - URI for the request.
