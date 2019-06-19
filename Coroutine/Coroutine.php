@@ -191,6 +191,11 @@ class Coroutine implements CoroutineInterface
 			if ($value instanceof Kernel) {
 				try {
 					$value($task, $this);
+				} catch (\Async\Coroutine\Exceptions\CancelledError $e) {
+                    $task->clearResult();
+                    $task->setState('cancelled');
+					$task->setException($e);
+					$this->schedule($task);
 				} catch (\Exception $e) {
                     $task->clearResult();
                     $task->setState('erred');

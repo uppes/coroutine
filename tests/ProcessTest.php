@@ -68,24 +68,23 @@ class ProcessTest extends TestCase
         $this->assertEquals($this->mainResult, $childId);
         yield;
     }
-/*
+
     public function taskProcessTimeOut() 
     {
         $childId = yield await([$this, 'childTask']);
         //$result = null;
         try {
             yield Kernel::awaitProcess(function () {
-                usleep(1000);
-            }, 0.051);
-        } catch (\OutOfBoundsException $error) {
-        echo EOL.'here'.$childId;
+                usleep(2000);
+            }, 1);
+        } catch (\Async\Coroutine\Exceptions\TimeoutError $error) {
             $this->mainResult = $childId;
             $this->errorResult = $error;
         }
         //$this->assertNull($result);
         $this->assertEquals($this->mainResult, $childId);
         yield;
-    }*/
+    }
 
     /**
      * @covers Async\Coroutine\Coroutine::schedule
@@ -147,7 +146,7 @@ class ProcessTest extends TestCase
         $this->assertTrue ($this->errorResult instanceof \RuntimeException);
         $this->assertEquals($this->mainResult, $this->childId, (string) $parallel->status());
     }
-/*
+
     public function testProcessTimeOut() 
     {
         $this->mainResult = 0;
@@ -164,8 +163,8 @@ class ProcessTest extends TestCase
         $this->assertNotEquals(0, $this->mainResult);
         $this->assertNotEquals(0, $this->childId);
         $this->assertGreaterThan(30, $this->counterResult);
-        $this->assertTrue ($this->errorResult instanceof \OutOfBoundsException, (string) $parallel->status());
+        $this->assertTrue ($this->errorResult instanceof \Async\Coroutine\Exceptions\TimeoutError, (string) $parallel->status());
         $this->assertEquals($this->mainResult, $this->childId, (string) $parallel->status());
-    }*/
+    }
     
 }

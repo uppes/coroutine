@@ -228,8 +228,9 @@ class Kernel
 					$task->setException(new \RuntimeException($error->getMessage()));
 					$coroutine->schedule($task);
 				})
-				->timeout(function() use ($task, $coroutine) {
-					$task->setException(new \OutOfBoundsException('Timed Out!'));
+				->timeout(function() use ($task, $coroutine, $timeout) {
+					$task->setState('cancelled');
+					$task->setException(new TimeoutError($timeout));
 					$coroutine->schedule($task);
 				});
 			}

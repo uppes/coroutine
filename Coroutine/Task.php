@@ -144,7 +144,7 @@ class Task implements TaskInterface
         return $this->state;
     }
 
-    public function getError(): Exception
+    public function getError(): \Exception
     {
         return $this->error;
     }
@@ -191,13 +191,9 @@ class Task implements TaskInterface
 
     public function result()
     {
-        if ($this->completed()) {
-            if (empty($this->result))
-                return;
+        if ($this->completed())
             return $this->result;
-        } elseif ($this->cancelled())
-            throw new CancelledError();            
-        elseif ($this->erred())
+        elseif ($this->cancelled() || $this->erred())
             throw $this->error;
         else
             throw new InvalidStateError();
