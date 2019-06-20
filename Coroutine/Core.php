@@ -278,9 +278,14 @@ if (! \function_exists('coroutine_run')) {
 		return \write_socket($instance, $response);
 	}
 
-	function client_Close(StreamSocketInterface $instance)
+	function client_close(StreamSocketInterface $instance)
 	{
 		return $instance->clientClose();
+	}
+
+	function client_meta(StreamSocketInterface $instance)
+	{
+		return $instance->clientMeta();
 	}	
 
 	/**

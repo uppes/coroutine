@@ -15,6 +15,7 @@ class StreamSocket implements StreamSocketInterface
     protected $client;
     protected $instance;
     protected $meta = [];
+    protected $metaData = [];
     protected $host = '';
     protected $isValid = false;
 
@@ -170,14 +171,19 @@ class StreamSocket implements StreamSocketInterface
         if (!$client)
             throw new \RuntimeException('Failed to connect to "' . $uri . '": ' . $errStr, $errNo);
 
-        \stream_set_blocking($client, false);        
-        
+        \stream_set_blocking($client, false);
+
         if (!empty($context)) {
             yield Kernel::writeWait($client);
 	        \stream_socket_enable_crypto ($client, true, \STREAM_CRYPTO_METHOD_TLS_CLIENT);
         }
 
         yield Coroutine::value(($skipInterface === false) ? new self($client, true, $host) : $client);
+    }
+
+    public function clientMeta()
+    {
+        return $this->fileMeta($this->client);
     }
 
     /**

@@ -61,7 +61,7 @@ class KernelTest extends TestCase
      * @covers Async\Coroutine\Kernel::createTask
      * @covers Async\Coroutine\Kernel::sleepFor
      * @covers Async\Coroutine\Task::getState
-     * @covers Async\Coroutine\Task::getError
+     * @covers Async\Coroutine\Task::exception
      * @covers \coroutine_run
      */
     public function testSleepFor() 

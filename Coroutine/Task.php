@@ -52,7 +52,6 @@ class Task implements TaskInterface
      *
      * @var mixed
      */
-    protected $routine;
     protected $coroutine;
 
     /**
@@ -63,9 +62,7 @@ class Task implements TaskInterface
     protected $state = null;
 
     /**
-     * The result of a task, if completed. If accessed before the task terminated, 
-     * a RuntimeError exception is raised. If the task crashed with an exception, 
-     * that exception is re-raised on access.
+     * The result of a task.
      *
      * @var mixed
      */
@@ -144,7 +141,7 @@ class Task implements TaskInterface
         return $this->state;
     }
 
-    public function getError(): \Exception
+    public function exception(): \Exception
     {
         return $this->error;
     }

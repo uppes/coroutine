@@ -323,7 +323,7 @@ class Kernel
 								$count--;
                                 unset($taskList[$id]);
 								self::$gatherResumer = [$taskIdList, $count, $results, $taskList];
-								$task->setException($tasks->getError());
+								$task->setException($tasks->exception());
 								$coroutine->schedule($tasks);
 							}  elseif ($tasks->cancelled()) {
 								$count--;

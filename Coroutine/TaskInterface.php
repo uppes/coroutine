@@ -53,5 +53,32 @@ interface TaskInterface
      */
     public function completed(): bool;
 
+    /**
+     * Return the result of the Task.
+     * 
+     * - If the Task is done, the result of the wrapped coroutine is returned 
+     * (or if the coroutine raised an exception, that exception is re-raised.)
+     * 
+     * - If the Task has been cancelled, this method raises a `CancelledError` exception.
+     * 
+     * - If the Task’s result isn’t yet available, this method raises a `InvalidStateError` exception.
+     * 
+     * @see https://docs.python.org/3/library/asyncio-task.html#asyncio.Task.result
+     */
     public function result();
+
+    /**
+     * Return the exception of the Task.
+     * 
+     * - If the wrapped coroutine raised an exception that exception is returned. 
+     * 
+     * - If the wrapped coroutine returned normally this method returns `null`.
+     * 
+     * - If the Task has been cancelled, this method raises a `CancelledError` exception.
+     * 
+     * - If the Task isn’t done yet, this method raises an `InvalidStateError` exception.
+     * 
+     * @see https://docs.python.org/3/library/asyncio-task.html#asyncio.Task.exception
+     */
+    public function exception(): \Exception;
 }
