@@ -59,7 +59,6 @@ class ClientStreamSocketTest extends TestCase
      * @covers Async\Coroutine\StreamSocket::clientClose
      * @covers Async\Coroutine\StreamSocket::clientMeta
      * @covers Async\Coroutine\StreamSocket::createClient
-     * @covers Async\Coroutine\StreamSocket::getMeta
      * @covers Async\Coroutine\Task::result
      * @covers Async\Coroutine\Task::rescheduled
      * @covers Async\Coroutine\Task::clearResult
