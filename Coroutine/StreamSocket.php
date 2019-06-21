@@ -135,7 +135,7 @@ class StreamSocket implements StreamSocketInterface
 
     public static function createClient(string $uri = null, array $context = [], bool $skipInterface = false) 
 	{
-        $url = $uri;
+        $url = $host = $uri;
         if (\strpos($url, '://') !== false) {
             // Explode out the parameters.
             $url_array = \parse_url($url);
@@ -164,7 +164,7 @@ class StreamSocket implements StreamSocketInterface
             $errNo,
             $errStr, 
             30, 
-            \STREAM_CLIENT_CONNECT, 
+            \STREAM_CLIENT_ASYNC_CONNECT | \STREAM_CLIENT_CONNECT, 
             \stream_context_create($context)
         );
 
@@ -175,7 +175,7 @@ class StreamSocket implements StreamSocketInterface
 
         if (!empty($context)) {
             yield Kernel::writeWait($client);
-	        \stream_socket_enable_crypto ($client, true, \STREAM_CRYPTO_METHOD_TLS_CLIENT);
+            \stream_socket_enable_crypto($client, true, \STREAM_CRYPTO_METHOD_TLS_CLIENT);
         }
 
         yield Coroutine::value(($skipInterface === false) ? new self($client, true, $host) : $client);
