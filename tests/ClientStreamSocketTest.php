@@ -73,6 +73,6 @@ class ClientStreamSocketTest extends TestCase
      */
     public function testClient() 
     {
-        \coroutine_run($this->taskClient('https://facebook.com', 80, '/'));
+        \coroutine_run($this->taskClient('https://facebook.com', 443, '/'));
     }
 }
