@@ -20,8 +20,7 @@ $port="5000"; //Set the TCP PORT to connect too
 if (isset($argc) && isset($argv[1])) {
     if ($argv[1] == '--host') {
         $hostname = $argv[2];
-        $port = 80;
-        $command = '/';
+        $command = isset($argv[3]) ? $argv[3] : '/';
     } else {
         $hostname = $ip;
         $command=$argv[1];
@@ -29,7 +28,7 @@ if (isset($argc) && isset($argv[1])) {
 } else 
     $command="hi"; 
 
-function client($hostname, $port, $command) {
+function client($hostname, $command) {
     global $argv;
     $contextOptions = [];
     if (isset($argv[2]))
@@ -41,10 +40,15 @@ function client($hostname, $port, $command) {
 
     #Connect to Server
     #Start SSL
-    $socket = yield \create_client("$hostname:$port", $contextOptions);
+    $socket = yield \create_client("$hostname", $contextOptions);
+
+    if (isset($argv[1]) && ($argv[1] == '--host'))
+        $http = "GET $command HTTP/1.1\r\nHost: $hostname\r\nConnection: close\r\n\r\n";
+    else 
+        $http = $command;
 
     #Send a command
-    yield \client_write($socket, $command);
+    yield \client_write($socket, $http);
 
     #Receive response from server. Loop until the response is finished
     $response = yield \client_read($socket);
