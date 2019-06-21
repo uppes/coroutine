@@ -136,6 +136,7 @@ class StreamSocket implements StreamSocketInterface
     public static function createClient(string $uri = null, array $context = [], bool $skipInterface = false) 
 	{
         $url = $host = $uri;
+        $isSSL = \array_key_exists('ssl', $context);
         if (\strpos($url, '://') !== false) {
             // Explode out the parameters.
             $url_array = \parse_url($url);
@@ -146,7 +147,7 @@ class StreamSocket implements StreamSocketInterface
                 $port = $url_array['port'];
 
             if (empty($port))
-                $port = ($method == 'https') || !empty($options) ? 443 : 80;
+                $port = ($method == 'https') || $isSSL ? 443 : 80;
 
             // Get the host.
             $host = $url_array['host'];
@@ -154,8 +155,29 @@ class StreamSocket implements StreamSocketInterface
 
             $url = "tcp://{$host}:$port";
         } elseif (\strpos($uri, '://') === false) {
+            // Explode out the parameters.
+            $url_array = \parse_url($url);
+            // Pop off an port.
+            if (isset($url_array['port']))
+                $port = $url_array['port'];
+                
+            if (empty($port))
+                $port = $isSSL ? 443 : 80;
+
+            // Get the host.
+            if (isset($url_array['host']))
+                $host = $url_array['host'];
+
+            //$ip = \gethostbyname($host);
+
             // assume default scheme if none has been given
-            $url = 'tcp://' . $uri.(!empty($options) ? ':443' : ':80');
+            $url = 'tcp://' . $host. ':'.$port;
+        }
+
+        $ctx = \stream_context_create($context);
+        if (($port == 443) || $isSSL) {
+            \stream_context_set_option($ctx, "ssl", "allow_self_signed", true);
+            \stream_context_set_option($ctx, "ssl", "disable_compression", true);
         }
 
         #Connect to Server
@@ -165,17 +187,23 @@ class StreamSocket implements StreamSocketInterface
             $errStr, 
             30, 
             \STREAM_CLIENT_ASYNC_CONNECT | \STREAM_CLIENT_CONNECT, 
-            \stream_context_create($context)
+            $ctx
         );
 
         if (!$client)
-            throw new \RuntimeException('Failed to connect to "' . $uri . '": ' . $errStr, $errNo);
+            throw new \RuntimeException(\sprintf('Failed to connect to %s: %s, %d', $uri, $errStr, $errNo));
 
         \stream_set_blocking($client, false);
 
-        if (!empty($context)) {
-            yield Kernel::writeWait($client);
-            \stream_socket_enable_crypto($client, true, \STREAM_CRYPTO_METHOD_TLS_CLIENT);
+        if (($port == 443) || $isSSL) {
+            while (true) {
+                yield Kernel::writeWait($client);
+                $enabled = @\stream_socket_enable_crypto($client, true, \STREAM_CRYPTO_METHOD_SSLv23_CLIENT | \STREAM_CRYPTO_METHOD_TLS_CLIENT);
+                if ($enabled === false) 
+                    throw new \RuntimeException(\sprintf('Failed to enable socket encryption: %s', \error_get_last()['message'] ?? ''));
+                if ($enabled === true) 
+                    break;
+            }
         }
 
         yield Coroutine::value(($skipInterface === false) ? new self($client, true, $host) : $client);

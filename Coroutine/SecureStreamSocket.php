@@ -9,9 +9,9 @@ use Async\Coroutine\StreamSocketInterface;
 
 class SecureStreamSocket extends StreamSocket
 {
-    protected static $caPath = \DIRECTORY_SEPARATOR;
-    protected static $privatekey = 'privatekey.pem';
-    protected static $certificate = 'certificate.crt';
+    public static $caPath = \DIRECTORY_SEPARATOR;
+    public static $privatekey = 'privatekey.pem';
+    public static $certificate = 'certificate.crt';
     protected static $method = null;
     
     public static function acceptSecure($socket) 

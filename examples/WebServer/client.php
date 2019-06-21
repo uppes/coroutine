@@ -30,20 +30,13 @@ if (isset($argc) && isset($argv[1])) {
 
 function client($hostname, $command) {
     global $argv;
-    $contextOptions = [];
-    if (isset($argv[2]))
-        $contextOptions = array(
-            'ssl' => array(
-                'allow_self_signed' => true
-            )
-        );
 
     #Connect to Server
     #Start SSL
-    $socket = yield \create_client("$hostname", $contextOptions);
+    $socket = yield \create_client("$hostname");
 
     if (isset($argv[1]) && ($argv[1] == '--host'))
-        $http = "GET $command HTTP/1.1\r\nHost: $hostname\r\nConnection: close\r\n\r\n";
+        $http = "GET $command HTTP/1.1\r\nAccept: */*\r\nConnection: close\r\n\r\n";
     else 
         $http = $command;
 
@@ -52,6 +45,8 @@ function client($hostname, $command) {
 
     #Receive response from server. Loop until the response is finished
     $response = yield \client_read($socket);
+
+    //\print_r(\client_meta($socket));
 
     #close connection
     yield \client_Close($socket);
