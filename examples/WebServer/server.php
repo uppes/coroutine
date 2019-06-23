@@ -111,10 +111,9 @@ function handleClient($socket)
                     $contents = yield \file_contents($instance);
                 }
                 \file_close($instance);
-                $output = "HTTP/1.0 200 OK\r\nServer: APatchyServer\r\nConnection: close\r\nContent-Type: $mime\r\n\r\n$contents";
+                $output = $socket->response($contents, 200);
             } else {
-                $contents = "The file you requested does not exist. Sorry!";
-                $output = "HTTP/1.0 404 OBJECT NOT FOUND\r\nServer: APatchyServer\r\nConnection: close\r\nContent-Type: text/html\r\n\r\n$contents";
+                $output = $socket->response("The file you requested does not exist. Sorry!", 404);
             }
 
             yield \write_socket($socket, $output);        
