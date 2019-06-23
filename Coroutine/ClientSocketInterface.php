@@ -16,7 +16,7 @@ interface ClientSocketInterface
 
     public function valid(): bool;
 
-    public function handle(): ?\resource;
+    public function handle();
 
     public static function instance(): self;
 }

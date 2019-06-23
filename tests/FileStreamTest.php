@@ -72,7 +72,7 @@ class FileStreamTest extends TestCase
 
     public function get_website_status_again($url) 
     {
-        $object = yield \file_open(null, $url);
+        $object = yield \file_open($url);
         $this->assertTrue($object instanceof FileStreamInterface);
         $status = \file_status($object);
         $this->assertEquals(200, $status);
@@ -85,7 +85,7 @@ class FileStreamTest extends TestCase
     public function taskFileOpen() 
     {
         chdir(__DIR__);
-        $instance = yield Kernel::fileOpen(null, '.'.\DS.'list.txt');
+        $instance = yield Kernel::fileOpen('.'.\DS.'list.txt');
         $this->assertTrue($instance instanceof FileStreamInterface);
         $websites = yield $instance->fileLines();
         $this->assertEquals(2, \count($websites));
@@ -103,7 +103,7 @@ class FileStreamTest extends TestCase
     public function taskFileOpen_Again() 
     {
         chdir(__DIR__);
-        $instance = yield \file_open(null, '.'.\DS.'list.txt');
+        $instance = yield \file_open('.'.\DS.'list.txt');
         $this->assertTrue($instance instanceof FileStreamInterface);
         $websites = yield \file_lines($instance );
         $this->assertEquals(2, \count($websites));

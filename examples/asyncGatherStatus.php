@@ -28,7 +28,7 @@ function get_statuses($websites)
 function get_website_status($url) 
 {yield;
     $id = yield \task_id();
-    $object = yield \file_open(null, $url);
+    $object = yield \file_open($url);
     $status = \file_status($object);
     \file_close($object);
     //[$meta, $status, $retry] = yield \head_uri($url);
@@ -54,7 +54,7 @@ function main()
 {    
     yield \await('lapse');
     chdir(__DIR__);
-    $object = yield \file_open(null, '.'.\DS.'list.txt');
+    $object = yield \file_open('.'.\DS.'list.txt');
     $websites = yield \file_lines($object);
     \file_close($object);
     if ($websites !== false) {

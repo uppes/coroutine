@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace Async\Coroutine;
 
 use Async\Coroutine\Kernel;
@@ -24,6 +26,7 @@ class FileStream implements FileStreamInterface
 
     public function fileOpen(string $uri = null, string $mode = 'r', $context = [])
 	{
+        $resource = null;
         if (\in_array($mode, ['r', 'r+', 'w', 'w+', 'a', 'a+', 'x', 'x+', 'c', 'c+']))
             $resource = @\fopen($uri, 
                 $mode.'b', 
@@ -44,16 +47,14 @@ class FileStream implements FileStreamInterface
     public function fileContents(int $size = 256, float $timeout_seconds = 0.5)
     {
         yield;
-        $resource = $this->resource;
-
-        if (! \is_resource($resource))
+        if (! \is_resource($this->resource))
             return false;
 
         $contents = '';
         while (true) {
-            yield Kernel::readWait($resource);
+            yield Kernel::readWait($this->resource);
             $startTime = \microtime(true);
-            $new = \stream_get_contents($resource, $size);
+            $new = \stream_get_contents($this->resource, $size);
             $endTime = \microtime(true);
             if (\is_string($new) && \strlen($new) >= 1) {
                 $contents .= $new;
@@ -72,14 +73,12 @@ class FileStream implements FileStreamInterface
     public function fileCreate($contents)
     {
         yield;
-        $resource = $this->resource;
-
-        if (! \is_resource($resource))
+        if (! \is_resource($this->resource))
             return false;
 
         for ($written = 0; $written < \strlen($contents); $written += $fwrite) {
-            yield Kernel::writeWait($resource);
-            $fwrite = \fwrite($resource, \substr($contents, $written));
+            yield Kernel::writeWait($this->resource);
+            $fwrite = \fwrite($this->resource, \substr($contents, $written));
             // see https://www.php.net/manual/en/function.fwrite.php#96951
             if (($fwrite === false) || ($fwrite == 0)) {
                 break;
@@ -91,17 +90,16 @@ class FileStream implements FileStreamInterface
 
     public function fileLines()
     {
-        $resource = $this->resource;
-
-        if (! \is_resource($resource))
+        yield;
+        if (! \is_resource($this->resource))
             return false;
 
         $contents = [];
-        while(! \feof($resource)) {
-            yield Kernel::readWait($resource);
-            $new = \trim(\fgets($resource), \EOL);
+        while(! \feof($this->resource)) {
+            yield Kernel::readWait($this->resource);
+            $new = \fgets($this->resource);
             if (!empty($new))
-                $contents[] = $new;
+                $contents[] = \trim($new, \EOL);
         }
     
         return $contents;

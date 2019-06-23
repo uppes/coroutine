@@ -101,16 +101,16 @@ function handleClient($socket)
 
             $input = '.'.$input;
 
-            yield \file_open($socket, $input);
-            if (\file_valid($socket)) {
+            $instance = yield \file_open($input);
+            if (\file_valid($instance)) {
                 print "Serving $input\n";
 
                 if (\strstr($input, '.php')) {
                     $contents = \loadTemplateFile($input, []);
                 } else {
-                    $contents = yield \file_contents($socket);
+                    $contents = yield \file_contents($instance);
                 }
-                \file_close($socket);
+                \file_close($instance);
                 $output = "HTTP/1.0 200 OK\r\nServer: APatchyServer\r\nConnection: close\r\nContent-Type: $mime\r\n\r\n$contents";
             } else {
                 $contents = "The file you requested does not exist. Sorry!";

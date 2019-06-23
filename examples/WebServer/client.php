@@ -35,9 +35,19 @@ function client($hostname, $command) {
     #Start SSL
     $socket = yield \create_client("$hostname");
 
-    if (isset($argv[1]) && ($argv[1] == '--host'))
-        $http = "GET $command HTTP/1.1\r\nAccept: */*\r\nConnection: close\r\n\r\n";
-    else 
+    if (isset($argv[1]) && ($argv[1] == '--host')) {
+        $headers = "GET $command HTTP/1.1\r\n";
+        
+        $url_array = \parse_url($hostname);
+        if (isset($url_array['host']))
+            $hostname = $url_array['host'];
+
+        $headers .= "Host: $hostname\r\n";
+        $headers .= "Accept: */*\r\n";
+        $headers .= "Content-type: text/html; charset=utf-8\r\n";
+        $headers .= "Connection: close\r\n\r\n";
+        $http = $headers;
+    } else 
         $http = $command;
 
     #Send a command
@@ -55,5 +65,5 @@ function client($hostname, $command) {
     echo $response;
 }
 
-\coroutine_create(\client($hostname, $port, $command));
+\coroutine_create(\client($hostname, $command));
 \coroutine_run();

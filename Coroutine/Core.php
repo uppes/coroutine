@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 use Async\Coroutine\Kernel;
 use Async\Coroutine\Channel;
 use Async\Coroutine\StreamSocket;
@@ -346,9 +348,9 @@ if (! \function_exists('coroutine_run')) {
 	 * @param resource|array $options
 	 * @return object
 	 */
-	function file_open(FileStreamInterface $instance = null, string $filename = null, $mode = 'r', $options = [])
+	function file_open(string $filename = null, $mode = 'r', $options = [])
 	{		
-		return Kernel::fileOpen($instance, $filename, $mode, $options); 
+		return Kernel::fileOpen($filename, $mode, $options); 
     }
 
     function is_type($var, string $comparing = null)
@@ -448,6 +450,9 @@ if (! \function_exists('coroutine_run')) {
 	 */
 	function head_uri(string $tagUri = null, ...$options)
 	{
+		if (empty($tagUri))
+			return false;
+
         if (\strpos($tagUri, '://') !== false) {
             $url = $tagUri;
             $instance = \create_uri();
@@ -474,7 +479,7 @@ if (! \function_exists('coroutine_run')) {
 	 */
 	function get_file(string $filename)
 	{
-		$object = yield \file_open(null, $filename);
+		$object = yield \file_open($filename);
 		if (\file_valid($object)) {
 			$contents = yield \file_Contents($object);
 			\file_close($object);
@@ -489,7 +494,7 @@ if (! \function_exists('coroutine_run')) {
 	 */
 	function put_file(string $filename, $contents = null)
 	{
-		$object = yield \file_open(null, $filename, 'w');
+		$object = yield \file_open($filename, 'w');
 		if (\file_valid($object)) {
 			$written = yield \file_create($object, $contents);			
 			\file_close($object);

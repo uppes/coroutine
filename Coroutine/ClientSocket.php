@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace Async\Coroutine;
 
 use Async\Coroutine\Kernel;
@@ -46,7 +48,8 @@ class ClientSocket implements ClientSocketInterface
             $host = $url_array['host'];
             //$ip = \gethostbyname($host);
 
-            $url = "tcp://{$host}:$port";
+            $scheme = ($method !== 'udp') ? 'tcp' : 'udp';
+            $url = "{$scheme}://{$host}:$port";
         } elseif (\strpos($uri, '://') === false) {
             // Explode out the parameters.
             $url_array = \parse_url($url);
@@ -69,8 +72,9 @@ class ClientSocket implements ClientSocketInterface
 
         $ctx = \stream_context_create($context);
         if (($port == 443) || $isSSL) {
-            \stream_context_set_option($ctx, "ssl", "allow_self_signed", true);
-            \stream_context_set_option($ctx, "ssl", "disable_compression", true);
+            \stream_context_set_option($ctx, 'ssl', 'ciphers', 'HIGH:!SSLv2:!SSLv3');
+            \stream_context_set_option($ctx, 'ssl', 'allow_self_signed', true);
+            \stream_context_set_option($ctx, 'ssl', 'disable_compression', true);
         }
 
         $client = @\stream_socket_client(
@@ -144,7 +148,7 @@ class ClientSocket implements ClientSocketInterface
         return \is_resource($this->resource);
     }
 
-    public function handle(): ?\resource
+    public function handle()
     {
         return $this->resource;
     }
