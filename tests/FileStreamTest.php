@@ -4,11 +4,11 @@ namespace Async\Tests;
 
 use Async\Coroutine\Kernel;
 use Async\Coroutine\Coroutine;
-use Async\Coroutine\StreamSocket;
-use Async\Coroutine\StreamSocketInterface;
+use Async\Coroutine\FileStream;
+use Async\Coroutine\FileStreamInterface;
 use PHPUnit\Framework\TestCase;
 
-class StreamSocketTest extends TestCase
+class FileStreamTest extends TestCase
 {
 	protected function setUp(): void
     {
@@ -73,7 +73,7 @@ class StreamSocketTest extends TestCase
     public function get_website_status_again($url) 
     {
         $object = yield \file_open(null, $url);
-        $this->assertTrue($object instanceof StreamSocketInterface);
+        $this->assertTrue($object instanceof FileStreamInterface);
         $status = \file_status($object);
         $this->assertEquals(200, $status);
         $meta = \file_meta($object);
@@ -86,7 +86,7 @@ class StreamSocketTest extends TestCase
     {
         chdir(__DIR__);
         $instance = yield Kernel::fileOpen(null, '.'.\DS.'list.txt');
-        $this->assertTrue($instance instanceof StreamSocketInterface);
+        $this->assertTrue($instance instanceof FileStreamInterface);
         $websites = yield $instance->fileLines();
         $this->assertEquals(2, \count($websites));
         $this->assertTrue($instance->fileValid());
@@ -104,7 +104,7 @@ class StreamSocketTest extends TestCase
     {
         chdir(__DIR__);
         $instance = yield \file_open(null, '.'.\DS.'list.txt');
-        $this->assertTrue($instance instanceof StreamSocketInterface);
+        $this->assertTrue($instance instanceof FileStreamInterface);
         $websites = yield \file_lines($instance );
         $this->assertEquals(2, \count($websites));
         $this->assertTrue(\file_valid($instance));
@@ -121,7 +121,7 @@ class StreamSocketTest extends TestCase
     public function taskFileOpen_Get_File() 
     {
         $contents = yield \get_file('.'.\DS.'list.txt');        
-        $this->assertEquals('bool', \is_type($contents));
+        $this->assertTrue(\is_type($contents, 'bool'));
         chdir(__DIR__);
         $contents = yield \get_file('.'.\DS.'list.txt');        
         $this->assertEquals('string', \is_type($contents));
@@ -136,15 +136,15 @@ class StreamSocketTest extends TestCase
      * @covers Async\Coroutine\Coroutine::addReader
      * @covers Async\Coroutine\Coroutine::ioStreams
      * @covers Async\Coroutine\Coroutine::run
-     * @covers Async\Coroutine\StreamSocket::fileOpen
-     * @covers Async\Coroutine\StreamSocket::fileClose
-     * @covers Async\Coroutine\StreamSocket::fileContents
-     * @covers Async\Coroutine\StreamSocket::fileValid
-     * @covers Async\Coroutine\StreamSocket::fileHandle
-     * @covers Async\Coroutine\StreamSocket::fileLines
+     * @covers Async\Coroutine\FileStream::fileOpen
+     * @covers Async\Coroutine\FileStream::fileClose
+     * @covers Async\Coroutine\FileStream::fileContents
+     * @covers Async\Coroutine\FileStream::fileValid
+     * @covers Async\Coroutine\FileStream::fileHandle
+     * @covers Async\Coroutine\FileStream::fileLines
      * @covers Async\Coroutine\HttpRequest::head
      * @covers Async\Coroutine\HttpRequest::request
-     * @covers Async\Coroutine\StreamSocket::getMeta
+     * @covers Async\Coroutine\FileStream::getMeta
      * @covers Async\Coroutine\Task::result
      * @covers Async\Coroutine\Task::rescheduled
      * @covers Async\Coroutine\Task::clearResult

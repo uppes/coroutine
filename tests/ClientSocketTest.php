@@ -4,11 +4,11 @@ namespace Async\Tests;
 
 use Async\Coroutine\Kernel;
 use Async\Coroutine\Coroutine;
-use Async\Coroutine\StreamSocket;
-use Async\Coroutine\StreamSocketInterface;
+use Async\Coroutine\ClientSocket;
+use Async\Coroutine\ClientSocketInterface;
 use PHPUnit\Framework\TestCase;
 
-class ClientStreamSocketTest extends TestCase
+class ClientSocketTest extends TestCase
 {
 	protected function setUp(): void
     {
@@ -25,7 +25,7 @@ class ClientStreamSocketTest extends TestCase
         #Connect to Server
         #Start SSL
         $socket = yield \create_client("$hostname:$port", $contextOptions);
-        $this->assertTrue($socket instanceof StreamSocketInterface);
+        $this->assertTrue($socket instanceof ClientSocketInterface);
     
         #Send a command
         $written = yield \client_write($socket, $command);
@@ -54,11 +54,11 @@ class ClientStreamSocketTest extends TestCase
      * @covers Async\Coroutine\Coroutine::removeWriter
      * @covers Async\Coroutine\Coroutine::ioStreams
      * @covers Async\Coroutine\Coroutine::run
-     * @covers Async\Coroutine\StreamSocket::read
-     * @covers Async\Coroutine\StreamSocket::write
-     * @covers Async\Coroutine\StreamSocket::clientClose
-     * @covers Async\Coroutine\StreamSocket::clientMeta
-     * @covers Async\Coroutine\StreamSocket::createClient
+     * @covers Async\Coroutine\ClientSocket::read
+     * @covers Async\Coroutine\ClientSocket::write
+     * @covers Async\Coroutine\ClientSocket::close
+     * @covers Async\Coroutine\ClientSocket::meta
+     * @covers Async\Coroutine\ClientSocket::create
      * @covers Async\Coroutine\Task::result
      * @covers Async\Coroutine\Task::rescheduled
      * @covers Async\Coroutine\Task::clearResult

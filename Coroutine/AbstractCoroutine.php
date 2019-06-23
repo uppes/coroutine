@@ -11,6 +11,8 @@ abstract class AbstractCoroutine
     }
 
     public function getValue() {
-        return $this->value;
+        $value = $this->value;
+        $this->value = null;
+        return $value;
     }
 }

@@ -5,7 +5,7 @@ namespace Async\Coroutine;
 
 use Async\Coroutine\Kernel;
 use Async\Coroutine\HttpRequestInterface;
-use Async\Coroutine\StreamSocketInterface;
+use Async\Coroutine\FileStreamInterface;
 
 /**
  * Class HttpRequest
@@ -134,7 +134,7 @@ class HttpRequest implements HttpRequestInterface
             \stream_context_set_option($context, 'http', 'content', $contents);
 
         $this->instance = yield Kernel::fileOpen(null, $url, 'r', $context);
-        if ($this->instance instanceof StreamSocketInterface) {
+        if ($this->instance instanceof FileStreamInterface) {
             $this->resource = $this->instance->fileHandle();
             if (\is_resource($this->resource)) {
                 $this->meta = $this->instance->getMeta();
@@ -224,7 +224,7 @@ class HttpRequest implements HttpRequestInterface
 
         $response = yield $this->request('HEAD', $url, null, $authorize, 'text/html', null, $userAgent, $protocolVersion);
         if ($response === false) {
-            if ($this->instance instanceof StreamSocketInterface) {
+            if ($this->instance instanceof FileStreamInterface) {
                 $this->resource = $this->instance->fileOpen($url);
                 if (\is_resource($this->resource)) {
                     $this->meta = $this->instance->getMeta();
@@ -341,7 +341,7 @@ class HttpRequest implements HttpRequestInterface
         $resource = $this->detach();
         \fclose($resource);
         $this->meta = null;
-        if ($this->instance instanceof StreamSocketInterface) {
+        if ($this->instance instanceof FileStreamInterface) {
             $this->instance->fileClose();
         }
     }

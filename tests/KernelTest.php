@@ -4,7 +4,7 @@ namespace Async\Tests;
 
 use Async\Coroutine\Kernel;
 use Async\Coroutine\Coroutine;
-use Async\Coroutine\StreamSocket;
+use Async\Coroutine\FileStream;
 use PHPUnit\Framework\TestCase;
 
 class KernelTest extends TestCase
@@ -23,7 +23,7 @@ class KernelTest extends TestCase
     {
         $tid = yield \task_id();
         yield \await([$this, 'lapse'], $tid);
-        return yield StreamSocket::input(256);
+        return yield FileStream::input(256);
     }
 
     public function taskSleepFor() 
@@ -89,7 +89,7 @@ class KernelTest extends TestCase
      * @covers Async\Coroutine\Coroutine::create
      * @covers Async\Coroutine\Coroutine::ioStreams
      * @covers Async\Coroutine\Coroutine::run
-     * @covers Async\Coroutine\StreamSocket::input
+     * @covers Async\Coroutine\FileStream::input
      * @covers Async\Coroutine\Task::result
      * @covers Async\Coroutine\Task::rescheduled
      * @covers Async\Coroutine\Task::clearResult

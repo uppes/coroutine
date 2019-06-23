@@ -2,16 +2,20 @@
 
 use Async\Coroutine\Kernel;
 use Async\Coroutine\Channel;
-use Async\Coroutine\ParallelInterface;
 use Async\Coroutine\StreamSocket;
 use Async\Coroutine\StreamSocketInterface;
-use Async\Coroutine\TaskInterface;
+use Async\Coroutine\ClientSocket;
+use Async\Coroutine\ClientSocketInterface;
+use Async\Coroutine\FileStream;
+use Async\Coroutine\FileStreamInterface;
 use Async\Coroutine\Coroutine;
 use Async\Coroutine\CoroutineInterface;
 use Async\Coroutine\HttpRequest;
 use Async\Coroutine\HttpRequestInterface;
 use Async\Processor\Processor;
+use Async\Coroutine\ParallelInterface;
 use Async\Processor\ProcessInterface;
+use Async\Coroutine\TaskInterface;
 
 if (! \function_exists('coroutine_run')) {	
 	\define('MILLISECOND', 0.001);
@@ -234,7 +238,7 @@ if (! \function_exists('coroutine_run')) {
 	 */
 	function input_wait(int $size = 256, bool $error = false)
 	{
-		return StreamSocket::input($size, $error);
+		return FileStream::input($size, $error);
 	}
 
 	function secure_server(
@@ -257,15 +261,20 @@ if (! \function_exists('coroutine_run')) {
 	/**
 	 * - This function needs to be prefixed with `yield`
 	 */
-	function create_client($uri = null, array $options = [], bool $isRequest = false)
+	function create_client($uri = null, array $options = [])
 	{
-		return StreamSocket::createClient($uri, $options, $isRequest);
+		return ClientSocket::create($uri, $options);
+	}
+
+	function client_meta(ClientSocketInterface $instance): ?array
+	{
+		return $instance->meta();
 	}
 
 	/**
 	 * - This function needs to be prefixed with `yield`
 	 */
-	function client_read(StreamSocketInterface $instance, int $size = -1) 
+	function client_read(ClientSocketInterface $instance, int $size = -1) 
 	{
 		return $instance->read($size);
 	}
@@ -273,19 +282,29 @@ if (! \function_exists('coroutine_run')) {
 	/**
 	 * - This function needs to be prefixed with `yield`
 	 */
-	function client_write(StreamSocketInterface $instance, string $response = null) 
+	function client_write(ClientSocketInterface $instance, string $response = null) 
 	{
-		return \write_socket($instance, $response);
+		return $instance->write($response);
 	}
 
-	function client_close(StreamSocketInterface $instance)
+	function client_close(ClientSocketInterface $instance)
 	{
-		return $instance->clientClose();
+		return $instance->close();
 	}
 
-	function client_meta(StreamSocketInterface $instance)
+	function client_valid(ClientSocketInterface $instance): bool
 	{
-		return $instance->clientMeta();
+		return $instance->valid();
+	}
+
+	function client_handle(ClientSocketInterface $instance): ?resource
+	{
+		return $instance->handle();
+	}
+
+	function client_instance(): ClientSocketInterface
+	{
+		return ClientSocket::instance();
 	}	
 
 	/**
@@ -327,12 +346,12 @@ if (! \function_exists('coroutine_run')) {
 	 * @param resource|array $options
 	 * @return object
 	 */
-	function file_open(StreamSocketInterface $instance = null, string $filename = null, $mode = 'r', $options = [])
+	function file_open(FileStreamInterface $instance = null, string $filename = null, $mode = 'r', $options = [])
 	{		
 		return Kernel::fileOpen($instance, $filename, $mode, $options); 
     }
 
-    function is_type($var): string
+    function is_type($var, string $comparing = null)
     {
         $checks = [
             'is_callable' => 'callable',
@@ -342,11 +361,13 @@ if (! \function_exists('coroutine_run')) {
             'is_null' => 'null',
             'is_bool' => 'bool',
             'is_array' => 'array',
+            'is_object' => 'object',
+            'is_resource' => 'resource',
         ];
     
         foreach ($checks as $func => $val) {
             if ($func($var)) {
-                return $val;
+                return (empty($comparing)) ? $val : ($comparing == $val);
             }
         }
     
@@ -478,7 +499,7 @@ if (! \function_exists('coroutine_run')) {
 		return false;
 	}
 
-	function file_close(StreamSocketInterface $instance)
+	function file_close(FileStreamInterface $instance)
 	{
 		return $instance->fileClose();
 	}
@@ -489,7 +510,7 @@ if (! \function_exists('coroutine_run')) {
 	 * @param resource $instance
 	 * @return bool
 	 */
-	function file_valid(StreamSocketInterface $instance): bool
+	function file_valid(FileStreamInterface $instance): bool
 	{
 		return $instance->fileValid();
 	}	
@@ -503,7 +524,7 @@ if (! \function_exists('coroutine_run')) {
 	 * @param float $timeout_seconds
 	 * @return mixed
 	 */
-	function file_contents(StreamSocketInterface $instance, int $size = -1, float $timeout_seconds = 0.5, $stream = null)
+	function file_contents(FileStreamInterface $instance, int $size = -1, float $timeout_seconds = 0.5, $stream = null)
 	{
 		return $instance->fileContents($size, $timeout_seconds, $stream);
     }
@@ -511,7 +532,7 @@ if (! \function_exists('coroutine_run')) {
 	/**
 	 * - This function needs to be prefixed with `yield`
 	 */
-	function file_create(StreamSocketInterface $instance, $contents, $stream = null)
+	function file_create(FileStreamInterface $instance, $contents, $stream = null)
 	{
 		return $instance->fileCreate($contents, $stream);
 	}
@@ -519,24 +540,29 @@ if (! \function_exists('coroutine_run')) {
 	/**
 	 * - This function needs to be prefixed with `yield`
 	 */
-	function file_lines(StreamSocketInterface $instance, $stream = null)
+	function file_lines(FileStreamInterface $instance)
 	{
-		return $instance->fileLines($stream);
+		return $instance->fileLines();
 	}
 
-	function file_meta(StreamSocketInterface $instance, $stream = null)
+	function file_meta(FileStreamInterface $instance)
 	{
-		return $instance->fileMeta($stream);
+		return $instance->fileMeta();
 	}
 
-	function file_status(StreamSocketInterface $instance, $meta = null)
+	function file_status(FileStreamInterface $instance, $meta = null)
 	{
 		return $instance->fileStatus($meta);
 	}
 
-	function file_handle(StreamSocketInterface $instance)
+	function file_handle(FileStreamInterface $instance)
 	{
 		return $instance->fileHandle();
+	}
+
+	function file_instance(): FileStreamInterface
+	{
+		return FileStream::fileInstance();
 	}
 
 	function remote_ip(StreamSocketInterface $instance)
