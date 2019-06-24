@@ -4,8 +4,8 @@ declare(strict_types = 1);
 
 use Async\Coroutine\Kernel;
 use Async\Coroutine\Channel;
-use Async\Coroutine\StreamSocket;
-use Async\Coroutine\StreamSocketInterface;
+use Async\Coroutine\ServerSocket;
+use Async\Coroutine\ServerSocketInterface;
 use Async\Coroutine\ClientSocket;
 use Async\Coroutine\ClientSocketInterface;
 use Async\Coroutine\FileStream;
@@ -243,23 +243,6 @@ if (! \function_exists('coroutine_run')) {
 		return FileStream::input($size, $error);
 	}
 
-	function secure_server(
-		$uri = null, 
-		array $options = [],	
-		string $privatekeyFile = 'privatekey.pem', 
-		string $certificateFile = 'certificate.crt', 
-		string $signingFile = 'signing.csr',
-		string $ssl_path = null, 
-		array $details = []) : StreamSocketInterface
-	{
-		return StreamSocket::secureServer($uri, $options, $privatekeyFile, $certificateFile, $signingFile, $ssl_path, $details);
-	}
-
-	function create_server($uri = null, array $options = []): StreamSocketInterface
-	{
-		return StreamSocket::createServer($uri, $options);
-	}	
-
 	/**
 	 * - This function needs to be prefixed with `yield`
 	 */
@@ -309,10 +292,27 @@ if (! \function_exists('coroutine_run')) {
 		return ClientSocket::instance();
 	}	
 
+	function secure_server(
+		$uri = null, 
+		array $options = [],	
+		string $privatekeyFile = 'privatekey.pem', 
+		string $certificateFile = 'certificate.crt', 
+		string $signingFile = 'signing.csr',
+		string $ssl_path = null, 
+		array $details = []) : ServerSocketInterface
+	{
+		return ServerSocket::secureServer($uri, $options, $privatekeyFile, $certificateFile, $signingFile, $ssl_path, $details);
+	}
+
+	function create_server($uri = null, array $options = []): ServerSocketInterface
+	{
+		return ServerSocket::createServer($uri, $options);
+	}
+
 	/**
 	 * - This function needs to be prefixed with `yield`
 	 */
-	function accept_socket(StreamSocketInterface $instance)
+	function server_accept(ServerSocketInterface $instance)
 	{
 		return $instance->accept();
 	}	
@@ -320,7 +320,7 @@ if (! \function_exists('coroutine_run')) {
 	/**
 	 * - This function needs to be prefixed with `yield`
 	 */
-	function read_socket(StreamSocketInterface $instance, int $size = -1)
+	function server_read(ServerSocketInterface $instance, int $size = -1)
 	{
 		return $instance->read($size);
 	}	
@@ -328,12 +328,22 @@ if (! \function_exists('coroutine_run')) {
 	/**
 	 * - This function needs to be prefixed with `yield`
 	 */
-	function write_socket(StreamSocketInterface $instance, string $response = null)
+	function server_write(ServerSocketInterface $instance, string $response = null)
 	{
 		return $instance->write($response);
+	}
+
+	function server_response(ServerSocketInterface $instance, $body = null, $status = 200 ): string
+	{
+		return $instance->response($body, $status);
+	}
+
+	function server_error(ServerSocketInterface $instance, $status = 404 ):string
+	{
+		return $instance->error($status);
 	}	
 
-	function close_socket(StreamSocketInterface $instance)
+	function server_close(ServerSocketInterface $instance)
 	{
 		return $instance->close();
 	}
@@ -570,7 +580,7 @@ if (! \function_exists('coroutine_run')) {
 		return FileStream::fileInstance();
 	}
 
-	function remote_ip(StreamSocketInterface $instance)
+	function remote_ip(ServerSocketInterface $instance)
 	{
 		return $instance->address();
 	}

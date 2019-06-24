@@ -27,7 +27,7 @@ function server($port)
     $socket = \create_server($port);
     $i=1;
     while (true) {
-        yield \await('handleClient', yield \accept_socket($socket));
+        yield \await('handleClient', yield \server_accept($socket));
     }
 }
 
@@ -47,7 +47,7 @@ function loadTemplateFile($template, $vars)
 function handleClient($socket) 
 {
     global $i;
-    $data = yield \read_socket($socket, 8192);
+    $data = yield \server_read($socket, 8192);
     
     $ip = \remote_ip($socket);
     print "New connection from " . $ip."\n";
@@ -62,7 +62,7 @@ function handleClient($socket)
 		#hi command
 		case 'hi';
             #write back to the client a response.
-            yield \write_socket($socket, "Hello {$ip}. This is our $i command run!");
+            yield \server_write($socket, "Hello {$ip}. This is our $i command run!");
 			$i++;
 			print "hi command received \n";
             break;
@@ -111,15 +111,15 @@ function handleClient($socket)
                     $contents = yield \file_contents($instance);
                 }
                 \file_close($instance);
-                $output = $socket->response($contents, 200);
+                $output = \server_response($socket, $contents, 200);
             } else {
-                $output = $socket->response("The file you requested does not exist. Sorry!", 404);
+                $output = \server_response($socket, "The file you requested does not exist. Sorry!", 404);
             }
 
-            yield \write_socket($socket, $output);        
+            yield \server_write($socket, $output);        
     }
 
-    yield \close_socket($socket);
+    yield \server_close($socket);
 }
 
 \coroutine_run(\server(5000));
