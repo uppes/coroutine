@@ -173,7 +173,18 @@ class FileStream implements FileStreamInterface
             throw new \InvalidArgumentException('Non-blocking STDIN, could not be enabled.');
         }
 
-		yield Kernel::readWait(\STDIN);
+        yield Kernel::readWait(\STDIN);
+        // allows non blocking under Windows 10, if no key is typed, will block after key press
+        if (!$blocking) {
+            while(true) {
+                $tell = \ftell(\STDIN);
+                if (\is_integer($tell) > 0)
+                    break;
+                else
+                    yield;
+            }
+        }
+
 		return \trim(\stream_get_line(\STDIN, $size, \EOL));
     }
 }
