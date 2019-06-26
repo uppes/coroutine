@@ -175,11 +175,11 @@ class FileStream implements FileStreamInterface
 
         yield Kernel::readWait(\STDIN);
         $windows7 = \strpos(\php_uname('v'), 'Windows 7') !== false;
-        // allows non blocking under Windows 10, if no key is typed, will block after key press
+        // kinda of workaround to allow non blocking under Windows 10, if no key is typed, will block after key press
         if (!$blocking) {
             while(true) {
                 $tell = \ftell(\STDIN);
-                if (($tell > 0) || $windows7)
+                if (\is_int($tell) || $windows7)
                     break;
                 else
                     yield;
