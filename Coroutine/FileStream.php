@@ -179,7 +179,7 @@ class FileStream implements FileStreamInterface
         if (!$blocking) {
             while(true) {
                 $tell = \ftell(\STDIN);
-                if ((\is_integer($tell) > 0) || $windows7)
+                if (($tell > 0) || $windows7)
                     break;
                 else
                     yield;
