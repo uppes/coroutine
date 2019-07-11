@@ -126,45 +126,6 @@ class FileStreamTest extends TestCase
         $contents = yield \get_file('.'.\DS.'list.txt');        
         $this->assertEquals('string', \is_type($contents));
     }
-
-    /**
-     * @covers Async\Coroutine\Kernel::createTask
-     * @covers Async\Coroutine\Kernel::fileOpen
-     * @covers Async\Coroutine\Kernel::readWait
-     * @covers Async\Coroutine\Coroutine::schedule
-     * @covers Async\Coroutine\Coroutine::create
-     * @covers Async\Coroutine\Coroutine::addReader
-     * @covers Async\Coroutine\Coroutine::ioStreams
-     * @covers Async\Coroutine\Coroutine::run
-     * @covers Async\Coroutine\FileStream::fileOpen
-     * @covers Async\Coroutine\FileStream::fileClose
-     * @covers Async\Coroutine\FileStream::fileContents
-     * @covers Async\Coroutine\FileStream::fileValid
-     * @covers Async\Coroutine\FileStream::fileHandle
-     * @covers Async\Coroutine\FileStream::fileLines
-     * @covers Async\Coroutine\HttpRequest::head
-     * @covers Async\Coroutine\HttpRequest::request
-     * @covers Async\Coroutine\FileStream::getMeta
-     * @covers Async\Coroutine\Task::result
-     * @covers Async\Coroutine\Task::rescheduled
-     * @covers Async\Coroutine\Task::clearResult
-     * @covers Async\Coroutine\Task::completed
-     * @covers Async\Coroutine\Task::pending
-     * @covers \gather
-     * @covers \head_uri
-     * @covers \create_uri
-     * @covers \clear_uri
-     * @covers \file_close
-     * @covers \file_meta
-     * @covers \file_open
-     * @covers \file_valid
-     * @covers \file_handle
-     * @covers \file_status
-     * @covers \file_lines
-     * @covers \file_Contents
-     * @covers \get_file
-     * @covers \is_type
-     */
     public function testFileOpen() 
     {
         \coroutine_run($this->taskFileOpen());

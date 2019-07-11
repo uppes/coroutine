@@ -16,21 +16,6 @@ class ParallelTest extends TestCase
         \coroutine_clear();
     }
 
-    /**
-     * @covers Async\Coroutine\Coroutine::processInstance
-     * @covers Async\Coroutine\Process::add
-     * @covers Async\Coroutine\Process::processing
-     * @covers Async\Coroutine\Parallel::markAsFinished
-     * @covers Async\Coroutine\Parallel::markAsTimedOut
-     * @covers Async\Coroutine\Parallel::markAsFailed
-     * @covers Async\Coroutine\Parallel::add
-     * @covers Async\Coroutine\Parallel::__construct
-     * @covers Async\Coroutine\Parallel::wait
-     * @covers Async\Coroutine\Parallel::ispcntl
-     * @covers Async\Coroutine\Parallel::status
-     * @covers Async\Coroutine\Parallel::notify
-     * @covers Async\Coroutine\Parallel::putInProgress
-     */
     public function testIt_can_check_for_asynchronous_support_speed()
     {
         $parallel = new Parallel();
@@ -58,21 +43,6 @@ class ParallelTest extends TestCase
         $this->assertLessThan($expect, $stopwatchResult, "Execution time was {$stopwatchResult}, expected less than {$expect}.\n".(string) $parallel->status());
     }
 
-    /**
-     * @covers Async\Coroutine\Coroutine::processInstance
-     * @covers Async\Coroutine\Process::add
-     * @covers Async\Coroutine\Process::processing
-     * @covers Async\Coroutine\Parallel::markAsFinished
-     * @covers Async\Coroutine\Parallel::markAsTimedOut
-     * @covers Async\Coroutine\Parallel::markAsFailed
-     * @covers Async\Coroutine\Parallel::add
-     * @covers Async\Coroutine\Parallel::create
-     * @covers Async\Coroutine\Parallel::wait
-     * @covers Async\Coroutine\Parallel::results
-     * @covers Async\Coroutine\Parallel::status
-     * @covers Async\Coroutine\Parallel::notify
-     * @covers Async\Coroutine\Parallel::putInProgress
-     */
     public function testIt_can_create_and_return_results()
     {
         $parallel = Parallel::create();
@@ -93,22 +63,6 @@ class ParallelTest extends TestCase
         $this->assertEquals(2, $result[0], (string) $parallel->status());
     }
 
-    /**
-     * @covers Async\Coroutine\Coroutine::processInstance
-     * @covers Async\Coroutine\Process::add
-     * @covers Async\Coroutine\Process::processing
-     * @covers Async\Coroutine\Parallel::markAsFinished
-     * @covers Async\Coroutine\Parallel::markAsTimedOut
-     * @covers Async\Coroutine\Parallel::markAsFailed
-     * @covers Async\Coroutine\Parallel::add
-     * @covers Async\Coroutine\Parallel::create
-     * @covers Async\Coroutine\Parallel::wait
-     * @covers Async\Coroutine\Parallel::results
-     * @covers Async\Coroutine\Parallel::status
-     * @covers Async\Coroutine\Parallel::retry
-     * @covers Async\Coroutine\Parallel::notify
-     * @covers Async\Coroutine\Parallel::putInProgress
-     */
     public function testIt_can_retry()
     {
         $parallel = Parallel::create();
@@ -142,20 +96,6 @@ class ParallelTest extends TestCase
         $this->assertEquals(20, $result[0], (string) $parallel->status());
     }
 
-    /**
-     * @covers Async\Coroutine\Coroutine::processInstance
-     * @covers Async\Coroutine\Process::add
-     * @covers Async\Coroutine\Process::processing
-     * @covers Async\Coroutine\Parallel::markAsFinished
-     * @covers Async\Coroutine\Parallel::markAsTimedOut
-     * @covers Async\Coroutine\Parallel::markAsFailed
-     * @covers Async\Coroutine\Parallel::add
-     * @covers Async\Coroutine\Parallel::__construct
-     * @covers Async\Coroutine\Parallel::wait
-     * @covers Async\Coroutine\Parallel::status
-     * @covers Async\Coroutine\Parallel::notify
-     * @covers Async\Coroutine\Parallel::putInProgress
-     */
     public function testIt_can_handle_success()
     {
         $parallel = new Parallel();
@@ -175,20 +115,6 @@ class ParallelTest extends TestCase
         $this->assertEquals(10, $counter, (string) $parallel->status());
     }
 
-    /**
-     * @covers Async\Coroutine\Coroutine::processInstance
-     * @covers Async\Coroutine\Process::add
-     * @covers Async\Coroutine\Process::processing
-     * @covers Async\Coroutine\Parallel::markAsFinished
-     * @covers Async\Coroutine\Parallel::markAsTimedOut
-     * @covers Async\Coroutine\Parallel::markAsFailed
-     * @covers Async\Coroutine\Parallel::add
-     * @covers Async\Coroutine\Parallel::__construct
-     * @covers Async\Coroutine\Parallel::wait
-     * @covers Async\Coroutine\Parallel::status
-     * @covers Async\Coroutine\Parallel::notify
-     * @covers Async\Coroutine\Parallel::putInProgress
-     */
     public function testIt_can_handle_timeout()
     {
         $parallel = new Parallel();
@@ -208,22 +134,6 @@ class ParallelTest extends TestCase
         $this->assertEquals(5, $counter, (string) $parallel->status());
     }
 
-    /**
-     * @covers Async\Coroutine\Coroutine::processInstance
-     * @covers Async\Coroutine\Process::add
-     * @covers Async\Coroutine\Process::processing
-     * @covers Async\Coroutine\Parallel::markAsFinished
-     * @covers Async\Coroutine\Parallel::markAsTimedOut
-     * @covers Async\Coroutine\Parallel::markAsFailed
-     * @covers Async\Coroutine\Parallel::concurrency
-     * @covers Async\Coroutine\Parallel::add
-     * @covers Async\Coroutine\Parallel::__construct
-     * @covers Async\Coroutine\Parallel::wait
-     * @covers Async\Coroutine\Parallel::status
-     * @covers Async\Coroutine\Parallel::getFinished
-     * @covers Async\Coroutine\Parallel::notify
-     * @covers Async\Coroutine\Parallel::putInProgress
-     */
     public function testIt_can_handle_a_maximum_of_concurrent_processes()
     {
         $parallel = (new Parallel());
@@ -248,21 +158,6 @@ class ParallelTest extends TestCase
         $this->assertCount(3, $parallel->getFinished(), (string) $parallel->status());
     }
 
-    /**
-     * @covers Async\Coroutine\Process::add
-     * @covers Async\Coroutine\Process::processing
-     * @covers Async\Coroutine\Parallel::markAsFinished
-     * @covers Async\Coroutine\Parallel::markAsTimedOut
-     * @covers Async\Coroutine\Parallel::markAsFailed
-     * @covers Async\Coroutine\Parallel::offsetExists
-     * @covers Async\Coroutine\Parallel::offsetSet
-     * @covers Async\Coroutine\Parallel::__construct
-     * @covers Async\Coroutine\Parallel::sleepTime
-     * @covers Async\Coroutine\Parallel::offsetGet
-     * @covers Async\Coroutine\Parallel::offsetUnset
-     * @covers \parallel_add
-     * @covers \parallel_wait
-     */
     public function testIt_can_handle_sleep_array_access()
     {
         $parallel = new Parallel();
@@ -292,18 +187,6 @@ class ParallelTest extends TestCase
         $this->assertFalse(isset($parallel[0]));
     }
 
-    /**
-     * @covers Async\Coroutine\Coroutine::processInstance
-     * @covers Async\Coroutine\Process::add
-     * @covers Async\Coroutine\Process::processing
-     * @covers Async\Coroutine\Parallel::markAsFinished
-     * @covers Async\Coroutine\Parallel::markAsTimedOut
-     * @covers Async\Coroutine\Parallel::markAsFailed
-     * @covers Async\Coroutine\Parallel::offsetSet
-     * @covers Async\Coroutine\Parallel::__construct
-     * @covers Async\Coroutine\Parallel::wait
-     * @covers \parallel_add
-     */
     public function testIt_returns_all_the_output_as_an_array()
     {
         $parallel = new Parallel();
@@ -322,20 +205,6 @@ class ParallelTest extends TestCase
         $this->assertEquals(10, array_sum($result));
     }
     
-    /**
-     * @covers Async\Coroutine\Coroutine::processInstance
-     * @covers Async\Coroutine\Process::add
-     * @covers Async\Coroutine\Process::processing
-     * @covers Async\Coroutine\Parallel::markAsFinished
-     * @covers Async\Coroutine\Parallel::markAsTimedOut
-     * @covers Async\Coroutine\Parallel::markAsFailed
-     * @covers Async\Coroutine\Parallel::offsetSet
-     * @covers Async\Coroutine\Parallel::__construct
-     * @covers Async\Coroutine\Parallel::wait
-     * @covers \parallel_add
-     * @covers \parallel_wait
-     * @covers \parallel_instance
-     */
     public function testIt_can_use_a_class_from_the_parent_process()
     {
         $parallel = \parallel_instance();
@@ -359,19 +228,6 @@ class ParallelTest extends TestCase
         $this->assertTrue($result->property);
     }    
     
-    /**
-     * @covers Async\Coroutine\Coroutine::processInstance
-     * @covers Async\Coroutine\Process::add
-     * @covers Async\Coroutine\Process::processing
-     * @covers Async\Coroutine\Parallel::markAsFinished
-     * @covers Async\Coroutine\Parallel::markAsTimedOut
-     * @covers Async\Coroutine\Parallel::markAsFailed
-     * @covers Async\Coroutine\Parallel::offsetSet
-     * @covers Async\Coroutine\Parallel::wait
-     * @covers \parallel_add
-     * @covers \parallel_wait
-     * @covers \parallel_instance
-     */
     public function testIt_works_with_global_helper_functions()
     {
         $workers = \parallel_instance();
@@ -393,17 +249,6 @@ class ParallelTest extends TestCase
         $this->assertEquals(10, $counter, (string) $workers->status());
     }
 	
-    /**
-     * @covers Async\Coroutine\Coroutine::processInstance
-     * @covers Async\Coroutine\Process::add
-     * @covers Async\Coroutine\Process::processing
-     * @covers Async\Coroutine\Parallel::markAsFinished
-     * @covers Async\Coroutine\Parallel::markAsTimedOut
-     * @covers Async\Coroutine\Parallel::markAsFailed
-     * @covers Async\Coroutine\Parallel::add
-     * @covers \parallel_wait
-     * @covers \parallel_instance
-     */
     public function testIt_can_run_invokable_classes()
     {
         $parallel = \parallel_instance();
@@ -415,12 +260,6 @@ class ParallelTest extends TestCase
         $this->assertEquals(2, $results[0]);
     }
 
-    /**
-     * @covers Async\Coroutine\Coroutine::processInstance
-     * @covers Async\Coroutine\Process::add
-     * @covers Async\Coroutine\Parallel::add
-     * @covers \parallel_instance
-     */
     public function testIt_reports_error_for_non_invokable_classes()
     {
         $this->expectException(\InvalidArgumentException::class);

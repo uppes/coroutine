@@ -38,22 +38,6 @@ class CoreTest extends TestCase
         }
     }
 
-    /**
-     * @covers Async\Coroutine\Coroutine::createTask
-     * @covers Async\Coroutine\Coroutine::schedule
-     * @covers Async\Coroutine\Coroutine::create
-     * @covers Async\Coroutine\Coroutine::cancelTask
-     * @covers Async\Coroutine\Coroutine::run
-     * @covers Async\Coroutine\Task::taskId
-     * @covers Async\Coroutine\Task::run
-     * @covers \task_id
-     * @covers \async
-     * @covers \awaitAble
-     * @covers \cancel_task
-     * @covers \coroutine_instance
-     * @covers \coroutine_create
-     * @covers \coroutine_run
-     */
     public function testCoreFunctions() 
     {
         $this->task = '';

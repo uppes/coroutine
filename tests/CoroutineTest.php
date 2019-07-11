@@ -39,15 +39,6 @@ class CoroutineTest extends TestCase
         }
     }
 
-    /**
-     * @covers Async\Coroutine\Coroutine::createTask
-     * @covers Async\Coroutine\Coroutine::schedule
-     * @covers Async\Coroutine\Coroutine::create
-     * @covers Async\Coroutine\Coroutine::ioWaiting
-     * @covers Async\Coroutine\Coroutine::run
-     * @covers Async\Coroutine\Task::taskId
-     * @covers Async\Coroutine\Task::run
-     */
     public function testCoroutine() 
     {
         $coroutine = new Coroutine();
@@ -93,13 +84,6 @@ class CoroutineTest extends TestCase
         }
     }
 
-    /**
-     * @covers Async\Coroutine\Coroutine::createTask
-     * @covers Async\Coroutine\Coroutine::schedule
-     * @covers Async\Coroutine\Coroutine::create
-     * @covers Async\Coroutine\Coroutine::ioWaiting
-     * @covers Async\Coroutine\Coroutine::run
-     */
     public function testKernel_TaskId() 
     {
         $this->task = '';
@@ -158,13 +142,6 @@ class CoroutineTest extends TestCase
         }
     }
 
-    /**
-     * @covers Async\Coroutine\Coroutine::createTask
-     * @covers Async\Coroutine\Coroutine::schedule
-     * @covers Async\Coroutine\Coroutine::create
-     * @covers Async\Coroutine\Coroutine::ioStreams
-     * @covers Async\Coroutine\Coroutine::run
-     */
     public function testKernel() 
     {
         $this->task = '';
@@ -189,15 +166,6 @@ class CoroutineTest extends TestCase
         $this->assertEquals(3, preg_match_all('/3 still alive!/', $this->task, $matches));
     }
     
-    /**
-     * @covers Async\Coroutine\Coroutine::addWriter
-     * @covers Async\Coroutine\Coroutine::removeWriter
-     * @covers Async\Coroutine\Coroutine::ioStreams
-     * @covers Async\Coroutine\Coroutine::ioWaiting
-     * @covers Async\Coroutine\Coroutine::run
-     * @covers Async\Coroutine\Task::taskId
-     * @covers Async\Coroutine\Task::run
-     */
     function testAddWriteStream() 
 	{
         $coroutine = new Coroutine();
@@ -211,15 +179,6 @@ class CoroutineTest extends TestCase
         $this->assertEquals('hello world', stream_get_contents($h));
     }
 
-    /**
-     * @covers Async\Coroutine\Coroutine::addReader
-     * @covers Async\Coroutine\Coroutine::removeReader
-     * @covers Async\Coroutine\Coroutine::ioStreams
-     * @covers Async\Coroutine\Coroutine::ioWaiting
-     * @covers Async\Coroutine\Coroutine::run
-     * @covers Async\Coroutine\Task::taskId
-     * @covers Async\Coroutine\Task::run
-     */
     function testAddReadStream() 
 	{
         $coroutine = new Coroutine();
@@ -235,11 +194,6 @@ class CoroutineTest extends TestCase
         $this->assertEquals('hello world', $result);
     }
     
-    /**
-     * @covers Async\Coroutine\Coroutine::addTimeout
-     * @covers Async\Coroutine\Coroutine::run
-     * @covers Async\Coroutine\Coroutine::runTimers
-     */
     function testTimeout() 
 	{
         $coroutine = new Coroutine();
@@ -251,11 +205,6 @@ class CoroutineTest extends TestCase
         $this->assertEquals(1, $check);
     }
     
-    /**
-     * @covers Async\Coroutine\Coroutine::addTimeout
-     * @covers Async\Coroutine\Coroutine::run
-     * @covers Async\Coroutine\Coroutine::runTimers
-     */
     function testTimeoutOrder() 
 	{
         $coroutine = new Coroutine();
@@ -273,13 +222,6 @@ class CoroutineTest extends TestCase
         $this->assertEquals(['b', 'a', 'c'], $check);
     }
 
-    /**
-     * @covers Async\Coroutine\Coroutine::addTimeout
-     * @covers Async\Coroutine\Coroutine::setInterval
-     * @covers Async\Coroutine\Coroutine::clearInterval
-     * @covers Async\Coroutine\Coroutine::run
-     * @covers Async\Coroutine\Coroutine::runTimers
-     */
     function testSetInterval() 
 	{
         $coroutine = new Coroutine();

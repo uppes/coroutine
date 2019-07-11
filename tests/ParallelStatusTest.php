@@ -13,20 +13,6 @@ class ParallelStatusTest extends TestCase
         \coroutine_clear();
     }
 
-    /**
-     * @covers Async\Coroutine\Coroutine::processInstance
-     * @covers Async\Coroutine\Process::add
-     * @covers Async\Coroutine\Process::processing
-     * @covers Async\Coroutine\Parallel::markAsFinished
-     * @covers Async\Coroutine\Parallel::markAsTimedOut
-     * @covers Async\Coroutine\Parallel::markAsFailed
-     * @covers Async\Coroutine\Parallel::__construct
-     * @covers Async\Coroutine\Parallel::add
-     * @covers Async\Coroutine\Parallel::wait
-     * @covers Async\Coroutine\Parallel::status
-     * @covers Async\Coroutine\ParallelStatus::__construct
-     * @covers Async\Coroutine\ParallelStatus::summaryToString
-     */
     public function testIt_can_show_a_textual_status()
     {
         $parallel = new Parallel();
@@ -42,20 +28,6 @@ class ParallelStatusTest extends TestCase
         $this->assertStringContainsString('finished: 1', (string) $parallel->status());
     }
 
-    /**
-     * @covers Async\Coroutine\Coroutine::processInstance
-     * @covers Async\Coroutine\Process::add
-     * @covers Async\Coroutine\Process::processing
-     * @covers Async\Coroutine\Parallel::markAsFinished
-     * @covers Async\Coroutine\Parallel::markAsTimedOut
-     * @covers Async\Coroutine\Parallel::markAsFailed
-     * @covers Async\Coroutine\Parallel::add
-     * @covers Async\Coroutine\Parallel::__construct
-     * @covers Async\Coroutine\Parallel::wait
-     * @covers Async\Coroutine\Parallel::status
-     * @covers Async\Coroutine\ParallelStatus::__construct
-     * @covers Async\Coroutine\ParallelStatus::summaryToString
-     */
     public function testIt_can_show_a_textual_failed_status()
     {
         $parallel = new Parallel();
@@ -75,20 +47,6 @@ class ParallelStatusTest extends TestCase
 		$this->assertStringContainsString('failed with Exception: Test', (string) $parallel->status());
     }	
 
-    /**
-     * @covers Async\Coroutine\Coroutine::processInstance
-     * @covers Async\Coroutine\Process::add
-     * @covers Async\Coroutine\Process::processing
-     * @covers Async\Coroutine\Parallel::markAsFinished
-     * @covers Async\Coroutine\Parallel::markAsTimedOut
-     * @covers Async\Coroutine\Parallel::markAsFailed
-     * @covers Async\Coroutine\Parallel::add
-     * @covers Async\Coroutine\Parallel::__construct
-     * @covers Async\Coroutine\Parallel::wait
-     * @covers Async\Coroutine\Parallel::status
-     * @covers Async\Coroutine\ParallelStatus::__construct
-     * @covers Async\Coroutine\ParallelStatus::summaryToString
-     */
     public function testIt_can_show_timeout_status()
     {
         $parallel = new Parallel();

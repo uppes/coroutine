@@ -54,51 +54,16 @@ class KernelTest extends TestCase
         }
     }
 
-    /**
-     * @covers Async\Coroutine\Coroutine::schedule
-     * @covers Async\Coroutine\Coroutine::create
-     * @covers Async\Coroutine\Coroutine::ioStreams
-     * @covers Async\Coroutine\Kernel::createTask
-     * @covers Async\Coroutine\Kernel::sleepFor
-     * @covers Async\Coroutine\Task::getState
-     * @covers Async\Coroutine\Task::exception
-     * @covers \coroutine_run
-     */
     public function testSleepFor() 
     {
         \coroutine_run($this->taskSleepFor());
     }
 
-    /**
-     * @covers Async\Coroutine\Coroutine::schedule
-     * @covers Async\Coroutine\Coroutine::create
-     * @covers Async\Coroutine\Coroutine::ioStreams
-     * @covers Async\Coroutine\Kernel::cancelTask
-     * @covers Async\Coroutine\Kernel::waitFor
-     */
     public function testWaitFor() 
     {
         \coroutine_run($this->taskWaitFor());
     }
 
-    /**
-     * @covers Async\Coroutine\Kernel::createTask
-     * @covers Async\Coroutine\Kernel::cancelTask
-     * @covers Async\Coroutine\Kernel::gather
-     * @covers Async\Coroutine\Coroutine::schedule
-     * @covers Async\Coroutine\Coroutine::create
-     * @covers Async\Coroutine\Coroutine::ioStreams
-     * @covers Async\Coroutine\Coroutine::run
-     * @covers Async\Coroutine\FileStream::input
-     * @covers Async\Coroutine\Task::result
-     * @covers Async\Coroutine\Task::rescheduled
-     * @covers Async\Coroutine\Task::clearResult
-     * @covers Async\Coroutine\Task::completed
-     * @covers Async\Coroutine\Task::pending
-     * @covers Async\Coroutine\Task::cancelled
-     * @covers Async\Coroutine\Task::isParallel
-     * @covers Async\Coroutine\Task::erred
-     */
     public function testInputAndGather() 
     {
         \coroutine_run($this->taskInput());

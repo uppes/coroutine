@@ -14,19 +14,6 @@ class ErrorHandlingTest extends TestCase
         \coroutine_clear();
     }
 
-    /**
-     * @covers Async\Coroutine\Coroutine::processInstance
-     * @covers Async\Coroutine\Process::add
-     * @covers Async\Coroutine\Process::processing
-     * @covers Async\Coroutine\Parallel::markAsFinished
-     * @covers Async\Coroutine\Parallel::markAsTimedOut
-     * @covers Async\Coroutine\Parallel::markAsFailed
-     * @covers Async\Coroutine\Parallel::add
-     * @covers Async\Coroutine\Parallel::__construct
-     * @covers Async\Coroutine\Parallel::wait
-     * @covers Async\Coroutine\Parallel::getFailed
-     * @covers Async\Coroutine\Parallel::status
-     */
     public function testIt_can_handle_exceptions_via_catch_callback()
     {
         $parallel = new Parallel();
@@ -44,17 +31,6 @@ class ErrorHandlingTest extends TestCase
         $this->assertCount(5, $parallel->getFailed(), (string) $parallel->status());
     }
 
-    /**
-     * @covers Async\Coroutine\Coroutine::processInstance
-     * @covers Async\Coroutine\Process::add
-     * @covers Async\Coroutine\Process::processing
-     * @covers Async\Coroutine\Parallel::markAsFinished
-     * @covers Async\Coroutine\Parallel::markAsTimedOut
-     * @covers Async\Coroutine\Parallel::markAsFailed
-     * @covers Async\Coroutine\Parallel::add
-     * @covers Async\Coroutine\Parallel::__construct
-     * @covers Async\Coroutine\Parallel::wait
-     */
     public function testIt_throws_the_exception_if_no_catch_callback()
     {
         $this->expectException(\Exception::class);
@@ -69,17 +45,6 @@ class ErrorHandlingTest extends TestCase
         $parallel->wait();
     }
 
-    /**
-     * @covers Async\Coroutine\Coroutine::processInstance
-     * @covers Async\Coroutine\Process::add
-     * @covers Async\Coroutine\Process::processing
-     * @covers Async\Coroutine\Parallel::markAsFinished
-     * @covers Async\Coroutine\Parallel::markAsTimedOut
-     * @covers Async\Coroutine\Parallel::markAsFailed
-     * @covers Async\Coroutine\Parallel::add
-     * @covers Async\Coroutine\Parallel::__construct
-     * @covers Async\Coroutine\Parallel::wait
-     */
     public function testIt_keeps_the_original_trace()
     {
         $parallel = new Parallel();

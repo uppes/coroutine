@@ -42,35 +42,6 @@ class ClientSocketTest extends TestCase
         yield \client_close($socket);    
     }
     
-    /**
-     * @covers Async\Coroutine\Kernel::createTask
-     * @covers Async\Coroutine\Kernel::readWait
-     * @covers Async\Coroutine\Kernel::writeWait
-     * @covers Async\Coroutine\Coroutine::schedule
-     * @covers Async\Coroutine\Coroutine::create
-     * @covers Async\Coroutine\Coroutine::addReader
-     * @covers Async\Coroutine\Coroutine::removeReader
-     * @covers Async\Coroutine\Coroutine::addWriter
-     * @covers Async\Coroutine\Coroutine::removeWriter
-     * @covers Async\Coroutine\Coroutine::ioStreams
-     * @covers Async\Coroutine\Coroutine::run
-     * @covers Async\Coroutine\ClientSocket::read
-     * @covers Async\Coroutine\ClientSocket::write
-     * @covers Async\Coroutine\ClientSocket::close
-     * @covers Async\Coroutine\ClientSocket::meta
-     * @covers Async\Coroutine\ClientSocket::create
-     * @covers Async\Coroutine\Task::result
-     * @covers Async\Coroutine\Task::rescheduled
-     * @covers Async\Coroutine\Task::clearResult
-     * @covers Async\Coroutine\Task::completed
-     * @covers Async\Coroutine\Task::pending
-     * @covers \create_client
-     * @covers \client_write
-     * @covers \client_read
-     * @covers \client_close
-     * @covers \client_meta
-     * @covers \is_type
-     */
     public function testClient() 
     {
         \coroutine_run($this->taskClient('https://facebook.com', 443, '/'));

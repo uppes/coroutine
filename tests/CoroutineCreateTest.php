@@ -8,7 +8,6 @@ class CoroutineCreateTest extends TestCase
 {
     /**
      * @dataProvider testNoSendProvider
-     * @covers Async\Coroutine\Coroutine::create
      */
     public function testNoSend(
         $coroutineFactory, $expectedArray, $reIndex = false
@@ -154,7 +153,6 @@ class CoroutineCreateTest extends TestCase
 
     /**
      * @dataProvider testSendProvider
-     * @covers Async\Coroutine\Coroutine::create
      */
     public function testSend($coroutineFactory, $sendValues, $expectedArray) 
     {
@@ -204,9 +202,7 @@ class CoroutineCreateTest extends TestCase
 
     /**
      * @dataProvider testThrowProvider
-     * @covers Async\Coroutine\Coroutine::create
-     */
-    
+     */    
     public function testThrow(
         $coroutineFactory, $throwAtKeys, $expectedArray, $shouldThrow
     ) {

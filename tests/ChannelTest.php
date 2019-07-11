@@ -33,16 +33,6 @@ class ChannelTest extends TestCase
         $this->assertEquals('true', $done);
     }
 
-    /**
-     * @covers Async\Coroutine\Kernel::make
-     * @covers Async\Coroutine\Kernel::receiver
-     * @covers Async\Coroutine\Kernel::receive
-     * @covers Async\Coroutine\Channel::make
-     * @covers Async\Coroutine\Channel::receiver
-     * @covers Async\Coroutine\Channel::receive
-     * @covers \go
-     * @covers \sleep_for
-     */
     public function testMake() 
     {
         \coroutine_run($this->taskMake());

@@ -85,28 +85,6 @@ class ProcessTest extends TestCase
         yield;
     }
 
-    /**
-     * @covers Async\Coroutine\Coroutine::schedule
-     * @covers Async\Coroutine\Coroutine::create
-     * @covers Async\Coroutine\Coroutine::ioStreams
-     * @covers Async\Coroutine\Coroutine::run
-     * @covers Async\Coroutine\Coroutine::parallelInstance
-     * @covers Async\Coroutine\Coroutine::processInstance
-     * @covers Async\Coroutine\Coroutine::createSubProcess
-     * @covers Async\Coroutine\Kernel::createTask
-     * @covers Async\Coroutine\Kernel::awaitProcess
-     * @covers Async\Coroutine\Process::add
-     * @covers Async\Coroutine\Process::processing
-     * @covers Async\Coroutine\Parallel::markAsFinished
-     * @covers Async\Coroutine\Parallel::markAsTimedOut
-     * @covers Async\Coroutine\Parallel::markAsFailed
-     * @covers Async\Coroutine\Parallel::add
-     * @covers Async\Coroutine\Parallel::create
-     * @covers Async\Coroutine\Parallel::results
-     * @covers Async\Coroutine\Parallel::status
-     * @covers Async\Coroutine\Parallel::notify
-     * @covers Async\Coroutine\Parallel::putInProgress
-     */
     public function testProcess() 
     {
         $this->mainResult = 0;
