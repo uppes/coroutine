@@ -83,7 +83,7 @@ The steps, that's taking place when an `yield` is introduced.
 
 The terminology/naming used here is more in line with [Python's Asyncio](https://www.python.org/dev/peps/pep-0492/) and [Curio](https://curio.readthedocs.io/en/latest/index.html#) usage. In fact, most of the source code method calls has been change to match theres.
 
-This package should be seen/used as an **userland** extension, it's usage of `yield` has been envisioned from [RFC] (https://wiki.php.net/rfc/generator-delegation) creators.
+This package should be seen/used as an **userland** extension, it's usage of `yield` has been envisioned from [RFC](https://wiki.php.net/rfc/generator-delegation) creators.
 
 The [Lua](https://www.lua.org/pil/9.4.html) language has similar functionality.
 

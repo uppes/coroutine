@@ -15,6 +15,8 @@ use Async\Coroutine\Exceptions\InvalidStateError;
  * When a coroutine is wrapped into a Task with functions like Coroutine::createTask() 
  * the coroutine is automatically scheduled to run soon.
  * 
+ * This Task class can also be seen to operate like an Fiber according to the RFC spec https://wiki.php.net/rfc/fiber
+ * 
  * @see https://curio.readthedocs.io/en/latest/reference.html#tasks
  */
 class Task implements TaskInterface
