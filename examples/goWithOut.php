@@ -14,7 +14,7 @@ function f(int $n) {
       yield;
     }
   }
-  
+
   function main() {
     for ($i = 0; $i < 10; $i++) {
       $func = yield \await('f',  $i);

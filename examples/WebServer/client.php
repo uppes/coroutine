@@ -1,8 +1,8 @@
 <?php
 /**
- * This also an simpler version of 
+ * This also an simpler version of
  * "HOWTO: PHP TCP Server/Client with SSL Encryption using Streams"
- *  
+ *
  * @see http://blog.leenix.co.uk/2011/05/howto-php-tcp-serverclient-with-ssl.html
  */
 
@@ -25,8 +25,8 @@ if (isset($argc) && isset($argv[1])) {
         $hostname = $ip;
         $command=$argv[1];
     }
-} else 
-    $command="hi"; 
+} else
+    $command="hi";
 
 function client($hostname, $command) {
     global $argv;
@@ -37,7 +37,7 @@ function client($hostname, $command) {
 
     if (isset($argv[1]) && ($argv[1] == '--host')) {
         $headers = "GET $command HTTP/1.1\r\n";
-        
+
         $url_array = \parse_url($hostname);
         if (isset($url_array['host']))
             $hostname = $url_array['host'];
@@ -47,7 +47,7 @@ function client($hostname, $command) {
         $headers .= "Content-type: text/html; charset=utf-8\r\n";
         $headers .= "Connection: close\r\n\r\n";
         $http = $headers;
-    } else 
+    } else
         $http = $command;
 
     #Send a command

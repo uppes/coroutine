@@ -18,7 +18,7 @@ class ProcessTest extends TestCase
         \coroutine_clear();
     }
 
-    public function childTask() 
+    public function childTask()
     {
         $childId = (yield Kernel::taskId());
         $this->assertNotNull($childId);
@@ -35,7 +35,7 @@ class ProcessTest extends TestCase
         $this->counterResult = $counter;
     }
 
-    public function taskProcess() 
+    public function taskProcess()
     {
         $childId = yield \await([$this, 'childTask']);
         $result = yield Kernel::awaitProcess(function () {
@@ -50,7 +50,7 @@ class ProcessTest extends TestCase
         yield;
     }
 
-    public function taskProcessError() 
+    public function taskProcessError()
     {
         $childId = yield \await([$this, 'childTask']);
         $result = null;
@@ -69,7 +69,7 @@ class ProcessTest extends TestCase
         yield;
     }
 
-    public function taskProcessTimeOut() 
+    public function taskProcessTimeOut()
     {
         $childId = yield await([$this, 'childTask']);
         try {
@@ -85,7 +85,7 @@ class ProcessTest extends TestCase
         yield;
     }
 
-    public function testProcess() 
+    public function testProcess()
     {
         $this->mainResult = 0;
         $this->childId = 0;
@@ -104,7 +104,7 @@ class ProcessTest extends TestCase
         $this->assertEquals($this->mainResult, $parallel->results()[0], (string) $parallel->status());
     }
 
-    public function testProcessError() 
+    public function testProcessError()
     {
         $this->mainResult = 0;
         $this->childId = 0;
@@ -124,7 +124,7 @@ class ProcessTest extends TestCase
         $this->assertEquals($this->mainResult, $this->childId, (string) $parallel->status());
     }
 
-    public function testProcessTimeOut() 
+    public function testProcessTimeOut()
     {
         $this->mainResult = 0;
         $this->childId = 0;
@@ -143,5 +143,5 @@ class ProcessTest extends TestCase
         $this->assertTrue ($this->errorResult instanceof \Async\Coroutine\Exceptions\TimeoutError, (string) $parallel->status());
         $this->assertEquals($this->mainResult, $this->childId, (string) $parallel->status());
     }
-    
+
 }

@@ -21,14 +21,14 @@ class ClientSocket implements ClientSocketInterface
     protected $port;
     protected $context;
     protected static $instance;
-    
-    private function __construct($client, $host = null) 
+
+    private function __construct($client, $host = null)
 	{
         $this->resource = $client;
         $this->host = $host;
     }
 
-    public static function create(string $uri = null, array $context = []) 
+    public static function create(string $uri = null, array $context = [])
 	{
         $url = $host = $uri;
         $isSSL = \array_key_exists('ssl', $context);
@@ -56,7 +56,7 @@ class ClientSocket implements ClientSocketInterface
             // Pop off an port.
             if (isset($url_array['port']))
                 $port = $url_array['port'];
-                
+
             if (empty($port))
                 $port = $isSSL ? 443 : 80;
 
@@ -78,11 +78,11 @@ class ClientSocket implements ClientSocketInterface
         }
 
         $client = @\stream_socket_client(
-            $url, 
+            $url,
             $errNo,
-            $errStr, 
-            30, 
-            \STREAM_CLIENT_ASYNC_CONNECT | \STREAM_CLIENT_CONNECT, 
+            $errStr,
+            30,
+            \STREAM_CLIENT_ASYNC_CONNECT | \STREAM_CLIENT_CONNECT,
             $ctx
         );
 
@@ -95,9 +95,9 @@ class ClientSocket implements ClientSocketInterface
             while (true) {
                 yield Kernel::writeWait($client);
                 $enabled = @\stream_socket_enable_crypto($client, true, \STREAM_CRYPTO_METHOD_SSLv23_CLIENT | \STREAM_CRYPTO_METHOD_TLS_CLIENT);
-                if ($enabled === false) 
+                if ($enabled === false)
                     throw new \RuntimeException(\sprintf('Failed to enable socket encryption: %s', \error_get_last()['message'] ?? ''));
-                if ($enabled === true) 
+                if ($enabled === true)
                     break;
             }
         }
@@ -114,7 +114,7 @@ class ClientSocket implements ClientSocketInterface
         return $this->meta;
     }
 
-    public function read(int $size = -1) 
+    public function read(int $size = -1)
 	{
         if (!\is_resource($this->resource))
             return false;
@@ -123,7 +123,7 @@ class ClientSocket implements ClientSocketInterface
         return \stream_get_contents($this->resource, $size);
     }
 
-    public function write($string) 
+    public function write($string)
 	{
         if (!\is_resource($this->resource))
             return false;
@@ -132,7 +132,7 @@ class ClientSocket implements ClientSocketInterface
         return \fwrite($this->resource, $string);
     }
 
-    public function close() 
+    public function close()
 	{
         $resource = $this->resource;
         $this->resource = null;
@@ -152,7 +152,7 @@ class ClientSocket implements ClientSocketInterface
     {
         return $this->resource;
     }
-    
+
     public static function instance(): ClientSocketInterface
     {
         return self::$instance;

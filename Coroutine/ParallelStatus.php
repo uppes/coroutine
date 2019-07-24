@@ -46,7 +46,7 @@ class ParallelStatus
 
     protected function failedToString(): string
     {
-        return (string) \array_reduce($this->parallelPool->getFailed(), function ($currentStatus, Launcher $process) {			
+        return (string) \array_reduce($this->parallelPool->getFailed(), function ($currentStatus, Launcher $process) {
 			$output = $process->getErrorOutput();
 
             if ($output instanceof SerializableException) {

@@ -12,7 +12,7 @@ use Async\Coroutine\Kernel;
     }
 });
 
-function parentTask() 
+function parentTask()
 {
     $tid = yield \task_id();
     $childTid = yield \await('childTask', 'using async() function');

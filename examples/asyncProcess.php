@@ -9,7 +9,7 @@ $results = [];
 // We can first define tasks and then run them
 $tasks = ['http://php.net', 'https://amphp.org', 'https://github.com'];
 
-function repeat() 
+function repeat()
 {
     $counter = 0;
     while (true) {

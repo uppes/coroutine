@@ -13,7 +13,7 @@ function f(int $n) {
       yield \sleep_for($amt);
     }
   }
-  
+
   function main() {
     for ($i = 0; $i < 10; $i++) {
       $func = yield \go('f',  $i);

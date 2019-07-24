@@ -9,7 +9,7 @@ use Async\Coroutine\TaskInterface;
 use Async\Coroutine\CoroutineInterface;
 
 /**
- * @internal 
+ * @internal
  */
 class Process
 {
@@ -20,20 +20,20 @@ class Process
     private $failCallback = null;
     private $pcntl = false;
     private $coroutine = null;
-	
-    public function __construct(CoroutineInterface $coroutine = null, 
+
+    public function __construct(CoroutineInterface $coroutine = null,
         $timedOutCallback = null, $finishCallback = null, $failCallback = null)
     {
         $this->coroutine = empty($coroutine) ? \coroutine_instance() : $coroutine;
         $this->init($timedOutCallback,  $finishCallback,  $failCallback);
-		
+
 		if ($this->isPcntl())
             $this->registerProcess();
     }
 
     public function add(ProcessInterface $process)
     {
-        $this->processes[$process->getPid()] = $process;		
+        $this->processes[$process->getPid()] = $process;
     }
 
     public function remove(ProcessInterface $process)
@@ -55,7 +55,7 @@ class Process
 			}
         }
     }
-	
+
     public function processing()
     {
         if (! empty($this->processes)) {
@@ -68,8 +68,8 @@ class Process
                         $this->coroutine->createTask($markTimedOuted($process));
                     elseif ($markTimedOuted instanceof TaskInterface)
                         $this->coroutine->schedule($markTimedOuted);
-                } 
-                
+                }
+
                 if (! $this->pcntl) {
 					if ($process->isRunning()) {
                         continue;
@@ -89,46 +89,46 @@ class Process
                             $this->coroutine->createTask($markFailed($process));
                         elseif ($markFailed instanceof TaskInterface)
                             $this->coroutine->schedule($markFailed);
-                    } 
-                }                
+                    }
+                }
             }
         }
     }
-	
+
     public function sleepTime(int $sleepTime)
     {
         $this->sleepTime = $sleepTime;
     }
-	
+
     public function sleepingTime(): int
     {
         return $this->sleepTime;
     }
-	
+
     public function init($timedOutCallback = null, $finishCallback = null, $failCallback = null)
     {
         $this->timedOutCallback = $timedOutCallback;
         $this->finishCallback = $finishCallback;
         $this->failCallback = $failCallback;
-    }	
-	
+    }
+
     public function isEmpty(): bool
     {
         return empty($this->processes);
     }
-	
+
     public function count(): int
     {
         return \count($this->processes);
     }
-	
+
     public function isPcntl(): bool
     {
         $this->pcntl = $this->coroutine->isPcntl();
-		
+
         return $this->pcntl;
     }
-	
+
     protected function registerProcess()
     {
         \pcntl_async_signals(true);
@@ -158,7 +158,7 @@ class Process
 
                     continue;
                 }
-				
+
                 $this->remove($process);
                 $markFailed = $this->failCallback;
 

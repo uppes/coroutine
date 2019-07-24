@@ -15,13 +15,13 @@ class FileStreamTest extends TestCase
         \coroutine_clear();
     }
 
-    public function get_statuses($websites) 
+    public function get_statuses($websites)
     {
         $statuses = ['200' => 0, '400' => 0];
         foreach($websites as $website) {
             $tasks[] = yield \await([$this, 'get_website_status'], $website);
         }
-        
+
         $taskStatus = yield \gather($tasks);
         $this->assertEquals(2, \count($taskStatus));
         foreach($taskStatus as  $id => $status) {
@@ -32,17 +32,17 @@ class FileStreamTest extends TestCase
                 $this->assertEquals(200, $status);
             }
         }
-        
+
         return json_encode($statuses);
     }
-    
-    public function get_statuses_again($websites) 
+
+    public function get_statuses_again($websites)
     {
         $statuses = ['200' => 0, '400' => 0];
         foreach($websites as $website) {
             $tasks[] = yield \await([$this, 'get_website_status_again'], $website);
         }
-        
+
         $taskStatus = yield \gather($tasks);
         $this->assertEquals(2, \count($taskStatus));
         foreach($taskStatus as  $id => $status) {
@@ -52,11 +52,11 @@ class FileStreamTest extends TestCase
                 $statuses[$status] += 1;
             }
         }
-        
+
         return json_encode($statuses);
     }
-    
-    public function get_website_status($url) 
+
+    public function get_website_status($url)
     {
         $response = yield \head_uri();
         $this->assertFalse($response);
@@ -70,7 +70,7 @@ class FileStreamTest extends TestCase
         return $status;
     }
 
-    public function get_website_status_again($url) 
+    public function get_website_status_again($url)
     {
         $object = yield \file_open($url);
         $this->assertTrue($object instanceof FileStreamInterface);
@@ -81,8 +81,8 @@ class FileStreamTest extends TestCase
         \file_close($object);
         return $status;
     }
-    
-    public function taskFileOpen() 
+
+    public function taskFileOpen()
     {
         chdir(__DIR__);
         $instance = yield Kernel::fileOpen('.'.\DS.'list.txt');
@@ -100,7 +100,7 @@ class FileStreamTest extends TestCase
         }
     }
 
-    public function taskFileOpen_Again() 
+    public function taskFileOpen_Again()
     {
         chdir(__DIR__);
         $instance = yield \file_open('.'.\DS.'list.txt');
@@ -118,25 +118,25 @@ class FileStreamTest extends TestCase
         }
     }
 
-    public function taskFileOpen_Get_File() 
+    public function taskFileOpen_Get_File()
     {
-        $contents = yield \get_file('.'.\DS.'list.txt');        
+        $contents = yield \get_file('.'.\DS.'list.txt');
         $this->assertTrue(\is_type($contents, 'bool'));
         chdir(__DIR__);
-        $contents = yield \get_file('.'.\DS.'list.txt');        
+        $contents = yield \get_file('.'.\DS.'list.txt');
         $this->assertEquals('string', \is_type($contents));
     }
-    public function testFileOpen() 
+    public function testFileOpen()
     {
         \coroutine_run($this->taskFileOpen());
     }
 
-    public function testFileOpen_Again() 
+    public function testFileOpen_Again()
     {
         \coroutine_run($this->taskFileOpen_Again());
     }
 
-    public function testFileOpen_Get_File() 
+    public function testFileOpen_Get_File()
     {
         \coroutine_run($this->taskFileOpen_Get_File());
     }

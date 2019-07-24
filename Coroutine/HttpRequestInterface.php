@@ -20,13 +20,13 @@ use Async\Coroutine\StreamSocketInterface;
  * @param int $redirect
  * @param int $timeout
  * @return array|bool
- * 
+ *
  * protected function request(string $method = null, string $url = null, $data = null, array $authorize = ['username' => "", 'password' => "", 'type' => ""], string $format = null, string $header = null, string $userAgent = 'Symplely Http', float $protocolVersion = 1.1, int $redirect = 20, int $timeout = 60)
- * 
+ *
  */
 // extends \Psr\Http\Message\StreamInterface
 
- interface HttpRequestInterface 
+ interface HttpRequestInterface
 {
     /**
      * @param string $url - URI for the request.
@@ -35,7 +35,7 @@ use Async\Coroutine\StreamSocketInterface;
      * @param string $userAgent - 'Symplely Http'
      * @param float $protocolVersion - 1.1
      * @param int $redirect - 10
-     * @param int $timeout - 30 
+     * @param int $timeout - 30
      * @return array|bool
      */
     public function get(string $url = null, ...$options);
@@ -49,7 +49,7 @@ use Async\Coroutine\StreamSocketInterface;
      * @param string $userAgent - 'Symplely Http'
      * @param float $protocolVersion - 1.1
      * @param int $redirect - 10
-     * @param int $timeout - 30 
+     * @param int $timeout - 30
      * @return array|bool
      */
     public function post(string $url = null, $data = null, ...$options);
@@ -151,7 +151,7 @@ use Async\Coroutine\StreamSocketInterface;
      * {@inheritdoc}
      */
     public function write($string, $stream = null);
-        
+
     /**
      * Does the message contain the specified header field (case-insensitive)?
      *

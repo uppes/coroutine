@@ -45,12 +45,12 @@ class ParallelStatusTest extends TestCase
 		$this->assertStringContainsString('finished: 0', (string) $parallel->status());
 		$this->assertStringContainsString('failed: 5', (string) $parallel->status());
 		$this->assertStringContainsString('failed with Exception: Test', (string) $parallel->status());
-    }	
+    }
 
     public function testIt_can_show_timeout_status()
     {
         $parallel = new Parallel();
-        
+
         foreach (range(1, 5) as $i) {
             $parallel->add(function () {
                 sleep(1000);

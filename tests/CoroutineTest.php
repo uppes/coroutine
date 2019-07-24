@@ -6,7 +6,7 @@ use Async\Coroutine\Kernel;
 use Async\Coroutine\Coroutine;
 use PHPUnit\Framework\TestCase;
 
-class CoroutineTest extends TestCase 
+class CoroutineTest extends TestCase
 {
     protected $task = '';
 
@@ -14,8 +14,8 @@ class CoroutineTest extends TestCase
     {
         \coroutine_clear();
     }
-    
-    public function task1() 
+
+    public function task1()
     {
         for ($i = 1; $i <= 10; ++$i) {
             $this->task .= "This is task 1 iteration $i.\n";
@@ -23,7 +23,7 @@ class CoroutineTest extends TestCase
         }
     }
 
-    public function task2() 
+    public function task2()
     {
         for ($i = 1; $i <= 5; ++$i) {
             $this->task .= "This is task 2 iteration $i.\n";
@@ -31,7 +31,7 @@ class CoroutineTest extends TestCase
         }
     }
 
-    public function task3() 
+    public function task3()
     {
         for ($i = 1; $i <= 3; ++$i) {
             $this->task .= "This is task 3 iteration $i.\n";
@@ -39,19 +39,19 @@ class CoroutineTest extends TestCase
         }
     }
 
-    public function testCoroutine() 
+    public function testCoroutine()
     {
         $coroutine = new Coroutine();
         $this->assertInstanceOf('\Async\Coroutine\Coroutine', $coroutine);
 
         $taskId = $coroutine->createTask($this->task1());
         $this->assertNotNull($taskId);
-        
+
         $coroutine->createTask($this->task2());
         $coroutine->createTask($this->task3());
 
         $coroutine->run();
-        
+
         $expect[] = "This is task 1 iteration 1.";
         $expect[] = "This is task 2 iteration 1.";
         $expect[] = "This is task 3 iteration 1.";
@@ -75,7 +75,7 @@ class CoroutineTest extends TestCase
             $this->assertStringContainsString($iteration, $this->task);
     }
 
-    public function task($max) 
+    public function task($max)
     {
         $tid = (yield Kernel::taskId()); // <-- here's the system call!
         for ($i = 1; $i <= $max; ++$i) {
@@ -84,7 +84,7 @@ class CoroutineTest extends TestCase
         }
     }
 
-    public function testKernel_TaskId() 
+    public function testKernel_TaskId()
     {
         $this->task = '';
 
@@ -93,7 +93,7 @@ class CoroutineTest extends TestCase
         $coroutine->createTask($this->task(10));
         $coroutine->createTask($this->task(5));
         $coroutine->createTask($this->task(3));
-        
+
         $coroutine->run();
 
         $expect[] = "This is task 1 iteration 1.";
@@ -119,7 +119,7 @@ class CoroutineTest extends TestCase
             $this->assertStringContainsString($iteration, $this->task);
     }
 
-    public function childTask() 
+    public function childTask()
     {
         $tid = (yield Kernel::taskId());
         $this->assertNotNull($tid);
@@ -129,20 +129,20 @@ class CoroutineTest extends TestCase
         }
     }
 
-    public function taskKernel() 
+    public function taskKernel()
     {
         $tid = (yield Kernel::taskId());
         $childTid = (yield Kernel::createTask($this->childTask()));
 
-        for ($i = 1; $i <= 6; ++$i) {            
+        for ($i = 1; $i <= 6; ++$i) {
             $this->task .= "Parent task $tid iteration $i.\n";
             yield;
-    
+
             if ($i == 3) yield Kernel::cancelTask($childTid);
         }
     }
 
-    public function testKernel() 
+    public function testKernel()
     {
         $this->task = '';
 
@@ -165,8 +165,8 @@ class CoroutineTest extends TestCase
 
         $this->assertEquals(3, preg_match_all('/3 still alive!/', $this->task, $matches));
     }
-    
-    function testAddWriteStream() 
+
+    function testAddWriteStream()
 	{
         $coroutine = new Coroutine();
         $h = fopen('php://temp', 'r+');
@@ -179,7 +179,7 @@ class CoroutineTest extends TestCase
         $this->assertEquals('hello world', stream_get_contents($h));
     }
 
-    function testAddReadStream() 
+    function testAddReadStream()
 	{
         $coroutine = new Coroutine();
         $h = fopen('php://temp', 'r+');
@@ -193,8 +193,8 @@ class CoroutineTest extends TestCase
         $coroutine->run();
         $this->assertEquals('hello world', $result);
     }
-    
-    function testTimeout() 
+
+    function testTimeout()
 	{
         $coroutine = new Coroutine();
         $check  = 0;
@@ -204,8 +204,8 @@ class CoroutineTest extends TestCase
         $coroutine->run();
         $this->assertEquals(1, $check);
     }
-    
-    function testTimeoutOrder() 
+
+    function testTimeoutOrder()
 	{
         $coroutine = new Coroutine();
         $check  = [];
@@ -222,7 +222,7 @@ class CoroutineTest extends TestCase
         $this->assertEquals(['b', 'a', 'c'], $check);
     }
 
-    function testSetInterval() 
+    function testSetInterval()
 	{
         $coroutine = new Coroutine();
         $check = 0;

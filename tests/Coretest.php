@@ -4,7 +4,7 @@ namespace Async\Tests;
 
 use PHPUnit\Framework\TestCase;
 
-class CoreTest extends TestCase 
+class CoreTest extends TestCase
 {
     protected $task = null;
 
@@ -13,7 +13,7 @@ class CoreTest extends TestCase
         \coroutine_clear();
     }
 
-    public function childTask() 
+    public function childTask()
     {
         $tid = yield \task_id();
         while (true) {
@@ -22,15 +22,15 @@ class CoreTest extends TestCase
         }
     }
 
-    public function parentTask() 
+    public function parentTask()
     {
         $tid = yield \task_id();
         $childTid = yield \await([$this, 'childTask']);
-        
+
         for ($i = 1; $i <= 6; ++$i) {
             $this->task .= "Parent task $tid iteration $i.\n";
             yield;
-        
+
             if ($i == 3) {
                 $bool = yield \cancel_task($childTid);
                 $this->assertTrue($bool);
@@ -38,13 +38,13 @@ class CoreTest extends TestCase
         }
     }
 
-    public function testCoreFunctions() 
+    public function testCoreFunctions()
     {
         $this->task = '';
-        
+
         \coroutine_instance();
         \coroutine_create( \awaitAble([$this, 'parentTask']) );
-        \coroutine_run();        
+        \coroutine_run();
 
         $expect[] = "Parent task 1 iteration 1.";
         $expect[] = "Child task 3 still alive!";

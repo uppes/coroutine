@@ -18,7 +18,7 @@ class FileStream implements FileStreamInterface
     protected $isValid = false;
 
     protected static $instance = null;
-    
+
     public function __construct()
 	{
         self::$instance = $this;
@@ -28,12 +28,12 @@ class FileStream implements FileStreamInterface
 	{
         $resource = null;
         if (\in_array($mode, ['r', 'r+', 'w', 'w+', 'a', 'a+', 'x', 'x+', 'c', 'c+']))
-            $resource = @\fopen($uri, 
-                $mode.'b', 
-                false, 
+            $resource = @\fopen($uri,
+                $mode.'b',
+                false,
                 \is_resource($context) ? $context : \stream_context_create($context)
             );
-        
+
         if (\is_resource($resource)) {
             $this->isValid = true;
             \stream_set_blocking($resource, false);
@@ -59,14 +59,14 @@ class FileStream implements FileStreamInterface
             if (\is_string($new) && \strlen($new) >= 1) {
                 $contents .= $new;
             }
-            
+
             $time_used = $endTime - $startTime;
-            if (($time_used >= $timeout_seconds) 
+            if (($time_used >= $timeout_seconds)
                 || ! \is_string($new) || (\is_string($new) && \strlen($new) < 1)) {
                 break;
             }
         }
-    
+
         return $contents;
     }
 
@@ -101,7 +101,7 @@ class FileStream implements FileStreamInterface
             if (!empty($new))
                 $contents[] = \trim($new, \EOL);
         }
-    
+
         return $contents;
     }
 
@@ -118,7 +118,7 @@ class FileStream implements FileStreamInterface
         return $this->meta;
     }
 
-    public function fileStatus(array $meta = null) 
+    public function fileStatus(array $meta = null)
     {
         if (empty($meta))
             $meta = $this->meta;
@@ -149,13 +149,13 @@ class FileStream implements FileStreamInterface
     {
         return $this->resource;
     }
-    
+
     public static function instance(): FileStreamInterface
     {
         return self::$instance;
     }
 
-    public function fileClose() 
+    public function fileClose()
 	{
         $resource = $this->resource;
         $this->resource = null;
@@ -165,7 +165,7 @@ class FileStream implements FileStreamInterface
             @\fclose($resource);
     }
 
-    public static function input(int $size = 256, bool $error = false) 
+    public static function input(int $size = 256, bool $error = false)
 	{
         //Check on STDIN stream
         $blocking = \stream_set_blocking(\STDIN, false);

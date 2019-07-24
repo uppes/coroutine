@@ -23,7 +23,7 @@ function main() {
             $uriId[] = yield \await('requestHandler', $uri);
 
         $bodies = yield \gather($uriId);
-        
+
         foreach ($bodies as $id => $result) {
             [$uri, $body] = $result;
             print "Task $id: ". $uri . " - " . \strlen($body) . " bytes" . \EOL;

@@ -2,7 +2,7 @@
 
 namespace Async\Coroutine;
 
-interface ClientSocketInterface 
+interface ClientSocketInterface
 {
     public static function create(string $uri = null, array $context = []);
 

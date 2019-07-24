@@ -13,28 +13,28 @@ use Async\Coroutine\Exceptions\CancelledError;
 /**
  * The Kernel
  * This class is used for Communication between the tasks and the scheduler
- * 
- * The `yield` keyword in your code, act both as an interrupt and as a way to 
+ *
+ * The `yield` keyword in your code, act both as an interrupt and as a way to
  * pass information to (and from) the scheduler.
  */
-class Kernel 
+class Kernel
 {
     protected $callback;
     protected static $gatherResumer = null;
 
-    public function __construct(callable $callback) 
+    public function __construct(callable $callback)
 	{
         $this->callback = $callback;
     }
 
 	/**
 	 * Tells the scheduler to pass the calling task and itself into the function.
-	 * 
+	 *
 	 * @param TaskInterface $task
 	 * @param Coroutine $coroutine
 	 * @return mixed
 	 */
-    public function __invoke(TaskInterface $task, Coroutine $coroutine) 
+    public function __invoke(TaskInterface $task, Coroutine $coroutine)
 	{
         $callback = $this->callback;
         return $callback($task, $coroutine);
@@ -42,10 +42,10 @@ class Kernel
 
 	/**
 	 * Return the task ID
-	 * 
+	 *
 	 * @return int
 	 */
-	public static function taskId() 
+	public static function taskId()
 	{
 		return new Kernel(
 			function(TaskInterface $task, Coroutine $coroutine) {
@@ -57,10 +57,10 @@ class Kernel
 
 	/**
 	 * Create an new task
-	 * 
+	 *
 	 * @return int task ID
 	 */
-	public static function createTask(\Generator $coroutines) 
+	public static function createTask(\Generator $coroutines)
 	{
 		return new Kernel(
 			function(TaskInterface $task, Coroutine $coroutine) use ($coroutines) {
@@ -72,10 +72,10 @@ class Kernel
 
 	/**
 	 * Creates an Channel similar to Google's Go language
-	 * 
+	 *
 	 * @return object
 	 */
-	public static function make() 
+	public static function make()
 	{
 		return new Kernel(
 			function(TaskInterface $task, Coroutine $coroutine) {
@@ -87,7 +87,7 @@ class Kernel
 
 	/**
 	 * Set Channel by task id, similar to Google Go language
-	 * 
+	 *
      * @param Channel $channel
 	 */
 	public static function receiver(Channel $channel)
@@ -102,7 +102,7 @@ class Kernel
 
 	/**
 	 * Set Channel by task id, similar to Google Go language
-	 * 
+	 *
      * @param mixed $message
 	 * @param int $taskId
 	 */
@@ -117,17 +117,17 @@ class Kernel
 
 	/**
 	 * Send an message to Channel by task id, similar to Google Go language
-	 * 
+	 *
      * @param mixed $message
 	 * @param int $taskId
 	 */
 
-	public static function sender(Channel $channel, $message = null, int $taskId = 0) 
+	public static function sender(Channel $channel, $message = null, int $taskId = 0)
 	{
 		return new Kernel(
 			function(TaskInterface $task, Coroutine $coroutine) use ($channel, $message, $taskId) {
-				$taskList = $coroutine->taskList();				    
-		
+				$taskList = $coroutine->taskList();
+
 				if (isset($taskList[$channel->receiverId()]))
 					$newTask = $taskList[$channel->receiverId()];
 				elseif (isset($taskList[$taskId]))
@@ -140,18 +140,18 @@ class Kernel
 			}
 		);
 	}
-	
+
 	/**
 	 * kill/remove an task using task id
-	 * 
+	 *
 	 * @param int $tid
 	 * @throws \InvalidArgumentException
 	 */
-	public static function cancelTask($tid) 
+	public static function cancelTask($tid)
 	{
 		return new Kernel(
 			function(TaskInterface $task, Coroutine $coroutine) use ($tid) {
-				if ($coroutine->cancelTask($tid)) {					
+				if ($coroutine->cancelTask($tid)) {
 					$task->sendValue(true);
 					$task->setState('cancelled');
 					$coroutine->schedule($task);
@@ -164,10 +164,10 @@ class Kernel
 
     /**
      * Wait on read stream socket to be ready read from.
-     * 
+     *
      * @param resource $streamSocket
      */
-	public static function readWait($streamSocket) 
+	public static function readWait($streamSocket)
 	{
 		return new Kernel(
 			function(TaskInterface $task, Coroutine $coroutine) use ($streamSocket) {
@@ -178,10 +178,10 @@ class Kernel
 
     /**
      * Wait on write stream socket to be ready to be written to.
-     * 
+     *
      * @param resource $streamSocket
      */
-	public static function writeWait($streamSocket) 
+	public static function writeWait($streamSocket)
 	{
 		return new Kernel(
 			function(TaskInterface $task, Coroutine $coroutine) use ($streamSocket) {
@@ -193,18 +193,18 @@ class Kernel
     /**
      * Block/sleep for delay seconds.
      * Suspends the calling task, allowing other tasks to run.
-	 * 
+	 *
 	 * @see https://docs.python.org/3.7/library/asyncio-task.html#sleeping
-	 * 
+	 *
      * @param float $delay
 	 * @param mixed $result - If provided, it is returned to the caller when the coroutine complete
      */
-	public static function sleepFor(float $delay = 0.0, $result = null) 
+	public static function sleepFor(float $delay = 0.0, $result = null)
 	{
 		return new Kernel(
 			function(TaskInterface $task, Coroutine $coroutine) use ($delay, $result) {
 				$coroutine->addTimeout(function () use ($task, $coroutine, $result) {
-					if (!empty($result)) 
+					if (!empty($result))
 						$task->sendValue($result);
 					$coroutine->schedule($task);
 				}, $delay);
@@ -212,7 +212,7 @@ class Kernel
 		);
 	}
 
-	public static function awaitProcess($callable, $timeout = 300) 
+	public static function awaitProcess($callable, $timeout = 300)
 	{
 		return new Kernel(
 			function(TaskInterface $task, Coroutine $coroutine) use ($callable, $timeout) {
@@ -242,15 +242,15 @@ class Kernel
 	/**
 	 * Run awaitable objects in the taskId sequence concurrently.
 	 * If any awaitable in taskId is a coroutine, it is automatically scheduled as a Task.
-	 * 
-	 * If all awaitables are completed successfully, the result is an aggregate list of returned values. 
+	 *
+	 * If all awaitables are completed successfully, the result is an aggregate list of returned values.
 	 * The order of result values corresponds to the order of awaitables in taskId.
-	 * 
-	 * The first raised exception is immediately propagated to the task that awaits on gather(). 
+	 *
+	 * The first raised exception is immediately propagated to the task that awaits on gather().
 	 * Other awaitables in the sequence won’t be cancelled and will continue to run.
-	 * 
+	 *
 	 * @see https://docs.python.org/3.7/library/asyncio-task.html#asyncio.gather
-	 * 
+	 *
 	 * @param int|array $taskId
 	 * @return array
 	 */
@@ -263,7 +263,7 @@ class Kernel
 				else {
 					$taskIdList = [];
 					$newIdList =(\is_array($taskId[0])) ? $taskId[0] : $taskId;
-	
+
 					foreach($newIdList as $id => $value) {
 						if($value instanceof \Generator) {
 							$id = $coroutine->createTask($value);
@@ -271,19 +271,19 @@ class Kernel
 						} else
 							$taskIdList[$value] = $value;
 					}
-	
+
 					$results = [];
 					$count = \count($taskIdList);
 					$taskList = $coroutine->taskList();
-	
+
 					$completeList = $coroutine->completedList();
 					$countComplete = \count($completeList);
 					if ($countComplete > 0) {
 						foreach($completeList as $id => $tasks) {
 							if (isset($taskIdList[$id])) {
 								$results[$id] = $tasks->result();
-								$count--;			
-								$tasks->clearResult();				
+								$count--;
+								$tasks->clearResult();
 								unset($taskIdList[$id]);
 								unset($completeList[$id]);
 								$coroutine->updateCompleted($completeList);
@@ -333,7 +333,7 @@ class Kernel
 								self::$gatherResumer = [$taskIdList, $count, $results, $taskList];
 								$task->setException(new CancelledError());
 								$coroutine->schedule($tasks);
-							} 
+							}
 						}
 					}
 				}
@@ -347,22 +347,22 @@ class Kernel
 
     /**
      * Wait for the callable to complete with a timeout.
-     * 
+     *
 	 * @see https://docs.python.org/3.7/library/asyncio-task.html#timeouts
-	 * 
+	 *
 	 * @param callable $callable
      * @param float $timeout
      */
-	public static function waitFor($callable, float $timeout = null) 
+	public static function waitFor($callable, float $timeout = null)
 	{
 		return new Kernel(
 			function(TaskInterface $task, Coroutine $coroutine) use ($callable, $timeout) {
 				if ($callable instanceof \Generator) {
 					$taskId = $coroutine->createTask($callable);
 				} else {
-					$taskId = $coroutine->createTask(\awaitAble($callable));					
+					$taskId = $coroutine->createTask(\awaitAble($callable));
 				}
-				
+
 				$coroutine->addTimeout(function () use ($taskId, $timeout, $task, $coroutine) {
 					if (!empty($timeout)) {
 						$coroutine->cancelTask($taskId);
@@ -380,7 +380,7 @@ class Kernel
 						}
 						$coroutine->schedule($task);
 					}
-						
+
 				}, $timeout);
 			}
 		);
@@ -389,7 +389,7 @@ class Kernel
 	/**
 	 * Makes an resolvable function from label name that's callable with `await`
 	 * The passed in `function/callable/task` is wrapped to be `awaitAble`
-	 * 
+	 *
 	 * @param string $labelFunction
 	 * @param Generator|callable $asyncFunction
 	 */
@@ -402,20 +402,20 @@ class Kernel
 
 		global ${$labelFunction};
 		${$labelFunction} = $GLOBALS[$labelFunction];
-	}	
+	}
 
 	/**
 	 * Add/schedule an `yield`-ing `function/callable/task` for execution.
 	 * - This function needs to be prefixed with `yield`
-	 * 
+	 *
 	 * @see https://docs.python.org/3.7/library/asyncio-task.html#asyncio.create_task
-	 * 
+	 *
 	 * @param Generator|callable $asyncLabel
 	 * @param mixed $args
-	 * 
+	 *
 	 * @return int $task id
 	 */
-	public static function await($asyncLabel, ...$args) 
+	public static function await($asyncLabel, ...$args)
 	{
 		$isLabel = false;
 		if (!\is_array($asyncLabel) && !\is_callable($asyncLabel)) {
@@ -428,18 +428,18 @@ class Kernel
 		else
 			return new Kernel(
 				function(TaskInterface $task, Coroutine $coroutine) use ($asyncLabel, $args) {
-					$task->sendValue($coroutine->createTask(\awaitAble($asyncLabel, ...$args)));				
+					$task->sendValue($coroutine->createTask(\awaitAble($asyncLabel, ...$args)));
 					$coroutine->schedule($task);
 				}
 			);
 	}
 
-	public static function fileOpen(string $uri = null, string $mode = 'r', $options = []) 
+	public static function fileOpen(string $uri = null, string $mode = 'r', $options = [])
 	{
 		return new Kernel(
 			function(TaskInterface $task, Coroutine $coroutine) use ($uri, $mode, $options) {
 				$instance = new FileStream();
-				$instance->fileOpen($uri, $mode, $options);				
+				$instance->fileOpen($uri, $mode, $options);
 				$task->sendValue($instance);
 				$coroutine->schedule($task);
 			}

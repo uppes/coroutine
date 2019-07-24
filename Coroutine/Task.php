@@ -12,15 +12,15 @@ use Async\Coroutine\Exceptions\InvalidStateError;
 
 /**
  * Task is used to schedule coroutines concurrently.
- * When a coroutine is wrapped into a Task with functions like Coroutine::createTask() 
+ * When a coroutine is wrapped into a Task with functions like Coroutine::createTask()
  * the coroutine is automatically scheduled to run soon.
- * 
+ *
  * This Task class can also be seen to operate like an Fiber according to the RFC spec https://wiki.php.net/rfc/fiber
- * 
+ *
  * @see https://curio.readthedocs.io/en/latest/reference.html#tasks
  */
 class Task implements TaskInterface
-{	
+{
     /**
      * The task’s id.
      *
@@ -43,8 +43,8 @@ class Task implements TaskInterface
     protected $subprocess = false;
 
     /**
-     * The number of scheduling cycles the task has completed. 
-     * This might be useful if you’re trying to figure out if a task is running or not. 
+     * The number of scheduling cycles the task has completed.
+     * This might be useful if you’re trying to figure out if a task is running or not.
      * Or if you’re trying to monitor a task’s progress.
      *
      * @var int
@@ -83,34 +83,34 @@ class Task implements TaskInterface
     protected $error;
     protected $exception = null;
 
-    public function __construct($taskId, \Generator $coroutine) 
+    public function __construct($taskId, \Generator $coroutine)
 	{
         $this->taskId = $taskId;
         $this->state = 'pending';
         $this->coroutine = Coroutine::create($coroutine);
     }
 
-    public function taskId(): int 
+    public function taskId(): int
 	{
         return $this->taskId;
     }
 
-    public function cyclesAdd() 
+    public function cyclesAdd()
 	{
         $this->cycles++;
     }
 
-    public function sendValue($sendValue) 
+    public function sendValue($sendValue)
 	{
         $this->sendValue = $sendValue;
     }
 
-    public function setException($exception) 
+    public function setException($exception)
 	{
         $this->exception = $exception;
     }
 
-    public function run() 
+    public function run()
 	{
         if ($this->beforeFirstYield) {
             $this->beforeFirstYield = false;
@@ -139,7 +139,7 @@ class Task implements TaskInterface
 	{
         $this->state = $status;
     }
-    
+
     public function getState(): string
 	{
         return $this->state;

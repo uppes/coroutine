@@ -10,41 +10,41 @@ use Async\Coroutine\FileStreamInterface;
 
 /**
  * Class HttpRequest
- * 
+ *
  * @package Async\Coroutine\HttpRequest
  */
 class HttpRequest implements HttpRequestInterface
 {
-    /** 
-     * @var string[] 
+    /**
+     * @var string[]
      */
     protected $protocolVersions = ["1.0", "1.1", "2.0"];
 
     /**
 	 * The request method
-     * 
-     * @var string 
+     *
+     * @var string
      */
     protected $method;
 
-    /** 
+    /**
 	 * The requested uri
-     * 
-     * @var string 
+     *
+     * @var string
      */
     protected $uri;
 
     /**
      * headers with lowercase keys
-     * 
-     * @var array  
+     *
+     * @var array
      */
     protected $headers = [];
 
     /**
-     * lowercase header to actual case map 
-     * 
-     * @var array 
+     * lowercase header to actual case map
+     *
+     * @var array
      */
     protected $headerCaseMap = [];
 
@@ -65,7 +65,7 @@ class HttpRequest implements HttpRequestInterface
 	 * @var array
 	 */
     protected $parameters = [];
-        
+
     protected function authorization(array $authorize)
     {
         $headers = '';
@@ -75,9 +75,9 @@ class HttpRequest implements HttpRequestInterface
         } elseif ($authorize['type']=='digest' && !empty($authorize['username'])) {
             $headers .= 'Authorization: Digest ';
             foreach ($authorize as $k => $v) {
-                if (empty($k) || empty($v)) 
+                if (empty($k) || empty($v))
                     continue;
-                if ($k=='password') 
+                if ($k=='password')
                     continue;
                 $headers .= $k.'="'.$v.'", ';
             }
@@ -101,19 +101,19 @@ class HttpRequest implements HttpRequestInterface
      * @param int $timeout
      * @return array|bool
      */
-    protected function request(string $method = null, 
-        string $url = null, 
-        $data = null, 
-        array $authorize = ['username' => "", 'password' => "", 'type' => ""], 
-        string $format = null, 
-        string $charset = 'utf-8', 
-        string $header = null, 
-        string $userAgent = 'Symplely Http', 
-        float $protocolVersion = 1.1, 
-        int $redirect = 20, 
+    protected function request(string $method = null,
+        string $url = null,
+        $data = null,
+        array $authorize = ['username' => "", 'password' => "", 'type' => ""],
+        string $format = null,
+        string $charset = 'utf-8',
+        string $header = null,
+        string $userAgent = 'Symplely Http',
+        float $protocolVersion = 1.1,
+        int $redirect = 20,
         int $timeout = 60)
     {
-        if (empty($url) || empty($format) 
+        if (empty($url) || empty($format)
             || !\in_array($method, ['CONNECT', 'DELETE', 'GET', 'HEAD', 'OPTIONS', 'PATCH', 'POST', 'PUT', 'TRACE'])
         )
             return false;
@@ -124,7 +124,7 @@ class HttpRequest implements HttpRequestInterface
         // parse the parameters
         if (!empty($params))
             \parse_str( $params, $this->parameters );
-        
+
         $headers = $this->authorization($authorize);
         $contents = \is_array($data) ? \http_build_query($data) : $data;
         $length = !empty($contents) ? "Content-length: ".\strlen($contents)."\r\n" : '';
@@ -158,11 +158,11 @@ class HttpRequest implements HttpRequestInterface
                     $response = yield $this->getContents();
                     $metaUpdated = $this->getMetadata(null, $this->resource);
                 }
-                
-                return [$this->meta, $response, $metaUpdated];            
+
+                return [$this->meta, $response, $metaUpdated];
             }
         }
-        
+
         return false;
     }
 
@@ -174,7 +174,7 @@ class HttpRequest implements HttpRequestInterface
      * @param string $userAgent - 'Symplely Http'
      * @param float $protocolVersion - 1.1
      * @param int $redirect - 10
-     * @param int $timeout - 30 
+     * @param int $timeout - 30
      * @return array|bool
      */
     public function get(string $url = null, ...$options)
@@ -184,22 +184,22 @@ class HttpRequest implements HttpRequestInterface
 
         $authorize = isset($options[0]) ? $options[0] : ['username' => "", 'password' => "", 'type' => ""];
         $format = isset($options[1]) ? $options[1] : 'text/html';
-        $charset = isset($options[1]) ? $options[1] : 'utf-8'; 
+        $charset = isset($options[1]) ? $options[1] : 'utf-8';
         $userAgent = isset($options[2]) ? $options[2] : 'Symplely Http';
         $protocolVersion = isset($options[3]) ? $options[3] : 1.1;
         $redirect = isset($options[4]) ? $options[4] : 10;
         $timeout = isset($options[5]) ? $options[5] : 30;
 
-        yield $this->request('GET', 
-            $url, 
-            null, 
+        yield $this->request('GET',
+            $url,
+            null,
             $authorize,
-            $format, 
-            $charset, 
-            null, 
-            $userAgent, 
-            $protocolVersion, 
-            $redirect, 
+            $format,
+            $charset,
+            null,
+            $userAgent,
+            $protocolVersion,
+            $redirect,
             $timeout
         );
     }
@@ -214,7 +214,7 @@ class HttpRequest implements HttpRequestInterface
      * @param string $userAgent - 'Symplely Http'
      * @param float $protocolVersion - 1.1
      * @param int $redirect - 10
-     * @param int $timeout - 30 
+     * @param int $timeout - 30
      * @return array|bool
      */
     public function post(string $url = null, $data = null, ...$options)
@@ -224,23 +224,23 @@ class HttpRequest implements HttpRequestInterface
 
         $authorize = isset($options[0]) ? $options[0] : ['username' => "", 'password' => "", 'type' => ""];
         $format = isset($options[1]) ? $options[1] : 'application/x-www-form-urlencoded';
-        $charset = isset($options[1]) ? $options[1] : 'utf-8'; 
+        $charset = isset($options[1]) ? $options[1] : 'utf-8';
         $header = isset($options[2]) ? $options[2] : null;
         $userAgent = isset($options[3]) ? $options[3] : 'Symplely Http';
         $protocolVersion = isset($options[5]) ? $options[5] : 1.1;
         $redirect = isset($options[5]) ? $options[5] : 10;
         $timeout = isset($options[6]) ? $options[6] : 30;
-        
-        yield $this->request('POST', 
-            $url, 
-            $data, 
-            $authorize, 
-            $format, 
-            $charset, 
-            $header, 
-            $userAgent, 
-            $protocolVersion, 
-            $redirect, 
+
+        yield $this->request('POST',
+            $url,
+            $data,
+            $authorize,
+            $format,
+            $charset,
+            $header,
+            $userAgent,
+            $protocolVersion,
+            $redirect,
             $timeout
         );
     }
@@ -261,14 +261,14 @@ class HttpRequest implements HttpRequestInterface
         $userAgent = isset($options[1]) ? $options[1] : 'Symplely Http';
         $protocolVersion = isset($options[2]) ? $options[2] : 1.1;
 
-        $response = yield $this->request('HEAD', 
-            $url, 
-            null, 
-            $authorize, 
-            'text/html', 
-            'utf-8', 
-            null, 
-            $userAgent, 
+        $response = yield $this->request('HEAD',
+            $url,
+            null,
+            $authorize,
+            'text/html',
+            'utf-8',
+            null,
+            $userAgent,
             $protocolVersion
         );
 
@@ -281,7 +281,7 @@ class HttpRequest implements HttpRequestInterface
                 }
             }
         }
-        
+
         return $response;
     }
 
@@ -295,7 +295,7 @@ class HttpRequest implements HttpRequestInterface
      * @param string $userAgent - 'Symplely Http'
      * @param float $protocolVersion - 1.1
      * @param int $redirect - 10
-     * @param int $timeout - 30 
+     * @param int $timeout - 30
      * @return array|bool
      */
     public function patch(string $url = null, $data = null, ...$options)
@@ -305,23 +305,23 @@ class HttpRequest implements HttpRequestInterface
 
         $authorize = isset($options[0]) ? $options[0] : ['username' => "", 'password' => "", 'type' => ""];
         $format = isset($options[1]) ? $options[1] : 'text/plain';
-        $charset = isset($options[1]) ? $options[1] : 'utf-8'; 
+        $charset = isset($options[1]) ? $options[1] : 'utf-8';
         $header = isset($options[2]) ? $options[2] : null;
         $userAgent = isset($options[3]) ? $options[3] : 'Symplely Http';
         $protocolVersion = isset($options[5]) ? $options[5] : 1.1;
         $redirect = isset($options[5]) ? $options[5] : 10;
         $timeout = isset($options[6]) ? $options[6] : 30;
 
-        yield $this->request('PATCH', 
-            $url, 
-            $data, 
-            $authorize, 
-            $format, 
-            $charset, 
-            $header, 
-            $userAgent, 
-            $protocolVersion, 
-            $redirect, 
+        yield $this->request('PATCH',
+            $url,
+            $data,
+            $authorize,
+            $format,
+            $charset,
+            $header,
+            $userAgent,
+            $protocolVersion,
+            $redirect,
             $timeout
         );
     }
@@ -336,7 +336,7 @@ class HttpRequest implements HttpRequestInterface
      * @param string $userAgent - 'Symplely Http'
      * @param float $protocolVersion - 1.1
      * @param int $redirect - 10
-     * @param int $timeout - 30 
+     * @param int $timeout - 30
      * @return array|bool
      */
     public function put(string $url = null, $data = null, ...$options)
@@ -346,23 +346,23 @@ class HttpRequest implements HttpRequestInterface
 
         $authorize = isset($options[0]) ? $options[0] : ['username' => "", 'password' => "", 'type' => ""];
         $format = isset($options[1]) ? $options[1] : 'application/octet-stream';
-        $charset = isset($options[1]) ? $options[1] : 'utf-8'; 
+        $charset = isset($options[1]) ? $options[1] : 'utf-8';
         $header = isset($options[2]) ? $options[2] : null;
         $userAgent = isset($options[3]) ? $options[3] : 'Symplely Http';
         $protocolVersion = isset($options[5]) ? $options[5] : 1.1;
         $redirect = isset($options[5]) ? $options[5] : 10;
         $timeout = isset($options[6]) ? $options[6] : 30;
 
-        yield $this->request('PUT', 
-            $url, 
-            $data, 
-            $authorize, 
-            $format, 
-            $charset, 
-            $header, 
-            $userAgent, 
-            $protocolVersion, 
-            $redirect, 
+        yield $this->request('PUT',
+            $url,
+            $data,
+            $authorize,
+            $format,
+            $charset,
+            $header,
+            $userAgent,
+            $protocolVersion,
+            $redirect,
             $timeout
         );
     }
@@ -377,7 +377,7 @@ class HttpRequest implements HttpRequestInterface
      * @param string $userAgent - 'Symplely Http'
      * @param float $protocolVersion - 1.1
      * @param int $redirect - 10
-     * @param int $timeout - 30 
+     * @param int $timeout - 30
      * @return array|bool
      */
     public function delete(string $url = null, $data = null, ...$options)
@@ -387,23 +387,23 @@ class HttpRequest implements HttpRequestInterface
 
         $authorize = isset($options[0]) ? $options[0] : ['username' => "", 'password' => "", 'type' => ""];
         $format = isset($options[1]) ? $options[1] : 'application/octet-stream';
-        $charset = isset($options[1]) ? $options[1] : 'utf-8'; 
+        $charset = isset($options[1]) ? $options[1] : 'utf-8';
         $header = isset($options[2]) ? $options[2] : null;
         $userAgent = isset($options[3]) ? $options[3] : 'Symplely Http';
         $protocolVersion = isset($options[5]) ? $options[5] : 1.1;
         $redirect = isset($options[5]) ? $options[5] : 10;
         $timeout = isset($options[6]) ? $options[6] : 30;
 
-        yield $this->request('DELETE', 
-            $url, 
-            $data, 
-            $authorize, 
-            $format, 
-            $charset, 
-            $header, 
-            $userAgent, 
-            $protocolVersion, 
-            $redirect, 
+        yield $this->request('DELETE',
+            $url,
+            $data,
+            $authorize,
+            $format,
+            $charset,
+            $header,
+            $userAgent,
+            $protocolVersion,
+            $redirect,
             $timeout
         );
     }
@@ -458,7 +458,7 @@ class HttpRequest implements HttpRequestInterface
         return true;
     }
 
-    public function getStatus($meta = null) 
+    public function getStatus($meta = null)
     {
         if (empty($meta))
             $meta = $this->meta;
@@ -486,7 +486,7 @@ class HttpRequest implements HttpRequestInterface
     public function getContents($stream = null)
     {
         $handle = empty($stream) ? $this->resource : $stream;
-        
+
         if ($this->isReadable($handle)) {
             yield Kernel::readWait($handle);
             $contents = \stream_get_contents($handle);
@@ -585,7 +585,7 @@ class HttpRequest implements HttpRequestInterface
 
         throw new \RuntimeException('Unable to write to underlying resource');
     }
-        
+
     /**
      * Does the message contain the specified header field (case-insensitive)?
      *
@@ -593,7 +593,7 @@ class HttpRequest implements HttpRequestInterface
      *
      * @return bool
      */
-    public function hasHeader(string $field): bool 
+    public function hasHeader(string $field): bool
     {
         return isset($this->headers[\strtolower($field)]);
     }
@@ -610,7 +610,7 @@ class HttpRequest implements HttpRequestInterface
      *
      * @return string|null Header value or `null` if no header with name `$field` exists.
      */
-    public function getHeader(string $field) 
+    public function getHeader(string $field)
     {
         return $this->headers[\strtolower($field)][0] ?? null;
     }
@@ -624,7 +624,7 @@ class HttpRequest implements HttpRequestInterface
      *
      * @return array Header values.
      */
-    public function getHeaderArray(string $field): array 
+    public function getHeaderArray(string $field): array
     {
        return $this->headers[\strtolower($field)] ?? [];
     }
@@ -637,7 +637,7 @@ class HttpRequest implements HttpRequestInterface
      *
      * @return Request
      */
-    public function withHeader(string $field, string $value): self 
+    public function withHeader(string $field, string $value): self
     {
         $field = \trim($field);
         $lower = \strtolower($field);
@@ -648,7 +648,7 @@ class HttpRequest implements HttpRequestInterface
         return $this;
     }
 
-    public function withHeaders(array $headers): self 
+    public function withHeaders(array $headers): self
     {
         foreach ($headers as $field => $values) {
             if (!\is_string($field) && !\is_int($field)) {
@@ -693,7 +693,7 @@ class HttpRequest implements HttpRequestInterface
      *
      * @return array
      */
-    public function getHeaders(bool $originalCase = false): array 
+    public function getHeaders(bool $originalCase = false): array
     {
         if (!$originalCase) {
             return $this->headers;
@@ -715,7 +715,7 @@ class HttpRequest implements HttpRequestInterface
      *
      * @return Request
      */
-    public function withoutHeader(string $field): self 
+    public function withoutHeader(string $field): self
     {
         $lower = \strtolower($field);
 

@@ -31,7 +31,7 @@ class ParallelTest extends TestCase
         $parallel->wait();
 
         $stopwatchResult = \microtime(true) - $stopwatch;
-		
+
 		if ('\\' !== \DIRECTORY_SEPARATOR) {
 			$expect = (float) 0.6;
             $this->assertTrue($parallel->isPcntl());
@@ -118,7 +118,7 @@ class ParallelTest extends TestCase
     public function testIt_can_handle_timeout()
     {
         $parallel = new Parallel();
-        
+
         $counter = 0;
 
         foreach (range(1, 5) as $i) {
@@ -204,7 +204,7 @@ class ParallelTest extends TestCase
         $this->assertCount(5, $result);
         $this->assertEquals(10, array_sum($result));
     }
-    
+
     public function testIt_can_use_a_class_from_the_parent_process()
     {
         $parallel = \parallel_instance();
@@ -226,8 +226,8 @@ class ParallelTest extends TestCase
 
         $this->assertInstanceOf(MyClass::class, $result);
         $this->assertTrue($result->property);
-    }    
-    
+    }
+
     public function testIt_works_with_global_helper_functions()
     {
         $workers = \parallel_instance();
@@ -248,7 +248,7 @@ class ParallelTest extends TestCase
 
         $this->assertEquals(10, $counter, (string) $workers->status());
     }
-	
+
     public function testIt_can_run_invokable_classes()
     {
         $parallel = \parallel_instance();

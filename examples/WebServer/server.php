@@ -1,8 +1,8 @@
 <?php
 /**
- * This also an simpler version of 
+ * This also an simpler version of
  * "HOWTO: PHP TCP Server/Client with SSL Encryption using Streams"
- *  
+ *
  * @see http://blog.leenix.co.uk/2011/05/howto-php-tcp-serverclient-with-ssl.html
  */
 include 'vendor/autoload.php';
@@ -44,14 +44,14 @@ function loadTemplateFile($template, $vars)
 }
 
 
-function handleClient($socket) 
+function handleClient($socket)
 {
     global $i;
     $data = yield \server_read($socket, 8192);
-    
+
     $ip = \remote_ip($socket);
     print "New connection from " . $ip."\n";
-    
+
     $output = "Received following request:\n\n$data";
 
 	switch($data) {
@@ -66,7 +66,7 @@ function handleClient($socket)
 			$i++;
 			print "hi command received \n";
             break;
-        default:    
+        default:
             $input = \explode(" ", $data);
             if (empty($input[1])) {
                 $input[1] = "index.html";
@@ -116,7 +116,7 @@ function handleClient($socket)
                 $output = \server_response($socket, "The file you requested does not exist. Sorry!", 404);
             }
 
-            yield \server_write($socket, $output);        
+            yield \server_write($socket, $output);
     }
 
     yield \server_close($socket);

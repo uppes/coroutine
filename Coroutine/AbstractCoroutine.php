@@ -4,7 +4,7 @@ declare(strict_types = 1);
 
 namespace Async\Coroutine;
 
-abstract class AbstractCoroutine 
+abstract class AbstractCoroutine
 {
     protected $value;
 

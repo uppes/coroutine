@@ -17,7 +17,7 @@ class ServerSocket implements ServerSocketInterface
     protected $meta = [];
     protected $metaData = [];
     protected $host = '';
-    
+
     public static $caPath = \DIRECTORY_SEPARATOR;
     public static $privatekey = 'privatekey.pem';
     public static $certificate = 'certificate.crt';
@@ -35,7 +35,7 @@ class ServerSocket implements ServerSocketInterface
 		// Informational 1xx
 		100 => 'Continue',
 		101 => 'Switching Protocols',
-	
+
 		// Success 2xx
 		200 => 'OK',
 		201 => 'Created',
@@ -44,7 +44,7 @@ class ServerSocket implements ServerSocketInterface
 		204 => 'No Content',
 		205 => 'Reset Content',
 		206 => 'Partial Content',
-	
+
 		// Redirection 3xx
 		300 => 'Multiple Choices',
 		301 => 'Moved Permanently',
@@ -54,7 +54,7 @@ class ServerSocket implements ServerSocketInterface
 		305 => 'Use Proxy',
 		// 306 is deprecated but reserved
 		307 => 'Temporary Redirect',
-	
+
 		// Client Error 4xx
 		400 => 'Bad Request',
 		401 => 'Unauthorized',
@@ -74,7 +74,7 @@ class ServerSocket implements ServerSocketInterface
 		415 => 'Unsupported Media Type',
 		416 => 'Requested Range Not Satisfiable',
 		417 => 'Expectation Failed',
-	
+
 		// Server Error 5xx
 		500 => 'Internal Server Error',
 		501 => 'Not Implemented',
@@ -91,39 +91,39 @@ class ServerSocket implements ServerSocketInterface
 	 * @var int
 	 */
 	protected $status = 200;
-	
+
 	/**
 	 * The current response body
 	 *
 	 * @var string
 	 */
 	protected $body = '';
-	
+
 	/**
 	 * The current response headers
 	 *
 	 * @var array
 	 */
     protected $headers = [];
-    
-    public function __construct($server) 
+
+    public function __construct($server)
 	{
         $this->instance = $this;
         $this->socket = $server;
     }
 
-    protected static function checkUri(array $parts = [], string $uri = '') 
+    protected static function checkUri(array $parts = [], string $uri = '')
     {
         if (empty($parts))
             $parts = \parse_url($uri);
 
         // ensure URI contains TCP scheme, host and port
-        if (!$parts || !isset($parts['scheme'], $parts['host'], $parts['port']) 
+        if (!$parts || !isset($parts['scheme'], $parts['host'], $parts['port'])
             || !\in_array($parts['scheme'], ['tcp', 'tls', 'http', 'https', 'ssl', 'udp', 'unix'])
         ) {
             throw new \InvalidArgumentException('Invalid URI "' . $uri . '" given');
 		}
-		
+
         if (false === \filter_var(\trim($parts['host'], '[]'), \FILTER_VALIDATE_IP)) {
             throw new \InvalidArgumentException('Given URI "' . $uri . '" does not contain a valid host IP');
         }
@@ -133,7 +133,7 @@ class ServerSocket implements ServerSocketInterface
      * Creates a plaintext TCP/IP socket server and starts listening on the given address
      *
      * This starts accepting new incoming connections on the given address.
-     * 
+     *
      * See the exception message and code for more details about the actual error
      * condition.
      *
@@ -147,7 +147,7 @@ class ServerSocket implements ServerSocketInterface
      * @throws InvalidArgumentException if the listening address is invalid
      * @throws RuntimeException if listening on this address fails (already in use etc.)
      */
-    public static function createServer($uri = null, $context = []) 
+    public static function createServer($uri = null, $context = [])
 	{
         $hostname = \gethostname();
         $ip = \gethostbyname($hostname);
@@ -161,7 +161,7 @@ class ServerSocket implements ServerSocketInterface
         if (\strpos($uri, '://') === false) {
             $uri = 'tcp://' . $uri;
         }
-		
+
         // parse_url() does not accept null ports (random port assignment) => manually remove
         if (\substr($uri, -2) === ':0') {
             $parts = \parse_url(\substr($uri, 0, -2));
@@ -171,24 +171,24 @@ class ServerSocket implements ServerSocketInterface
         } else {
             $parts = \parse_url($uri);
 		}
-			
+
         self::checkUri($parts, $uri);
-        
+
         if (empty($context))
             $context = \stream_context_create($context);
 
         #create a stream server on IP:Port
         $server = @\stream_socket_server(
-            $uri, 
-            $errNo, 
+            $uri,
+            $errNo,
             $errStr,
-            \STREAM_SERVER_BIND | \STREAM_SERVER_LISTEN, 
+            \STREAM_SERVER_BIND | \STREAM_SERVER_LISTEN,
             $context
         );
 
         if (!$server)
             throw new \RuntimeException('Failed to listen on "' . $uri . '": ' . $errStr, $errNo);
-        
+
         print "Listening to {$uri} for connections\n";
 
 		\stream_set_blocking($server, false);
@@ -199,7 +199,7 @@ class ServerSocket implements ServerSocketInterface
     public function address()
     {
         return self::$remote;
-    }    
+    }
 
     public function handshake()
 	{
@@ -242,9 +242,9 @@ class ServerSocket implements ServerSocketInterface
 		{
 			$this->status = $status;
 		}
-		
+
 		$this->body = $body;
-		
+
 		// set initial headers
         $this->header( 'Date', gmdate( 'D, d M Y H:i:s T' ) );
         $this->header( 'Content-Type', 'text/html; charset=utf-8' );
@@ -264,9 +264,9 @@ class ServerSocket implements ServerSocketInterface
 	{
 		return $this->response("<h1>Symplely Server: ".$status." - ".static::$statusCodes[$status]."</h1>", $status );
     }
-    	
+
 	/**
-	 * Add or overwrite an header parameter header 
+	 * Add or overwrite an header parameter header
 	 *
 	 * @param string 			$key
 	 * @param string 			$value
@@ -276,7 +276,7 @@ class ServerSocket implements ServerSocketInterface
 	{
 		$this->headers[\ucfirst($key)] = $value;
 	}
-	
+
 	/**
 	 * Build a header string based on the current object
 	 *
@@ -285,20 +285,20 @@ class ServerSocket implements ServerSocketInterface
 	public function buildHeaderString()
 	{
 		$lines = [];
-		
-		// response status 
+
+		// response status
 		$lines[] = 'HTTP/1.1 '.$this->status.' '.static::$statusCodes[$this->status];
-		
+
 		// add the headers
 		foreach( $this->headers as $key => $value )
 		{
 			$lines[] = $key.': '.$value;
 		}
-		
+
 		return \implode( " \r\n", $lines )."\r\n\r\n";
 	}
 
-    public function read(int $size = -1) 
+    public function read(int $size = -1)
 	{
         if (!\is_resource($this->socket))
             return false;
@@ -308,7 +308,7 @@ class ServerSocket implements ServerSocketInterface
         \stream_set_blocking($this->socket, false);
     }
 
-    public function write(string $string) 
+    public function write(string $string)
 	{
         if (!\is_resource($this->socket))
             return false;
@@ -317,18 +317,18 @@ class ServerSocket implements ServerSocketInterface
         yield Coroutine::value(\fwrite($this->socket, $string));
     }
 
-    public function close() 
+    public function close()
 	{
         $resource = $this->socket;
         $this->socket = null;
         $this->secure = null;
         $this->body = null;
-            
+
         if (\is_resource($resource))
             @\fclose($resource);
     }
 
-    public static function acceptSecure($socket) 
+    public static function acceptSecure($socket)
 	{
         $error = null;
         \set_error_handler(function ($_, $errstr) use (&$error) {
@@ -353,7 +353,7 @@ class ServerSocket implements ServerSocketInterface
                 print 'Unable to complete TLS handshake: ' . $error . "\n";
             }
         }
- 
+
         return $socket;
     }
 
@@ -365,7 +365,7 @@ class ServerSocket implements ServerSocketInterface
             self::createCert($privatekeyFile, $certificateFile, $signingFile, $ssl_path, $details);
         }
 
-        #Setup the SSL Options 
+        #Setup the SSL Options
         \stream_context_set_option($context, 'ssl', 'local_cert', self::$certificate); // Our SSL Cert in PEM format
         \stream_context_set_option($context, 'ssl', 'local_pk', self::$privatekey); // Our RSA key in PEM format
         \stream_context_set_option($context, 'ssl', 'passphrase', null); // Private key Password
@@ -388,14 +388,14 @@ class ServerSocket implements ServerSocketInterface
 
     /**
      * Creates self signed certificate
-     * 
+     *
      * @param string $privatekeyFile
      * @param string $certificateFile
      * @param string $signingFile
      * @param string $ssl_path
-     * @param array $details - certificate details 
-     * 
-     * Example: 
+     * @param array $details - certificate details
+     *
+     * Example:
      * ```
      *  array $details = [
      *      "countryName" =>  '',
@@ -408,7 +408,7 @@ class ServerSocket implements ServerSocketInterface
      *  ];
      * ```
      */
-    public static function createCert(string $privatekeyFile = 'privatekey.pem', string $certificateFile = 'certificate.crt', string $signingFile = 'signing.csr', string $ssl_path = null, array $details = []) 
+    public static function createCert(string $privatekeyFile = 'privatekey.pem', string $certificateFile = 'certificate.crt', string $signingFile = 'signing.csr', string $ssl_path = null, array $details = [])
     {
         if (empty($ssl_path)) {
             $ssl_path = \getcwd();
@@ -420,7 +420,7 @@ class ServerSocket implements ServerSocketInterface
         self::$certificate = $certificateFile;
         self::$caPath = $ssl_path;
         self::$isSecure = true;
-        
+
         if (! \file_exists('.'.$ssl_path.$privatekeyFile)) {
             $opensslConfig = array("config" => $ssl_path.'openssl.cnf');
 
@@ -432,18 +432,18 @@ class ServerSocket implements ServerSocketInterface
 
             // Generate a certificate signing request
             $csr = \openssl_csr_new($details, $privatekey, $opensslConfig);
-        
+
             // Create a self-signed certificate valid for 365 days
             $sslcert = \openssl_csr_sign($csr, null, $privatekey, 365, $opensslConfig);
-        
+
             // Create key file. Note no passphrase
             \openssl_pkey_export_to_file($privatekey, $ssl_path.$privatekeyFile, null, $opensslConfig);
-        
-            // Create server certificate 
+
+            // Create server certificate
             \openssl_x509_export_to_file($sslcert, $ssl_path.$certificateFile, false);
-            
-            // Create a signing request file 
+
+            // Create a signing request file
             \openssl_csr_export_to_file($csr, $ssl_path.$signingFile);
         }
-    }        
+    }
 }

@@ -21,6 +21,6 @@ interface FileStreamInterface
     public function fileClose();
 
     public function fileHandle();
-    
+
     public static function instance(): self;
 }

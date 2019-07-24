@@ -3,17 +3,17 @@ include 'vendor/autoload.php';
 
 use Async\Coroutine\StreamSocket;
 /**
- * Converted example of https://github.com/jimmysong/asyncio-examples from: 
+ * Converted example of https://github.com/jimmysong/asyncio-examples from:
  * @see https://youtu.be/qfY2cqjJMdw
  */
-function get_statuses($websites) 
+function get_statuses($websites)
 {
     $statuses = ['200' => 0, '400' => 0, '405' => 0];
     $tasks = [];
 	foreach($websites as $website) {
 		$tasks[] = yield \await('get_website_status', $website);
     }
-    
+
     $taskStatus = yield \gather($tasks);
 	foreach($taskStatus as  $id => $status) {
         if (!$status)
@@ -21,11 +21,11 @@ function get_statuses($websites)
 		else
 			$statuses[$status] += 1;
     }
-    
+
     return json_encode($statuses);
 }
 
-function get_website_status($url) 
+function get_website_status($url)
 {yield;
     $id = yield \task_id();
     $object = yield \file_open($url);
@@ -50,8 +50,8 @@ function lapse() {
     }
 }
 
-function main() 
-{    
+function main()
+{
     yield \await('lapse');
     chdir(__DIR__);
     $object = yield \file_open('.'.\DS.'list.txt');

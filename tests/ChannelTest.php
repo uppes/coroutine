@@ -16,24 +16,24 @@ class ChannelTest extends TestCase
         \coroutine_clear();
     }
 
-    public function taskSender(Channel $channel) 
+    public function taskSender(Channel $channel)
     {
         yield \sleep_for(2);
         $this->assertTrue($channel instanceof Channel);
         yield Kernel::sender($channel, 'true');
     }
-    
-    public function taskMake() 
+
+    public function taskMake()
     {
         $channel = yield Kernel::make();
         $this->assertTrue($channel instanceof Channel);
         yield \go([$this, 'taskSender'], $channel);
-        yield Kernel::receiver($channel);    
+        yield Kernel::receiver($channel);
         $done = yield Kernel::receive($channel);
         $this->assertEquals('true', $done);
     }
 
-    public function testMake() 
+    public function testMake()
     {
         \coroutine_run($this->taskMake());
     }

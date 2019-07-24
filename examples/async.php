@@ -1,7 +1,7 @@
 <?php
 include 'vendor/autoload.php';
 
-function childTask() 
+function childTask()
 {
     $tid = yield \task_id();
     while (true) {
@@ -10,7 +10,7 @@ function childTask()
     }
 };
 
-function parentTask() 
+function parentTask()
 {
     $tid = yield \task_id();
     $childTid = yield \await('childTask');
