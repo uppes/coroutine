@@ -6,8 +6,7 @@ namespace Async\Coroutine;
 
 use Async\Coroutine\Kernel;
 use Async\Coroutine\Coroutine;
-use Async\Coroutine\SecureStreamSocket;
-use Async\Coroutine\StreamSocketInterface;
+use Async\Coroutine\ClientSocketInterface;
 
 class ClientSocket implements ClientSocketInterface
 {
