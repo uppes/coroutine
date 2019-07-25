@@ -4,26 +4,8 @@
 namespace Async\Coroutine;
 
 use Async\Coroutine\Kernel;
-use Async\Coroutine\StreamSocketInterface;
 
 // use Psr\Http\Message\StreamInterface;
-
-/**
- * @param string $method - GET, POST, HEAD, PUT, PATCH, DELETE
- * @param string $url - URI for the request.
- * @param mixed $data
- * @param array $authorize
- * @param string $format
- * @param string $header
- * @param string $userAgent
- * @param float $protocolVersion
- * @param int $redirect
- * @param int $timeout
- * @return array|bool
- *
- * protected function request(string $method = null, string $url = null, $data = null, array $authorize = ['username' => "", 'password' => "", 'type' => ""], string $format = null, string $header = null, string $userAgent = 'Symplely Http', float $protocolVersion = 1.1, int $redirect = 20, int $timeout = 60)
- *
- */
 // extends \Psr\Http\Message\StreamInterface
 
  interface HttpRequestInterface
