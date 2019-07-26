@@ -409,6 +409,68 @@ class HttpRequest implements HttpRequestInterface
     }
 
     /**
+     * {@inheritDoc}
+     */
+    public function getSize($stream = null): ?int
+    {
+        $handle = $this->getResource($stream);
+
+        if ($handle === null) {
+            return null;
+        }
+
+        $stats = \fstat($handle);
+        return $stats['size'] ?? null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function tell(): int
+    {
+        if ($this->resource === null) {
+            throw new \RuntimeException('Stream is not open.');
+        }
+
+        $position = \ftell($this->resource);
+        if ($position === false) {
+            throw new \RuntimeException('Unable to get position of stream.');
+        }
+
+        return $position;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function rewind(): void
+    {
+        if ($this->resource === null) {
+            throw new \RuntimeException('Stream is not open.');
+        }
+
+        if (!\rewind($this->resource)) {
+            throw new \RuntimeException('Failed to rewind stream.');
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function seek($offset, $whence = \SEEK_SET): void
+    {
+        if ($this->resource === null) {
+            throw new \RuntimeException('Stream is not open.');
+        }
+
+        if (0 > \fseek($this->resource, $offset, $whence)) {
+            throw new \RuntimeException(
+                \sprintf('Failed to seek to offset %s.', $offset)
+            );
+        }
+    }
+
+    /**
      * {@inheritdoc}
      */
     public function __toString()
@@ -418,6 +480,7 @@ class HttpRequest implements HttpRequestInterface
             return $this->getContents();
         } catch (\Exception $e) {
         }
+
         return '';
     }
 
@@ -444,12 +507,17 @@ class HttpRequest implements HttpRequestInterface
         return $resource;
     }
 
+    protected function getResource($stream = null) 
+    {
+        return empty($stream) ? $this->resource : $stream;
+    }
+
     /**
      * {@inheritdoc}
      */
     public function eof($stream = null)
     {
-        $handle = empty($stream) ? $this->resource : $stream;
+        $handle = $this->getResource($stream);
 
         if (isset($handle)) {
             return \feof($handle);
@@ -485,7 +553,7 @@ class HttpRequest implements HttpRequestInterface
      */
     public function getContents($stream = null)
     {
-        $handle = empty($stream) ? $this->resource : $stream;
+        $handle = $this->getResource($stream);
 
         if ($this->isReadable($handle)) {
             yield Kernel::readWait($handle);
@@ -503,7 +571,7 @@ class HttpRequest implements HttpRequestInterface
      */
     public function getMetadata($key = null, $stream = null)
     {
-        $handle = empty($stream) ? $this->resource : $stream;
+        $handle = $this->getResource($stream);
 
         $metadata = \stream_get_meta_data($handle);
         if ($key) {
@@ -517,7 +585,7 @@ class HttpRequest implements HttpRequestInterface
      */
     public function isReadable($stream = null)
     {
-        $handle = empty($stream) ? $this->resource : $stream;
+        $handle = $this->getResource($stream);
 
         if (!isset($handle)) {
             return false;
@@ -531,7 +599,7 @@ class HttpRequest implements HttpRequestInterface
      */
     public function read($length, $stream = null)
     {
-        $handle = empty($stream) ? $this->resource : $stream;
+        $handle = $this->getResource($stream);
 
         if (!$this->isReadable()) {
             throw new \RuntimeException('Stream is not readable');
@@ -553,7 +621,7 @@ class HttpRequest implements HttpRequestInterface
      */
     public function isWritable($stream = null)
     {
-        $handle = empty($stream) ? $this->resource : $stream;
+        $handle = $this->getResource($stream);
 
         if (!isset($handle)) {
             return false;
@@ -571,7 +639,7 @@ class HttpRequest implements HttpRequestInterface
      */
     public function write($string, $stream = null)
     {
-        $handle = empty($stream) ? $this->resource : $stream;
+        $handle = $this->getResource($stream);
 
         if (!$this->isWritable()) {
             throw new \RuntimeException('Stream is not writable');
@@ -584,146 +652,5 @@ class HttpRequest implements HttpRequestInterface
         }
 
         throw new \RuntimeException('Unable to write to underlying resource');
-    }
-
-    /**
-     * Does the message contain the specified header field (case-insensitive)?
-     *
-     * @param string $field Header name.
-     *
-     * @return bool
-     */
-    public function hasHeader(string $field): bool
-    {
-        return isset($this->headers[\strtolower($field)]);
-    }
-
-    /**
-     * Retrieve the first occurrence of the specified header in the message.
-     *
-     * If multiple headers exist for the specified field only the value of the first header is returned. Applications
-     * may use `getHeaderArray()` to retrieve a list of all header values received for a given field.
-     *
-     * A `null` return indicates the requested header field was not present.
-     *
-     * @param string $field Header name.
-     *
-     * @return string|null Header value or `null` if no header with name `$field` exists.
-     */
-    public function getHeader(string $field)
-    {
-        return $this->headers[\strtolower($field)][0] ?? null;
-    }
-
-    /**
-     * Retrieve all occurrences of the specified header in the message.
-     *
-     * Applications may use `getHeader()` to access only the first occurrence.
-     *
-     * @param string $field Header name.
-     *
-     * @return array Header values.
-     */
-    public function getHeaderArray(string $field): array
-    {
-       return $this->headers[\strtolower($field)] ?? [];
-    }
-
-    /**
-     * Assign a value for the specified header field by replacing any existing values for that field.
-     *
-     * @param string $field Header name.
-     * @param string $value Header value.
-     *
-     * @return Request
-     */
-    public function withHeader(string $field, string $value): self
-    {
-        $field = \trim($field);
-        $lower = \strtolower($field);
-
-        $this->headers[$lower] = [\trim($value)];
-        $this->headerCaseMap[$lower] = $field;
-
-        return $this;
-    }
-
-    public function withHeaders(array $headers): self
-    {
-        foreach ($headers as $field => $values) {
-            if (!\is_string($field) && !\is_int($field)) {
-                // PHP converts integer strings automatically to integers.
-                // Later versions of PHP might allow other key types.
-                // @codeCoverageIgnoreStart
-                throw new \TypeError("All array keys for withHeaders must be strings");
-                // @codeCoverageIgnoreEnd
-            }
-
-            $field = \trim($field);
-            $lower = \strtolower($field);
-
-            if (!\is_array($values)) {
-                $values = [$values];
-            }
-
-            $this->headers[$lower] = [];
-
-            foreach ($values as $value) {
-                if (!\is_string($value) && !\is_int($value) && !\is_float($value)) {
-                    throw new \TypeError("All values for withHeaders must be string or an array of strings");
-                }
-
-                $this->headers[$lower][] = \trim($value);
-            }
-
-            $this->headerCaseMap[$lower] = $field;
-
-            if (empty($this->headers[$lower])) {
-                unset($this->headers[$lower], $this->headerCaseMap[$lower]);
-            }
-        }
-
-        return $this;
-    }
-
-    /**
-     * Retrieve an associative array of headers matching field names to an array of field values.
-     *
-     * @param bool $originalCase If true, headers are returned in the case of the last set header with that name.
-     *
-     * @return array
-     */
-    public function getHeaders(bool $originalCase = false): array
-    {
-        if (!$originalCase) {
-            return $this->headers;
-        }
-
-        $headers = [];
-
-        foreach ($this->headers as $header => $values) {
-            $headers[$this->headerCaseMap[$header]] = $values;
-        }
-
-        return $headers;
-    }
-
-    /**
-     * Remove the specified header field from the message.
-     *
-     * @param string $field Header name.
-     *
-     * @return Request
-     */
-    public function withoutHeader(string $field): self
-    {
-        $lower = \strtolower($field);
-
-        unset(
-            $this->headerCaseMap[$lower],
-            $this->headers[$lower]
-        );
-
-        return $this;
     }
 }

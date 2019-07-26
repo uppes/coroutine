@@ -133,68 +133,24 @@ use Async\Coroutine\Kernel;
      * {@inheritdoc}
      */
     public function write($string, $stream = null);
+    
+    /**
+     * {@inheritDoc}
+     */
+    public function getSize($stream = null): ?int;
 
     /**
-     * Does the message contain the specified header field (case-insensitive)?
-     *
-     * @param string $field Header name.
-     *
-     * @return bool
+     * {@inheritDoc}
      */
-    public function hasHeader(string $field): bool;
+    public function tell(): int;
 
     /**
-     * Retrieve the first occurrence of the specified header in the message.
-     *
-     * If multiple headers exist for the specified field only the value of the first header is returned. Applications
-     * may use `getHeaderArray()` to retrieve a list of all header values received for a given field.
-     *
-     * A `null` return indicates the requested header field was not present.
-     *
-     * @param string $field Header name.
-     *
-     * @return string|null Header value or `null` if no header with name `$field` exists.
+     * {@inheritDoc}
      */
-    public function getHeader(string $field);
+    public function rewind(): void;
 
     /**
-     * Retrieve all occurrences of the specified header in the message.
-     *
-     * Applications may use `getHeader()` to access only the first occurrence.
-     *
-     * @param string $field Header name.
-     *
-     * @return array Header values.
+     * {@inheritDoc}
      */
-    public function getHeaderArray(string $field);
-
-    /**
-     * Assign a value for the specified header field by replacing any existing values for that field.
-     *
-     * @param string $field Header name.
-     * @param string $value Header value.
-     *
-     * @return Request
-     */
-    public function withHeader(string $field, string $value);
-
-    public function withHeaders(array $headers);
-
-    /**
-     * Retrieve an associative array of headers matching field names to an array of field values.
-     *
-     * @param bool $originalCase If true, headers are returned in the case of the last set header with that name.
-     *
-     * @return array
-     */
-    public function getHeaders(bool $originalCase = false);
-
-    /**
-     * Remove the specified header field from the message.
-     *
-     * @param string $field Header name.
-     *
-     * @return Request
-     */
-    public function withoutHeader(string $field);
+    public function seek($offset, $whence = \SEEK_SET): void;
 }
