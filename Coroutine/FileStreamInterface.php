@@ -8,6 +8,8 @@ interface FileStreamInterface
 
     public function fileContents(int $size = 256, float $timeout_seconds = 0.5);
 
+    public function fileRead(int $size = 512);
+
     public function fileCreate($contents);
 
     public function fileLines();

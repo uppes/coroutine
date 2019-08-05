@@ -69,12 +69,24 @@ class FileStream implements FileStreamInterface
         return $contents;
     }
 
+    public function fileRead(int $size = 512)
+    {
+        if (! \is_resource($this->resource))
+            return false;
+
+        yield Kernel::readWait($this->resource);
+        $contents = \stream_get_contents($this->resource, $size);
+
+        return $contents;
+    }
+
     public function fileCreate($contents)
     {
         yield;
         if (! \is_resource($this->resource))
             return false;
 
+        $fwrite = 0;
         for ($written = 0; $written < \strlen($contents); $written += $fwrite) {
             yield Kernel::writeWait($this->resource);
             $fwrite = \fwrite($this->resource, \substr($contents, $written));

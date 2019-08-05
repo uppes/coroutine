@@ -12,12 +12,9 @@ use Async\Coroutine\FileStream;
 use Async\Coroutine\FileStreamInterface;
 use Async\Coroutine\Coroutine;
 use Async\Coroutine\CoroutineInterface;
-use Async\Coroutine\HttpRequest;
-use Async\Coroutine\HttpRequestInterface;
 use Async\Processor\Processor;
 use Async\Coroutine\ParallelInterface;
 use Async\Processor\ProcessInterface;
-use Async\Coroutine\TaskInterface;
 
 if (! \function_exists('coroutine_run')) {
 	\define('MILLISECOND', 0.001);
@@ -385,104 +382,6 @@ if (! \function_exists('coroutine_run')) {
 
         return 'unknown';
     }
-
-	function create_uri(string $tag = null): HttpRequestInterface
-	{
-		global $__uri__, $__uriTag__;
-
-        if (empty($tag)) {
-            if (!$__uri__ instanceof HttpRequestInterface)
-                $__uri__ = new HttpRequest;
-        } else {
-            if (!isset($__uriTag__[$tag]) || !$__uriTag__[$tag] instanceof HttpRequestInterface)
-                $__uriTag__[$tag] = new HttpRequest;
-        }
-
-		return empty($tag) ? $__uri__ : $__uriTag__[$tag];
-	}
-
-	function clear_uri(string $tag = null)
-	{
-        global $__uri__, $__uriTag__;
-
-        if (empty($tag)) {
-            if ($__uri__ instanceof HttpRequestInterface)
-                $__uri__->close();
-
-            $__uri__ = null;
-            unset($GLOBALS['__uri__']);
-        } else {
-            if (isset($__uriTag__[$tag]) && $__uriTag__[$tag] instanceof HttpRequestInterface)
-                $__uriTag__[$tag]->close();
-
-            $__uriTag__[$tag] = null;
-            unset($GLOBALS['__uriTag__'][$tag]);
-        }
-	}
-
-	/**
-	 * - This function needs to be prefixed with `yield`
-	 */
-	function get_uri(string $tagUri = null, ...$options)
-	{
-	}
-
-	/**
-	 * - This function needs to be prefixed with `yield`
-	 */
-	function put_uri(string $tagUri = null, ...$options)
-	{
-	}
-
-	/**
-	 * - This function needs to be prefixed with `yield`
-	 */
-	function delete_uri(string $tagUri = null, ...$options)
-	{
-	}
-
-	/**
-	 * - This function needs to be prefixed with `yield`
-	 */
-	function post_uri(string $tagUri = null, ...$options)
-	{
-	}
-
-	/**
-	 * - This function needs to be prefixed with `yield`
-	 */
-	function patch_uri(string $tagUri = null, ...$options)
-	{
-	}
-
-	/**
-	 * - This function needs to be prefixed with `yield`
-	 */
-	function head_uri(string $tagUri = null, ...$options)
-	{
-		if (empty($tagUri))
-			return false;
-
-        if (\strpos($tagUri, '://') !== false) {
-            $url = $tagUri;
-            $instance = \create_uri();
-        } elseif (!empty($options)) {
-            $url = \array_shift($options);
-            $instance = \create_uri($tagUri);
-        }
-
-        if (isset($instance) && $instance instanceof HttpRequestInterface) {
-            $authorize = isset($options[0]) ? $options[0] : ['username' => "", 'password' => "", 'type' => ""];
-            $userAgent = isset($options[1]) ? $options[1] : 'Symplely Http';
-            $protocolVersion = isset($options[2]) ? $options[2] : 1.1;
-
-            $response = yield $instance->head($url, $authorize, $userAgent, $protocolVersion);
-
-            return $response;
-        }
-
-        return false;
-	}
 
 	/**
 	 * - This function needs to be prefixed with `yield`

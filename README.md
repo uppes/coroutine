@@ -419,7 +419,6 @@ yield \some_name($whatever, ...$args);
 
 * Add more standard examples from other languages, converted over.
 * Update docs in reference to similar sections of functionally in Python, Go or any other languages.
-* Turn some Http PSR-7, and PSR-17, or PSR-18 package to something totally asynchronous like Pythons aioHttp.
 * Add/Update phpunit tests.
 
 ## Package/Comparison

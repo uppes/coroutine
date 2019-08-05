@@ -15,27 +15,6 @@ class FileStreamTest extends TestCase
         \coroutine_clear();
     }
 
-    public function get_statuses($websites)
-    {
-        $statuses = ['200' => 0, '400' => 0];
-        foreach($websites as $website) {
-            $tasks[] = yield \await([$this, 'get_website_status'], $website);
-        }
-
-        $taskStatus = yield \gather($tasks);
-        $this->assertEquals(2, \count($taskStatus));
-        foreach($taskStatus as  $id => $status) {
-            if (!$status)
-                $statuses[$status] = 0;
-            else {
-                $statuses[$status] += 1;
-                $this->assertEquals(200, $status);
-            }
-        }
-
-        return json_encode($statuses);
-    }
-
     public function get_statuses_again($websites)
     {
         $statuses = ['200' => 0, '400' => 0];
@@ -56,20 +35,6 @@ class FileStreamTest extends TestCase
         return json_encode($statuses);
     }
 
-    public function get_website_status($url)
-    {
-        $response = yield \head_uri();
-        $this->assertFalse($response);
-        $response = yield \head_uri($url);
-        \clear_uri();
-        $this->assertEquals(3, \count($response));
-        [$meta, $status, $retry] = $response;
-        $this->assertEquals('array', \is_type($meta));
-        $this->assertEquals('bool', \is_type($retry));
-        $this->assertEquals(200, $status);
-        return $status;
-    }
-
     public function get_website_status_again($url)
     {
         $object = yield \file_open($url);
@@ -80,24 +45,6 @@ class FileStreamTest extends TestCase
         $this->assertNotNull($meta);
         \file_close($object);
         return $status;
-    }
-
-    public function taskFileOpen()
-    {
-        chdir(__DIR__);
-        $instance = yield Kernel::fileOpen('.'.\DS.'list.txt');
-        $this->assertTrue($instance instanceof FileStreamInterface);
-        $websites = yield $instance->fileLines();
-        $this->assertEquals(2, \count($websites));
-        $this->assertTrue($instance->fileValid());
-        $this->assertTrue(\is_resource($instance->fileHandle()));
-        $instance->fileClose();
-        $this->assertFalse(\is_resource($instance->fileHandle()));
-        if ($websites !== false) {
-            $data = yield from $this->get_statuses($websites);
-            $this->expectOutputString('{"200":2,"400":0}');
-            print $data;
-        }
     }
 
     public function taskFileOpen_Again()
@@ -125,10 +72,6 @@ class FileStreamTest extends TestCase
         chdir(__DIR__);
         $contents = yield \get_file('.'.\DS.'list.txt');
         $this->assertEquals('string', \is_type($contents));
-    }
-    public function testFileOpen()
-    {
-        \coroutine_run($this->taskFileOpen());
     }
 
     public function testFileOpen_Again()
