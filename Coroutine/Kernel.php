@@ -418,7 +418,7 @@ class Kernel
 	public static function await($asyncLabel, ...$args)
 	{
 		$isLabel = false;
-		if (!\is_array($asyncLabel) && !\is_callable($asyncLabel)) {
+		if (!\is_array($asyncLabel) && !\is_callable($asyncLabel) && !$asyncLabel instanceof \Generator) {
 			global ${$asyncLabel};
 			$isLabel = isset(${$asyncLabel});
 		}
@@ -428,7 +428,12 @@ class Kernel
 		else
 			return new Kernel(
 				function(TaskInterface $task, Coroutine $coroutine) use ($asyncLabel, $args) {
-					$task->sendValue($coroutine->createTask(\awaitAble($asyncLabel, ...$args)));
+					if ($asyncLabel instanceof \Generator) {
+						$task->sendValue($coroutine->createTask($asyncLabel));
+					} else {
+						$task->sendValue($coroutine->createTask(\awaitAble($asyncLabel, ...$args)));
+					}
+
 					$coroutine->schedule($task);
 				}
 			);
