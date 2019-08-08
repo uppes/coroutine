@@ -43,7 +43,7 @@ class CoreTest extends TestCase
         $this->task = '';
 
         \coroutine_instance();
-        \coroutine_create( \awaitAble([$this, 'parentTask']) );
+        \coroutine_create(\awaitAble([$this, 'parentTask']));
         \coroutine_run();
 
         $expect[] = "Parent task 1 iteration 1.";

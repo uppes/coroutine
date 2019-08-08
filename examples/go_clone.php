@@ -20,8 +20,8 @@ function alphabets() {
 }
 
 function main() {
-	yield \go('numbers');
-	yield \go('alphabets');
+	yield \go(\numbers());
+	yield \go(\alphabets());
 	yield \sleep_for(3000 * \MILLISECOND);
 	print(" main terminated");
 }

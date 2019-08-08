@@ -40,12 +40,12 @@ function main() {
 
     $coroutinesId = [];
     foreach ($tasks as $index => $parameters) {
-        $coroutinesId[] = yield \await('enqueue', $index, $parameters);
+        $coroutinesId[] = yield \await(\enqueue($index, $parameters));
     }
 
     try{
         // will throw exception and stop/kill progress printout '.' after 1 seconds
-        yield \wait_for('repeat', 1);
+        yield \wait_for(\repeat(), 1);
     } catch (\Async\Coroutine\Exceptions\TimeoutError $e) {
         $results = yield \gather($coroutinesId);
     }

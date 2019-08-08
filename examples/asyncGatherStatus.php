@@ -11,7 +11,7 @@ function get_statuses($websites)
     $statuses = ['200' => 0, '400' => 0, '405' => 0];
     $tasks = [];
 	foreach($websites as $website) {
-		$tasks[] = yield \await('get_website_status', $website);
+		$tasks[] = yield \await(\get_website_status($website));
     }
 
     $taskStatus = yield \gather($tasks);
@@ -52,7 +52,7 @@ function lapse() {
 
 function main()
 {
-    yield \await('lapse');
+    yield \await(\lapse());
     chdir(__DIR__);
     $object = yield \file_open('.'.\DS.'list.txt');
     $websites = yield \file_lines($object);

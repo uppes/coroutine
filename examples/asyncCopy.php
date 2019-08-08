@@ -1,8 +1,7 @@
 <?php
 include 'vendor/autoload.php';
 
-use Async\Coroutine\Kernel;
-
+// will create closure function in global namespace with supplied name as variable
 \async('childTask', function ($av = null)
 {
     $tid = yield \task_id();
@@ -14,8 +13,12 @@ use Async\Coroutine\Kernel;
 
 function parentTask()
 {
+    // place the variable global name in local namespace
+    global $childTask;
+
     $tid = yield \task_id();
-    $childTid = yield \await('childTask', 'using async() function');
+    // have `await` access the created async closure functions
+    $childTid = yield \await($childTask('using async() function'));
 
     for ($i = 1; $i <= 6; ++$i) {
         echo "Parent task $tid iteration $i.\n";

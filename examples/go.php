@@ -16,7 +16,7 @@ function f(int $n) {
 
   function main() {
     for ($i = 0; $i < 10; $i++) {
-      $func = yield \go('f',  $i);
+      $func = yield \go(\f($i));
       print ("\nCreated function: f($i), Task id: $func - ");
     }
 

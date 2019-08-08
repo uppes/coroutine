@@ -332,12 +332,12 @@ function needName() {
 }
 
 function main() {
-    yield \await('needName');
+    yield \await(\needName());
     echo \EOL.'You typed: '.(yield \keyboard()).\EOL;
 
     try {
         // Wait for at most 0.5 second
-        yield \wait_for('eternity', 0.5);
+        yield \wait_for(\eternity(), 0.5);
     } catch (\RuntimeException $e) {
         print("\ntimeout!");
         // this script should have exited automatically, since
@@ -376,8 +376,8 @@ function alphabets() {
 }
 
 function main() {
-    yield \go('numbers');
-    yield \go('alphabets');
+    yield \go(\numbers());
+    yield \go(\alphabets());
     yield \sleep_for(3000 * \MILLISECOND);
     print(" main terminated");
 }

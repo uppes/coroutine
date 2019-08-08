@@ -5,7 +5,6 @@ declare(strict_types = 1);
 namespace Async\Coroutine;
 
 use Async\Coroutine\Kernel;
-use Async\Coroutine\Coroutine;
 use Async\Coroutine\FileStreamInterface;
 
 class FileStream implements FileStreamInterface
@@ -71,6 +70,7 @@ class FileStream implements FileStreamInterface
 
     public function fileRead(int $size = 512)
     {
+        yield;
         if (! \is_resource($this->resource))
             return false;
 

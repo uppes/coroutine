@@ -20,7 +20,7 @@ function main() {
         $uriId = [];
 
         foreach ($uris as $uri)
-            $uriId[] = yield \await('requestHandler', $uri);
+            $uriId[] = yield \await(\requestHandler($uri));
 
         $bodies = yield \gather($uriId);
 

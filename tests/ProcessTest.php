@@ -37,7 +37,7 @@ class ProcessTest extends TestCase
 
     public function taskProcess()
     {
-        $childId = yield \await([$this, 'childTask']);
+        $childId = yield \await($this->childTask());
         $result = yield Kernel::awaitProcess(function () {
             usleep(1000);
             return 3;
@@ -71,7 +71,7 @@ class ProcessTest extends TestCase
 
     public function taskProcessTimeOut()
     {
-        $childId = yield await([$this, 'childTask']);
+        $childId = yield await($this->childTask());
         try {
             yield Kernel::awaitProcess(function () {
                 \sleep(1.5);

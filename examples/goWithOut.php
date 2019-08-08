@@ -15,15 +15,14 @@ function f(int $n) {
     }
   }
 
-  function main() {
+function main() {
     for ($i = 0; $i < 10; $i++) {
-      $func = yield \await('f',  $i);
+      $func = yield \await(\f($i));
       print ("\nCreated function: f($i), Task id: $func - ");
     }
 
     print("\nPress enter to exit,\nbut i will be still running,\ngot more tasks iterations to do!\n");
     yield \input_wait();
-  }
+ }
 
-\coroutine_create( \main() );
-\coroutine_run();
+\coroutine_run(\main());

@@ -13,7 +13,7 @@ function childTask()
 function parentTask()
 {
     $tid = yield \task_id();
-    $childTid = yield \await('childTask');
+    $childTid = yield \await(\childTask());
 
     for ($i = 1; $i <= 6; ++$i) {
         echo "Parent task $tid iteration $i.\n";

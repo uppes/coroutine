@@ -21,12 +21,12 @@ function f(string $from) {
     // Suppose we have a function call `e(s)`. Here's how
     // we'd call that in the usual way, running it
     // synchronously.
-    yield e("direct");
+    yield \e("direct");
 
     // To invoke this function in a goroutine, use
     // `go f(s)`. This new goroutine will execute
     // concurrently with the calling one. will not if `yield` is not present!
-    yield \go('f', "goroutine");
+    yield \go(\f("goroutine"));
 
     // You can also start a goroutine for an anonymous
     // function call.

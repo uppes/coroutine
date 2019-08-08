@@ -258,9 +258,9 @@ class Kernel
 	{
 		return new Kernel(
 			function(TaskInterface $task, Coroutine $coroutine) use ($taskId) {
-				if (!empty(self::$gatherResumer))
+				if (!empty(self::$gatherResumer)) {
 					[$taskIdList, $count, $results, $taskList] = self::$gatherResumer;
-				else {
+                } else {
 					$taskIdList = [];
 					$newIdList =(\is_array($taskId[0])) ? $taskId[0] : $taskId;
 
@@ -389,7 +389,9 @@ class Kernel
 	/**
 	 * Makes an resolvable function from label name that's callable with `await`
 	 * The passed in `function/callable/task` is wrapped to be `awaitAble`
-	 *
+     * 
+	 * This will create closure function in global namespace with supplied name as variable
+     * 
 	 * @param string $labelFunction
 	 * @param Generator|callable $asyncFunction
 	 */
@@ -397,11 +399,8 @@ class Kernel
 	{
 		$GLOBALS[$labelFunction] = function (...$args) use ($asyncFunction) {
 			$return = yield $asyncFunction(...$args);
-			return yield Coroutine::plain($return);
+			return Coroutine::plain($return);
 		};
-
-		global ${$labelFunction};
-		${$labelFunction} = $GLOBALS[$labelFunction];
 	}
 
 	/**
@@ -423,9 +422,9 @@ class Kernel
 			$isLabel = isset(${$asyncLabel});
 		}
 
-		if ($isLabel && (${$asyncLabel}() instanceof \Generator))
+		if ($isLabel && (${$asyncLabel}() instanceof \Generator)) {
 			return Kernel::createTask(${$asyncLabel}(...$args));
-		else
+        } else {
 			return new Kernel(
 				function(TaskInterface $task, Coroutine $coroutine) use ($asyncLabel, $args) {
 					if ($asyncLabel instanceof \Generator) {
@@ -436,7 +435,8 @@ class Kernel
 
 					$coroutine->schedule($task);
 				}
-			);
+            );
+        }
 	}
 
 	public static function fileOpen(string $uri = null, string $mode = 'r', $options = [])

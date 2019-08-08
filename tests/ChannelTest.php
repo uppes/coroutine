@@ -27,7 +27,7 @@ class ChannelTest extends TestCase
     {
         $channel = yield Kernel::make();
         $this->assertTrue($channel instanceof Channel);
-        yield \go([$this, 'taskSender'], $channel);
+        yield \go($this->taskSender($channel));
         yield Kernel::receiver($channel);
         $done = yield Kernel::receive($channel);
         $this->assertEquals('true', $done);

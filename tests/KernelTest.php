@@ -22,7 +22,7 @@ class KernelTest extends TestCase
     public function keyboard()
     {
         $tid = yield \task_id();
-        yield \await([$this, 'lapse'], $tid);
+        yield \await($this->lapse($tid));
         return yield FileStream::input(256);
     }
 
@@ -48,7 +48,7 @@ class KernelTest extends TestCase
     {        
         try {
             // Wait for at most 0.2 second
-            yield Kernel::waitFor([$this, 'taskSleepFor'], 0.2);
+            yield Kernel::waitFor($this->taskSleepFor(), 0.2);
         } catch (\Async\Coroutine\Exceptions\TimeoutError $e) {
             $this->assertInstanceOf(\Async\Coroutine\Exceptions\TimeoutError::class, $e);
         }

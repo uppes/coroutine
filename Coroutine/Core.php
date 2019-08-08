@@ -25,6 +25,8 @@ if (! \function_exists('coroutine_run')) {
 	/**
 	 * Makes an resolvable function from label name that's callable with `await`
 	 * The passed in `function/callable/task` is wrapped to be `awaitAble`
+     * 
+	 * This will create closure function in global namespace with supplied name as variable
 	 *
 	 * @param string $labelFunction
 	 * @param Generator|callable $asyncFunction
@@ -37,6 +39,10 @@ if (! \function_exists('coroutine_run')) {
 	/**
 	 * Add/schedule an `yield`-ing `function/callable/task` for execution.
 	 *
+     * If used in conjunction with `async()` then `$awaitableFunction` is an variable that will be placed
+     * in global namespace, your local calling function will need use `global` keyword with same variable 
+     * in local namespace also.
+     * 
 	 * @see https://docs.python.org/3.7/library/asyncio-task.html#asyncio.create_task
 	 *
 	 * - This function needs to be prefixed with `yield`
@@ -181,7 +187,7 @@ if (! \function_exists('coroutine_run')) {
 	 * @param mixed $args
 	 * @return int task id
 	 */
-	function go(callable $goFunction, ...$args)
+	function go($goFunction, ...$args)
 	{
 		return Kernel::await($goFunction, ...$args);
 	}
@@ -195,7 +201,7 @@ if (! \function_exists('coroutine_run')) {
 	 * @param callable $callable
 	 * @param float $timeout
 	 */
-	function wait_for(callable $callable, float $timeout = 0.0)
+	function wait_for($callable, float $timeout = 0.0)
 	{
 		return Kernel::waitFor($callable, $timeout);
 	}
