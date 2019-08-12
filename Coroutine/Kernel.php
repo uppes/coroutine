@@ -21,6 +21,8 @@ class Kernel
 {
     protected $callback;
     protected static $gatherResumer = null;
+    protected static $gatherCount = 0;
+    protected static $gatherShouldError = true;
 
     public function __construct(callable $callback)
 	{
@@ -240,6 +242,23 @@ class Kernel
 	}
 
 	/**
+	 * Controls how the `gather()` function operates.
+	 *
+	 * @param int $race - If set, initiate a competitive race between multiple tasks.
+	 * - When amount of tasks as completed, the `gather` will return with task results.
+	 * - When `0` (default), will wait for all to complete.
+	 * @param bool $exception - If `false`, the first raised exception is immediately propagated to the task that awaits on gather().
+	 * Other awaitables in the aws sequence won’t be cancelled and will continue to run.
+	 * - If `true` (default), exceptions are treated the same as successful results, and aggregated in the result list.
+	 * @throws \LengthException - If the number of tasks less than the desired $race.
+	 */
+	public static function gatherOptions(int $race = 0, bool $exception = true)
+	{
+		self::$gatherCount = $race;
+		self::$gatherShouldError = $exception;
+	}
+
+	/**
 	 * Run awaitable objects in the taskId sequence concurrently.
 	 * If any awaitable in taskId is a coroutine, it is automatically scheduled as a Task.
 	 *
@@ -273,7 +292,14 @@ class Kernel
 					}
 
 					$results = [];
-					$count = \count($taskIdList);
+					$count = $initialCount = \count($taskIdList);
+					$gatherSet = (self::$gatherCount > 0);
+					if ($gatherSet) {
+						if ($initialCount < self::$gatherCount) {
+							throw new \LengthException('Not enough tasks to fulfill gather count');
+						}
+					}
+
 					$taskList = $coroutine->taskList();
 
 					$completeList = $coroutine->completedList();
@@ -283,7 +309,6 @@ class Kernel
 							if (isset($taskIdList[$id])) {
 								$results[$id] = $tasks->result();
 								$count--;
-								$tasks->clearResult();
 								unset($taskIdList[$id]);
 								unset($completeList[$id]);
 								$coroutine->updateCompleted($completeList);
@@ -292,6 +317,7 @@ class Kernel
 					}
 				}
 
+				$count = ($gatherSet) ? \min(self::$gatherCount, $count) : $count;
 				while ($count > 0) {
 					foreach($taskIdList as $id) {
 						if (isset($taskList[$id])) {
@@ -302,13 +328,12 @@ class Kernel
 									$tasks = $completeList[$id];
 									$results[$id] = $tasks->result();
 									$count--;
-                                    $tasks->clearResult();
 									unset($taskIdList[$id]);
 									unset($completeList[$id]);
 									$coroutine->updateCompleted($completeList);
 								}
 
-								if ($tasks->getState() === 'process') {
+								if ($tasks->process()) {
 									$coroutine->runCoroutines();
 								}
 							} elseif ($tasks->pending() || $tasks->rescheduled()) {
@@ -316,7 +341,6 @@ class Kernel
 							} elseif ($tasks->completed()) {
 								$results[$id] = $tasks->result();
 								$count--;
-                                $tasks->clearResult();
                                 unset($taskList[$id]);
 								$completeList = $coroutine->completedList();
                                 unset($completeList[$id]);
@@ -373,7 +397,6 @@ class Kernel
 						if (isset($completeList[$taskId])) {
 							$tasks = $completeList[$taskId];
 							$result = $tasks->result();
-							$tasks->clearResult();
                             unset($completeList[$taskId]);
                             $coroutine->updateCompleted($completeList);
 							$task->sendValue($result);
@@ -389,9 +412,9 @@ class Kernel
 	/**
 	 * Makes an resolvable function from label name that's callable with `await`
 	 * The passed in `function/callable/task` is wrapped to be `awaitAble`
-     * 
+     *
 	 * This will create closure function in global namespace with supplied name as variable
-     * 
+     *
 	 * @param string $labelFunction
 	 * @param Generator|callable $asyncFunction
 	 */

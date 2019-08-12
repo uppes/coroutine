@@ -25,7 +25,7 @@ if (! \function_exists('coroutine_run')) {
 	/**
 	 * Makes an resolvable function from label name that's callable with `await`
 	 * The passed in `function/callable/task` is wrapped to be `awaitAble`
-     * 
+     *
 	 * This will create closure function in global namespace with supplied name as variable
 	 *
 	 * @param string $labelFunction
@@ -40,9 +40,9 @@ if (! \function_exists('coroutine_run')) {
 	 * Add/schedule an `yield`-ing `function/callable/task` for execution.
 	 *
      * If used in conjunction with `async()` then `$awaitableFunction` is an variable that will be placed
-     * in global namespace, your local calling function will need use `global` keyword with same variable 
+     * in global namespace, your local calling function will need use `global` keyword with same variable
      * in local namespace also.
-     * 
+     *
 	 * @see https://docs.python.org/3.7/library/asyncio-task.html#asyncio.create_task
 	 *
 	 * - This function needs to be prefixed with `yield`
@@ -55,6 +55,23 @@ if (! \function_exists('coroutine_run')) {
 	function await($awaitableFunction, ...$args)
 	{
 		return Kernel::await($awaitableFunction, ...$args);
+	}
+
+	/**
+	 * Controls how the `gather()` function operates.
+	 *
+	 * @param int $race - If set, initiate a competitive race between multiple tasks.
+	 * - When amount of tasks as completed, the `gather` will return with task results.
+	 * - When `0` (default), will wait for all to complete.
+	 * @param bool $exception - If `false`, the first raised exception is immediately propagated to the task that awaits on gather().
+	 * Other awaitables in the aws sequence won’t be cancelled and will continue to run.
+	 * - If `true` (default), exceptions are treated the same as successful results, and aggregated in the result list.
+	 * @throws \LengthException - If the number of tasks less than the desired $race.
+	 *
+	 */
+	function gather_options(int $race = 0, bool $exception = true)
+	{
+		Kernel::gatherOptions($race, $exception);
 	}
 
 	/**
@@ -76,7 +93,7 @@ if (! \function_exists('coroutine_run')) {
 	 */
 	function gather(...$taskId)
 	{
-		return Kernel::gather(...$taskId) ;
+		return Kernel::gather(...$taskId);
 	}
 
 	/**

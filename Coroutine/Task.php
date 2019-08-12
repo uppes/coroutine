@@ -83,6 +83,24 @@ class Task implements TaskInterface
     protected $error;
     protected $exception = null;
 
+    /**
+     * Use to store custom state.
+     *
+     * This property is for third party code/library.
+     *
+     * @var mixed
+     */
+    protected $customState;
+
+    /**
+     * Use to store custom data.
+     *
+     * This property is for third party code/library.
+     *
+     * @var mixed
+     */
+    protected $customData;
+
     public function __construct($taskId, \Generator $coroutine)
 	{
         $this->taskId = $taskId;
@@ -145,6 +163,46 @@ class Task implements TaskInterface
         return $this->state;
     }
 
+    /**
+     * Store custom state of the task.
+     */
+    public function customState($state = null)
+	{
+        $this->customState = $state;
+    }
+
+    /**
+     * Store custom data of the task.
+     */
+    public function customData($data = null)
+	{
+        $this->customData = $data;
+    }
+
+    /**
+     * Return the stored custom state of the task.
+     */
+    public function getCustomState()
+	{
+        return $this->customState;
+    }
+
+    /**
+     * Return the stored custom data of the task.
+     */
+    public function getCustomData()
+	{
+        return $this->customData;
+    }
+
+    /**
+     * Clear the stored custom data and state of the task.
+     */
+    public function customReset()
+	{
+        $this->customData = $this->customState = null;
+    }
+
     public function exception(): \Exception
     {
         return $this->error;
@@ -158,6 +216,16 @@ class Task implements TaskInterface
     public function isParallel(): bool
     {
         return $this->subprocess;
+    }
+
+    /**
+     * A flag that indicates whether or not the sub process task has started.
+     *
+     * @return bool
+     */
+    public function process(): bool
+    {
+        return ($this->state == 'process');
     }
 
     public function erred(): bool
@@ -192,11 +260,14 @@ class Task implements TaskInterface
 
     public function result()
     {
-        if ($this->completed())
-            return $this->result;
-        elseif ($this->cancelled() || $this->erred())
+        if ($this->completed()) {
+            $result = $this->result;
+            $this->result = null;
+            return $result;
+        } elseif ($this->cancelled() || $this->erred()) {
             throw $this->error;
-        else
+        } else {
             throw new InvalidStateError();
+        }
     }
 }
