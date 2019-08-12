@@ -6,8 +6,6 @@ namespace Async\Coroutine;
 
 use Async\Coroutine\Coroutine;
 use Async\Coroutine\TaskInterface;
-use Async\Coroutine\ResultValueCoroutine;
-use Async\Coroutine\Exceptions\CancelledError;
 use Async\Coroutine\Exceptions\InvalidStateError;
 
 /**
@@ -101,6 +99,29 @@ class Task implements TaskInterface
      */
     protected $customData;
 
+    protected $deferred = [];
+    protected $deferredResult = [];
+
+    /**
+     * Execute deferred stored callbacks if task completed
+     */
+    public function __destruct()
+    {
+        if (\is_array($this->deferred) && !empty($this->deferred) && $this->completed()) {
+            // @todo
+        }
+
+        $this->result = null;
+        $this->customData = null;
+        $this->deferred = null;
+        $this->deferredResult = null;
+    }
+
+    public function addDefer($deferredFunction, int $id)
+	{
+        \array_push($this->deferred[$id], $deferredFunction);
+    }
+
     public function __construct($taskId, \Generator $coroutine)
 	{
         $this->taskId = $taskId;
@@ -163,41 +184,31 @@ class Task implements TaskInterface
         return $this->state;
     }
 
-    /**
-     * Store custom state of the task.
-     */
     public function customState($state = null)
 	{
         $this->customState = $state;
     }
 
-    /**
-     * Store custom data of the task.
-     */
     public function customData($data = null)
 	{
         $this->customData = $data;
     }
 
-    /**
-     * Return the stored custom state of the task.
-     */
     public function getCustomState()
 	{
         return $this->customState;
     }
 
-    /**
-     * Return the stored custom data of the task.
-     */
     public function getCustomData()
 	{
         return $this->customData;
     }
 
-    /**
-     * Clear the stored custom data and state of the task.
-     */
+    public function isCustomState($state): bool
+	{
+        return ($this->customState === $state);
+    }
+
     public function customReset()
 	{
         $this->customData = $this->customState = null;
@@ -218,11 +229,6 @@ class Task implements TaskInterface
         return $this->subprocess;
     }
 
-    /**
-     * A flag that indicates whether or not the sub process task has started.
-     *
-     * @return bool
-     */
     public function process(): bool
     {
         return ($this->state == 'process');

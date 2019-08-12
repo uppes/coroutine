@@ -25,6 +25,49 @@ interface TaskInterface
 
     public function setState(string $status);
 
+    public function getState(): string;
+
+    public function addDefer($deferredFunction);
+
+    /**
+     * Store custom state of the task.
+     */
+    public function customState($state = null);
+
+    /**
+     * Store custom data of the task.
+     */
+    public function customData($data = null);
+
+    /**
+     * Return the stored custom state of the task.
+     */
+    public function getCustomState();
+
+    /**
+     * Return the stored custom data of the task.
+     */
+    public function getCustomData();
+
+    /**
+     * A flag that indicates custom state is as requested.
+     *
+     * @return bool
+     */
+    public function isCustomState($state): bool;
+
+    /**
+     * Clear the stored custom data and state of the task.
+     */
+    public function customReset();
+
+    /**
+     * A flag that indicates whether or not the sub process task has started.
+     *
+     * @return bool
+     */
+    public function process(): bool;
+
     /**
      * A flag that indicates whether or not the task has an error.
      *
