@@ -63,9 +63,10 @@ if (! \function_exists('coroutine_run')) {
 	 * @param int $race - If set, initiate a competitive race between multiple tasks.
 	 * - When amount of tasks as completed, the `gather` will return with task results.
 	 * - When `0` (default), will wait for all to complete.
-	 * @param bool $exception - If `false`, the first raised exception is immediately propagated to the task that awaits on gather().
+	 * @param bool $exception - If `true` (default), the first raised exception is immediately
+	 *  propagated to the task that awaits on gather().
 	 * Other awaitables in the aws sequence won’t be cancelled and will continue to run.
-	 * - If `true` (default), exceptions are treated the same as successful results, and aggregated in the result list.
+	 * - If `false`, exceptions are treated the same as successful results, and aggregated in the result list.
 	 * @throws \LengthException - If the number of tasks less than the desired $race.
 	 *
 	 */
