@@ -611,6 +611,8 @@ if (! \function_exists('coroutine_run')) {
 	 * Return a curryied version of the given function. You can decide if you also
 	 * want to curry optional parameters or not.
 	 *
+	 * @see https://github.com/lstrojny/functional-php/blob/master/docs/functional-php.md#currying
+	 *
 	 * @param callable $function the function to curry
 	 * @param bool $required curry optional parameters ?
 	 * @return callable a curryied version of the given function
@@ -642,6 +644,8 @@ if (! \function_exists('coroutine_run')) {
 	 * No check is made to verify that the given argument count is either too low or too high.
 	 * If you give a smaller number you will have an error when calling the given function. If
 	 * you give a higher number, arguments will simply be ignored.
+	 *
+	 * @see https://github.com/lstrojny/functional-php/blob/master/docs/functional-php.md#curry_n
 	 *
 	 * @param int $count number of arguments you want to curry
 	 * @param callable $function the function you want to curry
