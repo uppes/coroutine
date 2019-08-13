@@ -117,7 +117,7 @@ class Task implements TaskInterface
         $this->deferredResult = null;
     }
 
-    public function addDefer($deferredFunction, int $id)
+    public function addDefer(callable $deferredFunction, int $id)
 	{
         \array_push($this->deferred[$id], $deferredFunction);
     }
