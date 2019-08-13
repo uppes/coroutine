@@ -605,5 +605,59 @@ if (! \function_exists('coroutine_run')) {
 
 		if ($pool instanceof ParallelInterface)
 			return $pool->wait();
-    }
+	}
+
+	/**
+	 * Return a curryied version of the given function. You can decide if you also
+	 * want to curry optional parameters or not.
+	 *
+	 * @param callable $function the function to curry
+	 * @param bool $required curry optional parameters ?
+	 * @return callable a curryied version of the given function
+	 */
+	function curry(callable $function, $required = true)
+	{
+		if (\method_exists('Closure', 'fromCallable')) {
+			$reflection = new \ReflectionFunction(\Closure::fromCallable($function));
+		} else {
+			if (\is_string($function) && \strpos($function, '::', 1) !== false) {
+				$reflection = new \ReflectionMethod($function, null);
+			} elseif (\is_array($function) && \count($function) === 2) {
+				$reflection = new \ReflectionMethod($function[0], $function[1]);
+			} elseif (\is_object($function) && \method_exists($function, '__invoke')) {
+				$reflection = new \ReflectionMethod($function, '__invoke');
+			} else {
+				$reflection = new \ReflectionFunction($function);
+			}
+		}
+		$count = $required ?
+			$reflection->getNumberOfRequiredParameters() :
+			$reflection->getNumberOfParameters();
+		return curry_n($count, $function);
+	}
+
+	/**
+	 * Return a version of the given function where the $count first arguments are curryied.
+	 *
+	 * No check is made to verify that the given argument count is either too low or too high.
+	 * If you give a smaller number you will have an error when calling the given function. If
+	 * you give a higher number, arguments will simply be ignored.
+	 *
+	 * @param int $count number of arguments you want to curry
+	 * @param callable $function the function you want to curry
+	 * @return callable a curryied version of the given function
+	 */
+	function curry_n($count, callable $function)
+	{
+		$accumulator = function (array $arguments) use ($count, $function, &$accumulator) {
+			return function (...$newArguments) use ($count, $function, $arguments, $accumulator) {
+				$arguments = \array_merge($arguments, $newArguments);
+				if ($count <= \count($arguments)) {
+					return \call_user_func_array($function, $arguments);
+				}
+				return $accumulator($arguments);
+			};
+		};
+		return $accumulator([]);
+	}
 }

@@ -64,4 +64,25 @@ class CoreTest extends TestCase
         $this->assertEquals(6, \preg_match_all('/Parent task 1/', $this->task, $matches));
         $this->assertEquals(9, \preg_match_all('/task/', $this->task, $matches));
     }
+
+    public function testCurry()
+    {
+		$add = \curry(function($x, $y) {
+		    return $x + $y;
+		});
+		$this->assertEquals(3, $add(1, 2));
+		$addFive = $add(5); // this is a function
+		$this->assertEquals(6, $addFive(1));
+		$data = [1, 2, 3, 4, 5];
+		$slice = \curry('array_slice');
+		$itemsFrom = $slice($data);
+		$this->assertEquals([3, 4, 5], $itemsFrom(2));
+		$this->assertEquals([2, 3], $itemsFrom(1, 2));
+		// Notice that optional arguments are ignored !
+		$polynomial = \curry(function($a, $b, $c, $x) {
+		    return $a * $x * $x + $b * $x + $c;
+		});
+		$f = $polynomial(0, 2, 1); // 2 * $x + 1
+		$this->assertEquals(11, $f(5));
+	}
 }
