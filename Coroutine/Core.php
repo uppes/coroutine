@@ -2,6 +2,7 @@
 
 declare(strict_types = 1);
 
+use Async\Coroutine\Defer;
 use Async\Coroutine\Kernel;
 use Async\Coroutine\Channel;
 use Async\Coroutine\ServerSocket;
@@ -605,6 +606,31 @@ if (! \function_exists('coroutine_run')) {
 
 		if ($pool instanceof ParallelInterface)
 			return $pool->wait();
+	}
+
+	/**
+	 * Modeled as in `Go` Language.
+	 *
+     * A defer statement defers the execution of a function until the surrounding function returns.
+     * The deferred call's arguments are evaluated immediately,
+     * but the function call is not executed until the surrounding function returns.
+	 *
+	 * Modified from https://github.com/tito10047/php-defer
+	 *
+	 * @see https://golang.org/doc/effective_go.html#defer
+	 *
+	 * @param Defer|null $previous defer
+	 * @param callable $callback
+	 * @param mixed ...$args
+	 *
+	 * @throws \Exception
+	 */
+	function defer(&$previous, $callback)
+	{
+		$args = \func_get_args();
+		\array_shift($args);
+		\array_shift($args);
+		Defer::deferring($previous, $callback, $args);
 	}
 
 	/**

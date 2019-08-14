@@ -461,25 +461,6 @@ class Kernel
             );
         }
 	}
-	/**
-     * @todo Will be modeled as in Go Language.
-     * A defer statement defers the execution of a function until the surrounding function returns.
-     * The deferred call's arguments are evaluated immediately,
-     * but the function call is not executed until the surrounding function returns.
-     *
-     * @param callable $deferredFunction
-     * @param mixed ..$args
-	 */
-	public static function defer(callable $deferredFunction)
-	{
-		return new Kernel(
-            function(TaskInterface $task, Coroutine $coroutine) use ($deferredFunction) {
-				$id = $task->taskId();
-                $task->addDefer($deferredFunction, (int) $id);
-                $coroutine->schedule($task);
-			}
-        );
-	}
 
 	public static function fileOpen(string $uri = null, string $mode = 'r', $options = [])
 	{

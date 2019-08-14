@@ -27,8 +27,6 @@ interface TaskInterface
 
     public function getState(): string;
 
-    public function addDefer(callable $deferredFunction, int $id);
-
     /**
      * Store custom state of the task.
      */

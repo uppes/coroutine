@@ -99,28 +99,12 @@ class Task implements TaskInterface
      */
     protected $customData;
 
-    protected $deferred = [];
-    protected $deferredResult = [];
-
     /**
-     * Execute deferred stored callbacks if task completed
+     * Task type either `paralleled`, `yielded`, or `awaited`.
+     *
+     * @var string
      */
-    public function __destruct()
-    {
-        if (\is_array($this->deferred) && !empty($this->deferred) && $this->completed()) {
-            // @todo
-        }
-
-        $this->result = null;
-        $this->customData = null;
-        $this->deferred = null;
-        $this->deferredResult = null;
-    }
-
-    public function addDefer(callable $deferredFunction, int $id)
-	{
-        \array_push($this->deferred[$id], $deferredFunction);
-    }
+    protected $taskType = 'yielded';
 
     public function __construct($taskId, \Generator $coroutine)
 	{
