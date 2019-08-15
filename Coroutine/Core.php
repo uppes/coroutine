@@ -5,10 +5,6 @@ declare(strict_types = 1);
 use Async\Coroutine\Defer;
 use Async\Coroutine\Kernel;
 use Async\Coroutine\Channel;
-use Async\Coroutine\ServerSocket;
-use Async\Coroutine\ServerSocketInterface;
-use Async\Coroutine\ClientSocket;
-use Async\Coroutine\ClientSocketInterface;
 use Async\Coroutine\FileStream;
 use Async\Coroutine\FileStreamInterface;
 use Async\Coroutine\Coroutine;
@@ -21,7 +17,6 @@ if (! \function_exists('coroutine_run')) {
 	\define('MILLISECOND', 0.001);
 	\define('EOL', \PHP_EOL);
 	\define('DS', \DIRECTORY_SEPARATOR);
-
 
 	/**
 	 * Makes an resolvable function from label name that's callable with `await`
@@ -266,111 +261,6 @@ if (! \function_exists('coroutine_run')) {
 	}
 
 	/**
-	 * - This function needs to be prefixed with `yield`
-	 */
-	function create_client($uri = null, array $options = [])
-	{
-		return ClientSocket::create($uri, $options);
-	}
-
-	function client_meta(ClientSocketInterface $instance): ?array
-	{
-		return $instance->meta();
-	}
-
-	/**
-	 * - This function needs to be prefixed with `yield`
-	 */
-	function client_read(ClientSocketInterface $instance, int $size = -1)
-	{
-		return $instance->read($size);
-	}
-
-	/**
-	 * - This function needs to be prefixed with `yield`
-	 */
-	function client_write(ClientSocketInterface $instance, string $response = null)
-	{
-		return $instance->write($response);
-	}
-
-	function client_close(ClientSocketInterface $instance)
-	{
-		return $instance->close();
-	}
-
-	function client_valid(ClientSocketInterface $instance): bool
-	{
-		return $instance->valid();
-	}
-
-	function client_handle(ClientSocketInterface $instance): ?resource
-	{
-		return $instance->handle();
-	}
-
-	function client_instance(): ClientSocketInterface
-	{
-		return ClientSocket::instance();
-	}
-
-	function secure_server(
-		$uri = null,
-		array $options = [],
-		string $privatekeyFile = 'privatekey.pem',
-		string $certificateFile = 'certificate.crt',
-		string $signingFile = 'signing.csr',
-		string $ssl_path = null,
-		array $details = []) : ServerSocketInterface
-	{
-		return ServerSocket::secureServer($uri, $options, $privatekeyFile, $certificateFile, $signingFile, $ssl_path, $details);
-	}
-
-	function create_server($uri = null, array $options = []): ServerSocketInterface
-	{
-		return ServerSocket::createServer($uri, $options);
-	}
-
-	/**
-	 * - This function needs to be prefixed with `yield`
-	 */
-	function server_accept(ServerSocketInterface $instance)
-	{
-		return $instance->accept();
-	}
-
-	/**
-	 * - This function needs to be prefixed with `yield`
-	 */
-	function server_read(ServerSocketInterface $instance, int $size = -1)
-	{
-		return $instance->read($size);
-	}
-
-	/**
-	 * - This function needs to be prefixed with `yield`
-	 */
-	function server_write(ServerSocketInterface $instance, string $response = null)
-	{
-		return $instance->write($response);
-	}
-
-	function server_response(ServerSocketInterface $instance, $body = null, $status = 200 ): string
-	{
-		return $instance->response($body, $status);
-	}
-
-	function server_error(ServerSocketInterface $instance, $status = 404 ):string
-	{
-		return $instance->error($status);
-	}
-
-	function server_close(ServerSocketInterface $instance)
-	{
-		return $instance->close();
-	}
-
-	/**
 	 * Open file or url.
 	 * - This function needs to be prefixed with `yield`
 	 *
@@ -504,11 +394,6 @@ if (! \function_exists('coroutine_run')) {
 		return FileStream::fileInstance();
 	}
 
-	function remote_ip(ServerSocketInterface $instance)
-	{
-		return $instance->address();
-	}
-
 	function coroutine_instance()
 	{
 		return \coroutine_create();
@@ -610,11 +495,21 @@ if (! \function_exists('coroutine_run')) {
 
 	/**
 	 * Modeled as in `Go` Language.
-	 *
-     * A defer statement defers the execution of a function until the surrounding function returns.
-     * The deferred call's arguments are evaluated immediately,
-     * but the function call is not executed until the surrounding function returns.
-	 *
+	 * 
+     * The behavior of defer statements is straightforward and predictable. 
+     * There are three simple rules:
+     * 1. *A deferred function's arguments are evaluated when the defer statement is evaluated.*
+     * 2. *Deferred function calls are executed in Last In First Out order after the* surrounding function returns.
+     * 3. *Deferred functions can`t modify return values when is type, but can modify content of reference to array or object.*
+     * 
+     * PHP Limitations: 
+     * - In this *PHP* defer implementation, 
+     *  you cant modify returned value. You can modify only content of returned reference.
+     * - You must always set first parameter in `defer` function,
+     *  the parameter MUST HAVE same variable name as other `defer`,
+     *  and this variable MUST NOT exist anywhere in local scope.
+     * - You can`t pass function declared in local scope by name to *defer*.
+     *
 	 * Modified from https://github.com/tito10047/php-defer
 	 *
 	 * @see https://golang.org/doc/effective_go.html#defer
@@ -631,6 +526,14 @@ if (! \function_exists('coroutine_run')) {
 		\array_shift($args);
 		\array_shift($args);
 		Defer::deferring($previous, $callback, $args);
+    }
+
+	function recover(&$previous, $callback, ...$args)
+	{
+        if ($previous !== null && $previous instanceof Defer)
+            Defer::recover($previous, $callback, $args);
+        else
+		    Defer::deferring($previous, $callback, $args);
 	}
 
 	/**
