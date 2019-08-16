@@ -495,15 +495,15 @@ if (! \function_exists('coroutine_run')) {
 
 	/**
 	 * Modeled as in `Go` Language.
-	 * 
-     * The behavior of defer statements is straightforward and predictable. 
+	 *
+     * The behavior of defer statements is straightforward and predictable.
      * There are three simple rules:
      * 1. *A deferred function's arguments are evaluated when the defer statement is evaluated.*
      * 2. *Deferred function calls are executed in Last In First Out order after the* surrounding function returns.
      * 3. *Deferred functions can`t modify return values when is type, but can modify content of reference to array or object.*
-     * 
-     * PHP Limitations: 
-     * - In this *PHP* defer implementation, 
+     *
+     * PHP Limitations:
+     * - In this *PHP* defer implementation,
      *  you cant modify returned value. You can modify only content of returned reference.
      * - You must always set first parameter in `defer` function,
      *  the parameter MUST HAVE same variable name as other `defer`,
@@ -528,12 +528,17 @@ if (! \function_exists('coroutine_run')) {
 		Defer::deferring($previous, $callback, $args);
     }
 
-	function recover(&$previous, $callback, ...$args)
+	function recover(&$previous, $callback)
 	{
-        if ($previous !== null && $previous instanceof Defer)
-            Defer::recover($previous, $callback, $args);
-        else
-		    Defer::deferring($previous, $callback, $args);
+		$args = \func_get_args();
+		\array_shift($args);
+		\array_shift($args);
+        Defer::recover($previous, $callback, $args);
+	}
+
+	function panic($message = '', $code = 0)
+	{
+		throw new \Exception($message, $code);
 	}
 
 	/**

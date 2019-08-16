@@ -4,5 +4,8 @@
         "phpunit",
         "symfony",
         "symplely"
-    ]
+    ],
+    "files.eol": "\n",
+    "files.trimFinalNewlines": true,
+    "files.trimTrailingWhitespace": true
 }

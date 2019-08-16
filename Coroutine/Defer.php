@@ -19,17 +19,24 @@ class Defer
 	private $root = null;
 	private $isLast = true;
 	private $destructed = false;
-	private $errorCatcher = null;
-	private $recoverArgs;
-	private $recover;
+	private static $recoverableArgs;
+	private static $recoverable;
+	private static $isRecoverable = false;
 
-	private function __construct($prev, $callback, $args)
+	private function __construct($prev, $callback, $args, $recover = false)
 	{
-		$this->callback = $callback;
-		$this->args = $args;
+		if ($recover) {
+			self::$isRecoverable = true;
+			self::$recoverable = $callback;
+			self::$recoverableArgs= $args;
+		} else {
+			$this->callback = $callback;
+			$this->args = $args;
+		}
+
 		if ($prev instanceof self) {
 			if ($prev->root == null) {
-				$prev->root = $prev;
+                $prev->root = $prev;
 			}
 
 			$prev->root->prev[] = $prev;
@@ -47,7 +54,7 @@ class Defer
 	 *
 	 * @throws \Exception
 	 */
-	public static function deferring(&$previous, $callback, $args)
+	public static function deferring(&$previous, $callback, $args, $recover = false)
 	{
 		if (!\is_callable($callback)) {
 			if (\is_string($callback) && !\function_exists($callback)) {
@@ -56,58 +63,51 @@ class Defer
 			throw new \Exception("this is not callable");
 		}
 
-        $previous = new self($previous, $callback, $args);
+        $previous = new self($previous, $callback, $args, $recover);
     }
 
-	public static function recover(&$previous, callable $callback, ...$args)
+	public static function recover(&$previous, $callback, $args = null)
 	{
-        $previous->recover = $callback;
-		$previous->recoverArgs = $args;
+        $previous = self::deferring($previous, $callback, $args, true);
 	}
 
 	public function __destruct()
 	{
         if ($this->destructed) {
             return;
-        }
+		}
+		$this->destructed = true;
 
-        $this->destructed = true;
+		$errorCatcher = null;
         try {
-            \call_user_func_array($this->callback, $this->args);
+			if (\is_callable($this->callback))
+				\call_user_func_array($this->callback, $this->args);
         } catch (\Exception $e) {
-            if ($this->recover !== null) {
-                $this->errorCatcher = null;
-                \call_user_func_array($this->recover, $this->recoverArgs);
-            } else
-                $this->errorCatcher = $e;
-                
-        }
+			if (self::$isRecoverable)
+				\call_user_func_array(self::$recoverable, self::$recoverableArgs);
+			else
+				$errorCatcher = $e;
+		}
 
-        $this->recover = null;
-        $this->recoverArgs = [];
         if ($this->root != null) {
             for ($i = \count($this->root->prev) - 1; $i >= 0; $i--) {
                 $deferred = $this->root->prev[$i];
                 $deferred->destructed = true;
                 try {
-                    \call_user_func_array($deferred->callback, $deferred->args);
+					if (\is_callable($this->callback))
+						\call_user_func_array($deferred->callback, $deferred->args);
                 } catch (\Exception $e) {
-                    if ($deferred->recover !== null) {
-                        $this->errorCatcher = null;
-                        \call_user_func_array($deferred->recover, $deferred->recoverArgs);
-                    } else
-                        $this->errorCatcher = $e;
-                }
-                $deferred->recover = null;
-                $deferred->recoverArgs = null;
+					if (self::$isRecoverable)
+						\call_user_func_array(self::$recoverable, self::$recoverableArgs);
+					else
+						$errorCatcher = $e;
+				}
                 $this->root->prev[$i] = null;
             }
         }
 
-        if ($this->errorCatcher !== null) {
-            $error = $this->errorCatcher;
-            $this->errorCatcher = null;
-            throw $error;
+		if (!self::$isRecoverable && ($errorCatcher != null)) {
+            throw $errorCatcher;
         }
 	}
 }
