@@ -10,22 +10,17 @@ interface TaskInterface
 {
     public function taskId();
 
+    public function taskType(string $type);
+
     public function sendValue($sendValue);
-
-    /**
-     * Mark the task as done and set an exception.
-     *
-     * @param \Exception
-     */
-    public function setException($exception);
-
-    public function run();
-
-    public function isFinished(): bool;
 
     public function setState(string $status);
 
     public function getState(): string;
+
+    public function run();
+
+    public function isFinished(): bool;
 
     /**
      * Store custom state of the task.
@@ -53,11 +48,6 @@ interface TaskInterface
      * @return bool
      */
     public function isCustomState($state): bool;
-
-    /**
-     * Clear the stored custom data and state of the task.
-     */
-    public function customReset();
 
     /**
      * A flag that indicates whether or not the sub process task has started.
@@ -107,6 +97,13 @@ interface TaskInterface
      * @see https://docs.python.org/3/library/asyncio-task.html#asyncio.Task.result
      */
     public function result();
+
+    /**
+     * Mark the task as done and set an exception.
+     *
+     * @param \Exception
+     */
+    public function setException($exception);
 
     /**
      * Return the exception of the Task.

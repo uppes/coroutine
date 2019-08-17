@@ -18,8 +18,7 @@ function main() {
   $channel = yield \make();
   print("Main going to call hello go goroutine\n");
   yield \go(\hello($channel));
-  yield \receiver($channel);
-  $done = yield \receive($channel);
+  $done = yield \receiver($channel);
   print("\nMain received data: $done");
 }
 

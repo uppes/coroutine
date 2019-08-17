@@ -103,7 +103,7 @@ class Kernel
 	}
 
 	/**
-	 * Set Channel by task id, similar to Google Go language
+	 * Wait to receive message, similar to Google Go language
 	 *
      * @param mixed $message
 	 * @param int $taskId
@@ -220,9 +220,8 @@ class Kernel
 			function(TaskInterface $task, Coroutine $coroutine) use ($callable, $timeout) {
 				$task->parallelTask();
 				$task->setState('process');
-				$subProcess = $coroutine->createSubProcess($callable, $timeout);
-
-				$subProcess->then( function ($result) use ($task, $coroutine) {
+				$coroutine->createSubProcess($callable, $timeout)
+				->then(function($result) use ($task, $coroutine) {
 					$task->setState('completed');
 					$task->sendValue($result);
 					$coroutine->schedule($task);
@@ -247,9 +246,10 @@ class Kernel
 	 * @param int $race - If set, initiate a competitive race between multiple tasks.
 	 * - When amount of tasks as completed, the `gather` will return with task results.
 	 * - When `0` (default), will wait for all to complete.
-	 * @param bool $exception - If `false`, the first raised exception is immediately propagated to the task that awaits on gather().
-	 * Other awaitables in the aws sequence won’t be cancelled and will continue to run.
-	 * - If `true` (default), exceptions are treated the same as successful results, and aggregated in the result list.
+	 * @param bool $exception - If `true` (default), the first raised exception is
+	 * immediately propagated to the task that awaits on gather(). Other awaitables in
+	 * the aws sequence won't be cancelled and will continue to run.
+	 * - If `false`, exceptions are treated the same as successful results, and aggregated in the result list.
 	 * @throws \LengthException - If the number of tasks less than the desired $race.
 	 */
 	public static function gatherOptions(int $race = 0, bool $exception = true)
@@ -266,7 +266,7 @@ class Kernel
 	 * The order of result values corresponds to the order of awaitables in taskId.
 	 *
 	 * The first raised exception is immediately propagated to the task that awaits on gather().
-	 * Other awaitables in the sequence won’t be cancelled and will continue to run.
+	 * Other awaitables in the sequence won't be cancelled and will continue to run.
 	 *
 	 * @see https://docs.python.org/3.7/library/asyncio-task.html#asyncio.gather
 	 *
@@ -310,8 +310,7 @@ class Kernel
 								$results[$id] = $tasks->result();
 								$count--;
 								unset($taskIdList[$id]);
-								unset($completeList[$id]);
-								$coroutine->updateCompleted($completeList);
+								self::updateList($coroutine, $id, $completeList);
 							}
 						}
 					}
@@ -329,8 +328,7 @@ class Kernel
 									$results[$id] = $tasks->result();
 									$count--;
 									unset($taskIdList[$id]);
-									unset($completeList[$id]);
-									$coroutine->updateCompleted($completeList);
+									self::updateList($coroutine, $id, $completeList);
 								}
 
 								if ($tasks->process()) {
@@ -342,21 +340,26 @@ class Kernel
 								$results[$id] = $tasks->result();
 								$count--;
                                 unset($taskList[$id]);
-								$completeList = $coroutine->completedList();
-                                unset($completeList[$id]);
-                                $coroutine->updateCompleted($completeList);
+								self::updateList($coroutine, $id);
 							} elseif ($tasks->erred()) {
 								$count--;
-                                unset($taskList[$id]);
-								self::$gatherResumer = [$taskIdList, $count, $results, $taskList];
-								$task->setException($tasks->exception());
-								$coroutine->schedule($tasks);
+								unset($taskList[$id]);
+								self::updateList($coroutine, $id);
+								$exception = $tasks->exception();
+                                if (self::$gatherShouldError) {
+                                    self::$gatherResumer = [$taskIdList, $count, $results, $taskList];
+                                    $task->setException($exception);
+                                    $coroutine->schedule($tasks);
+                                }
 							}  elseif ($tasks->cancelled()) {
 								$count--;
-                                unset($taskList[$id]);
-								self::$gatherResumer = [$taskIdList, $count, $results, $taskList];
-								$task->setException(new CancelledError());
-								$coroutine->schedule($tasks);
+								unset($taskList[$id]);
+								self::updateList($coroutine, $id);
+                                if (self::$gatherShouldError) {
+                                    self::$gatherResumer = [$taskIdList, $count, $results, $taskList];
+                                    $task->setException(new CancelledError());
+                                    $coroutine->schedule($tasks);
+                                }
 							}
 						}
 					}
@@ -367,6 +370,16 @@ class Kernel
 				$coroutine->schedule($task);
 			}
 		);
+	}
+
+	protected static function updateList(Coroutine $coroutine, int $id, array $completeList = [])
+	{
+		if (empty($completeList)) {
+			$completeList = $coroutine->completedList();
+		}
+
+		unset($completeList[$id]);
+		$coroutine->updateCompleted($completeList);
 	}
 
     /**
@@ -397,8 +410,7 @@ class Kernel
 						if (isset($completeList[$taskId])) {
 							$tasks = $completeList[$taskId];
 							$result = $tasks->result();
-                            unset($completeList[$taskId]);
-                            $coroutine->updateCompleted($completeList);
+							self::updateList($coroutine, $taskId, $completeList);
 							$task->sendValue($result);
 						}
 						$coroutine->schedule($task);

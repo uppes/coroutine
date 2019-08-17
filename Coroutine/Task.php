@@ -34,13 +34,6 @@ class Task implements TaskInterface
     protected $daemon;
 
     /**
-     * A flag that indicates whether or not a task is an is parallel process.
-     *
-     * @var bool
-     */
-    protected $subprocess = false;
-
-    /**
      * The number of scheduling cycles the task has completed.
      * This might be useful if you’re trying to figure out if a task is running or not.
      * Or if you’re trying to monitor a task’s progress.
@@ -100,11 +93,12 @@ class Task implements TaskInterface
     protected $customData;
 
     /**
+     * A flag that indicates whether or not a task is an is parallel process.
      * Task type either `paralleled`, `yielded`, or `awaited`.
      *
      * @var string
      */
-    protected $taskType = 'yielded';
+    protected $taskType = 'awaited';
 
     public function __construct($taskId, \Generator $coroutine)
 	{
@@ -113,14 +107,19 @@ class Task implements TaskInterface
         $this->coroutine = Coroutine::create($coroutine);
     }
 
+    public function cyclesAdd()
+	{
+        $this->cycles++;
+    }
+
     public function taskId(): int
 	{
         return $this->taskId;
     }
 
-    public function cyclesAdd()
+    public function taskType(string $type)
 	{
-        $this->cycles++;
+        $this->taskType = $type;
     }
 
     public function sendValue($sendValue)
@@ -131,26 +130,6 @@ class Task implements TaskInterface
     public function setException($exception)
 	{
         $this->exception = $exception;
-    }
-
-    public function run()
-	{
-        if ($this->beforeFirstYield) {
-            $this->beforeFirstYield = false;
-            return $this->coroutine->current();
-        } elseif ($this->exception) {
-            $value = $this->coroutine->throw($this->exception);
-            $this->error = $this->exception;
-            $this->exception = null;
-            return $value;
-        } else {
-            $value = $this->coroutine->send($this->sendValue);
-            if (!empty($value))
-                $this->result = $value;
-
-            $this->sendValue = null;
-            return $value;
-        }
     }
 
     public function isFinished(): bool
@@ -185,7 +164,9 @@ class Task implements TaskInterface
 
     public function getCustomData()
 	{
-        return $this->customData;
+        $customData = $this->customData;
+        $this->customData = null;
+        return $customData;
     }
 
     public function isCustomState($state): bool
@@ -193,24 +174,21 @@ class Task implements TaskInterface
         return ($this->customState === $state);
     }
 
-    public function customReset()
-	{
-        $this->customData = $this->customState = null;
-    }
-
     public function exception(): \Exception
     {
-        return $this->error;
+        $error = $this->error;
+        $this->error = null;
+        return $error;
     }
 
     public function parallelTask()
     {
-        $this->subprocess = true;
+        $this->taskType = 'paralleled';
     }
 
     public function isParallel(): bool
     {
-        return $this->subprocess;
+        return ($this->taskType == 'paralleled');
     }
 
     public function process(): bool
@@ -258,6 +236,27 @@ class Task implements TaskInterface
             throw $this->error;
         } else {
             throw new InvalidStateError();
+        }
+    }
+
+    public function run()
+	{
+        if ($this->beforeFirstYield) {
+            $this->beforeFirstYield = false;
+            return $this->coroutine->current();
+        } elseif ($this->exception) {
+            $value = $this->coroutine->throw($this->exception);
+            $this->error = $this->exception;
+            $this->exception = null;
+            return $value;
+        } else {
+            $value = $this->coroutine->send($this->sendValue);
+            if (!empty($value) && ($this->taskType == 'awaited')) {
+                $this->result = $value;
+            }
+
+            $this->sendValue = null;
+            return $value;
         }
     }
 }

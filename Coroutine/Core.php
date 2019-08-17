@@ -168,26 +168,16 @@ if (! \function_exists('coroutine_run')) {
 	}
 
 	/**
-	 * Set task as Channel receiver
+	 * Set task as Channel receiver, and wait to receive Channel message
 	 * - This function needs to be prefixed with `yield`
 	 *
 	 * @param Channel $channel
 	 */
 	function receiver(Channel $channel)
 	{
-		return Kernel::receiver($channel);
-	}
-
-	/**
-	 * Receive Channel message
-	 * - This function needs to be prefixed with `yield`
-	 *
-	 * @param Channel $channel
-	 * @return mixed
-	 */
-	function receive(Channel $channel)
-	{
-		return Kernel::receive($channel);
+		yield Kernel::receiver($channel);
+		$message = yield Kernel::receive($channel);
+		return $message;
 	}
 
 	/**
