@@ -296,7 +296,9 @@ class Kernel
 					$gatherSet = (self::$gatherCount > 0);
 					if ($gatherSet) {
 						if ($initialCount < self::$gatherCount) {
-							throw new \LengthException('Not enough tasks to fulfill gather count');
+                            $count = self::$gatherCount;
+                            self::gatherOptions();
+							throw new \LengthException(\sprintf('The (%d) tasks, not enough to fulfill the `gatherOptions(%d)` race count!', $initialCount, $count));
 						}
 					}
 
@@ -357,8 +359,7 @@ class Kernel
 								self::updateList($coroutine, $id);
 								$exception = $tasks->exception();
                                 if (self::$gatherShouldError) {
-                                    self::$gatherCount = 0;
-                                    self::$gatherShouldError = true;
+                                    self::gatherOptions();
                                     self::$gatherResumer = [$taskIdList, $count, $results, $taskList];
                                     $task->setException($exception);
                                     $coroutine->schedule($tasks);
@@ -368,8 +369,7 @@ class Kernel
 								unset($taskList[$id]);
 								self::updateList($coroutine, $id);
                                 if (self::$gatherShouldError) {
-                                    self::$gatherCount = 0;
-                                    self::$gatherShouldError = true;
+                                    self::gatherOptions();
                                     self::$gatherResumer = [$taskIdList, $count, $results, $taskList];
                                     $task->setException(new CancelledError());
                                     $coroutine->schedule($tasks);
@@ -379,9 +379,8 @@ class Kernel
 					}
 				}
 
+                self::gatherOptions();
 				self::$gatherResumer = null;
-                self::$gatherCount = 0;
-                self::$gatherShouldError = true;
 				$task->sendValue($results);
 				$coroutine->schedule($task);
 			}
