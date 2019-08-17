@@ -19,6 +19,7 @@ class FileStreamTest extends TestCase
             $tasks[] = yield \await($this->get_website_status_again($website));
         }
 
+        yield \gather_options(2);
         $taskStatus = yield \gather($tasks);
         $this->assertEquals(2, \count($taskStatus));
         \array_map(function($status) use(&$statuses) {
@@ -47,7 +48,7 @@ class FileStreamTest extends TestCase
         $instance = yield \file_open(__DIR__.\DS.'list.txt');
         $this->assertTrue($instance instanceof FileStreamInterface);
         $websites = yield \file_lines($instance );
-        $this->assertEquals(2, \count($websites));
+        $this->assertEquals(5, \count($websites));
         $this->assertTrue(\file_valid($instance));
         $this->assertTrue(\is_resource(\file_handle($instance)));
         \file_close($instance);

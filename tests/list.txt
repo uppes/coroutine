@@ -1,2 +1,5 @@
 http://google.com/
 http://blogspot.com/
+http://microsoft.com/
+http://dell.com/
+http://nytimes.com/

@@ -303,20 +303,30 @@ class Kernel
 					$taskList = $coroutine->taskList();
 
 					$completeList = $coroutine->completedList();
-					$countComplete = \count($completeList);
+                    $countComplete = \count($completeList);
+                    $gatherCompleteCount = 0;
 					if ($countComplete > 0) {
 						foreach($completeList as $id => $tasks) {
 							if (isset($taskIdList[$id])) {
 								$results[$id] = $tasks->result();
-								$count--;
+                                $count--;
+                                $gatherCompleteCount++;
 								unset($taskIdList[$id]);
-								self::updateList($coroutine, $id, $completeList);
+                                self::updateList($coroutine, $id, $completeList);
+                                if ($gatherCompleteCount >= self::$gatherCount)
+                                    break;
 							}
 						}
 					}
 				}
 
-				$count = ($gatherSet) ? \min(self::$gatherCount, $count) : $count;
+                if ($gatherSet) {
+                    $subCount =  (self::$gatherCount - $gatherCompleteCount);
+                    if  (($gatherCompleteCount >= self::$gatherCount) || ($count >= self::$gatherCount)) {
+                        $count = $subCount;
+                    }
+                }
+
 				while ($count > 0) {
 					foreach($taskIdList as $id) {
 						if (isset($taskList[$id])) {
@@ -347,6 +357,8 @@ class Kernel
 								self::updateList($coroutine, $id);
 								$exception = $tasks->exception();
                                 if (self::$gatherShouldError) {
+                                    self::$gatherCount = 0;
+                                    self::$gatherShouldError = true;
                                     self::$gatherResumer = [$taskIdList, $count, $results, $taskList];
                                     $task->setException($exception);
                                     $coroutine->schedule($tasks);
@@ -356,6 +368,8 @@ class Kernel
 								unset($taskList[$id]);
 								self::updateList($coroutine, $id);
                                 if (self::$gatherShouldError) {
+                                    self::$gatherCount = 0;
+                                    self::$gatherShouldError = true;
                                     self::$gatherResumer = [$taskIdList, $count, $results, $taskList];
                                     $task->setException(new CancelledError());
                                     $coroutine->schedule($tasks);
@@ -366,6 +380,8 @@ class Kernel
 				}
 
 				self::$gatherResumer = null;
+                self::$gatherCount = 0;
+                self::$gatherShouldError = true;
 				$task->sendValue($results);
 				$coroutine->schedule($task);
 			}
