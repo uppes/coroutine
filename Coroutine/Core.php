@@ -518,6 +518,17 @@ if (! \function_exists('coroutine_run')) {
 		Defer::deferring($previous, $callback, $args);
     }
 
+	/**
+	 * Regains control of a panicking `task`.
+	 *
+	 * Recover is only useful inside `defer()` functions. During normal execution, a call to recover will return nil
+	 * and have no other effect. If the current `task` is panicking, a call to recover will capture the value given
+	 * to panic and resume normal execution.
+	 *
+	 * @param Defer|null $previous defer
+	 * @param callable $callback
+	 * @param mixed ...$args
+	 */
 	function recover(&$previous, $callback)
 	{
 		$args = \func_get_args();
@@ -526,9 +537,12 @@ if (! \function_exists('coroutine_run')) {
         Defer::recover($previous, $callback, $args);
 	}
 
-	function panic($message = '', $code = 0)
+	/**
+	 * An shortcut function for throwing an `Exception`.
+	 */
+	function panic($message = '', $code = 0, \Throwable $previous = null)
 	{
-		throw new \Exception($message, $code);
+		throw new \Exception($message, $code, $previous);
 	}
 
 	/**
