@@ -327,8 +327,10 @@ class Kernel
                     if  (($gatherCompleteCount >= self::$gatherCount) || ($count >= self::$gatherCount)) {
                         $count = $subCount;
                     }
-                }
+				}
 
+				$gatherShouldError = self::$gatherShouldError;
+                self::gatherOptions();
 				while ($count > 0) {
 					foreach($taskIdList as $id) {
 						if (isset($taskList[$id])) {
@@ -358,8 +360,7 @@ class Kernel
 								unset($taskList[$id]);
 								self::updateList($coroutine, $id);
 								$exception = $tasks->exception();
-                                if (self::$gatherShouldError) {
-                                    self::gatherOptions();
+                                if ($gatherShouldError) {
                                     self::$gatherResumer = [$taskIdList, $count, $results, $taskList];
                                     $task->setException($exception);
                                     $coroutine->schedule($tasks);
@@ -368,8 +369,7 @@ class Kernel
 								$count--;
 								unset($taskList[$id]);
 								self::updateList($coroutine, $id);
-                                if (self::$gatherShouldError) {
-                                    self::gatherOptions();
+                                if ($gatherShouldError) {
                                     self::$gatherResumer = [$taskIdList, $count, $results, $taskList];
                                     $task->setException(new CancelledError());
                                     $coroutine->schedule($tasks);
@@ -379,7 +379,6 @@ class Kernel
 					}
 				}
 
-                self::gatherOptions();
 				self::$gatherResumer = null;
 				$task->sendValue($results);
 				$coroutine->schedule($task);
