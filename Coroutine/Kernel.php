@@ -355,23 +355,14 @@ class Kernel
 								$count--;
                                 unset($taskList[$id]);
 								self::updateList($coroutine, $id);
-							} elseif ($tasks->erred()) {
+							} elseif ($tasks->erred() || $tasks->cancelled()) {
+                                $exception = $tasks->cancelled() ? new CancelledError() : $tasks->exception();
 								$count--;
 								unset($taskList[$id]);
 								self::updateList($coroutine, $id);
-								$exception = $tasks->exception();
                                 if ($gatherShouldError) {
                                     self::$gatherResumer = [$taskIdList, $count, $results, $taskList];
                                     $task->setException($exception);
-                                    $coroutine->schedule($tasks);
-                                }
-							}  elseif ($tasks->cancelled()) {
-								$count--;
-								unset($taskList[$id]);
-								self::updateList($coroutine, $id);
-                                if ($gatherShouldError) {
-                                    self::$gatherResumer = [$taskIdList, $count, $results, $taskList];
-                                    $task->setException(new CancelledError());
                                     $coroutine->schedule($tasks);
                                 }
 							}

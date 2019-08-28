@@ -118,5 +118,5 @@ interface TaskInterface
      *
      * @see https://docs.python.org/3/library/asyncio-task.html#asyncio.Task.exception
      */
-    public function exception(): \Exception;
+    public function exception(): ?\Exception;
 }

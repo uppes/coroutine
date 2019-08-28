@@ -174,7 +174,7 @@ class Task implements TaskInterface
         return ($this->customState === $state);
     }
 
-    public function exception(): \Exception
+    public function exception(): ?\Exception
     {
         $error = $this->error;
         $this->error = null;

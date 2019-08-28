@@ -12,6 +12,7 @@ use Async\Coroutine\CoroutineInterface;
 use Async\Processor\Processor;
 use Async\Coroutine\ParallelInterface;
 use Async\Processor\ProcessInterface;
+use Async\Coroutine\Exceptions\Panic;
 
 if (! \function_exists('coroutine_run')) {
 	\define('MILLISECOND', 0.001);
@@ -34,6 +35,7 @@ if (! \function_exists('coroutine_run')) {
 
 	/**
 	 * Add/schedule an `yield`-ing `function/callable/task` for execution.
+     * Will immediately return an `int`, and continue to the next instruction.
 	 *
      * If used in conjunction with `async()` then `$awaitableFunction` is an variable that will be placed
      * in global namespace, your local calling function will need use `global` keyword with same variable
@@ -55,6 +57,7 @@ if (! \function_exists('coroutine_run')) {
 
 	/**
 	 * Controls how the `gather()` function operates.
+     * Will `gather` behave like **Promise** functions `All`, `Some`, `Any` in JavaScript.
 	 *
 	 * @param int $race - If set, initiate a competitive race between multiple tasks.
 	 * - When amount of tasks as completed, the `gather` will return with task results.
@@ -226,7 +229,8 @@ if (! \function_exists('coroutine_run')) {
 		return Kernel::taskId();
 	}
 
-	/**
+    /**
+     * Wait on read stream socket to be ready read from.
 	 * - This function needs to be prefixed with `yield`
 	 */
 	function read_wait($stream)
@@ -235,6 +239,7 @@ if (! \function_exists('coroutine_run')) {
 	}
 
 	/**
+     * Wait on write stream socket to be ready to be written to.
 	 * - This function needs to be prefixed with `yield`
 	 */
 	function write_wait($stream)
@@ -242,9 +247,12 @@ if (! \function_exists('coroutine_run')) {
 		return Kernel::writeWait($stream);
 	}
 
-	/**
-	 * - This function needs to be prefixed with `yield`
-	 */
+    /**
+     * Wait on keyboard input.
+     * Will not block other task on `Linux`, will continue other tasks until `enter` key is pressed,
+     * Will block on Windows, once an key is typed/pressed, will continue other tasks `ONLY` if no key is pressed.
+     * - This function needs to be prefixed with `yield`
+     */
 	function input_wait(int $size = 256, bool $error = false)
 	{
 		return FileStream::input($size, $error);
@@ -484,9 +492,7 @@ if (! \function_exists('coroutine_run')) {
 	}
 
 	/**
-	 * Modeled as in `Go` Language.
-	 *
-     * The behavior of defer statements is straightforward and predictable.
+	 * Modeled as in `Go` Language. The behavior of defer statements is straightforward and predictable.
      * There are three simple rules:
      * 1. *A deferred function's arguments are evaluated when the defer statement is evaluated.*
      * 2. *Deferred function calls are executed in Last In First Out order after the* surrounding function returns.
@@ -519,7 +525,7 @@ if (! \function_exists('coroutine_run')) {
     }
 
 	/**
-	 * Regains control of a panicking `task`.
+     * Modeled as in `Go` Language. Regains control of a panicking `task`.
 	 *
 	 * Recover is only useful inside `defer()` functions. During normal execution, a call to recover will return nil
 	 * and have no other effect. If the current `task` is panicking, a call to recover will capture the value given
@@ -538,14 +544,19 @@ if (! \function_exists('coroutine_run')) {
 	}
 
 	/**
-	 * An shortcut function for throwing an `Exception`.
+     * Modeled as in `Go` Language.
+     *
+	 * An general purpose function for throwing an Coroutine `Exception`,
+     * or some abnormal condition needing to keep an `task` stack trace.
 	 */
 	function panic($message = '', $code = 0, \Throwable $previous = null)
 	{
-		throw new \Exception($message, $code, $previous);
+		throw new Panic($message, $code, $previous);
 	}
 
 	/**
+     * An PHP Functional Programming Primitive.
+     *
 	 * Return a curryied version of the given function. You can decide if you also
 	 * want to curry optional parameters or not.
 	 *

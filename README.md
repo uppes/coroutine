@@ -103,6 +103,7 @@ const DS = DIRECTORY_SEPARATOR;
 
 /**
  * Add/schedule an `yield`-ing `function/callable/task` for execution.
+ * Will immediately return an `int`, and continue to the next instruction.
  * Returns an task Id
  * - This function needs to be prefixed with `yield`
  *
@@ -118,6 +119,12 @@ yield \await($awaitedFunction, ...$args) ;
  * @see https://docs.python.org/3.7/library/asyncio-task.html#awaitables
  */
 \awaitAble($awaitableFunction, ...$args);
+
+/**
+ * Controls how the `gather()` function operates.
+ * Will `gather` behave like **Promise** functions `All`, `Some`, `Any` in JavaScript.
+ */
+\gather_options($race, $exception);
 
 /**
  * Run awaitable objects in the taskId sequence concurrently.
@@ -156,16 +163,11 @@ yield \make();
 yield \sender($channel, $message, $taskId);
 
 /**
- * Set task as Channel receiver
+ * Set task as Channel receiver, and wait to receive Channel message
+ * Will continue other tasks until so.
  * - This function needs to be prefixed with `yield`
  */
 yield \receiver($channel);
-
-/**
- * Receive Channel message, returns the message
- * - This function needs to be prefixed with `yield`
- */
-yield \receive($channel);
 
 /**
  * A goroutine is a function that is capable of running concurrently with other functions.
@@ -174,21 +176,88 @@ yield \receive($channel);
  */
 yield \go($goFunction, ...$args);
 
+/**
+ * Modeled as in `Go` Language.
+ *
+ * The behavior of defer statements is straightforward and predictable.
+ * There are three simple rules:
+ * 1. *A deferred function's arguments are evaluated when the defer statement is evaluated.*
+ * 2. *Deferred function calls are executed in Last In First Out order after the* surrounding function returns.
+ * 3. *Deferred functions can`t modify return values when is type, but can modify content of reference to
+ *
+ * @see https://golang.org/doc/effective_go.html#defer
+ */
+\defer(&$previous, $callback)
+
+/**
+ * Modeled as in `Go` Language.
+ *
+ * Regains control of a panicking `task`.
+ *
+ * Recover is only useful inside `defer()` functions. During normal execution, a call to recover will return nil
+ * and have no other effect. If the current `task` is panicking, a call to recover will capture the value given
+ * to panic and resume normal execution.
+ */
+\recover(&$previous, $callback);
+
+/**
+ * Modeled as in `Go` Language.
+ *
+ * An general purpose function for throwing an Coroutine `Exception`,
+ * or some abnormal condition needing to keep an `task` stack trace.
+ */
+\panic($message, $code, $previous);
+
+/**
+ * Return the task ID
+ * - This function needs to be prefixed with `yield`
+ */
 yield \task_id();
 
+/**
+ * kill/remove an task using task id
+ * - This function needs to be prefixed with `yield`
+ */
 yield \cancel_task($tid);
 
 /**
  * Wait for the callable/task to complete with a timeout.
+ * Will continue other tasks until so.
+ * - This function needs to be prefixed with `yield`
  */
 yield \wait_for($callable, $timeout);
 
+/**
+ * Wait on read stream/socket to be ready read from.
+ * Will continue other tasks until so.
+ * - This function needs to be prefixed with `yield`
+ */
 yield \read_wait($stream);
 
+/**
+ * Wait on write stream/socket to be ready to be written to.
+ * Will continue other tasks until so.
+ * - This function needs to be prefixed with `yield`
+ */
 yield \write_wait($stream);
 
-yield \input_wait($size = 256);
+/**
+ * Wait on keyboard input.
+ * Will continue other tasks until so.
+ * Will not block other task on `Linux`, will continue other tasks until `enter` key is pressed,
+ * Will block on Windows, once an key is typed/pressed, will continue other tasks `ONLY` if no key is pressed.
+ * - This function needs to be prefixed with `yield`
+ */
+yield \input_wait($size);
 
+/**
+ * An PHP Functional Programming Primitive.
+ * Return a curryied version of the given function. You can decide if you also
+ * want to curry optional parameters or not.
+ *
+ * @see https://github.com/lstrojny/functional-php/blob/master/docs/functional-php.md#currying
+ */
+\curry($function, $required);
 ```
 
 ```php
@@ -200,31 +269,6 @@ yield \input_wait($size = 256);
  * @see https://docs.python.org/3.7/library/asyncio-dev.html#running-blocking-code
  */
 yield \await_process($command, $timeout)
-```
-
-```php
-yield \secure_server($uri, $options, $privatekeyFil, $certificateFile, $signingFile, $ssl_path, $details);
-
-yield \create_server($uri, $options);
-
-yield \create_client($uri, $options, $isRequest);
-
-yield \client_read($socket, $size);
-
-yield \client_write($socket, $response);
-
-yield \close_client($socket);
-
-yield \accept_socket($socket);
-
-yield \read_socket($socket, $size);
-
-yield \write_socket($socket, $response);
-
-yield \close_Socket($socket);
-
-// no yield
-\remote_ip($socket);
 ```
 
 ```php
