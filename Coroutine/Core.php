@@ -57,7 +57,7 @@ if (! \function_exists('coroutine_run')) {
 
 	/**
 	 * Controls how the `gather()` function operates.
-     * Will `gather` behave like **Promise** functions `All`, `Some`, `Any` in JavaScript.
+     * `gather` will behave like **Promise** functions `All`, `Some`, `Any` in JavaScript.
 	 *
 	 * @param int $race - If set, initiate a competitive race between multiple tasks.
 	 * - When amount of tasks as completed, the `gather` will return with task results.

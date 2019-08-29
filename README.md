@@ -122,7 +122,7 @@ yield \await($awaitedFunction, ...$args) ;
 
 /**
  * Controls how the `gather()` function operates.
- * Will `gather` behave like **Promise** functions `All`, `Some`, `Any` in JavaScript.
+ * `gather` will behave like **Promise** functions `All`, `Some`, `Any` in JavaScript.
  */
 \gather_options($race, $exception);
 
