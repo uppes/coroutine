@@ -315,7 +315,7 @@ class Kernel
                                 $gatherCompleteCount++;
 								unset($taskIdList[$id]);
                                 self::updateList($coroutine, $id, $completeList);
-                                if ($gatherCompleteCount >= self::$gatherCount)
+                                if ($gatherCompleteCount == self::$gatherCount)
                                     break;
 							}
 						}
@@ -324,8 +324,10 @@ class Kernel
 
                 if ($gatherSet) {
                     $subCount =  (self::$gatherCount - $gatherCompleteCount);
-                    if  (($gatherCompleteCount >= self::$gatherCount) || ($count >= self::$gatherCount)) {
+                    if ($gatherCompleteCount != self::$gatherCount) {
                         $count = $subCount;
+                    } elseif ($gatherCompleteCount == self::$gatherCount) {
+                        $count = 0;
                     }
 				}
 
