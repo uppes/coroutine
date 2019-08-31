@@ -11,7 +11,6 @@ use Async\Coroutine\Process;
 use Async\Coroutine\TaskInterface;
 use Async\Coroutine\ReturnValueCoroutine;
 use Async\Coroutine\PlainValueCoroutine;
-use Async\Coroutine\ResultValueCoroutine;
 use Async\Coroutine\CoroutineInterface;
 use Async\Processor\ProcessInterface;
 

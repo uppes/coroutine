@@ -357,6 +357,19 @@ if (! \function_exists('coroutine_run')) {
     }
 
 	/**
+	 * Stream file contents from open file handle, reading by size chucks
+	 * - This function needs to be prefixed with `yield`
+	 *
+	 * @param resource $instance
+	 * @param int $size
+	 * @return mixed
+	 */
+	function file_read(FileStreamInterface $instance, int $size = 512)
+	{
+		return $instance->fileRead($size);
+    }
+
+	/**
 	 * - This function needs to be prefixed with `yield`
 	 */
 	function file_create(FileStreamInterface $instance, $contents, $stream = null)
@@ -547,7 +560,7 @@ if (! \function_exists('coroutine_run')) {
      * Modeled as in `Go` Language.
      *
 	 * An general purpose function for throwing an Coroutine `Exception`,
-     * or some abnormal condition needing to keep an `task` stack trace.
+     * or some abnormal condition needing to keep an `Task` stack trace.
 	 */
 	function panic($message = '', $code = 0, \Throwable $previous = null)
 	{

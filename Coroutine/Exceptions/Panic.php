@@ -2,9 +2,9 @@
 
 namespace Async\Coroutine\Exceptions;
 
-use Async\Coroutine\Exceptions\PanicInterface;
+use Async\Coroutine\Exceptions\Panicking;
 
-class Panic extends \Exception implements PanicInterface
+class Panic extends \Exception implements Panicking
 {
     public function __construct($message = null, $code = 0, \Throwable $previous = null)
     {
