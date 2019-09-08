@@ -248,7 +248,7 @@ class Coroutine implements CoroutineInterface
             $read = $this->readStreams;
             $write = $this->writeStreams;
             $except = null;
-            if (\stream_select(
+            if (@\stream_select(
                 $read,
                 $write,
                 $except,
@@ -274,6 +274,8 @@ class Coroutine implements CoroutineInterface
                         $this->createTask($writeCb());
                     }
                 }
+            } else {
+                \panic(\error_get_last()['message']);
             }
         }
     }
