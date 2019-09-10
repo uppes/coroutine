@@ -224,6 +224,14 @@ if (! \function_exists('coroutine_run')) {
 	/**
 	 * - This function needs to be prefixed with `yield`
 	 */
+	function shutdown()
+	{
+		return Kernel::shutdown();
+	}
+
+	/**
+	 * - This function needs to be prefixed with `yield`
+	 */
 	function task_id()
 	{
 		return Kernel::taskId();

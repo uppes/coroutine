@@ -165,6 +165,19 @@ class Kernel
 	}
 
     /**
+     * Performs a clean shutdown.
+     * Should be called at application exit.
+     */
+	public static function shutdown()
+	{
+		return new Kernel(
+			function(TaskInterface $task, Coroutine $coroutine) {
+				$coroutine->shutdown();
+			}
+		);
+	}
+
+    /**
      * Wait on read stream socket to be ready read from.
      *
      * @param resource $streamSocket

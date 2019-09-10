@@ -131,6 +131,17 @@ class Coroutine implements CoroutineInterface
 		$this->taskQueue->enqueue($task);
     }
 
+    public function shutdown()
+	{
+        if (!empty($this->taskMap)) {
+            $map = \array_reverse($this->taskMap, true);
+            $keys = \array_keys($map);
+            foreach($keys as $id) {
+                $this->cancelTask((int) $id);
+            }
+        }
+    }
+
     public function cancelTask(int $tid)
 	{
         if (!isset($this->taskMap[$tid])) {
@@ -142,6 +153,8 @@ class Coroutine implements CoroutineInterface
         foreach ($this->taskQueue as $i => $task) {
             if ($task->taskId() === $tid) {
                 $task->clearResult();
+                $task->customData();
+                $task->customState();
                 $task->setState('cancelled');
                 unset($this->taskQueue[$i]);
                 break;
@@ -152,7 +165,6 @@ class Coroutine implements CoroutineInterface
     }
 
     public function taskList()
-
 	{
         if (!isset($this->taskMap)) {
             return null;

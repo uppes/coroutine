@@ -24,6 +24,12 @@ interface CoroutineInterface
      */
     public function schedule(TaskInterface $task);
 
+    /**
+     * Performs a clean shutdown.
+     * Should be called at application exit.
+     */
+    public function shutdown();
+
 	/**
 	 * kill/remove an task using task id
 	 *
