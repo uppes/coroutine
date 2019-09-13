@@ -5,8 +5,7 @@
 include 'vendor/autoload.php';
 
 function requestHandler(string $uri) {
-    $contents = yield \get_file($uri);
-    return [$uri, $contents];
+    return yield [$uri, yield \get_file($uri)];
 };
 
 function main() {
@@ -19,8 +18,9 @@ function main() {
     try {
         $uriId = [];
 
-        foreach ($uris as $uri)
+        foreach ($uris as $uri) {
             $uriId[] = yield \await(\requestHandler($uri));
+        }
 
         $bodies = yield \gather($uriId);
 

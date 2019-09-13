@@ -425,11 +425,6 @@ class Coroutine implements CoroutineInterface
 		return new ReturnValueCoroutine($value);
     }
 
-	public static function result($value)
-	{
-        return new ResultValueCoroutine($value);
-	}
-
     /**
      * Creates an object instance of the value which will signal
      * `Coroutine::create` that it’s a return value.

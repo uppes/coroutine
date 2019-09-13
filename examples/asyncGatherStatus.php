@@ -11,7 +11,7 @@ function get_statuses($websites)
     $statuses = ['200' => 0, '400' => 0, '405' => 0];
     $tasks = [];
 	foreach($websites as $website) {
-		$tasks[] = yield \await(\get_website_status($website));
+		$tasks[] = yield \await('\get_website_status', $website);
     }
 
     $taskStatus = yield \gather($tasks);
@@ -26,7 +26,7 @@ function get_statuses($websites)
 }
 
 function get_website_status($url)
-{yield;
+{
     $id = yield \task_id();
     $object = yield \file_open($url);
     $status = \file_status($object);
@@ -43,8 +43,8 @@ function lapse() {
     while(true) {
         echo '.';
         $i++;
-        if ($i == 100) {
-            break;
+        if ($i == 150) {
+            yield \shutdown();
         }
         yield;
     }
@@ -52,7 +52,7 @@ function lapse() {
 
 function main()
 {
-    yield \await(\lapse());
+    $tid = yield \await(\lapse());
     chdir(__DIR__);
     $object = yield \file_open('.'.\DS.'list.txt');
     $websites = yield \file_lines($object);
