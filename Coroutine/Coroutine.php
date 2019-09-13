@@ -286,7 +286,7 @@ class Coroutine implements CoroutineInterface
                         $this->createTask($writeCb());
                     }
                 }
-            } else {
+            } elseif (!empty(\error_get_last()['message'])) {
                 \panic(\error_get_last()['message']);
             }
         }
