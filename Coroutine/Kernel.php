@@ -172,7 +172,9 @@ class Kernel
 	{
 		return new Kernel(
 			function(TaskInterface $task, Coroutine $coroutine) {
-				$coroutine->shutdown();
+                $tasks = $coroutine->taskList();
+                $coroutine->shutdown();
+				$coroutine->schedule($tasks[1]);
 			}
 		);
 	}

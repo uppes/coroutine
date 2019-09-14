@@ -137,6 +137,8 @@ class Coroutine implements CoroutineInterface
             $map = \array_reverse($this->taskMap, true);
             $keys = \array_keys($map);
             foreach($keys as $id) {
+                if ($id == 1)
+                    break;
                 $this->cancelTask((int) $id);
             }
         }
@@ -323,16 +325,87 @@ class Coroutine implements CoroutineInterface
         }
     }
 
+    protected function ioSocketStream($timeout)
+    {
+        if (empty($this->waitingForRead) && empty($this->waitingForWrite)) {
+            return;
+        }
+
+        $rSocks = [];
+        foreach ($this->waitingForRead as list($socket)) {
+            $rSocks[] = $socket;
+        }
+
+        $wSocks = [];
+        foreach ($this->waitingForWrite as list($socket)) {
+            $wSocks[] = $socket;
+        }
+
+        $eSocks = []; // dummy
+
+        if (!@\stream_select(
+            $rSocks,
+            $wSocks,
+            $eSocks,
+            (null === $timeout) ? null : 0,
+            $timeout ? (int) ( $timeout * (($timeout === null) ? 1000000 : 1)) : 0)
+        ) {
+            return;
+        }
+
+        foreach ($rSocks as $socket) {
+            list(, $tasks) = $this->waitingForRead[(int) $socket];
+            unset($this->waitingForRead[(int) $socket]);
+
+            foreach ($tasks as $task) {
+                if ($task instanceof TaskInterface) {
+                    $this->schedule($task);
+                } elseif ($task() instanceof \Generator) {
+                    $this->createTask($task());
+                }
+            }
+        }
+
+        foreach ($wSocks as $socket) {
+            list(, $tasks) = $this->waitingForWrite[(int) $socket];
+            unset($this->waitingForWrite[(int) $socket]);
+
+            foreach ($tasks as $task) {
+                if ($task instanceof TaskInterface) {
+                    $this->schedule($task);
+                } elseif ($task() instanceof \Generator) {
+                    $this->createTask($task());
+                }
+            }
+        }
+    }
+
     public function addReader($stream, $task)
     {
         $this->readStreams[(int) $stream] = $stream;
         $this->readCallbacks[(int) $stream] = $task;
     }
 
+    public function waitForRead($stream, $task) {
+        if (isset($this->waitingForRead[(int) $stream])) {
+            $this->waitingForRead[(int) $stream][1][] = $task;
+        } else {
+            $this->waitingForRead[(int) $stream] = [$stream, [$task]];
+        }
+    }
+
     public function addWriter($stream, $task)
     {
         $this->writeStreams[(int) $stream] = $stream;
         $this->writeCallbacks[(int) $stream] = $task;
+    }
+
+    public function waitForWrite($stream, $task) {
+        if (isset($this->waitingForWrite[(int) $stream])) {
+            $this->waitingForWrite[(int) $stream][1][] = $task;
+        } else {
+            $this->waitingForWrite[(int) $stream] = [$stream, [$task]];
+        }
     }
 
     public function removeReader($stream)
