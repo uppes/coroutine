@@ -295,6 +295,10 @@ class Kernel
 				if (!empty(self::$gatherResumer)) {
 					[$taskIdList, $count, $results, $taskList] = self::$gatherResumer;
                 } else {
+					$gatherCount = self::$gatherCount;
+					$gatherShouldError = self::$gatherShouldError;
+					self::gatherOptions();
+
 					$taskIdList = [];
 					$newIdList =(\is_array($taskId[0])) ? $taskId[0] : $taskId;
 
@@ -307,13 +311,11 @@ class Kernel
 					}
 
 					$results = [];
-					$count = $initialCount = \count($taskIdList);
-					$gatherSet = (self::$gatherCount > 0);
+					$count = \count($taskIdList);
+					$gatherSet = ($gatherCount > 0);
 					if ($gatherSet) {
-						if ($initialCount < self::$gatherCount) {
-                            $count = self::$gatherCount;
-                            self::gatherOptions();
-							throw new \LengthException(\sprintf('The (%d) tasks, not enough to fulfill the `gatherOptions(%d)` race count!', $initialCount, $count));
+						if ($count < $gatherCount) {
+							throw new \LengthException(\sprintf('The (%d) tasks, not enough to fulfill the `gatherOptions(%d)` race count!', $count, $gatherCount));
 						}
 					}
 
@@ -330,7 +332,7 @@ class Kernel
                                 $gatherCompleteCount++;
 								unset($taskIdList[$id]);
                                 self::updateList($coroutine, $id, $completeList);
-                                if ($gatherCompleteCount == self::$gatherCount)
+                                if ($gatherCompleteCount == $gatherCount)
                                     break;
 							}
 						}
@@ -338,16 +340,13 @@ class Kernel
 				}
 
                 if ($gatherSet) {
-                    $subCount =  (self::$gatherCount - $gatherCompleteCount);
-                    if ($gatherCompleteCount != self::$gatherCount) {
+                    $subCount = ($gatherCount - $gatherCompleteCount);
+                    if ($gatherCompleteCount != $gatherCount) {
                         $count = $subCount;
-                    } elseif ($gatherCompleteCount == self::$gatherCount) {
+                    } elseif ($gatherCompleteCount == $gatherCount) {
                         $count = 0;
                     }
 				}
-
-				$gatherShouldError = self::$gatherShouldError;
-                self::gatherOptions();
 				while ($count > 0) {
 					foreach($taskIdList as $id) {
 						if (isset($taskList[$id])) {
@@ -360,6 +359,11 @@ class Kernel
 									$count--;
 									unset($taskIdList[$id]);
 									self::updateList($coroutine, $id, $completeList);
+									if ($gatherSet) {
+										$subCount--;
+										if ($subCount == 0)
+											break;
+									}
 								}
 
 								if ($tasks->process()) {
@@ -372,6 +376,11 @@ class Kernel
 								$count--;
                                 unset($taskList[$id]);
 								self::updateList($coroutine, $id);
+								if ($gatherSet) {
+									$subCount--;
+									if ($subCount == 0)
+										break;
+								}
 							} elseif ($tasks->erred() || $tasks->cancelled()) {
                                 $exception = $tasks->cancelled() ? new CancelledError() : $tasks->exception();
 								$count--;
@@ -452,7 +461,7 @@ class Kernel
 	 * @param string $labelFunction
 	 * @param Generator|callable $asyncFunction
 	 */
-	public static function async(string $labelFunction = '__f', callable $asyncFunction = null)
+	public static function async(string $labelFunction, callable $asyncFunction)
 	{
 		$GLOBALS[$labelFunction] = function (...$args) use ($asyncFunction) {
 			$return = yield $asyncFunction(...$args);
@@ -496,7 +505,7 @@ class Kernel
         }
 	}
 
-	public static function fileOpen(string $uri = null, string $mode = 'r', $options = [])
+	public static function fileOpen(string $uri, string $mode = 'r', $options = [])
 	{
 		return new Kernel(
 			function(TaskInterface $task, Coroutine $coroutine) use ($uri, $mode, $options) {

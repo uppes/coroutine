@@ -34,35 +34,19 @@ class Coroutine implements CoroutineInterface
     protected $timers = [];
 
     /**
-     * List of readable streams for stream_select, indexed by stream id.
+     * Combined list of readable socket/streams and read callbacks.
      *
-     * @var resource[]
+     * for stream_select, indexed by stream id.
+     * @var resource[] [stream, tasks]
      */
-    protected $readStreams = [];
-
-    /**
-     * List of writable streams for stream_select, indexed by stream id.
-     *
-     * @var resource[]
-     */
-    protected $writeStreams = [];
-
-    /**
-     * List of read callbacks, indexed by stream id.
-     *
-     * @var callback[]
-     */
-    protected $readCallbacks = [];
-
-    /**
-     * List of write callbacks, indexed by stream id.
-     *
-     * @var callback[]
-     */
-    protected $writeCallbacks = [];
-
-    // resourceID => [socket, tasks]
     protected $waitingForRead = [];
+
+    /**
+     * Combined list of writable socket/streams and write callbacks.
+     *
+     * for stream_select, indexed by stream id.
+     * @var resource[] [stream, tasks]
+     */
     protected $waitingForWrite = [];
 
     protected $pcntl = null;
@@ -256,50 +240,12 @@ class Coroutine implements CoroutineInterface
         }
     }
 
-    protected function ioStreams($timeout)
-    {
-        if ($this->readStreams || $this->writeStreams) {
-            $read = $this->readStreams;
-            $write = $this->writeStreams;
-            $except = null;
-            if (@\stream_select(
-                $read,
-                $write,
-                $except,
-                (null === $timeout) ? null : 0,
-                $timeout ? (int) ( $timeout * (($timeout === null) ? 1000000 : 1)) : 0)
-            ) {
-                foreach ($read as $readStream) {
-                    $readCb = $this->readCallbacks[(int) $readStream];
-                    if ($readCb instanceof TaskInterface) {
-                        $this->removeReader($readStream);
-                        $this->schedule($readCb);
-                    } elseif ($readCb() instanceof \Generator) {
-                        $this->createTask($readCb());
-                    }
-                }
-
-                foreach ($write as $writeStream) {
-                    $writeCb = $this->writeCallbacks[(int) $writeStream];
-                    if ($writeCb instanceof TaskInterface) {
-                        $this->removeWriter($writeStream);
-                        $this->schedule($writeCb);
-                    } elseif ($writeCb() instanceof \Generator) {
-                        $this->createTask($writeCb());
-                    }
-                }
-            } elseif (!empty(\error_get_last()['message'])) {
-                \panic(\error_get_last()['message']);
-            }
-        }
-    }
-
     protected function ioWaiting()
 	{
         while (true) {
             if ($this->taskQueue->isEmpty()
-                && empty($this->readStreams)
-                && empty($this->writeStreams)
+                && empty($this->waitingForRead)
+                && empty($this->waitingForWrite)
                 && empty($this->timers)
                 && $this->process->isEmpty()
             ) {
@@ -319,7 +265,7 @@ class Coroutine implements CoroutineInterface
                     // There's a running 'process', wait some before rechecking.
                     $streamWait = $this->process->sleepingTime();
 
-                $this->ioStreams($streamWait);
+                $this->ioSocketStream($streamWait);
             }
             yield;
         }
@@ -348,14 +294,18 @@ class Coroutine implements CoroutineInterface
             $wSocks,
             $eSocks,
             (null === $timeout) ? null : 0,
-            $timeout ? (int) ( $timeout * (($timeout === null) ? 1000000 : 1)) : 0)
+            $timeout ? (int) ($timeout * (($timeout === null) ? 1000000 : 1)) : 0)
         ) {
+            if (!empty(\error_get_last()['message'])) {
+                \panic(\error_get_last()['message']);
+            }
+
             return;
         }
 
         foreach ($rSocks as $socket) {
             list(, $tasks) = $this->waitingForRead[(int) $socket];
-            unset($this->waitingForRead[(int) $socket]);
+            $this->removeReader($socket);
 
             foreach ($tasks as $task) {
                 if ($task instanceof TaskInterface) {
@@ -368,7 +318,7 @@ class Coroutine implements CoroutineInterface
 
         foreach ($wSocks as $socket) {
             list(, $tasks) = $this->waitingForWrite[(int) $socket];
-            unset($this->waitingForWrite[(int) $socket]);
+            $this->removeWriter($socket);
 
             foreach ($tasks as $task) {
                 if ($task instanceof TaskInterface) {
@@ -382,11 +332,6 @@ class Coroutine implements CoroutineInterface
 
     public function addReader($stream, $task)
     {
-        $this->readStreams[(int) $stream] = $stream;
-        $this->readCallbacks[(int) $stream] = $task;
-    }
-
-    public function waitForRead($stream, $task) {
         if (isset($this->waitingForRead[(int) $stream])) {
             $this->waitingForRead[(int) $stream][1][] = $task;
         } else {
@@ -396,11 +341,6 @@ class Coroutine implements CoroutineInterface
 
     public function addWriter($stream, $task)
     {
-        $this->writeStreams[(int) $stream] = $stream;
-        $this->writeCallbacks[(int) $stream] = $task;
-    }
-
-    public function waitForWrite($stream, $task) {
         if (isset($this->waitingForWrite[(int) $stream])) {
             $this->waitingForWrite[(int) $stream][1][] = $task;
         } else {
@@ -410,18 +350,12 @@ class Coroutine implements CoroutineInterface
 
     public function removeReader($stream)
     {
-        unset(
-            $this->readStreams[(int) $stream],
-            $this->readCallbacks[(int) $stream]
-        );
+        unset($this->waitingForRead[(int) $stream]);
     }
 
     public function removeWriter($stream)
     {
-        unset(
-            $this->writeStreams[(int) $stream],
-            $this->writeCallbacks[(int) $stream]
-        );
+        unset($this->waitingForWrite[(int) $stream]);
     }
 
     /**
