@@ -269,9 +269,8 @@ class Coroutine implements CoroutineInterface
                     // There's a running 'process', wait some before rechecking.
                     $streamWait = $this->process->sleepingTime();
 
-                $this->ioSocketStream($streamWait);
+                yield $this->ioSocketStream($streamWait);
             }
-            yield;
         }
     }
 

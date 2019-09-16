@@ -75,14 +75,4 @@ class KernelTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         \coroutine_run($this->lapse(99));
     }
-
-    public function testIoStreams()
-    {
-        function noStream() {
-            yield \read_wait(null);
-        }
-
-        $this->expectException(Panicking::class);
-        \coroutine_run(noStream());
-    }
 }
