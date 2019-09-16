@@ -179,7 +179,7 @@ class Coroutine implements CoroutineInterface
 		return $this->runCoroutines();
     }
 
-    public function runCoroutines()
+    public function runCoroutines($useReturn = false)
 	{
 		while (!$this->taskQueue->isEmpty()) {
 			$task = $this->taskQueue->dequeue();
@@ -212,6 +212,10 @@ class Coroutine implements CoroutineInterface
 			} else {
                 $task->setState('rescheduled');
 				$this->schedule($task);
+            }
+
+            if ($useReturn) {
+                return;
             }
 		}
     }
@@ -288,7 +292,6 @@ class Coroutine implements CoroutineInterface
         }
 
         $eSocks = []; // dummy
-
         if (!@\stream_select(
             $rSocks,
             $wSocks,
@@ -296,10 +299,6 @@ class Coroutine implements CoroutineInterface
             (null === $timeout) ? null : 0,
             $timeout ? (int) ($timeout * (($timeout === null) ? 1000000 : 1)) : 0)
         ) {
-            if (!empty(\error_get_last()['message'])) {
-                \panic(\error_get_last()['message']);
-            }
-
             return;
         }
 
@@ -337,6 +336,8 @@ class Coroutine implements CoroutineInterface
         } else {
             $this->waitingForRead[(int) $stream] = [$stream, [$task]];
         }
+
+        return $this;
     }
 
     public function addWriter($stream, $task)
@@ -346,16 +347,22 @@ class Coroutine implements CoroutineInterface
         } else {
             $this->waitingForWrite[(int) $stream] = [$stream, [$task]];
         }
+
+        return $this;
     }
 
     public function removeReader($stream)
     {
         unset($this->waitingForRead[(int) $stream]);
+
+        return $this;
     }
 
     public function removeWriter($stream)
     {
         unset($this->waitingForWrite[(int) $stream]);
+
+        return $this;
     }
 
     /**
