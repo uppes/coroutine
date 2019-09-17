@@ -504,16 +504,4 @@ class Kernel
             );
         }
 	}
-
-	public static function fileOpen(string $uri, string $mode = 'r', $options = [])
-	{
-		return new Kernel(
-			function(TaskInterface $task, Coroutine $coroutine) use ($uri, $mode, $options) {
-				$instance = new FileStream();
-				$instance->fileOpen($uri, $mode, $options);
-				$task->sendValue($instance);
-				$coroutine->schedule($task);
-			}
-		);
-	}
 }
