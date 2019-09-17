@@ -5,8 +5,6 @@ declare(strict_types = 1);
 use Async\Coroutine\Defer;
 use Async\Coroutine\Kernel;
 use Async\Coroutine\Channel;
-use Async\Coroutine\FileStream;
-use Async\Coroutine\FileStreamInterface;
 use Async\Coroutine\Coroutine;
 use Async\Coroutine\CoroutineInterface;
 use Async\Processor\Processor;
@@ -263,23 +261,8 @@ if (! \function_exists('coroutine_run')) {
      */
 	function input_wait(int $size = 256, bool $error = false)
 	{
-		return FileStream::input($size, $error);
+		return Coroutine::input($size, $error);
 	}
-
-	/**
-	 * Open file or url.
-	 * - This function needs to be prefixed with `yield`
-	 *
-	 * @param resource|null $instance - create instance if null
-	 * @param string $filename|url
-	 * @param string $mode|port
-	 * @param resource|array $options
-	 * @return object
-	 */
-	function file_open(string $filename = null, $mode = 'r', $options = [])
-	{
-		return Kernel::fileOpen($filename, $mode, $options);
-    }
 
     function is_type($var, string $comparing = null)
     {
@@ -303,115 +286,6 @@ if (! \function_exists('coroutine_run')) {
 
         return 'unknown';
     }
-
-	/**
-	 * - This function needs to be prefixed with `yield`
-	 */
-	function get_file(string $filename)
-	{
-		$object = yield \file_open($filename);
-		if (\file_valid($object)) {
-			$contents = yield \file_Contents($object);
-			\file_close($object);
-			return $contents;
-		}
-
-		return false;
-	}
-
-	/**
-	 * - This function needs to be prefixed with `yield`
-	 */
-	function put_file(string $filename, $contents = null)
-	{
-		$object = yield \file_open($filename, 'w');
-		if (\file_valid($object)) {
-			$written = yield \file_create($object, $contents);
-			\file_close($object);
-			return $written;
-		}
-
-		return false;
-	}
-
-	function file_close(FileStreamInterface $instance)
-	{
-		return $instance->fileClose();
-	}
-
-	/**
-	 * Check if valid open file handle, which file exists and readable.
-	 *
-	 * @param resource $instance
-	 * @return bool
-	 */
-	function file_valid(FileStreamInterface $instance): bool
-	{
-		return $instance->fileValid();
-	}
-
-	/**
-	 * Get file contents from open file handle, reading by size chucks, with timeout
-	 * - This function needs to be prefixed with `yield`
-	 *
-	 * @param resource $instance
-	 * @param int $size
-	 * @param float $timeout_seconds
-	 * @return mixed
-	 */
-	function file_contents(FileStreamInterface $instance, int $size = -1, float $timeout_seconds = 0.5, $stream = null)
-	{
-		return $instance->fileContents($size, $timeout_seconds, $stream);
-    }
-
-	/**
-	 * Stream file contents from open file handle, reading by size chucks
-	 * - This function needs to be prefixed with `yield`
-	 *
-	 * @param resource $instance
-	 * @param int $size
-	 * @return mixed
-	 */
-	function file_read(FileStreamInterface $instance, int $size = 512)
-	{
-		return $instance->fileRead($size);
-    }
-
-	/**
-	 * - This function needs to be prefixed with `yield`
-	 */
-	function file_create(FileStreamInterface $instance, $contents, $stream = null)
-	{
-		return $instance->fileCreate($contents, $stream);
-	}
-
-	/**
-	 * - This function needs to be prefixed with `yield`
-	 */
-	function file_lines(FileStreamInterface $instance)
-	{
-		return $instance->fileLines();
-	}
-
-	function file_meta(FileStreamInterface $instance)
-	{
-		return $instance->fileMeta();
-	}
-
-	function file_status(FileStreamInterface $instance, $meta = null)
-	{
-		return $instance->fileStatus($meta);
-	}
-
-	function file_handle(FileStreamInterface $instance)
-	{
-		return $instance->fileHandle();
-	}
-
-	function file_instance(): FileStreamInterface
-	{
-		return FileStream::fileInstance();
-	}
 
 	function coroutine_instance()
 	{

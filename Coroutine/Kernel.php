@@ -367,10 +367,10 @@ class Kernel
 								}
 
 								if ($tasks->process()) {
-									$coroutine->runCoroutines();
+									$coroutine->execute();
 								}
 							} elseif ($tasks->pending() || $tasks->rescheduled()) {
-								$coroutine->runCoroutines();
+								$coroutine->execute();
 							} elseif ($tasks->completed()) {
 								$results[$id] = $tasks->result();
 								$count--;

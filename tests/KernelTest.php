@@ -2,9 +2,8 @@
 
 namespace Async\Tests;
 
+use Async\Coroutine\Coroutine;
 use Async\Coroutine\Kernel;
-use Async\Coroutine\Exceptions\Panicking;
-use Async\Coroutine\FileStream;
 use PHPUnit\Framework\TestCase;
 
 class KernelTest extends TestCase
@@ -23,7 +22,7 @@ class KernelTest extends TestCase
     {
         $tid = yield \task_id();
         yield \await($this->lapse($tid));
-        return yield FileStream::input(256);
+        return yield Coroutine::input(256);
     }
 
     public function taskSleepFor()

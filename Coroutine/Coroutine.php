@@ -176,10 +176,10 @@ class Coroutine implements CoroutineInterface
     public function run()
 	{
         $this->createTask($this->ioWaiting());
-		return $this->runCoroutines();
+		return $this->execute();
     }
 
-    public function runCoroutines($useReturn = false)
+    public function execute($useReturn = false)
 	{
 		while (!$this->taskQueue->isEmpty()) {
 			$task = $this->taskQueue->dequeue();
@@ -448,6 +448,30 @@ class Coroutine implements CoroutineInterface
 	public static function plain($value)
 	{
 		return new PlainValueCoroutine($value);
+    }
+
+    public static function input(int $size = 256, bool $error = false)
+	{
+        //Check on STDIN stream
+        $blocking = \stream_set_blocking(\STDIN, false);
+        if ($error && !$blocking) {
+            throw new \InvalidArgumentException('Non-blocking STDIN, could not be enabled.');
+        }
+
+        yield Kernel::readWait(\STDIN);
+        $windows7 = \strpos(\php_uname('v'), 'Windows 7') !== false;
+        // kinda of workaround to allow non blocking under Windows 10, if no key is typed, will block after key press
+        if (!$blocking) {
+            while(true) {
+                $tell = \ftell(\STDIN);
+                if (\is_int($tell) || $windows7)
+                    break;
+                else
+                    yield;
+            }
+        }
+
+		return \trim(\stream_get_line(\STDIN, $size, \EOL));
     }
 
 	public static function create(\Generator $gen)

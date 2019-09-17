@@ -39,7 +39,7 @@ interface CoroutineInterface
     public function cancelTask(int $tid);
 
     /**
-     * Process/walk the task queue and runs the tasks.
+     * Process/walk the task queue and execute the tasks.
      * If a task is finished it's dropped, otherwise rescheduled at the end of the queue.
      *
      * @see https://docs.python.org/3.7/library/asyncio-task.html#running-an-asyncio-program
