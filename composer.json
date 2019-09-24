@@ -26,14 +26,14 @@
         }
     ],
     "require": {
-        "php": ">7.0",
-        "symplely/processor": "^1.0.8"
+        "php": ">7.1",
+        "symplely/processor": "^1.1.0"
     },
     "autoload": {
         "files": [
             "Coroutine/Core.php"
         ],
-        "psr-4": { 
+        "psr-4": {
 			"Async\\Coroutine\\": "Coroutine/"
 		}
     },
