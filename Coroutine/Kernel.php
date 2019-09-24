@@ -33,10 +33,10 @@ class Kernel
 	 * Tells the scheduler to pass the calling task and itself into the function.
 	 *
 	 * @param TaskInterface $task
-	 * @param Coroutine $coroutine
+	 * @param CoroutineInterface $coroutine
 	 * @return mixed
 	 */
-    public function __invoke(TaskInterface $task, Coroutine $coroutine)
+    public function __invoke(TaskInterface $task, CoroutineInterface $coroutine)
 	{
         $callback = $this->callback;
         return $callback($task, $coroutine);
@@ -50,7 +50,7 @@ class Kernel
 	public static function taskId()
 	{
 		return new Kernel(
-			function(TaskInterface $task, Coroutine $coroutine) {
+			function(TaskInterface $task, CoroutineInterface $coroutine) {
 				$task->sendValue($task->taskId());
 				$coroutine->schedule($task);
 			}
@@ -65,7 +65,7 @@ class Kernel
 	public static function createTask(\Generator $coroutines)
 	{
 		return new Kernel(
-			function(TaskInterface $task, Coroutine $coroutine) use ($coroutines) {
+			function(TaskInterface $task, CoroutineInterface $coroutine) use ($coroutines) {
 				$task->sendValue($coroutine->createTask($coroutines));
 				$coroutine->schedule($task);
 			}
@@ -80,7 +80,7 @@ class Kernel
 	public static function make()
 	{
 		return new Kernel(
-			function(TaskInterface $task, Coroutine $coroutine) {
+			function(TaskInterface $task, CoroutineInterface $coroutine) {
 				$task->sendValue(Channel::make($task, $coroutine));
 				$coroutine->schedule($task);
 			}
@@ -95,7 +95,7 @@ class Kernel
 	public static function receiver(Channel $channel)
 	{
 		return new Kernel(
-			function(TaskInterface $task, Coroutine $coroutine) use ($channel) {
+			function(TaskInterface $task, CoroutineInterface $coroutine) use ($channel) {
 				$channel->receiver((int) $task->taskId());
 				$coroutine->schedule($task);
 			}
@@ -111,7 +111,7 @@ class Kernel
 	public static function receive(Channel $channel)
 	{
 		return new Kernel(
-			function(TaskInterface $task, Coroutine $coroutine) use ($channel) {
+			function(TaskInterface $task, CoroutineInterface $coroutine) use ($channel) {
 				$channel->receive();
 			}
 		);
@@ -127,7 +127,7 @@ class Kernel
 	public static function sender(Channel $channel, $message = null, int $taskId = 0)
 	{
 		return new Kernel(
-			function(TaskInterface $task, Coroutine $coroutine) use ($channel, $message, $taskId) {
+			function(TaskInterface $task, CoroutineInterface $coroutine) use ($channel, $message, $taskId) {
 				$taskList = $coroutine->taskList();
 
 				if (isset($taskList[$channel->receiverId()]))
@@ -152,7 +152,7 @@ class Kernel
 	public static function cancelTask($tid)
 	{
 		return new Kernel(
-			function(TaskInterface $task, Coroutine $coroutine) use ($tid) {
+			function(TaskInterface $task, CoroutineInterface $coroutine) use ($tid) {
 				if ($coroutine->cancelTask($tid)) {
 					$task->sendValue(true);
 					$task->setState('cancelled');
@@ -171,7 +171,7 @@ class Kernel
 	public static function shutdown()
 	{
 		return new Kernel(
-			function(TaskInterface $task, Coroutine $coroutine) {
+			function(TaskInterface $task, CoroutineInterface $coroutine) {
                 $tasks = $coroutine->taskList();
                 $coroutine->shutdown();
 				$coroutine->schedule($tasks[1]);
@@ -187,7 +187,7 @@ class Kernel
 	public static function readWait($streamSocket)
 	{
 		return new Kernel(
-			function(TaskInterface $task, Coroutine $coroutine) use ($streamSocket) {
+			function(TaskInterface $task, CoroutineInterface $coroutine) use ($streamSocket) {
 				$coroutine->addReader($streamSocket, $task);
 			}
 		);
@@ -201,7 +201,7 @@ class Kernel
 	public static function writeWait($streamSocket)
 	{
 		return new Kernel(
-			function(TaskInterface $task, Coroutine $coroutine) use ($streamSocket) {
+			function(TaskInterface $task, CoroutineInterface $coroutine) use ($streamSocket) {
 				$coroutine->addWriter($streamSocket, $task);
 			}
 		);
@@ -219,7 +219,7 @@ class Kernel
 	public static function sleepFor(float $delay = 0.0, $result = null)
 	{
 		return new Kernel(
-			function(TaskInterface $task, Coroutine $coroutine) use ($delay, $result) {
+			function(TaskInterface $task, CoroutineInterface $coroutine) use ($delay, $result) {
 				$coroutine->addTimeout(function () use ($task, $coroutine, $result) {
 					if (!empty($result))
 						$task->sendValue($result);
@@ -232,7 +232,7 @@ class Kernel
 	public static function awaitProcess($callable, $timeout = 300)
 	{
 		return new Kernel(
-			function(TaskInterface $task, Coroutine $coroutine) use ($callable, $timeout) {
+			function(TaskInterface $task, CoroutineInterface $coroutine) use ($callable, $timeout) {
 				$task->parallelTask();
 				$task->setState('process');
 				$coroutine->createSubProcess($callable, $timeout)
@@ -291,7 +291,7 @@ class Kernel
     public static function gather(...$taskId)
 	{
 		return new Kernel(
-			function(TaskInterface $task, Coroutine $coroutine) use ($taskId) {
+			function(TaskInterface $task, CoroutineInterface $coroutine) use ($taskId) {
 				if (!empty(self::$gatherResumer)) {
 					[$taskIdList, $count, $results, $taskList] = self::$gatherResumer;
                 } else {
@@ -403,7 +403,7 @@ class Kernel
 		);
 	}
 
-	protected static function updateList(Coroutine $coroutine, int $id, array $completeList = [])
+	protected static function updateList(CoroutineInterface $coroutine, int $id, array $completeList = [])
 	{
 		if (empty($completeList)) {
 			$completeList = $coroutine->completedList();
@@ -424,7 +424,7 @@ class Kernel
 	public static function waitFor($callable, float $timeout = null)
 	{
 		return new Kernel(
-			function(TaskInterface $task, Coroutine $coroutine) use ($callable, $timeout) {
+			function(TaskInterface $task, CoroutineInterface $coroutine) use ($callable, $timeout) {
 				if ($callable instanceof \Generator) {
 					$taskId = $coroutine->createTask($callable);
 				} else {
@@ -492,7 +492,7 @@ class Kernel
 			return Kernel::createTask(${$asyncLabel}(...$args));
         } else {
 			return new Kernel(
-				function(TaskInterface $task, Coroutine $coroutine) use ($asyncLabel, $args) {
+				function(TaskInterface $task, CoroutineInterface $coroutine) use ($asyncLabel, $args) {
 					if ($asyncLabel instanceof \Generator) {
 						$task->sendValue($coroutine->createTask($asyncLabel));
 					} else {
