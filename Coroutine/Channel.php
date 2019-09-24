@@ -18,7 +18,7 @@ class Channel
     protected $task = null;
     protected $coroutine = null;
 
-    private function __construct(TaskInterface $task, Coroutine $coroutine)
+    private function __construct(TaskInterface $task, CoroutineInterface $coroutine)
 	{
         $this->task = $task;
         $this->coroutine = $coroutine;
@@ -29,7 +29,7 @@ class Channel
 	 *
 	 * @return object
 	 */
-    public static function make(TaskInterface $task, Coroutine $coroutine)
+    public static function make(TaskInterface $task, CoroutineInterface $coroutine)
 	{
         return new self($task, $coroutine);
     }
