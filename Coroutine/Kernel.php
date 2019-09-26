@@ -374,6 +374,7 @@ class Kernel
 									$tasks->customState();
 									$coroutine->schedule($tasks);
 									$tasks->run();
+                                    continue;
 								}
 
 								$coroutine->execute();
