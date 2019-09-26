@@ -370,6 +370,12 @@ class Kernel
 									$coroutine->execute();
 								}
 							} elseif ($tasks->pending() || $tasks->rescheduled()) {
+								if ($tasks->pending() && $tasks->isCustomState(true)) {
+									$tasks->customState();
+									$coroutine->schedule($tasks);
+									$tasks->run();
+								}
+
 								$coroutine->execute();
 							} elseif ($tasks->completed()) {
 								$results[$id] = $tasks->result();
@@ -494,7 +500,13 @@ class Kernel
 			return new Kernel(
 				function(TaskInterface $task, CoroutineInterface $coroutine) use ($asyncLabel, $args) {
 					if ($asyncLabel instanceof \Generator) {
-						$task->sendValue($coroutine->createTask($asyncLabel));
+						$tid = $coroutine->createTask($asyncLabel);
+						if (!empty($args)) {
+							$taskList = $coroutine->taskList();
+							$taskList[$tid]->customState(true);
+						}
+
+						$task->sendValue($tid);
 					} else {
 						$task->sendValue($coroutine->createTask(\awaitAble($asyncLabel, ...$args)));
 					}
