@@ -180,29 +180,39 @@ class Kernel
 	}
 
     /**
-     * Wait on read stream socket to be ready read from.
+     * Wait on read stream/socket to be ready read from,
+	 * optionally schedule current task to execute immediately/next.
      *
      * @param resource $streamSocket
+     * @param bool $immediately
      */
-	public static function readWait($streamSocket)
+	public static function readWait($streamSocket, bool $immediately = false)
 	{
 		return new Kernel(
-			function(TaskInterface $task, CoroutineInterface $coroutine) use ($streamSocket) {
+			function(TaskInterface $task, CoroutineInterface $coroutine) use ($streamSocket, $immediately) {
 				$coroutine->addReader($streamSocket, $task);
+                if ($immediately) {
+					$coroutine->schedule($task);
+				}
 			}
 		);
 	}
 
     /**
-     * Wait on write stream socket to be ready to be written to.
+     * Wait on write stream/socket to be ready to be written to,
+	 * optionally schedule current task to execute immediately/next.
      *
      * @param resource $streamSocket
+     * @param bool $immediately
      */
-	public static function writeWait($streamSocket)
+	public static function writeWait($streamSocket, bool $immediately = false)
 	{
 		return new Kernel(
-			function(TaskInterface $task, CoroutineInterface $coroutine) use ($streamSocket) {
+			function(TaskInterface $task, CoroutineInterface $coroutine) use ($streamSocket, $immediately) {
 				$coroutine->addWriter($streamSocket, $task);
+                if ($immediately) {
+					$coroutine->schedule($task);
+				}
 			}
 		);
 	}
