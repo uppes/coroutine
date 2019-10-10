@@ -155,7 +155,6 @@ class Kernel
 			function(TaskInterface $task, CoroutineInterface $coroutine) use ($tid) {
 				if ($coroutine->cancelTask($tid)) {
 					$task->sendValue(true);
-					$task->setState('cancelled');
 					$coroutine->schedule($task);
 				} else {
 					throw new \InvalidArgumentException('Invalid task ID!');
@@ -493,7 +492,8 @@ class Kernel
 	 * @see https://docs.python.org/3.7/library/asyncio-task.html#asyncio.create_task
 	 *
 	 * @param Generator|callable $asyncLabel
-	 * @param mixed $args
+	 * @param mixed $args - if `generator`, $args can hold `customState`, and `customData`
+     * - if `customData` is object, and has `setId` method, store the $task id.
 	 *
 	 * @return int $task id
 	 */
@@ -513,8 +513,19 @@ class Kernel
 					if ($asyncLabel instanceof \Generator) {
 						$tid = $coroutine->createTask($asyncLabel);
 						if (!empty($args)) {
-							$taskList = $coroutine->taskList();
-							$taskList[$tid]->customState(true);
+                            $taskList = $coroutine->taskList();
+                            if (($args[0] === 'true') || ($args[0] === true))
+							    $taskList[$tid]->customState(true);
+                            else
+                                $taskList[$tid]->customState($args[0]);
+
+                            if (isset($args[1])) {
+                                $object = $args[1];
+                                if (\is_object($object) && \method_exists($object, 'setId'))
+                                    $taskList[$tid]->customData($object->setId($tid));
+                                else
+                                    $taskList[$tid]->customData($object);
+                            }
 						}
 
 						$task->sendValue($tid);

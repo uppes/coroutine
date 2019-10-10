@@ -139,7 +139,10 @@ class Coroutine implements CoroutineInterface
         foreach ($this->taskQueue as $i => $task) {
             if ($task->taskId() === $tid) {
                 $task->clearResult();
-                $task->customData();
+                $object = $task->getCustomData();
+                if (\is_object($object) && \method_exists($object, 'close'))
+                    $object->close();
+
                 $task->customState();
                 $task->setState('cancelled');
                 unset($this->taskQueue[$i]);

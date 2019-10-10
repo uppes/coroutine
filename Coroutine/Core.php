@@ -44,7 +44,8 @@ if (! \function_exists('coroutine_run')) {
 	 * - This function needs to be prefixed with `yield`
 	 *
 	 * @param Generator|callable $awaitableFunction
-	 * @param mixed $args
+	 * @param mixed $args - if `generator`, $args can hold `customState`, and `customData`
+     * - if `customData` is object, and has `setId` method, store the $task id.
 	 *
 	 * @return int $task id
 	 */
@@ -189,7 +190,9 @@ if (! \function_exists('coroutine_run')) {
 	 * @see https://www.golang-book.com/books/intro/10#section1
 	 *
 	 * @param callable $goFunction
-	 * @param mixed $args
+	 * @param mixed $args - if `generator`, $args can hold `customState`, and `customData`
+     * - if `customData` is object, and has `setId` method, store the $task id.
+	 *
 	 * @return int task id
 	 */
 	function go($goFunction, ...$args)
@@ -236,21 +239,25 @@ if (! \function_exists('coroutine_run')) {
 	}
 
     /**
-     * Wait on read stream socket to be ready read from.
+     * Wait on read stream socket to be ready read from,
+	 * optionally schedule current task to execute immediately/next.
+     *
 	 * - This function needs to be prefixed with `yield`
 	 */
-	function read_wait($stream)
+	function read_wait($stream, bool $immediately = false)
 	{
-		return Kernel::readWait($stream);
+		return Kernel::readWait($stream, $immediately);
 	}
 
 	/**
-     * Wait on write stream socket to be ready to be written to.
+     * Wait on write stream socket to be ready to be written to,
+	 * optionally schedule current task to execute immediately/next.
+     *
 	 * - This function needs to be prefixed with `yield`
 	 */
-	function write_wait($stream)
+	function write_wait($stream, bool $immediately = false)
 	{
-		return Kernel::writeWait($stream);
+		return Kernel::writeWait($stream, $immediately);
 	}
 
     /**
