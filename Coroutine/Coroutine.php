@@ -143,7 +143,6 @@ class Coroutine implements CoroutineInterface
                 if (\is_object($object) && \method_exists($object, 'close'))
                     $object->close();
 
-                $task->customState();
                 $task->setState('cancelled');
                 unset($this->taskQueue[$i]);
                 break;
