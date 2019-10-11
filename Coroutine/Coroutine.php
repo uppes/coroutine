@@ -128,7 +128,7 @@ class Coroutine implements CoroutineInterface
         }
     }
 
-    public function cancelTask(int $tid)
+    public function cancelTask(int $tid, $customState = null)
 	{
         if (!isset($this->taskMap[$tid])) {
             return false;
@@ -142,6 +142,9 @@ class Coroutine implements CoroutineInterface
                 $object = $task->getCustomData();
                 if (\is_object($object) && \method_exists($object, 'close'))
                     $object->close();
+
+                if (!empty($customState))
+                    $task->customState($customState);
 
                 $task->setState('cancelled');
                 unset($this->taskQueue[$i]);

@@ -144,20 +144,24 @@ class Kernel
 	}
 
 	/**
-	 * kill/remove an task using task id
+	 * kill/remove an task using task id,
+     * optionally pass custom cancel state and error message for third party code integration.
 	 *
 	 * @param int $tid
+	 * @param mixed $customState
+	 * @param string $errorMessage
+     *
 	 * @throws \InvalidArgumentException
 	 */
-	public static function cancelTask($tid)
+	public static function cancelTask($tid, $customState = null, string $errorMessage = 'Invalid task ID!')
 	{
 		return new Kernel(
-			function(TaskInterface $task, CoroutineInterface $coroutine) use ($tid) {
-				if ($coroutine->cancelTask($tid)) {
+			function(TaskInterface $task, CoroutineInterface $coroutine) use ($tid, $customState, $errorMessage) {
+				if ($coroutine->cancelTask($tid, $customState)) {
 					$task->sendValue(true);
 					$coroutine->schedule($task);
 				} else {
-					throw new \InvalidArgumentException('Invalid task ID!');
+					throw new \InvalidArgumentException($errorMessage);
 				}
 			}
 		);
@@ -180,7 +184,7 @@ class Kernel
 
     /**
      * Wait on read stream/socket to be ready read from,
-	 * optionally schedule current task to execute immediately/next.
+	 * optionally schedule current task to execute immediately/next for third party code integration.
      *
      * @param resource $streamSocket
      * @param bool $immediately
@@ -199,7 +203,7 @@ class Kernel
 
     /**
      * Wait on write stream/socket to be ready to be written to,
-	 * optionally schedule current task to execute immediately/next.
+	 * optionally schedule current task to execute immediately/next for third party code integration.
      *
      * @param resource $streamSocket
      * @param bool $immediately
@@ -333,6 +337,7 @@ class Kernel
 					$completeList = $coroutine->completedList();
                     $countComplete = \count($completeList);
                     $gatherCompleteCount = 0;
+
 					if ($countComplete > 0) {
 						foreach($completeList as $id => $tasks) {
 							if (isset($taskIdList[$id])) {
@@ -355,7 +360,8 @@ class Kernel
                     } elseif ($gatherCompleteCount == $gatherCount) {
                         $count = 0;
                     }
-				}
+                }
+
 				while ($count > 0) {
 					foreach($taskIdList as $id) {
 						if (isset($taskList[$id])) {
@@ -377,7 +383,8 @@ class Kernel
 
 								if ($tasks->process()) {
 									$coroutine->execute();
-								}
+                                }
+
 							} elseif ($tasks->pending() || $tasks->rescheduled()) {
 								if ($tasks->pending() && $tasks->isCustomState(true)) {
 									$tasks->customState();
@@ -396,7 +403,8 @@ class Kernel
 									$subCount--;
 									if ($subCount == 0)
 										break;
-								}
+                                }
+
 							} elseif ($tasks->erred() || $tasks->cancelled()) {
                                 $exception = $tasks->cancelled() ? new CancelledError() : $tasks->exception();
 								$count--;
@@ -494,6 +502,7 @@ class Kernel
 	 * @param Generator|callable $asyncLabel
 	 * @param mixed $args - if `generator`, $args can hold `customState`, and `customData`
      * - if `customData` is object, and has `setId` method, store the $task id.
+     * - for third party code integration.
 	 *
 	 * @return int $task id
 	 */

@@ -31,12 +31,14 @@ interface CoroutineInterface
     public function shutdown();
 
 	/**
-	 * kill/remove an task using task id
+	 * kill/remove an task using task id,
+     * optionally pass custom cancel state for third party code integration.
 	 *
 	 * @param int $tid
+	 * @param mixed $customState
 	 * @return bool
 	 */
-    public function cancelTask(int $tid);
+    public function cancelTask(int $tid, $customState = null);
 
     /**
      * Process/walk the task queue and execute the tasks.
