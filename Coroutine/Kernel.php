@@ -338,6 +338,7 @@ class Kernel
                     $countComplete = \count($completeList);
                     $gatherCompleteCount = 0;
 
+                	// Check and handle tasks already completed before entering/executing gather().
 					if ($countComplete > 0) {
 						foreach($completeList as $id => $tasks) {
 							if (isset($taskIdList[$id])) {
@@ -345,7 +346,11 @@ class Kernel
                                 $count--;
                                 $gatherCompleteCount++;
 								unset($taskIdList[$id]);
-                                self::updateList($coroutine, $id, $completeList);
+
+								// Update running task list.
+								self::updateList($coroutine, $id, $completeList);
+
+								// end loop, if gather race count reached
                                 if ($gatherCompleteCount == $gatherCount)
                                     break;
 							}
@@ -353,6 +358,7 @@ class Kernel
 					}
 				}
 
+                // Check and update base off gather race and completed count.
                 if ($gatherSet) {
                     $subCount = ($gatherCount - $gatherCompleteCount);
                     if ($gatherCompleteCount != $gatherCount) {
@@ -362,10 +368,13 @@ class Kernel
                     }
                 }
 
+                // Run and wait until race or count is reached.
 				while ($count > 0) {
 					foreach($taskIdList as $id) {
 						if (isset($taskList[$id])) {
 							$tasks = $taskList[$id];
+
+                            // Handle if parallel task.
 							if ($tasks->isParallel()) {
 								$completeList = $coroutine->completedList();
 								if (isset($completeList[$id])) {
@@ -381,10 +390,12 @@ class Kernel
 									}
 								}
 
+                            	// Handle if parallel task process not running, force run.
 								if ($tasks->process()) {
 									$coroutine->execute();
                                 }
 
+                            // Handle if task not running/pending, force run.
 							} elseif ($tasks->pending() || $tasks->rescheduled()) {
 								if ($tasks->pending() && $tasks->isCustomState(true)) {
 									$tasks->customState();
@@ -394,22 +405,33 @@ class Kernel
 								}
 
 								$coroutine->execute();
+
+							// Handle if task finished.
 							} elseif ($tasks->completed()) {
 								$results[$id] = $tasks->result();
 								$count--;
-                                unset($taskList[$id]);
+								unset($taskList[$id]);
+
+								// Update running task list.
 								self::updateList($coroutine, $id);
+
+								// end loop, if set and race count reached
 								if ($gatherSet) {
 									$subCount--;
 									if ($subCount == 0)
 										break;
                                 }
 
+                            // Handle if task erred or cancelled.
 							} elseif ($tasks->erred() || $tasks->cancelled()) {
                                 $exception = $tasks->cancelled() ? new CancelledError() : $tasks->exception();
 								$count--;
 								unset($taskList[$id]);
+
+                                // Update running task list.
 								self::updateList($coroutine, $id);
+
+                                // Check and propagate/schedule the exception.
                                 if ($gatherShouldError) {
                                     self::$gatherResumer = [$taskIdList, $count, $results, $taskList];
                                     $task->setException($exception);
@@ -427,13 +449,16 @@ class Kernel
 		);
 	}
 
-	protected static function updateList(CoroutineInterface $coroutine, int $id, array $completeList = [])
+    /**
+     * Update current/running task list.
+     */
+	protected static function updateList(CoroutineInterface $coroutine, int $taskList, array $completeList = [])
 	{
 		if (empty($completeList)) {
 			$completeList = $coroutine->completedList();
 		}
 
-		unset($completeList[$id]);
+		unset($completeList[$taskList]);
 		$coroutine->updateCompleted($completeList);
 	}
 
