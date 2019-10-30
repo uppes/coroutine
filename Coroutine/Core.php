@@ -45,7 +45,7 @@ if (! \function_exists('coroutine_run')) {
 	 *
 	 * @param Generator|callable $awaitableFunction
 	 * @param mixed $args - if `generator`, $args can hold `customState`, and `customData`
-     * - if `customData` is object, and has `setId` method, store the $task id.
+     * - if `customData` is object, and has `taskId` method, store the $task id.
 	 *
 	 * @return int $task id
 	 */
@@ -191,7 +191,7 @@ if (! \function_exists('coroutine_run')) {
 	 *
 	 * @param callable $goFunction
 	 * @param mixed $args - if `generator`, $args can hold `customState`, and `customData`
-     * - if `customData` is object, and has `setId` method, store the $task id.
+     * - if `customData` is object, and has `taskId` method, store the $task id.
 	 *
 	 * @return int task id
 	 */

@@ -20,9 +20,59 @@ use Async\Coroutine\Exceptions\CancelledError;
 class Kernel
 {
     protected $callback;
-    protected static $gatherResumer = null;
+
+	protected static $gatherResumer = null;
+
     protected static $gatherCount = 0;
     protected static $gatherShouldError = true;
+
+	/**
+	 * Custom `Gather` not started state.
+	 * @var string
+	 */
+	protected static $isCustomSate = '';
+
+	/**
+	 * Execute on already pre-completed `Gather` tasks.
+	 * @var callable
+	 */
+	protected static $onPreComplete;
+
+	/**
+	 * Execute on completed `Gather` tasks.
+	 * @var callable
+	 */
+	protected static $onCompleted;
+
+	/**
+	 * Execute on exception `Gather` tasks.
+	 * @var callable
+	 */
+	protected static $onError;
+
+	/**
+	 * Execute on cancelled `Gather` tasks.
+	 * @var callable
+	 */
+	protected static $onCancel;
+
+	/**
+	 * Execute on not started `Gather` tasks.
+	 * @var callable
+	 */
+	protected static $onProcessing;
+
+	/**
+	 * Execute on `Gather` task list updates.
+	 * @var callable
+	 */
+	protected static $onUpdate;
+
+	/**
+	 * Execute cleanup on `Gather` race count tasks.
+	 * @var callable
+	 */
+    protected static $onRaceAborted;
 
     public function __construct(callable $callback)
 	{
@@ -270,6 +320,7 @@ class Kernel
 
 	/**
 	 * Controls how the `gather()` function operates.
+     * `gather` will behave like **Promise** functions `All`, `Some`, `Any` in JavaScript.
 	 *
 	 * @param int $race - If set, initiate a competitive race between multiple tasks.
 	 * - When amount of tasks as completed, the `gather` will return with task results.
@@ -280,10 +331,43 @@ class Kernel
 	 * - If `false`, exceptions are treated the same as successful results, and aggregated in the result list.
 	 * @throws \LengthException - If the number of tasks less than the desired $race.
 	 */
-	public static function gatherOptions(int $race = 0, bool $exception = true)
+	public static function gatherOptions(int $race = 0, bool $exception = true): void
 	{
 		self::$gatherCount = $race;
 		self::$gatherShouldError = $exception;
+	}
+
+	/**
+	 * Allow passing custom functions to control how `gather()` react after task process state changes.
+	 * This is mainly used for third party integration without repeating `Gather`main functionality.
+	 *
+	 * @param string $isCustomSate - for custom status state to check on not stated tasks
+	 * @param null|callable $onPreComplete - for already finish tasks
+	 * @param null|callable $onProcessing - for not running tasks
+	 * @param null|callable $onCompleted - for finished tasks
+	 * @param null|callable $onError - for erring or failing tasks
+	 * @param null|callable $onCancel - for aborted cancelled tasks
+	 * @param null|callable $onUpdate - for keeping task list current
+	 * @param null|callable $onRaceAborted - for cleanup on tasks not to be used any longer
+	 */
+	public static function gatherController(
+        string $isCustomSate = '',
+        ?callable $onPreComplete = null,
+        ?callable $onProcessing = null,
+        ?callable $onCompleted = null,
+        ?callable $onError = null,
+        ?callable $onCancel = null,
+        ?callable $onUpdate = null,
+        ?callable $onRaceAborted = null): void
+	{
+		self::$isCustomSate = $isCustomSate;
+		self::$onPreComplete = $onPreComplete;
+		self::$onProcessing = $onProcessing;
+		self::$onCompleted = $onCompleted;
+		self::$onError = $onError;
+		self::$onCancel = $onCancel;
+		self::$onUpdate = $onUpdate;
+		self::$onRaceAborted = $onRaceAborted;
 	}
 
 	/**
@@ -310,17 +394,31 @@ class Kernel
                 } else {
 					$gatherCount = self::$gatherCount;
 					$gatherShouldError = self::$gatherShouldError;
-					self::gatherOptions();
+                    self::gatherOptions();
+
+                    $isCustomSate = self::$isCustomSate;
+                    $onPreComplete = self::$onPreComplete;
+                    $onProcessing = self::$onProcessing;
+                    $onCompleted = self::$onCompleted;
+                    $onError = self::$onError;
+                    $onCancel = self::$onCancel;
+                    $onUpdate = self::$onUpdate;
+                    $onRaceAborted = self::$onRaceAborted;
+                    self::gatherController();
 
 					$taskIdList = [];
 					$newIdList =(\is_array($taskId[0])) ? $taskId[0] : $taskId;
-
 					foreach($newIdList as $id => $value) {
 						if($value instanceof \Generator) {
 							$id = $coroutine->createTask($value);
 							$taskIdList[$id] = $id;
-						} else
-							$taskIdList[$value] = $value;
+						} elseif (\is_int($value)) {
+                            $taskIdList[$value] = $value;
+                        } else {
+							// @codeCoverageIgnoreStart
+                            \panic("Invalid access, only array of integers, or generator objects allowed!");
+							// @codeCoverageIgnoreEnd
+                        }
 					}
 
 					$results = [];
@@ -328,7 +426,9 @@ class Kernel
 					$gatherSet = ($gatherCount > 0);
 					if ($gatherSet) {
 						if ($count < $gatherCount) {
-							throw new \LengthException(\sprintf('The (%d) tasks, not enough to fulfill the `gatherOptions(%d)` race count!', $count, $gatherCount));
+							// @codeCoverageIgnoreStart
+							throw new \LengthException(\sprintf('The (%d) tasks, not enough to fulfill the `options(%d)` count!', $count, $gatherCount));
+							// @codeCoverageIgnoreEnd
 						}
 					}
 
@@ -342,7 +442,15 @@ class Kernel
 					if ($countComplete > 0) {
 						foreach($completeList as $id => $tasks) {
 							if (isset($taskIdList[$id])) {
-								$results[$id] = $tasks->result();
+                                if (\is_callable($onPreComplete)) {
+									// @codeCoverageIgnoreStart
+                                    $result = $onPreComplete($tasks, $id);
+									// @codeCoverageIgnoreEnd
+                                } else {
+								    $result = $tasks->result();
+                                }
+
+								$results[$id] = $result;
                                 $count--;
                                 $gatherCompleteCount++;
 								unset($taskIdList[$id]);
@@ -379,7 +487,15 @@ class Kernel
 								$completeList = $coroutine->completedList();
 								if (isset($completeList[$id])) {
 									$tasks = $completeList[$id];
-									$results[$id] = $tasks->result();
+                                    if (\is_callable($onPreComplete)) {
+										// @codeCoverageIgnoreStart
+										$result = $onPreComplete($tasks, $id);
+										// @codeCoverageIgnoreEnd
+                                    } else {
+                                        $result = $tasks->result();
+                                    }
+
+									$results[$id] = $result;
 									$count--;
 									unset($taskIdList[$id]);
 									self::updateList($coroutine, $id, $completeList);
@@ -394,26 +510,36 @@ class Kernel
 								if ($tasks->process()) {
 									$coroutine->execute();
                                 }
-
                             // Handle if task not running/pending, force run.
-							} elseif ($tasks->pending() || $tasks->rescheduled()) {
-								if ($tasks->pending() && $tasks->isCustomState(true)) {
-									$tasks->customState();
-									$coroutine->schedule($tasks);
-									$tasks->run();
-                                    continue;
+							} elseif ($tasks->isCustomState($isCustomSate) || $tasks->pending() || $tasks->rescheduled()) {
+                                if (\is_callable($onProcessing)) {
+									// @codeCoverageIgnoreStart
+									$onProcessing($tasks, $coroutine);
+									// @codeCoverageIgnoreEnd
+                                } else {
+									if ($tasks->pending() && $tasks->isCustomState(true)) {
+										$tasks->customState();
+										$coroutine->schedule($tasks);
+										$tasks->run();
+										continue;
+									}
+
+									$coroutine->execute();
 								}
-
-								$coroutine->execute();
-
 							// Handle if task finished.
 							} elseif ($tasks->completed()) {
-								$results[$id] = $tasks->result();
-								$count--;
-								unset($taskList[$id]);
+                                if (\is_callable($onCompleted)) {
+									// @codeCoverageIgnoreStart
+									$onCompleted($task,	$coroutine, $taskList, $id,	$count,	$results, $onUpdate, $gatherShouldError);
+									// @codeCoverageIgnoreEnd
+                                } else {
+									$results[$id] = $tasks->result();
+									$count--;
+									unset($taskList[$id]);
 
-								// Update running task list.
-								self::updateList($coroutine, $id);
+									// Update running task list.
+									self::updateList($coroutine, $id);
+                                }
 
 								// end loop, if set and race count reached
 								if ($gatherSet) {
@@ -421,15 +547,24 @@ class Kernel
 									if ($subCount == 0)
 										break;
                                 }
-
                             // Handle if task erred or cancelled.
 							} elseif ($tasks->erred() || $tasks->cancelled()) {
-                                $exception = $tasks->cancelled() ? new CancelledError() : $tasks->exception();
+                                if ($tasks->erred() && \is_callable($onError)) {
+									// @codeCoverageIgnoreStart
+                                    $result = $onError($tasks, $id);
+                                } elseif ($tasks->cancelled() && \is_callable($onCancel)) {
+                                    $result = $onCancel($tasks, $id);
+									// @codeCoverageIgnoreEnd
+                                } else {
+                                    $result = $tasks->cancelled() ? new CancelledError() : $tasks->exception();
+                                }
+
+                                $exception = $result;
 								$count--;
 								unset($taskList[$id]);
 
                                 // Update running task list.
-								self::updateList($coroutine, $id);
+                                self::updateList($coroutine, $id, $taskList, $onUpdate, false, true);
 
                                 // Check and propagate/schedule the exception.
                                 if ($gatherShouldError) {
@@ -437,10 +572,19 @@ class Kernel
                                     $task->setException($exception);
                                     $coroutine->schedule($tasks);
                                 }
-							}
+                            }
+
+                            $result = null;
 						}
 					}
 				}
+
+                // Check for, update and abort/close any responses not part of request count.
+                if ($gatherSet && \is_callable($onRaceAborted)) {
+					// @codeCoverageIgnoreStart
+                    $onRaceAborted($coroutine, $results, $newIdList, $onUpdate);
+					// @codeCoverageIgnoreEnd
+                }
 
 				self::$gatherResumer = null;
 				$task->sendValue($results);
@@ -450,16 +594,35 @@ class Kernel
 	}
 
     /**
-     * Update current/running task list.
+     * Update current/running task list, optionally call extra custom update function.
      */
-	protected static function updateList(CoroutineInterface $coroutine, int $taskList, array $completeList = [])
+	public static function updateList(
+        CoroutineInterface $coroutine,
+        int $taskId,
+        array $completeList = [],
+        ?callable $onUpdate = null,
+        bool $cancel = false,
+        bool $forceUpdate = false): void
 	{
-		if (empty($completeList)) {
-			$completeList = $coroutine->completedList();
-		}
+        if (isset($completeList[$taskId]) && \is_callable($onUpdate)) {
+			// @codeCoverageIgnoreStart
+            $onUpdate($completeList[$taskId]);
+        }
 
-		unset($completeList[$taskList]);
-		$coroutine->updateCompleted($completeList);
+        if ($cancel) {
+            $coroutine->cancelTask($taskId);
+			// @codeCoverageIgnoreEnd
+        } else {
+            if (empty($completeList) || $forceUpdate) {
+				$completeList = $coroutine->completedList();
+			}
+
+            if (isset($completeList[$taskId])) {
+				unset($completeList[$taskId]);
+			}
+
+            $coroutine->updateCompleted($completeList);
+		}
 	}
 
     /**
@@ -526,7 +689,7 @@ class Kernel
 	 *
 	 * @param Generator|callable $asyncLabel
 	 * @param mixed $args - if `generator`, $args can hold `customState`, and `customData`
-     * - if `customData` is object, and has `setId` method, store the $task id.
+     * - if `customData` is object, and has `taskId` method, store the $task id.
      * - for third party code integration.
 	 *
 	 * @return int $task id
@@ -555,8 +718,8 @@ class Kernel
 
                             if (isset($args[1])) {
                                 $object = $args[1];
-                                if (\is_object($object) && \method_exists($object, 'setId'))
-                                    $taskList[$tid]->customData($object->setId($tid));
+                                if (\is_object($object) && \method_exists($object, 'taskId'))
+                                    $taskList[$tid]->customData($object->taskId($tid));
                                 else
                                     $taskList[$tid]->customData($object);
                             }
