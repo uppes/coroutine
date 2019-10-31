@@ -444,7 +444,7 @@ class Kernel
 							if (isset($taskIdList[$id])) {
 								if (\is_callable($onPreComplete)) {
 									// @codeCoverageIgnoreStart
-									$result = $onPreComplete($tasks, $id);
+									$result = $onPreComplete($tasks);
 									// @codeCoverageIgnoreEnd
 								} else {
 									$result = $tasks->result();
@@ -489,7 +489,7 @@ class Kernel
 									$tasks = $completeList[$id];
 									if (\is_callable($onPreComplete)) {
 										// @codeCoverageIgnoreStart
-										$result = $onPreComplete($tasks, $id);
+										$result = $onPreComplete($tasks);
 										// @codeCoverageIgnoreEnd
 									} else {
 										$result = $tasks->result();
@@ -530,17 +530,18 @@ class Kernel
 							} elseif ($tasks->completed()) {
 								if (\is_callable($onCompleted)) {
 									// @codeCoverageIgnoreStart
-									$onCompleted($task,	$coroutine, $taskList, $id,	$count,	$results, $onUpdate, $gatherShouldError);
+                                    $result = $onCompleted($tasks);
 									// @codeCoverageIgnoreEnd
 								} else {
-									$results[$id] = $tasks->result();
-									$count--;
-									unset($taskList[$id]);
-
-									// Update running task list.
-									self::updateList($coroutine, $id);
+                                    $result = $tasks->result();
 								}
 
+                                $results[$id] = $result;
+                                $count--;
+                                unset($taskList[$id]);
+
+                                // Update running task list.
+                                self::updateList($coroutine, $id);
 								// end loop, if set and race count reached
 								if ($gatherSet) {
 									$subCount--;
@@ -551,9 +552,9 @@ class Kernel
 							} elseif ($tasks->erred() || $tasks->cancelled()) {
 								if ($tasks->erred() && \is_callable($onError)) {
 									// @codeCoverageIgnoreStart
-									$result = $onError($tasks, $id);
+									$result = $onError($tasks);
 								} elseif ($tasks->cancelled() && \is_callable($onCancel)) {
-									$result = $onCancel($tasks, $id);
+									$result = $onCancel($tasks);
 									// @codeCoverageIgnoreEnd
 								} else {
 									$result = $tasks->cancelled() ? new CancelledError() : $tasks->exception();
@@ -688,7 +689,6 @@ class Kernel
 	 *
 	 * @param Generator|callable $asyncLabel
 	 * @param mixed $args - if `generator`, $args can hold `customState`, and `customData`
-	 * - if `customData` is object, and has `taskPid` method, store the $task id.
 	 * - for third party code integration.
 	 *
 	 * @return int $task id
@@ -716,11 +716,7 @@ class Kernel
 								$taskList[$tid]->customState($args[0]);
 
 							if (isset($args[1])) {
-								$object = $args[1];
-								if (\is_object($object) && \method_exists($object, 'taskPid'))
-									$taskList[$tid]->customData($object->taskPid($tid));
-								else
-									$taskList[$tid]->customData($object);
+								$taskList[$tid]->customData($args[1]);
 							}
 						}
 

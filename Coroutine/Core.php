@@ -45,7 +45,6 @@ if (!\function_exists('coroutine_run')) {
 	 *
 	 * @param Generator|callable $awaitableFunction
 	 * @param mixed $args - if `generator`, $args can hold `customState`, and `customData`
-	 * - if `customData` is object, and has `taskPid` method, store the $task id.
 	 *
 	 * @return int $task id
 	 */
@@ -63,7 +62,7 @@ if (!\function_exists('coroutine_run')) {
 	 * - When `0` (default), will wait for all to complete.
 	 * @param bool $exception - If `true` (default), the first raised exception is immediately
 	 *  propagated to the task that awaits on gather().
-	 * Other awaitables in the aws sequence wonâ€™t be cancelled and will continue to run.
+	 * Other awaitables in the aws sequence won't be cancelled and will continue to run.
 	 * - If `false`, exceptions are treated the same as successful results, and aggregated in the result list.
 	 * @throws \LengthException - If the number of tasks less than the desired $race.
 	 *
@@ -81,7 +80,7 @@ if (!\function_exists('coroutine_run')) {
 	 * The order of result values corresponds to the order of awaitables in taskId.
 	 *
 	 * The first raised exception is immediately propagated to the task that awaits on gather().
-	 * Other awaitables in the sequence wonâ€™t be cancelled and will continue to run.
+	 * Other awaitables in the sequence won't be cancelled and will continue to run.
 	 *
 	 * @see https://docs.python.org/3.7/library/asyncio-task.html#asyncio.gather
 	 *
@@ -191,7 +190,6 @@ if (!\function_exists('coroutine_run')) {
 	 *
 	 * @param callable $goFunction
 	 * @param mixed $args - if `generator`, $args can hold `customState`, and `customData`
-	 * - if `customData` is object, and has `taskPid` method, store the $task id.
 	 *
 	 * @return int task id
 	 */
