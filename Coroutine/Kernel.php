@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Async\Coroutine;
 
@@ -19,12 +19,12 @@ use Async\Coroutine\Exceptions\CancelledError;
  */
 class Kernel
 {
-    protected $callback;
+	protected $callback;
 
 	protected static $gatherResumer = null;
 
-    protected static $gatherCount = 0;
-    protected static $gatherShouldError = true;
+	protected static $gatherCount = 0;
+	protected static $gatherShouldError = true;
 
 	/**
 	 * Custom `Gather` not started state.
@@ -72,12 +72,12 @@ class Kernel
 	 * Execute cleanup on `Gather` race count tasks.
 	 * @var callable
 	 */
-    protected static $onRaceAborted;
+	protected static $onRaceAborted;
 
-    public function __construct(callable $callback)
+	public function __construct(callable $callback)
 	{
-        $this->callback = $callback;
-    }
+		$this->callback = $callback;
+	}
 
 	/**
 	 * Tells the scheduler to pass the calling task and itself into the function.
@@ -86,11 +86,11 @@ class Kernel
 	 * @param CoroutineInterface $coroutine
 	 * @return mixed
 	 */
-    public function __invoke(TaskInterface $task, CoroutineInterface $coroutine)
+	public function __invoke(TaskInterface $task, CoroutineInterface $coroutine)
 	{
-        $callback = $this->callback;
-        return $callback($task, $coroutine);
-    }
+		$callback = $this->callback;
+		return $callback($task, $coroutine);
+	}
 
 	/**
 	 * Return the task ID
@@ -100,7 +100,7 @@ class Kernel
 	public static function taskId()
 	{
 		return new Kernel(
-			function(TaskInterface $task, CoroutineInterface $coroutine) {
+			function (TaskInterface $task, CoroutineInterface $coroutine) {
 				$task->sendValue($task->taskId());
 				$coroutine->schedule($task);
 			}
@@ -115,7 +115,7 @@ class Kernel
 	public static function createTask(\Generator $coroutines)
 	{
 		return new Kernel(
-			function(TaskInterface $task, CoroutineInterface $coroutine) use ($coroutines) {
+			function (TaskInterface $task, CoroutineInterface $coroutine) use ($coroutines) {
 				$task->sendValue($coroutine->createTask($coroutines));
 				$coroutine->schedule($task);
 			}
@@ -130,7 +130,7 @@ class Kernel
 	public static function make()
 	{
 		return new Kernel(
-			function(TaskInterface $task, CoroutineInterface $coroutine) {
+			function (TaskInterface $task, CoroutineInterface $coroutine) {
 				$task->sendValue(Channel::make($task, $coroutine));
 				$coroutine->schedule($task);
 			}
@@ -140,12 +140,12 @@ class Kernel
 	/**
 	 * Set Channel by task id, similar to Google Go language
 	 *
-     * @param Channel $channel
+	 * @param Channel $channel
 	 */
 	public static function receiver(Channel $channel)
 	{
 		return new Kernel(
-			function(TaskInterface $task, CoroutineInterface $coroutine) use ($channel) {
+			function (TaskInterface $task, CoroutineInterface $coroutine) use ($channel) {
 				$channel->receiver((int) $task->taskId());
 				$coroutine->schedule($task);
 			}
@@ -155,13 +155,13 @@ class Kernel
 	/**
 	 * Wait to receive message, similar to Google Go language
 	 *
-     * @param mixed $message
+	 * @param mixed $message
 	 * @param int $taskId
 	 */
 	public static function receive(Channel $channel)
 	{
 		return new Kernel(
-			function(TaskInterface $task, CoroutineInterface $coroutine) use ($channel) {
+			function (TaskInterface $task, CoroutineInterface $coroutine) use ($channel) {
 				$channel->receive();
 			}
 		);
@@ -170,14 +170,14 @@ class Kernel
 	/**
 	 * Send an message to Channel by task id, similar to Google Go language
 	 *
-     * @param mixed $message
+	 * @param mixed $message
 	 * @param int $taskId
 	 */
 
 	public static function sender(Channel $channel, $message = null, int $taskId = 0)
 	{
 		return new Kernel(
-			function(TaskInterface $task, CoroutineInterface $coroutine) use ($channel, $message, $taskId) {
+			function (TaskInterface $task, CoroutineInterface $coroutine) use ($channel, $message, $taskId) {
 				$taskList = $coroutine->taskList();
 
 				if (isset($taskList[$channel->receiverId()]))
@@ -195,18 +195,18 @@ class Kernel
 
 	/**
 	 * kill/remove an task using task id,
-     * optionally pass custom cancel state and error message for third party code integration.
+	 * optionally pass custom cancel state and error message for third party code integration.
 	 *
 	 * @param int $tid
 	 * @param mixed $customState
 	 * @param string $errorMessage
-     *
+	 *
 	 * @throws \InvalidArgumentException
 	 */
 	public static function cancelTask($tid, $customState = null, string $errorMessage = 'Invalid task ID!')
 	{
 		return new Kernel(
-			function(TaskInterface $task, CoroutineInterface $coroutine) use ($tid, $customState, $errorMessage) {
+			function (TaskInterface $task, CoroutineInterface $coroutine) use ($tid, $customState, $errorMessage) {
 				if ($coroutine->cancelTask($tid, $customState)) {
 					$task->sendValue(true);
 					$coroutine->schedule($task);
@@ -217,72 +217,72 @@ class Kernel
 		);
 	}
 
-    /**
-     * Performs a clean shutdown.
-     * Should be called at application exit.
-     */
+	/**
+	 * Performs a clean shutdown.
+	 * Should be called at application exit.
+	 */
 	public static function shutdown()
 	{
 		return new Kernel(
-			function(TaskInterface $task, CoroutineInterface $coroutine) {
-                $tasks = $coroutine->taskList();
-                $coroutine->shutdown();
+			function (TaskInterface $task, CoroutineInterface $coroutine) {
+				$tasks = $coroutine->taskList();
+				$coroutine->shutdown();
 				$coroutine->schedule($tasks[1]);
 			}
 		);
 	}
 
-    /**
-     * Wait on read stream/socket to be ready read from,
+	/**
+	 * Wait on read stream/socket to be ready read from,
 	 * optionally schedule current task to execute immediately/next for third party code integration.
-     *
-     * @param resource $streamSocket
-     * @param bool $immediately
-     */
+	 *
+	 * @param resource $streamSocket
+	 * @param bool $immediately
+	 */
 	public static function readWait($streamSocket, bool $immediately = false)
 	{
 		return new Kernel(
-			function(TaskInterface $task, CoroutineInterface $coroutine) use ($streamSocket, $immediately) {
+			function (TaskInterface $task, CoroutineInterface $coroutine) use ($streamSocket, $immediately) {
 				$coroutine->addReader($streamSocket, $task);
-                if ($immediately) {
+				if ($immediately) {
 					$coroutine->schedule($task);
 				}
 			}
 		);
 	}
 
-    /**
-     * Wait on write stream/socket to be ready to be written to,
+	/**
+	 * Wait on write stream/socket to be ready to be written to,
 	 * optionally schedule current task to execute immediately/next for third party code integration.
-     *
-     * @param resource $streamSocket
-     * @param bool $immediately
-     */
+	 *
+	 * @param resource $streamSocket
+	 * @param bool $immediately
+	 */
 	public static function writeWait($streamSocket, bool $immediately = false)
 	{
 		return new Kernel(
-			function(TaskInterface $task, CoroutineInterface $coroutine) use ($streamSocket, $immediately) {
+			function (TaskInterface $task, CoroutineInterface $coroutine) use ($streamSocket, $immediately) {
 				$coroutine->addWriter($streamSocket, $task);
-                if ($immediately) {
+				if ($immediately) {
 					$coroutine->schedule($task);
 				}
 			}
 		);
 	}
 
-    /**
-     * Block/sleep for delay seconds.
-     * Suspends the calling task, allowing other tasks to run.
+	/**
+	 * Block/sleep for delay seconds.
+	 * Suspends the calling task, allowing other tasks to run.
 	 *
 	 * @see https://docs.python.org/3.7/library/asyncio-task.html#sleeping
 	 *
-     * @param float $delay
+	 * @param float $delay
 	 * @param mixed $result - If provided, it is returned to the caller when the coroutine complete
-     */
+	 */
 	public static function sleepFor(float $delay = 0.0, $result = null)
 	{
 		return new Kernel(
-			function(TaskInterface $task, CoroutineInterface $coroutine) use ($delay, $result) {
+			function (TaskInterface $task, CoroutineInterface $coroutine) use ($delay, $result) {
 				$coroutine->addTimeout(function () use ($task, $coroutine, $result) {
 					if (!empty($result))
 						$task->sendValue($result);
@@ -295,32 +295,32 @@ class Kernel
 	public static function awaitProcess($callable, $timeout = 300)
 	{
 		return new Kernel(
-			function(TaskInterface $task, CoroutineInterface $coroutine) use ($callable, $timeout) {
+			function (TaskInterface $task, CoroutineInterface $coroutine) use ($callable, $timeout) {
 				$task->parallelTask();
 				$task->setState('process');
 				$coroutine->createSubProcess($callable, $timeout)
-				->then(function($result) use ($task, $coroutine) {
-					$task->setState('completed');
-					$task->sendValue($result);
-					$coroutine->schedule($task);
-				})
-				->catch(function(\Exception $error) use ($task, $coroutine) {
-					$task->setState('erred');
-					$task->setException(new \RuntimeException($error->getMessage()));
-					$coroutine->schedule($task);
-				})
-				->timeout(function() use ($task, $coroutine, $timeout) {
-					$task->setState('cancelled');
-					$task->setException(new TimeoutError($timeout));
-					$coroutine->schedule($task);
-				});
+					->then(function ($result) use ($task, $coroutine) {
+						$task->setState('completed');
+						$task->sendValue($result);
+						$coroutine->schedule($task);
+					})
+					->catch(function (\Exception $error) use ($task, $coroutine) {
+						$task->setState('erred');
+						$task->setException(new \RuntimeException($error->getMessage()));
+						$coroutine->schedule($task);
+					})
+					->timeout(function () use ($task, $coroutine, $timeout) {
+						$task->setState('cancelled');
+						$task->setException(new TimeoutError($timeout));
+						$coroutine->schedule($task);
+					});
 			}
 		);
 	}
 
 	/**
 	 * Controls how the `gather()` function operates.
-     * `gather` will behave like **Promise** functions `All`, `Some`, `Any` in JavaScript.
+	 * `gather` will behave like **Promise** functions `All`, `Some`, `Any` in JavaScript.
 	 *
 	 * @param int $race - If set, initiate a competitive race between multiple tasks.
 	 * - When amount of tasks as completed, the `gather` will return with task results.
@@ -351,15 +351,15 @@ class Kernel
 	 * @param null|callable $onRaceAborted - for cleanup on tasks not to be used any longer
 	 */
 	public static function gatherController(
-        string $isCustomSate = '',
-        ?callable $onPreComplete = null,
-        ?callable $onProcessing = null,
-        ?callable $onCompleted = null,
-        ?callable $onError = null,
-        ?callable $onCancel = null,
-        ?callable $onUpdate = null,
-        ?callable $onRaceAborted = null): void
-	{
+		string $isCustomSate = '',
+		?callable $onPreComplete = null,
+		?callable $onProcessing = null,
+		?callable $onCompleted = null,
+		?callable $onError = null,
+		?callable $onCancel = null,
+		?callable $onUpdate = null,
+		?callable $onRaceAborted = null
+	): void {
 		self::$isCustomSate = $isCustomSate;
 		self::$onPreComplete = $onPreComplete;
 		self::$onProcessing = $onProcessing;
@@ -385,40 +385,40 @@ class Kernel
 	 * @param int|array $taskId
 	 * @return array
 	 */
-    public static function gather(...$taskId)
+	public static function gather(...$taskId)
 	{
 		return new Kernel(
-			function(TaskInterface $task, CoroutineInterface $coroutine) use ($taskId) {
+			function (TaskInterface $task, CoroutineInterface $coroutine) use ($taskId) {
 				if (!empty(self::$gatherResumer)) {
 					[$taskIdList, $count, $results, $taskList] = self::$gatherResumer;
-                } else {
+				} else {
 					$gatherCount = self::$gatherCount;
 					$gatherShouldError = self::$gatherShouldError;
-                    self::gatherOptions();
+					self::gatherOptions();
 
-                    $isCustomSate = self::$isCustomSate;
-                    $onPreComplete = self::$onPreComplete;
-                    $onProcessing = self::$onProcessing;
-                    $onCompleted = self::$onCompleted;
-                    $onError = self::$onError;
-                    $onCancel = self::$onCancel;
-                    $onUpdate = self::$onUpdate;
-                    $onRaceAborted = self::$onRaceAborted;
-                    self::gatherController();
+					$isCustomSate = self::$isCustomSate;
+					$onPreComplete = self::$onPreComplete;
+					$onProcessing = self::$onProcessing;
+					$onCompleted = self::$onCompleted;
+					$onError = self::$onError;
+					$onCancel = self::$onCancel;
+					$onUpdate = self::$onUpdate;
+					$onRaceAborted = self::$onRaceAborted;
+					self::gatherController();
 
 					$taskIdList = [];
-					$newIdList =(\is_array($taskId[0])) ? $taskId[0] : $taskId;
-					foreach($newIdList as $id => $value) {
-						if($value instanceof \Generator) {
+					$newIdList = (\is_array($taskId[0])) ? $taskId[0] : $taskId;
+					foreach ($newIdList as $id => $value) {
+						if ($value instanceof \Generator) {
 							$id = $coroutine->createTask($value);
 							$taskIdList[$id] = $id;
 						} elseif (\is_int($value)) {
-                            $taskIdList[$value] = $value;
-                        } else {
+							$taskIdList[$value] = $value;
+						} else {
 							// @codeCoverageIgnoreStart
-                            \panic("Invalid access, only array of integers, or generator objects allowed!");
+							\panic("Invalid access, only array of integers, or generator objects allowed!");
 							// @codeCoverageIgnoreEnd
-                        }
+						}
 					}
 
 					$results = [];
@@ -435,65 +435,65 @@ class Kernel
 					$taskList = $coroutine->taskList();
 
 					$completeList = $coroutine->completedList();
-                    $countComplete = \count($completeList);
-                    $gatherCompleteCount = 0;
+					$countComplete = \count($completeList);
+					$gatherCompleteCount = 0;
 
-                	// Check and handle tasks already completed before entering/executing gather().
+					// Check and handle tasks already completed before entering/executing gather().
 					if ($countComplete > 0) {
-						foreach($completeList as $id => $tasks) {
+						foreach ($completeList as $id => $tasks) {
 							if (isset($taskIdList[$id])) {
-                                if (\is_callable($onPreComplete)) {
+								if (\is_callable($onPreComplete)) {
 									// @codeCoverageIgnoreStart
-                                    $result = $onPreComplete($tasks, $id);
+									$result = $onPreComplete($tasks, $id);
 									// @codeCoverageIgnoreEnd
-                                } else {
-								    $result = $tasks->result();
-                                }
+								} else {
+									$result = $tasks->result();
+								}
 
 								$results[$id] = $result;
-                                $count--;
-                                $gatherCompleteCount++;
+								$count--;
+								$gatherCompleteCount++;
 								unset($taskIdList[$id]);
 
 								// Update running task list.
 								self::updateList($coroutine, $id, $completeList);
 
 								// end loop, if gather race count reached
-                                if ($gatherCompleteCount == $gatherCount)
-                                    break;
+								if ($gatherCompleteCount == $gatherCount)
+									break;
 							}
 						}
 					}
 				}
 
-                // Check and update base off gather race and completed count.
-                if ($gatherSet) {
-                    $subCount = ($gatherCount - $gatherCompleteCount);
-                    if ($gatherCompleteCount != $gatherCount) {
-                        $count = $subCount;
-                    } elseif ($gatherCompleteCount == $gatherCount) {
-                        $count = 0;
-                    }
-                }
+				// Check and update base off gather race and completed count.
+				if ($gatherSet) {
+					$subCount = ($gatherCount - $gatherCompleteCount);
+					if ($gatherCompleteCount != $gatherCount) {
+						$count = $subCount;
+					} elseif ($gatherCompleteCount == $gatherCount) {
+						$count = 0;
+					}
+				}
 
-                // Run and wait until race or count is reached.
+				// Run and wait until race or count is reached.
 				while ($count > 0) {
-					foreach($taskIdList as $id) {
+					foreach ($taskIdList as $id) {
 						if (isset($taskList[$id])) {
 							$tasks = $taskList[$id];
 
-                            // Handle if parallel task.
+							// Handle if parallel task.
 							if ($tasks->isParallel()) {
 								$completeList = $coroutine->completedList();
 								if (isset($completeList[$id])) {
 									$tasks = $completeList[$id];
-                                    if (\is_callable($onPreComplete)) {
+									if (\is_callable($onPreComplete)) {
 										// @codeCoverageIgnoreStart
 										$result = $onPreComplete($tasks, $id);
 										// @codeCoverageIgnoreEnd
-                                    } else {
-                                        $result = $tasks->result();
-                                    }
+									} else {
+										$result = $tasks->result();
+									}
 
 									$results[$id] = $result;
 									$count--;
@@ -506,17 +506,17 @@ class Kernel
 									}
 								}
 
-                            	// Handle if parallel task process not running, force run.
+								// Handle if parallel task process not running, force run.
 								if ($tasks->process()) {
 									$coroutine->execute();
-                                }
-                            // Handle if task not running/pending, force run.
+								}
+								// Handle if task not running/pending, force run.
 							} elseif ($tasks->isCustomState($isCustomSate) || $tasks->pending() || $tasks->rescheduled()) {
-                                if (\is_callable($onProcessing)) {
+								if (\is_callable($onProcessing)) {
 									// @codeCoverageIgnoreStart
 									$onProcessing($tasks, $coroutine);
 									// @codeCoverageIgnoreEnd
-                                } else {
+								} else {
 									if ($tasks->pending() && $tasks->isCustomState(true)) {
 										$tasks->customState();
 										$coroutine->schedule($tasks);
@@ -526,65 +526,65 @@ class Kernel
 
 									$coroutine->execute();
 								}
-							// Handle if task finished.
+								// Handle if task finished.
 							} elseif ($tasks->completed()) {
-                                if (\is_callable($onCompleted)) {
+								if (\is_callable($onCompleted)) {
 									// @codeCoverageIgnoreStart
 									$onCompleted($task,	$coroutine, $taskList, $id,	$count,	$results, $onUpdate, $gatherShouldError);
 									// @codeCoverageIgnoreEnd
-                                } else {
+								} else {
 									$results[$id] = $tasks->result();
 									$count--;
 									unset($taskList[$id]);
 
 									// Update running task list.
 									self::updateList($coroutine, $id);
-                                }
+								}
 
 								// end loop, if set and race count reached
 								if ($gatherSet) {
 									$subCount--;
 									if ($subCount == 0)
 										break;
-                                }
-                            // Handle if task erred or cancelled.
+								}
+								// Handle if task erred or cancelled.
 							} elseif ($tasks->erred() || $tasks->cancelled()) {
-                                if ($tasks->erred() && \is_callable($onError)) {
+								if ($tasks->erred() && \is_callable($onError)) {
 									// @codeCoverageIgnoreStart
-                                    $result = $onError($tasks, $id);
-                                } elseif ($tasks->cancelled() && \is_callable($onCancel)) {
-                                    $result = $onCancel($tasks, $id);
+									$result = $onError($tasks, $id);
+								} elseif ($tasks->cancelled() && \is_callable($onCancel)) {
+									$result = $onCancel($tasks, $id);
 									// @codeCoverageIgnoreEnd
-                                } else {
-                                    $result = $tasks->cancelled() ? new CancelledError() : $tasks->exception();
-                                }
+								} else {
+									$result = $tasks->cancelled() ? new CancelledError() : $tasks->exception();
+								}
 
-                                $exception = $result;
+								$exception = $result;
 								$count--;
 								unset($taskList[$id]);
 
-                                // Update running task list.
-                                self::updateList($coroutine, $id, $taskList, $onUpdate, false, true);
+								// Update running task list.
+								self::updateList($coroutine, $id, $taskList, $onUpdate, false, true);
 
-                                // Check and propagate/schedule the exception.
-                                if ($gatherShouldError) {
-                                    self::$gatherResumer = [$taskIdList, $count, $results, $taskList];
-                                    $task->setException($exception);
-                                    $coroutine->schedule($tasks);
-                                }
-                            }
+								// Check and propagate/schedule the exception.
+								if ($gatherShouldError) {
+									self::$gatherResumer = [$taskIdList, $count, $results, $taskList];
+									$task->setException($exception);
+									$coroutine->schedule($tasks);
+								}
+							}
 
-                            $result = null;
+							$result = null;
 						}
 					}
 				}
 
-                // Check for, update and abort/close any responses not part of request count.
-                if ($gatherSet && \is_callable($onRaceAborted)) {
+				// Check for, update and abort/close any responses not part of request count.
+				if ($gatherSet && \is_callable($onRaceAborted)) {
 					// @codeCoverageIgnoreStart
-                    $onRaceAborted($coroutine, $results, $newIdList, $onUpdate);
+					$onRaceAborted($coroutine, $results, $newIdList, $onUpdate);
 					// @codeCoverageIgnoreEnd
-                }
+				}
 
 				self::$gatherResumer = null;
 				$task->sendValue($results);
@@ -593,50 +593,50 @@ class Kernel
 		);
 	}
 
-    /**
-     * Update current/running task list, optionally call extra custom update function.
-     */
+	/**
+	 * Update current/running task list, optionally call extra custom update function.
+	 */
 	public static function updateList(
-        CoroutineInterface $coroutine,
-        int $taskId,
-        array $completeList = [],
-        ?callable $onUpdate = null,
-        bool $cancel = false,
-        bool $forceUpdate = false): void
-	{
-        if (isset($completeList[$taskId]) && \is_callable($onUpdate)) {
+		CoroutineInterface $coroutine,
+		int $taskId,
+		array $completeList = [],
+		?callable $onUpdate = null,
+		bool $cancel = false,
+		bool $forceUpdate = false
+	): void {
+		if (isset($completeList[$taskId]) && \is_callable($onUpdate)) {
 			// @codeCoverageIgnoreStart
-            $onUpdate($completeList[$taskId]);
-        }
+			$onUpdate($completeList[$taskId]);
+		}
 
-        if ($cancel) {
-            $coroutine->cancelTask($taskId);
+		if ($cancel) {
+			$coroutine->cancelTask($taskId);
 			// @codeCoverageIgnoreEnd
-        } else {
-            if (empty($completeList) || $forceUpdate) {
+		} else {
+			if (empty($completeList) || $forceUpdate) {
 				$completeList = $coroutine->completedList();
 			}
 
-            if (isset($completeList[$taskId])) {
+			if (isset($completeList[$taskId])) {
 				unset($completeList[$taskId]);
 			}
 
-            $coroutine->updateCompleted($completeList);
+			$coroutine->updateCompleted($completeList);
 		}
 	}
 
-    /**
-     * Wait for the callable to complete with a timeout.
-     *
+	/**
+	 * Wait for the callable to complete with a timeout.
+	 *
 	 * @see https://docs.python.org/3.7/library/asyncio-task.html#timeouts
 	 *
 	 * @param callable $callable
-     * @param float $timeout
-     */
+	 * @param float $timeout
+	 */
 	public static function waitFor($callable, float $timeout = null)
 	{
 		return new Kernel(
-			function(TaskInterface $task, CoroutineInterface $coroutine) use ($callable, $timeout) {
+			function (TaskInterface $task, CoroutineInterface $coroutine) use ($callable, $timeout) {
 				if ($callable instanceof \Generator) {
 					$taskId = $coroutine->createTask($callable);
 				} else {
@@ -658,7 +658,6 @@ class Kernel
 						}
 						$coroutine->schedule($task);
 					}
-
 				}, $timeout);
 			}
 		);
@@ -667,9 +666,9 @@ class Kernel
 	/**
 	 * Makes an resolvable function from label name that's callable with `await`
 	 * The passed in `function/callable/task` is wrapped to be `awaitAble`
-     *
+	 *
 	 * This will create closure function in global namespace with supplied name as variable
-     *
+	 *
 	 * @param string $labelFunction
 	 * @param Generator|callable $asyncFunction
 	 */
@@ -689,8 +688,8 @@ class Kernel
 	 *
 	 * @param Generator|callable $asyncLabel
 	 * @param mixed $args - if `generator`, $args can hold `customState`, and `customData`
-     * - if `customData` is object, and has `taskId` method, store the $task id.
-     * - for third party code integration.
+	 * - if `customData` is object, and has `taskPid` method, store the $task id.
+	 * - for third party code integration.
 	 *
 	 * @return int $task id
 	 */
@@ -704,25 +703,25 @@ class Kernel
 
 		if ($isLabel && (${$asyncLabel}() instanceof \Generator)) {
 			return Kernel::createTask(${$asyncLabel}(...$args));
-        } else {
+		} else {
 			return new Kernel(
-				function(TaskInterface $task, CoroutineInterface $coroutine) use ($asyncLabel, $args) {
+				function (TaskInterface $task, CoroutineInterface $coroutine) use ($asyncLabel, $args) {
 					if ($asyncLabel instanceof \Generator) {
 						$tid = $coroutine->createTask($asyncLabel);
 						if (!empty($args)) {
-                            $taskList = $coroutine->taskList();
-                            if (($args[0] === 'true') || ($args[0] === true))
-							    $taskList[$tid]->customState(true);
-                            else
-                                $taskList[$tid]->customState($args[0]);
+							$taskList = $coroutine->taskList();
+							if (($args[0] === 'true') || ($args[0] === true))
+								$taskList[$tid]->customState(true);
+							else
+								$taskList[$tid]->customState($args[0]);
 
-                            if (isset($args[1])) {
-                                $object = $args[1];
-                                if (\is_object($object) && \method_exists($object, 'taskId'))
-                                    $taskList[$tid]->customData($object->taskId($tid));
-                                else
-                                    $taskList[$tid]->customData($object);
-                            }
+							if (isset($args[1])) {
+								$object = $args[1];
+								if (\is_object($object) && \method_exists($object, 'taskPid'))
+									$taskList[$tid]->customData($object->taskPid($tid));
+								else
+									$taskList[$tid]->customData($object);
+							}
 						}
 
 						$task->sendValue($tid);
@@ -732,7 +731,7 @@ class Kernel
 
 					$coroutine->schedule($task);
 				}
-            );
-        }
+			);
+		}
 	}
 }

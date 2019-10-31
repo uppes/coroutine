@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 use Async\Coroutine\Defer;
 use Async\Coroutine\Kernel;
@@ -12,7 +12,7 @@ use Async\Coroutine\ParallelInterface;
 use Async\Processor\ProcessInterface;
 use Async\Coroutine\Exceptions\Panic;
 
-if (! \function_exists('coroutine_run')) {
+if (!\function_exists('coroutine_run')) {
 	\define('MILLISECOND', 0.001);
 	\define('EOL', \PHP_EOL);
 	\define('DS', \DIRECTORY_SEPARATOR);
@@ -20,7 +20,7 @@ if (! \function_exists('coroutine_run')) {
 	/**
 	 * Makes an resolvable function from label name that's callable with `await`
 	 * The passed in `function/callable/task` is wrapped to be `awaitAble`
-     *
+	 *
 	 * This will create closure function in global namespace with supplied name as variable
 	 *
 	 * @param string $labelFunction
@@ -33,19 +33,19 @@ if (! \function_exists('coroutine_run')) {
 
 	/**
 	 * Add/schedule an `yield`-ing `function/callable/task` for execution.
-     * Will immediately return an `int`, and continue to the next instruction.
+	 * Will immediately return an `int`, and continue to the next instruction.
 	 *
-     * If used in conjunction with `async()` then `$awaitableFunction` is an variable that will be placed
-     * in global namespace, your local calling function will need use `global` keyword with same variable
-     * in local namespace also.
-     *
+	 * If used in conjunction with `async()` then `$awaitableFunction` is an variable that will be placed
+	 * in global namespace, your local calling function will need use `global` keyword with same variable
+	 * in local namespace also.
+	 *
 	 * @see https://docs.python.org/3.7/library/asyncio-task.html#asyncio.create_task
 	 *
 	 * - This function needs to be prefixed with `yield`
 	 *
 	 * @param Generator|callable $awaitableFunction
 	 * @param mixed $args - if `generator`, $args can hold `customState`, and `customData`
-     * - if `customData` is object, and has `taskId` method, store the $task id.
+	 * - if `customData` is object, and has `taskPid` method, store the $task id.
 	 *
 	 * @return int $task id
 	 */
@@ -56,14 +56,14 @@ if (! \function_exists('coroutine_run')) {
 
 	/**
 	 * Controls how the `gather()` function operates.
-     * `gather` will behave like **Promise** functions `All`, `Some`, `Any` in JavaScript.
+	 * `gather` will behave like **Promise** functions `All`, `Some`, `Any` in JavaScript.
 	 *
 	 * @param int $race - If set, initiate a competitive race between multiple tasks.
 	 * - When amount of tasks as completed, the `gather` will return with task results.
 	 * - When `0` (default), will wait for all to complete.
 	 * @param bool $exception - If `true` (default), the first raised exception is immediately
 	 *  propagated to the task that awaits on gather().
-	 * Other awaitables in the aws sequence won’t be cancelled and will continue to run.
+	 * Other awaitables in the aws sequence wonâ€™t be cancelled and will continue to run.
 	 * - If `false`, exceptions are treated the same as successful results, and aggregated in the result list.
 	 * @throws \LengthException - If the number of tasks less than the desired $race.
 	 *
@@ -81,7 +81,7 @@ if (! \function_exists('coroutine_run')) {
 	 * The order of result values corresponds to the order of awaitables in taskId.
 	 *
 	 * The first raised exception is immediately propagated to the task that awaits on gather().
-	 * Other awaitables in the sequence won’t be cancelled and will continue to run.
+	 * Other awaitables in the sequence wonâ€™t be cancelled and will continue to run.
 	 *
 	 * @see https://docs.python.org/3.7/library/asyncio-task.html#asyncio.gather
 	 *
@@ -115,7 +115,7 @@ if (! \function_exists('coroutine_run')) {
 	/**
 	 * Wrap the callable with `yield`, this makes sure every callable is a generator function,
 	 * and will switch at least once without actually executing.
- 	 * Then function is used by `await` not really called directly.
+	 * Then function is used by `await` not really called directly.
 	 *
 	 * @see https://docs.python.org/3.7/library/asyncio-task.html#awaitables
 	 *
@@ -161,7 +161,7 @@ if (! \function_exists('coroutine_run')) {
 	 * - This function needs to be prefixed with `yield`
 	 *
 	 * @param Channel $channel
-   	 * @param mixed $message
+	 * @param mixed $message
 	 * @param int $taskId
 	 */
 	function sender(Channel $channel, $message = null, int $taskId = 0)
@@ -191,7 +191,7 @@ if (! \function_exists('coroutine_run')) {
 	 *
 	 * @param callable $goFunction
 	 * @param mixed $args - if `generator`, $args can hold `customState`, and `customData`
-     * - if `customData` is object, and has `taskId` method, store the $task id.
+	 * - if `customData` is object, and has `taskPid` method, store the $task id.
 	 *
 	 * @return int task id
 	 */
@@ -238,10 +238,10 @@ if (! \function_exists('coroutine_run')) {
 		return Kernel::taskId();
 	}
 
-    /**
-     * Wait on read stream socket to be ready read from,
+	/**
+	 * Wait on read stream socket to be ready read from,
 	 * optionally schedule current task to execute immediately/next.
-     *
+	 *
 	 * - This function needs to be prefixed with `yield`
 	 */
 	function read_wait($stream, bool $immediately = false)
@@ -250,9 +250,9 @@ if (! \function_exists('coroutine_run')) {
 	}
 
 	/**
-     * Wait on write stream socket to be ready to be written to,
+	 * Wait on write stream socket to be ready to be written to,
 	 * optionally schedule current task to execute immediately/next.
-     *
+	 *
 	 * - This function needs to be prefixed with `yield`
 	 */
 	function write_wait($stream, bool $immediately = false)
@@ -260,39 +260,39 @@ if (! \function_exists('coroutine_run')) {
 		return Kernel::writeWait($stream, $immediately);
 	}
 
-    /**
-     * Wait on keyboard input.
-     * Will not block other task on `Linux`, will continue other tasks until `enter` key is pressed,
-     * Will block on Windows, once an key is typed/pressed, will continue other tasks `ONLY` if no key is pressed.
-     * - This function needs to be prefixed with `yield`
-     */
+	/**
+	 * Wait on keyboard input.
+	 * Will not block other task on `Linux`, will continue other tasks until `enter` key is pressed,
+	 * Will block on Windows, once an key is typed/pressed, will continue other tasks `ONLY` if no key is pressed.
+	 * - This function needs to be prefixed with `yield`
+	 */
 	function input_wait(int $size = 256, bool $error = false)
 	{
 		return Coroutine::input($size, $error);
 	}
 
-    function is_type($var, string $comparing = null)
-    {
-        $checks = [
-            'is_callable' => 'callable',
-            'is_string' => 'string',
-            'is_integer' => 'int',
-            'is_float' => 'float',
-            'is_null' => 'null',
-            'is_bool' => 'bool',
-            'is_array' => 'array',
-            'is_object' => 'object',
-            'is_resource' => 'resource',
-        ];
+	function is_type($var, string $comparing = null)
+	{
+		$checks = [
+			'is_callable' => 'callable',
+			'is_string' => 'string',
+			'is_integer' => 'int',
+			'is_float' => 'float',
+			'is_null' => 'null',
+			'is_bool' => 'bool',
+			'is_array' => 'array',
+			'is_object' => 'object',
+			'is_resource' => 'resource',
+		];
 
-        foreach ($checks as $func => $val) {
-            if ($func($var)) {
-                return (empty($comparing)) ? $val : ($comparing == $val);
-            }
-        }
+		foreach ($checks as $func => $val) {
+			if ($func($var)) {
+				return (empty($comparing)) ? $val : ($comparing == $val);
+			}
+		}
 
-        return 'unknown';
-    }
+		return 'unknown';
+	}
 
 	function coroutine_instance()
 	{
@@ -303,17 +303,17 @@ if (! \function_exists('coroutine_run')) {
 	{
 		global $__coroutine__;
 		$__coroutine__ = null;
-        unset($GLOBALS['__coroutine__']);
+		unset($GLOBALS['__coroutine__']);
 	}
 
 	function coroutine_create(\Generator $coroutine = null)
 	{
 		global $__coroutine__;
 
-		if (! $__coroutine__ instanceof CoroutineInterface)
+		if (!$__coroutine__ instanceof CoroutineInterface)
 			$__coroutine__ = new Coroutine();
 
-		if (! empty($coroutine))
+		if (!empty($coroutine))
 			$__coroutine__->createTask($coroutine);
 
 		return $__coroutine__;
@@ -338,55 +338,55 @@ if (! \function_exists('coroutine_run')) {
 		}
 	}
 
-    /**
-     * Add something/callable to `coroutine` process pool
+	/**
+	 * Add something/callable to `coroutine` process pool
 	 *
-     * @param callable $callable
-     * @param int $timeout
-     *
-     * @return ProcessInterface
-     */
+	 * @param callable $callable
+	 * @param int $timeout
+	 *
+	 * @return ProcessInterface
+	 */
 	function parallel($callable, int $timeout = 300): ProcessInterface
-    {
+	{
 		$coroutine = \coroutine_instance();
 
 		if ($coroutine instanceof CoroutineInterface)
 			return $coroutine->createSubProcess($callable, $timeout);
 	}
 
-    /**
-     * Get/create process worker pool of an parallel instance.
+	/**
+	 * Get/create process worker pool of an parallel instance.
 	 *
-     * @return ProcessInterface
-     */
-    function parallel_instance(): ParallelInterface
-    {
+	 * @return ProcessInterface
+	 */
+	function parallel_instance(): ParallelInterface
+	{
 		$coroutine = \coroutine_instance();
 
 		if ($coroutine instanceof CoroutineInterface)
 			return $coroutine->parallelInstance();
 	}
 
-    /**
-     * Add something/callable to parallel instance process pool.
+	/**
+	 * Add something/callable to parallel instance process pool.
 	 *
-     * @param callable $somethingToRun
-     * @param int $timeout
-     *
-     * @return ProcessInterface
-     */
-    function parallel_add($somethingToRun, int $timeout = 300): ProcessInterface
-    {
+	 * @param callable $somethingToRun
+	 * @param int $timeout
+	 *
+	 * @return ProcessInterface
+	 */
+	function parallel_add($somethingToRun, int $timeout = 300): ProcessInterface
+	{
 		return Processor::create($somethingToRun, $timeout);
 	}
 
-    /**
-     * Execute process pool, wait for results. Will do other stuff come back later.
+	/**
+	 * Execute process pool, wait for results. Will do other stuff come back later.
 	 *
-     * @return array
-     */
-    function parallel_wait(): ?array
-    {
+	 * @return array
+	 */
+	function parallel_wait(): ?array
+	{
 		$pool = \parallel_instance();
 
 		if ($pool instanceof ParallelInterface)
@@ -395,19 +395,19 @@ if (! \function_exists('coroutine_run')) {
 
 	/**
 	 * Modeled as in `Go` Language. The behavior of defer statements is straightforward and predictable.
-     * There are three simple rules:
-     * 1. *A deferred function's arguments are evaluated when the defer statement is evaluated.*
-     * 2. *Deferred function calls are executed in Last In First Out order after the* surrounding function returns.
-     * 3. *Deferred functions can`t modify return values when is type, but can modify content of reference to array or object.*
-     *
-     * PHP Limitations:
-     * - In this *PHP* defer implementation,
-     *  you cant modify returned value. You can modify only content of returned reference.
-     * - You must always set first parameter in `defer` function,
-     *  the parameter MUST HAVE same variable name as other `defer`,
-     *  and this variable MUST NOT exist anywhere in local scope.
-     * - You can`t pass function declared in local scope by name to *defer*.
-     *
+	 * There are three simple rules:
+	 * 1. *A deferred function's arguments are evaluated when the defer statement is evaluated.*
+	 * 2. *Deferred function calls are executed in Last In First Out order after the* surrounding function returns.
+	 * 3. *Deferred functions can`t modify return values when is type, but can modify content of reference to array or object.*
+	 *
+	 * PHP Limitations:
+	 * - In this *PHP* defer implementation,
+	 *  you cant modify returned value. You can modify only content of returned reference.
+	 * - You must always set first parameter in `defer` function,
+	 *  the parameter MUST HAVE same variable name as other `defer`,
+	 *  and this variable MUST NOT exist anywhere in local scope.
+	 * - You can`t pass function declared in local scope by name to *defer*.
+	 *
 	 * Modified from https://github.com/tito10047/php-defer
 	 *
 	 * @see https://golang.org/doc/effective_go.html#defer
@@ -424,10 +424,10 @@ if (! \function_exists('coroutine_run')) {
 		\array_shift($args);
 		\array_shift($args);
 		Defer::deferring($previous, $callback, $args);
-    }
+	}
 
 	/**
-     * Modeled as in `Go` Language. Regains control of a panicking `task`.
+	 * Modeled as in `Go` Language. Regains control of a panicking `task`.
 	 *
 	 * Recover is only useful inside `defer()` functions. During normal execution, a call to recover will return nil
 	 * and have no other effect. If the current `task` is panicking, a call to recover will capture the value given
@@ -442,14 +442,14 @@ if (! \function_exists('coroutine_run')) {
 		$args = \func_get_args();
 		\array_shift($args);
 		\array_shift($args);
-        Defer::recover($previous, $callback, $args);
+		Defer::recover($previous, $callback, $args);
 	}
 
 	/**
-     * Modeled as in `Go` Language.
-     *
+	 * Modeled as in `Go` Language.
+	 *
 	 * An general purpose function for throwing an Coroutine `Exception`,
-     * or some abnormal condition needing to keep an `Task` stack trace.
+	 * or some abnormal condition needing to keep an `Task` stack trace.
 	 */
 	function panic($message = '', $code = 0, \Throwable $previous = null)
 	{
@@ -457,8 +457,8 @@ if (! \function_exists('coroutine_run')) {
 	}
 
 	/**
-     * An PHP Functional Programming Primitive.
-     *
+	 * An PHP Functional Programming Primitive.
+	 *
 	 * Return a curryied version of the given function. You can decide if you also
 	 * want to curry optional parameters or not.
 	 *
@@ -484,8 +484,7 @@ if (! \function_exists('coroutine_run')) {
 			}
 		}
 		$count = $required ?
-			$reflection->getNumberOfRequiredParameters() :
-			$reflection->getNumberOfParameters();
+			$reflection->getNumberOfRequiredParameters() : $reflection->getNumberOfParameters();
 		return curry_n($count, $function);
 	}
 

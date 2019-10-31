@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Async\Coroutine;
 
@@ -29,7 +29,8 @@ class Parallel implements ArrayAccess, ParallelInterface
     public function __construct(CoroutineInterface $coroutine = null)
     {
         $this->coroutine = empty($coroutine) ? \coroutine_instance() : $coroutine;
-        $this->processor = $this->coroutine->processInstance([$this, 'markAsTimedOut'],
+        $this->processor = $this->coroutine->processInstance(
+            [$this, 'markAsTimedOut'],
             [$this, 'markAsFinished'],
             [$this, 'markAsFailed']
         );
@@ -79,11 +80,11 @@ class Parallel implements ArrayAccess, ParallelInterface
      */
     public function add($process, int $timeout = 300): ProcessInterface
     {
-        if (! is_callable($process) && ! $process instanceof ProcessInterface) {
+        if (!is_callable($process) && !$process instanceof ProcessInterface) {
             throw new InvalidArgumentException('The process passed to Parallel::add should be callable.');
         }
 
-        if (! $process instanceof ProcessInterface) {
+        if (!$process instanceof ProcessInterface) {
             $process = Processor::create($process, $timeout);
         }
 
@@ -102,7 +103,7 @@ class Parallel implements ArrayAccess, ParallelInterface
 
         $process = \array_shift($this->queue);
 
-        if (! $process) {
+        if (!$process) {
             return;
         }
 

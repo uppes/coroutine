@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Async\Coroutine;
 
@@ -54,7 +54,7 @@ class Coroutine implements CoroutineInterface
     protected $parallel = null;
 
     public function __construct()
-	{
+    {
         global $__coroutine__;
         $__coroutine__ = $this;
 
@@ -80,7 +80,7 @@ class Coroutine implements CoroutineInterface
 
     /**
      * Add callable for parallel processing, in an separate php process
-	 *
+     *
      * @see https://docs.python.org/3.8/library/asyncio-subprocess.html#creating-subprocesses
      *
      * @param callable $callable
@@ -88,21 +88,21 @@ class Coroutine implements CoroutineInterface
      *
      * @return ProcessInterface
      */
-	public function createSubProcess($callable, int $timeout = 300): ProcessInterface
+    public function createSubProcess($callable, int $timeout = 300): ProcessInterface
     {
-		return $this->parallel->add($callable, $timeout);
+        return $this->parallel->add($callable, $timeout);
     }
 
     public function isPcntl(): bool
     {
         $this->pcntl = \extension_loaded('pcntl') && \function_exists('pcntl_async_signals')
-        && \function_exists('posix_kill');
+            && \function_exists('posix_kill');
 
         return $this->pcntl;
     }
 
     public function createTask(\Generator $coroutine)
-	{
+    {
         $tid = ++$this->maxTaskId;
         $task = new Task($tid, $coroutine);
         $this->taskMap[$tid] = $task;
@@ -111,16 +111,16 @@ class Coroutine implements CoroutineInterface
     }
 
     public function schedule(TaskInterface $task)
-	{
-		$this->taskQueue->enqueue($task);
+    {
+        $this->taskQueue->enqueue($task);
     }
 
     public function shutdown()
-	{
+    {
         if (!empty($this->taskMap)) {
             $map = \array_reverse($this->taskMap, true);
             $keys = \array_keys($map);
-            foreach($keys as $id) {
+            foreach ($keys as $id) {
                 if ($id == 1)
                     break;
                 $this->cancelTask((int) $id);
@@ -129,7 +129,7 @@ class Coroutine implements CoroutineInterface
     }
 
     public function cancelTask(int $tid, $customState = null)
-	{
+    {
         if (!isset($this->taskMap[$tid])) {
             return false;
         }
@@ -156,7 +156,7 @@ class Coroutine implements CoroutineInterface
     }
 
     public function taskList()
-	{
+    {
         if (!isset($this->taskMap)) {
             return null;
         }
@@ -165,7 +165,7 @@ class Coroutine implements CoroutineInterface
     }
 
     public function completedList()
-	{
+    {
         if (!isset($this->completedMap)) {
             return null;
         }
@@ -174,55 +174,55 @@ class Coroutine implements CoroutineInterface
     }
 
     public function updateCompleted($taskMap = [])
-	{
+    {
         $this->completedMap = $taskMap;
     }
 
     public function run()
-	{
+    {
         $this->createTask($this->ioWaiting());
-		return $this->execute();
+        return $this->execute();
     }
 
     public function execute($useReturn = false)
-	{
-		while (!$this->taskQueue->isEmpty()) {
-			$task = $this->taskQueue->dequeue();
+    {
+        while (!$this->taskQueue->isEmpty()) {
+            $task = $this->taskQueue->dequeue();
             $task->setState('running');
             $task->cyclesAdd();
-			$value = $task->run();
+            $value = $task->run();
 
-			if ($value instanceof Kernel) {
-				try {
-					$value($task, $this);
-				} catch (\Async\Coroutine\Exceptions\CancelledError $e) {
+            if ($value instanceof Kernel) {
+                try {
+                    $value($task, $this);
+                } catch (\Async\Coroutine\Exceptions\CancelledError $e) {
                     $task->clearResult();
                     $task->setState('cancelled');
-					$task->setException($e);
-					$this->schedule($task);
-				} catch (\Exception $e) {
+                    $task->setException($e);
+                    $this->schedule($task);
+                } catch (\Exception $e) {
                     $task->clearResult();
                     $task->setState('erred');
-					$task->setException($e);
-					$this->schedule($task);
+                    $task->setException($e);
+                    $this->schedule($task);
                 }
-				continue;
-			}
+                continue;
+            }
 
-			if ($task->isFinished()) {
+            if ($task->isFinished()) {
                 $task->setState('completed');
                 $id = $task->taskId();
                 $this->completedMap[$id] = $task;
-				unset($this->taskMap[$id]);
-			} else {
+                unset($this->taskMap[$id]);
+            } else {
                 $task->setState('rescheduled');
-				$this->schedule($task);
+                $this->schedule($task);
             }
 
             if ($useReturn) {
                 return;
             }
-		}
+        }
     }
 
     /**
@@ -236,7 +236,7 @@ class Coroutine implements CoroutineInterface
         while (($timer = \array_pop($this->timers)) && $timer[0] < $now) {
             if ($timer[1] instanceof TaskInterface) {
                 $this->schedule($timer[1]);
-            }  elseif ($timer[1]() instanceof \Generator) {
+            } elseif ($timer[1]() instanceof \Generator) {
                 $this->createTask($timer[1]());
             }
         }
@@ -250,9 +250,10 @@ class Coroutine implements CoroutineInterface
     }
 
     protected function ioWaiting()
-	{
+    {
         while (true) {
-            if ($this->taskQueue->isEmpty()
+            if (
+                $this->taskQueue->isEmpty()
                 && empty($this->waitingForRead)
                 && empty($this->waitingForWrite)
                 && empty($this->timers)
@@ -267,10 +268,10 @@ class Coroutine implements CoroutineInterface
                 if (\is_numeric($nextTimeout))
                     // Wait until the next Timeout should trigger.
                     $streamWait = $nextTimeout * 1000000;
-                elseif (! $this->taskQueue->isEmpty())
+                elseif (!$this->taskQueue->isEmpty())
                     // There's a pending 'createTask'. Don't wait.
                     $streamWait = 0;
-                elseif (! $this->process->isEmpty())
+                elseif (!$this->process->isEmpty())
                     // There's a running 'process', wait some before rechecking.
                     $streamWait = $this->process->sleepingTime();
 
@@ -301,8 +302,8 @@ class Coroutine implements CoroutineInterface
             $wSocks,
             $eSocks,
             (null === $timeout) ? null : 0,
-            $timeout ? (int) ($timeout * (($timeout === null) ? 1000000 : 1)) : 0)
-        ) {
+            $timeout ? (int) ($timeout * (($timeout === null) ? 1000000 : 1)) : 0
+        )) {
             return;
         }
 
@@ -438,25 +439,25 @@ class Coroutine implements CoroutineInterface
         $intervalId[1] = false;
     }
 
-	public static function value($value)
-	{
-		return new ReturnValueCoroutine($value);
+    public static function value($value)
+    {
+        return new ReturnValueCoroutine($value);
     }
 
     /**
      * Creates an object instance of the value which will signal
-     * `Coroutine::create` that it’s a return value.
+     * `Coroutine::create` that itÃ¢â‚¬â„¢s a return value.
      *
      * @param mixed $value
      * @return PlainValueCoroutine
      */
-	public static function plain($value)
-	{
-		return new PlainValueCoroutine($value);
+    public static function plain($value)
+    {
+        return new PlainValueCoroutine($value);
     }
 
     public static function input(int $size = 256, bool $error = false)
-	{
+    {
         //Check on STDIN stream
         $blocking = \stream_set_blocking(\STDIN, false);
         if ($error && !$blocking) {
@@ -467,7 +468,7 @@ class Coroutine implements CoroutineInterface
         $windows7 = \strpos(\php_uname('v'), 'Windows 7') !== false;
         // kinda of workaround to allow non blocking under Windows 10, if no key is typed, will block after key press
         if (!$blocking) {
-            while(true) {
+            while (true) {
                 $tell = \ftell(\STDIN);
                 if (\is_int($tell) || $windows7)
                     break;
@@ -476,65 +477,65 @@ class Coroutine implements CoroutineInterface
             }
         }
 
-		return \trim(\stream_get_line(\STDIN, $size, \EOL));
+        return \trim(\stream_get_line(\STDIN, $size, \EOL));
     }
 
-	public static function create(\Generator $gen)
-	{
-		$stack = new \SplStack;
-		$exception = null;
+    public static function create(\Generator $gen)
+    {
+        $stack = new \SplStack;
+        $exception = null;
 
-		for (;;) {
-			try {
-				if ($exception) {
-					$gen->throw($exception);
-					$exception = null;
-					continue;
-				}
+        for (;;) {
+            try {
+                if ($exception) {
+                    $gen->throw($exception);
+                    $exception = null;
+                    continue;
+                }
 
-				$value = $gen->current();
-				if ($value instanceof \Generator) {
-					$stack->push($gen);
-					$gen = $value;
-					continue;
-				}
+                $value = $gen->current();
+                if ($value instanceof \Generator) {
+                    $stack->push($gen);
+                    $gen = $value;
+                    continue;
+                }
 
-				$isReturnValue = $value instanceof ReturnValueCoroutine;
-				if (!$gen->valid() || $isReturnValue) {
-					if ($stack->isEmpty()) {
-						return;
-					}
+                $isReturnValue = $value instanceof ReturnValueCoroutine;
+                if (!$gen->valid() || $isReturnValue) {
+                    if ($stack->isEmpty()) {
+                        return;
+                    }
 
                     $return = null;
                     if (!$gen->valid() && !$isReturnValue) {
                         $return = $gen->getReturn();
                     }
 
-					$gen = $stack->pop();
-					$gen->send($isReturnValue ? $value->getValue() : $return);
-					continue;
-				}
+                    $gen = $stack->pop();
+                    $gen->send($isReturnValue ? $value->getValue() : $return);
+                    continue;
+                }
 
-				if ($value instanceof PlainValueCoroutine) {
-					$value = $value->getValue();
-				}
+                if ($value instanceof PlainValueCoroutine) {
+                    $value = $value->getValue();
+                }
 
-				try {
-					$sendValue = (yield $gen->key() => $value);
-				} catch (\Exception $e) {
-					$gen->throw($e);
-					continue;
-				}
+                try {
+                    $sendValue = (yield $gen->key() => $value);
+                } catch (\Exception $e) {
+                    $gen->throw($e);
+                    continue;
+                }
 
-				$gen->send($sendValue);
-			} catch (\Exception $e) {
-				if ($stack->isEmpty()) {
-					throw $e;
-				}
+                $gen->send($sendValue);
+            } catch (\Exception $e) {
+                if ($stack->isEmpty()) {
+                    throw $e;
+                }
 
-				$gen = $stack->pop();
-				$exception = $e;
-			}
-		}
-	}
+                $gen = $stack->pop();
+                $exception = $e;
+            }
+        }
+    }
 }

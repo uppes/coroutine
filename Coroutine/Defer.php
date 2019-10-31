@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Async\Coroutine;
 
@@ -28,7 +28,7 @@ class Defer
 		if ($recover) {
 			self::$isRecoverable = true;
 			self::$recoverable = $callback;
-			self::$recoverableArgs= $args;
+			self::$recoverableArgs = $args;
 		} else {
 			$this->callback = $callback;
 			$this->args = $args;
@@ -36,7 +36,7 @@ class Defer
 
 		if ($prev instanceof self) {
 			if ($prev->root == null) {
-                $prev->root = $prev;
+				$prev->root = $prev;
 			}
 
 			$prev->root->prev[] = $prev;
@@ -63,51 +63,51 @@ class Defer
 			throw new \Exception("this is not callable");
 		}
 
-        $previous = new self($previous, $callback, $args, $recover);
-    }
+		$previous = new self($previous, $callback, $args, $recover);
+	}
 
 	public static function recover(&$previous, $callback, $args = null)
 	{
-        $previous = self::deferring($previous, $callback, $args, true);
+		$previous = self::deferring($previous, $callback, $args, true);
 	}
 
 	public function __destruct()
 	{
-        if ($this->destructed) {
-            return;
+		if ($this->destructed) {
+			return;
 		}
 		$this->destructed = true;
 
 		$errorCatcher = null;
-        try {
+		try {
 			if (\is_callable($this->callback))
 				\call_user_func_array($this->callback, $this->args);
-        } catch (\Exception $e) {
+		} catch (\Exception $e) {
 			if (self::$isRecoverable)
 				\call_user_func_array(self::$recoverable, self::$recoverableArgs);
 			else
 				$errorCatcher = $e;
 		}
 
-        if ($this->root != null) {
-            for ($i = \count($this->root->prev) - 1; $i >= 0; $i--) {
-                $deferred = $this->root->prev[$i];
-                $deferred->destructed = true;
-                try {
+		if ($this->root != null) {
+			for ($i = \count($this->root->prev) - 1; $i >= 0; $i--) {
+				$deferred = $this->root->prev[$i];
+				$deferred->destructed = true;
+				try {
 					if (\is_callable($this->callback))
 						\call_user_func_array($deferred->callback, $deferred->args);
-                } catch (\Exception $e) {
+				} catch (\Exception $e) {
 					if (self::$isRecoverable)
 						\call_user_func_array(self::$recoverable, self::$recoverableArgs);
 					else
 						$errorCatcher = $e;
 				}
-                $this->root->prev[$i] = null;
-            }
-        }
+				$this->root->prev[$i] = null;
+			}
+		}
 
 		if (!self::$isRecoverable && ($errorCatcher != null)) {
-            throw $errorCatcher;
-        }
+			throw $errorCatcher;
+		}
 	}
 }

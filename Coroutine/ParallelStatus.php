@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Async\Coroutine;
 
@@ -38,19 +38,19 @@ class ParallelStatus
         $timeouts = $this->parallelPool->getTimeouts();
 
         return
-            'queue: '.\count($queue)
-            .' - finished: '.\count($finished)
-            .' - failed: '.\count($failed)
-            .' - timeout: '.\count($timeouts);
+            'queue: ' . \count($queue)
+            . ' - finished: ' . \count($finished)
+            . ' - failed: ' . \count($failed)
+            . ' - timeout: ' . \count($timeouts);
     }
 
     protected function failedToString(): string
     {
         return (string) \array_reduce($this->parallelPool->getFailed(), function ($currentStatus, Launcher $process) {
-			$output = $process->getErrorOutput();
+            $output = $process->getErrorOutput();
 
             if ($output instanceof SerializableException) {
-                $output = \get_class($output->asThrowable()).': '.$output->asThrowable()->getMessage();
+                $output = \get_class($output->asThrowable()) . ': ' . $output->asThrowable()->getMessage();
             }
 
             return $this->lines((string) $currentStatus, "{$process->getPid()} failed with {$output}");

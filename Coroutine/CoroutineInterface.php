@@ -30,14 +30,14 @@ interface CoroutineInterface
      */
     public function shutdown();
 
-	/**
-	 * kill/remove an task using task id,
+    /**
+     * kill/remove an task using task id,
      * optionally pass custom cancel state for third party code integration.
-	 *
-	 * @param int $tid
-	 * @param mixed $customState
-	 * @return bool
-	 */
+     *
+     * @param int $tid
+     * @param mixed $customState
+     * @return bool
+     */
     public function cancelTask(int $tid, $customState = null);
 
     /**
@@ -112,7 +112,7 @@ interface CoroutineInterface
 
     /**
      * Creates an object instance of the value which will signal
-     * `Coroutine::create` that it’s a return value.
+     * `Coroutine::create` that itâs a return value.
      *
      *  - yield Coroutine::value("I'm a return value!");
      *

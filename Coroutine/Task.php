@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Async\Coroutine;
 
@@ -101,76 +101,76 @@ class Task implements TaskInterface
     protected $taskType = 'awaited';
 
     public function __construct($taskId, \Generator $coroutine)
-	{
+    {
         $this->taskId = $taskId;
         $this->state = 'pending';
         $this->coroutine = Coroutine::create($coroutine);
     }
 
     public function cyclesAdd()
-	{
+    {
         $this->cycles++;
     }
 
     public function taskId(): int
-	{
+    {
         return $this->taskId;
     }
 
     public function taskType(string $type)
-	{
+    {
         $this->taskType = $type;
     }
 
     public function sendValue($sendValue)
-	{
+    {
         $this->sendValue = $sendValue;
     }
 
     public function setException($exception)
-	{
+    {
         $this->exception = $exception;
     }
 
     public function isFinished(): bool
-	{
+    {
         return !$this->coroutine->valid();
     }
 
     public function setState(string $status)
-	{
+    {
         $this->state = $status;
     }
 
     public function getState(): string
-	{
+    {
         return $this->state;
     }
 
     public function customState($state = null)
-	{
+    {
         $this->customState = $state;
     }
 
     public function customData($data = null)
-	{
+    {
         $this->customData = $data;
     }
 
     public function getCustomState()
-	{
+    {
         return $this->customState;
     }
 
     public function getCustomData()
-	{
+    {
         $customData = $this->customData;
         $this->customData = null;
         return $customData;
     }
 
     public function isCustomState($state): bool
-	{
+    {
         return ($this->customState === $state);
     }
 
@@ -240,7 +240,7 @@ class Task implements TaskInterface
     }
 
     public function run()
-	{
+    {
         if ($this->beforeFirstYield) {
             $this->beforeFirstYield = false;
             return $this->coroutine->current();

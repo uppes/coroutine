@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace Async\Coroutine;
 
@@ -21,13 +21,16 @@ class Process
     private $pcntl = false;
     private $coroutine = null;
 
-    public function __construct(CoroutineInterface $coroutine = null,
-        $timedOutCallback = null, $finishCallback = null, $failCallback = null)
-    {
+    public function __construct(
+        CoroutineInterface $coroutine = null,
+        $timedOutCallback = null,
+        $finishCallback = null,
+        $failCallback = null
+    ) {
         $this->coroutine = empty($coroutine) ? \coroutine_instance() : $coroutine;
         $this->init($timedOutCallback,  $finishCallback,  $failCallback);
 
-		if ($this->isPcntl())
+        if ($this->isPcntl())
             $this->registerProcess();
     }
 
@@ -52,17 +55,17 @@ class Process
         if ($this->processes) {
             foreach ($this->processes as $process) {
                 $this->stop($process);
-			}
+            }
         }
     }
 
     public function processing()
     {
-        if (! empty($this->processes)) {
+        if (!empty($this->processes)) {
             foreach ($this->processes as $process) {
                 if ($process->isTimedOut()) {
                     $this->remove($process);
-					$markTimedOuted = $this->timedOutCallback;
+                    $markTimedOuted = $this->timedOutCallback;
 
                     if ($markTimedOuted($process) instanceof \Generator)
                         $this->coroutine->createTask($markTimedOuted($process));
@@ -70,12 +73,12 @@ class Process
                         $this->coroutine->schedule($markTimedOuted);
                 }
 
-                if (! $this->pcntl) {
-					if ($process->isRunning()) {
+                if (!$this->pcntl) {
+                    if ($process->isRunning()) {
                         continue;
-					} elseif ($process->isSuccessful()) {
+                    } elseif ($process->isSuccessful()) {
                         $this->remove($process);
-						$markFinished = $this->finishCallback;
+                        $markFinished = $this->finishCallback;
 
                         if ($markFinished($process) instanceof \Generator)
                             $this->coroutine->createTask($markFinished($process));
@@ -143,7 +146,7 @@ class Process
 
                 $process = $this->processes[$pid] ?? null;
 
-                if (! $process) {
+                if (!$process) {
                     continue;
                 }
 
