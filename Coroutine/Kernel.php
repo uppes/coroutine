@@ -408,8 +408,8 @@ class Kernel
 							$taskIdList[$id] = $id;
 						} elseif (\is_int($value)) {
 							$taskIdList[$value] = $value;
-							// @codeCoverageIgnoreStart
 						} else {
+							// @codeCoverageIgnoreStart
 							\panic("Invalid access, only array of integers, or generator objects allowed!");
 							// @codeCoverageIgnoreEnd
 						}
@@ -436,10 +436,8 @@ class Kernel
 					if ($countComplete > 0) {
 						foreach ($completeList as $id => $tasks) {
 							if (isset($taskIdList[$id])) {
-								// @codeCoverageIgnoreStart
 								if (\is_callable($onPreComplete)) {
 									$result = $onPreComplete($tasks);
-									// @codeCoverageIgnoreEnd
 								} else {
 									$result = $tasks->result();
 								}
@@ -475,16 +473,13 @@ class Kernel
 					foreach ($taskIdList as $id) {
 						if (isset($taskList[$id])) {
 							$tasks = $taskList[$id];
-
 							// Handle if parallel task.
 							if ($tasks->isParallel()) {
 								$completeList = $coroutine->completedList();
 								if (isset($completeList[$id])) {
 									$tasks = $completeList[$id];
-									// @codeCoverageIgnoreStart
 									if (\is_callable($onPreComplete)) {
 										$result = $onPreComplete($tasks);
-										// @codeCoverageIgnoreEnd
 									} else {
 										$result = $tasks->result();
 									}
@@ -506,10 +501,8 @@ class Kernel
 								}
 								// Handle if task not running/pending, force run.
 							} elseif ($tasks->isCustomState($isCustomSate) || $tasks->pending() || $tasks->rescheduled()) {
-								// @codeCoverageIgnoreStart
 								if (\is_callable($onProcessing)) {
 									$onProcessing($tasks, $coroutine);
-									// @codeCoverageIgnoreEnd
 								} else {
 									if (($tasks->pending() || $tasks->rescheduled()) && $tasks->isCustomState(true)) {
 										$tasks->customState();
@@ -522,10 +515,8 @@ class Kernel
 								}
 								// Handle if task finished.
 							} elseif ($tasks->completed()) {
-								// @codeCoverageIgnoreStart
 								if (\is_callable($onCompleted)) {
 									$result = $onCompleted($tasks);
-									// @codeCoverageIgnoreEnd
 								} else {
 									$result = $tasks->result();
 								}
@@ -544,12 +535,10 @@ class Kernel
 								}
 								// Handle if task erred or cancelled.
 							} elseif ($tasks->erred() || $tasks->cancelled()) {
-								// @codeCoverageIgnoreStart
 								if ($tasks->erred() && \is_callable($onError)) {
 									$result = $onError($tasks);
 								} elseif ($tasks->cancelled() && \is_callable($onCancel)) {
 									$result = $onCancel($tasks);
-									// @codeCoverageIgnoreEnd
 								} else {
 									$result = $tasks->cancelled() ? new CancelledError() : $tasks->exception();
 								}
@@ -576,7 +565,6 @@ class Kernel
 				}
 
 				// Check for, update and cancel/close any result not part of race gather count.
-				// @codeCoverageIgnoreStart
 				if ($gatherSet && (\is_callable($onClear) || $gatherShouldClearCancelled)) {
 					$resultId = \array_keys($results);
 					$abortList = \array_diff($gatherIdList, $resultId);
@@ -592,7 +580,6 @@ class Kernel
 						}
 					}
 				}
-				// @codeCoverageIgnoreEnd
 
 				self::$gatherResumer = null;
 				$task->sendValue($results);
@@ -612,14 +599,12 @@ class Kernel
 		bool $cancel = false,
 		bool $forceUpdate = false
 	): void {
-		// @codeCoverageIgnoreStart
 		if (isset($completeList[$taskId]) && \is_callable($onClear)) {
 			$onClear($completeList[$taskId]);
 		}
 
 		if ($cancel) {
 			$coroutine->cancelTask($taskId);
-			// @codeCoverageIgnoreEnd
 		} else {
 			if (empty($completeList) || $forceUpdate) {
 				$completeList = $coroutine->completedList();
