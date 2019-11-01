@@ -64,12 +64,13 @@ if (!\function_exists('coroutine_run')) {
 	 *  propagated to the task that awaits on gather().
 	 * Other awaitables in the aws sequence won't be cancelled and will continue to run.
 	 * - If `false`, exceptions are treated the same as successful results, and aggregated in the result list.
-	 * @throws \LengthException - If the number of tasks less than the desired $race.
+	 * @param bool $clear - If `true` (default), close/cancel remaining results
+	 * @throws \LengthException - If the number of tasks less than the desired $race count.
 	 *
 	 */
-	function gather_options(int $race = 0, bool $exception = true)
+	function gather_options(int $race = 0, bool $exception = true, bool $clear = true)
 	{
-		Kernel::gatherOptions($race, $exception);
+		Kernel::gatherOptions($race, $exception, $clear);
 	}
 
 	/**

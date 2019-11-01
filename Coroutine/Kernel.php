@@ -25,6 +25,7 @@ class Kernel
 
 	protected static $gatherCount = 0;
 	protected static $gatherShouldError = true;
+	protected static $gatherShouldClearCancelled = true;
 
 	/**
 	 * Custom `Gather` not started state.
@@ -63,16 +64,10 @@ class Kernel
 	protected static $onProcessing;
 
 	/**
-	 * Execute on `Gather` task list updates.
+	 * Execute cleanup on `Gather Options` race tasks no longer needed.
 	 * @var callable
 	 */
-	protected static $onUpdate;
-
-	/**
-	 * Execute cleanup on `Gather` race count tasks.
-	 * @var callable
-	 */
-	protected static $onRaceAborted;
+	protected static $onClear;
 
 	public function __construct(callable $callback)
 	{
@@ -329,12 +324,14 @@ class Kernel
 	 * immediately propagated to the task that awaits on gather(). Other awaitables in
 	 * the aws sequence won't be cancelled and will continue to run.
 	 * - If `false`, exceptions are treated the same as successful results, and aggregated in the result list.
-	 * @throws \LengthException - If the number of tasks less than the desired $race.
+	 * @param bool $clear - If `true` (default), close/cancel remaining results
+	 * @throws \LengthException - If the number of tasks less than the desired $race count.
 	 */
-	public static function gatherOptions(int $race = 0, bool $exception = true): void
+	public static function gatherOptions(int $race = 0, bool $exception = true, bool $clear = true): void
 	{
 		self::$gatherCount = $race;
 		self::$gatherShouldError = $exception;
+		self::$gatherShouldClearCancelled = $clear;
 	}
 
 	/**
@@ -347,8 +344,7 @@ class Kernel
 	 * @param null|callable $onCompleted - for finished tasks
 	 * @param null|callable $onError - for erring or failing tasks
 	 * @param null|callable $onCancel - for aborted cancelled tasks
-	 * @param null|callable $onUpdate - for keeping task list current
-	 * @param null|callable $onRaceAborted - for cleanup on tasks not to be used any longer
+	 * @param null|callable $onClear - for cleanup on tasks not to be used any longer
 	 */
 	public static function gatherController(
 		string $isCustomSate = '',
@@ -357,8 +353,7 @@ class Kernel
 		?callable $onCompleted = null,
 		?callable $onError = null,
 		?callable $onCancel = null,
-		?callable $onUpdate = null,
-		?callable $onRaceAborted = null
+		?callable $onClear = null
 	): void {
 		self::$isCustomSate = $isCustomSate;
 		self::$onPreComplete = $onPreComplete;
@@ -366,8 +361,7 @@ class Kernel
 		self::$onCompleted = $onCompleted;
 		self::$onError = $onError;
 		self::$onCancel = $onCancel;
-		self::$onUpdate = $onUpdate;
-		self::$onRaceAborted = $onRaceAborted;
+		self::$onClear = $onClear;
 	}
 
 	/**
@@ -394,6 +388,7 @@ class Kernel
 				} else {
 					$gatherCount = self::$gatherCount;
 					$gatherShouldError = self::$gatherShouldError;
+					$gatherShouldClearCancelled = self::$gatherShouldClearCancelled;
 					self::gatherOptions();
 
 					$isCustomSate = self::$isCustomSate;
@@ -402,20 +397,19 @@ class Kernel
 					$onCompleted = self::$onCompleted;
 					$onError = self::$onError;
 					$onCancel = self::$onCancel;
-					$onUpdate = self::$onUpdate;
-					$onRaceAborted = self::$onRaceAborted;
+					$onClear = self::$onClear;
 					self::gatherController();
 
 					$taskIdList = [];
-					$newIdList = (\is_array($taskId[0])) ? $taskId[0] : $taskId;
-					foreach ($newIdList as $id => $value) {
+					$gatherIdList = (\is_array($taskId[0])) ? $taskId[0] : $taskId;
+					foreach ($gatherIdList as $id => $value) {
 						if ($value instanceof \Generator) {
 							$id = $coroutine->createTask($value);
 							$taskIdList[$id] = $id;
 						} elseif (\is_int($value)) {
 							$taskIdList[$value] = $value;
-						} else {
 							// @codeCoverageIgnoreStart
+						} else {
 							\panic("Invalid access, only array of integers, or generator objects allowed!");
 							// @codeCoverageIgnoreEnd
 						}
@@ -442,8 +436,8 @@ class Kernel
 					if ($countComplete > 0) {
 						foreach ($completeList as $id => $tasks) {
 							if (isset($taskIdList[$id])) {
+								// @codeCoverageIgnoreStart
 								if (\is_callable($onPreComplete)) {
-									// @codeCoverageIgnoreStart
 									$result = $onPreComplete($tasks);
 									// @codeCoverageIgnoreEnd
 								} else {
@@ -487,8 +481,8 @@ class Kernel
 								$completeList = $coroutine->completedList();
 								if (isset($completeList[$id])) {
 									$tasks = $completeList[$id];
+									// @codeCoverageIgnoreStart
 									if (\is_callable($onPreComplete)) {
-										// @codeCoverageIgnoreStart
 										$result = $onPreComplete($tasks);
 										// @codeCoverageIgnoreEnd
 									} else {
@@ -512,12 +506,12 @@ class Kernel
 								}
 								// Handle if task not running/pending, force run.
 							} elseif ($tasks->isCustomState($isCustomSate) || $tasks->pending() || $tasks->rescheduled()) {
+								// @codeCoverageIgnoreStart
 								if (\is_callable($onProcessing)) {
-									// @codeCoverageIgnoreStart
 									$onProcessing($tasks, $coroutine);
 									// @codeCoverageIgnoreEnd
 								} else {
-									if ($tasks->pending() && $tasks->isCustomState(true)) {
+									if (($tasks->pending() || $tasks->rescheduled()) && $tasks->isCustomState(true)) {
 										$tasks->customState();
 										$coroutine->schedule($tasks);
 										$tasks->run();
@@ -528,20 +522,20 @@ class Kernel
 								}
 								// Handle if task finished.
 							} elseif ($tasks->completed()) {
+								// @codeCoverageIgnoreStart
 								if (\is_callable($onCompleted)) {
-									// @codeCoverageIgnoreStart
-                                    $result = $onCompleted($tasks);
+									$result = $onCompleted($tasks);
 									// @codeCoverageIgnoreEnd
 								} else {
-                                    $result = $tasks->result();
+									$result = $tasks->result();
 								}
 
-                                $results[$id] = $result;
-                                $count--;
-                                unset($taskList[$id]);
+								$results[$id] = $result;
+								$count--;
+								unset($taskList[$id]);
 
-                                // Update running task list.
-                                self::updateList($coroutine, $id);
+								// Update running task list.
+								self::updateList($coroutine, $id);
 								// end loop, if set and race count reached
 								if ($gatherSet) {
 									$subCount--;
@@ -550,8 +544,8 @@ class Kernel
 								}
 								// Handle if task erred or cancelled.
 							} elseif ($tasks->erred() || $tasks->cancelled()) {
+								// @codeCoverageIgnoreStart
 								if ($tasks->erred() && \is_callable($onError)) {
-									// @codeCoverageIgnoreStart
 									$result = $onError($tasks);
 								} elseif ($tasks->cancelled() && \is_callable($onCancel)) {
 									$result = $onCancel($tasks);
@@ -565,13 +559,14 @@ class Kernel
 								unset($taskList[$id]);
 
 								// Update running task list.
-								self::updateList($coroutine, $id, $taskList, $onUpdate, false, true);
+								self::updateList($coroutine, $id, $taskList, $onClear, false, true);
 
 								// Check and propagate/schedule the exception.
 								if ($gatherShouldError) {
 									self::$gatherResumer = [$taskIdList, $count, $results, $taskList];
 									$task->setException($exception);
 									$coroutine->schedule($tasks);
+									return;
 								}
 							}
 
@@ -580,12 +575,24 @@ class Kernel
 					}
 				}
 
-				// Check for, update and abort/close any responses not part of request count.
-				if ($gatherSet && \is_callable($onRaceAborted)) {
-					// @codeCoverageIgnoreStart
-					$onRaceAborted($coroutine, $results, $newIdList, $onUpdate);
-					// @codeCoverageIgnoreEnd
+				// Check for, update and cancel/close any result not part of race gather count.
+				// @codeCoverageIgnoreStart
+				if ($gatherSet && (\is_callable($onClear) || $gatherShouldClearCancelled)) {
+					$resultId = \array_keys($results);
+					$abortList = \array_diff($gatherIdList, $resultId);
+					$currentList = $coroutine->taskList();
+					$finishedList = $coroutine->completedList();
+					foreach ($abortList as $id) {
+						if (isset($finishedList[$id])) {
+							// Update task list removing tasks already completed that will not be used, mark and execute any custom update/cancel routines
+							self::updateList($coroutine, $id, $finishedList, $onClear);
+						} elseif (isset($currentList[$id])) {
+							// Update task list removing current running tasks not part of race gather count, mark and execute any custom update, then cancel routine
+							self::updateList($coroutine, $id, $currentList, $onClear, true);
+						}
+					}
 				}
+				// @codeCoverageIgnoreEnd
 
 				self::$gatherResumer = null;
 				$task->sendValue($results);
@@ -595,19 +602,19 @@ class Kernel
 	}
 
 	/**
-	 * Update current/running task list, optionally call extra custom update function.
+	 * Update current/running task list, optionally call custom update function on the task.
 	 */
-	public static function updateList(
+	protected static function updateList(
 		CoroutineInterface $coroutine,
 		int $taskId,
 		array $completeList = [],
-		?callable $onUpdate = null,
+		?callable $onClear = null,
 		bool $cancel = false,
 		bool $forceUpdate = false
 	): void {
-		if (isset($completeList[$taskId]) && \is_callable($onUpdate)) {
-			// @codeCoverageIgnoreStart
-			$onUpdate($completeList[$taskId]);
+		// @codeCoverageIgnoreStart
+		if (isset($completeList[$taskId]) && \is_callable($onClear)) {
+			$onClear($completeList[$taskId]);
 		}
 
 		if ($cancel) {
