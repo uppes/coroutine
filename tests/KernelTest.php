@@ -15,7 +15,7 @@ class KernelTest extends TestCase
         \coroutine_clear();
     }
 
-    protected function controller($skip = false)
+    protected function controller()
     {
         $onAlreadyCompleted = function (TaskInterface $tasks) {
             $tasks->customState('done');
@@ -24,13 +24,10 @@ class KernelTest extends TestCase
             return $tasks->result();
         };
 
-        $onNotStarted = function (TaskInterface $tasks, CoroutineInterface $coroutine) use($skip) {
+        $onNotStarted = function (TaskInterface $tasks, CoroutineInterface $coroutine) {
             $tasks->customState();
             $coroutine->schedule($tasks);
-            if ($skip == true) {
-                $tasks->run();
-            }
-            $coroutine->execute($skip);
+            $coroutine->execute();
         };
 
         $onCompleted = function (TaskInterface $tasks) {
@@ -109,7 +106,7 @@ class KernelTest extends TestCase
 
     public function taskInput()
     {
-        $this->controller(true);
+        $this->controller();
         try {
             $data = yield Kernel::gather($this->keyboard());
         } catch (\Async\Coroutine\Exceptions\CancelledError $e) {
