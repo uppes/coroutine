@@ -106,7 +106,6 @@ class KernelTest extends TestCase
 
     public function taskInput()
     {
-        $this->controller();
         try {
             $data = yield Kernel::gather($this->keyboard());
         } catch (\Async\Coroutine\Exceptions\CancelledError $e) {
