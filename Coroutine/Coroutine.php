@@ -126,6 +126,17 @@ class Coroutine implements CoroutineInterface
                 $this->cancelTask((int) $id);
             }
         }
+
+        if (!empty($this->completedMap)) {
+            foreach ($this->completedMap as $task) {
+                $task->clearResult();
+                $object = $task->getCustomData();
+                if (\is_object($object) && \method_exists($object, 'close'))
+                    $object->close();
+
+                $task->customState('shutdown');
+            }
+        }
     }
 
     public function cancelTask(int $tid, $customState = null)

@@ -4,6 +4,8 @@ namespace Async\Tests;
 
 use Async\Coroutine\Coroutine;
 use Async\Coroutine\Kernel;
+use Async\Coroutine\TaskInterface;
+use Async\Coroutine\CoroutineInterface;
 use PHPUnit\Framework\TestCase;
 
 class KernelTest extends TestCase
@@ -11,6 +13,77 @@ class KernelTest extends TestCase
 	protected function setUp(): void
     {
         \coroutine_clear();
+    }
+
+    protected function controller($skip = false)
+    {
+        $onAlreadyCompleted = function (TaskInterface $tasks) {
+            $tasks->customState('done');
+            $tasks->getCustomData();
+
+            return $tasks->result();
+        };
+
+        $onNotStarted = function (TaskInterface $tasks, CoroutineInterface $coroutine) use($skip) {
+            $tasks->customState();
+            $coroutine->schedule($tasks);
+            if ($skip == true) {
+                $tasks->run();
+            }
+            $coroutine->execute($skip);
+        };
+
+        $onCompleted = function (TaskInterface $tasks) {
+            $tasks->customState('done');
+            $tasks->getCustomData();
+
+            return $tasks->result();
+        };
+
+        $onToClear = function (TaskInterface $tasks) {
+            $tasks->customState('cleared');
+            $tasks->getCustomData();
+        };
+
+        $onError = null;
+        $onCancel = null;
+
+        Kernel::gatherController(
+            '',
+            $onAlreadyCompleted,
+            $onNotStarted,
+            $onCompleted,
+            $onError,
+            $onCancel,
+            $onToClear
+        );
+    }
+
+    public function factorial($name, $number) {
+        $f = 1;
+        foreach (range(2, $number + 1) as $i) {
+            yield \sleep_for(1);
+            $f *= $i;
+        }
+
+        return $f;
+    }
+
+    public function taskGather() {
+        $this->controller();
+        $factorials = yield \gather(
+            $this->factorial("A", 2),
+            $this->factorial("B", 3),
+            $this->factorial("C", 4)
+        );
+
+        $this->assertNotEmpty($factorials);
+        $this->assertCount(3, $factorials);
+    }
+
+    public function testGather()
+    {
+        \coroutine_run($this->taskGather());
     }
 
     public function lapse(int $taskId = null)
@@ -36,6 +109,7 @@ class KernelTest extends TestCase
 
     public function taskInput()
     {
+        $this->controller(true);
         try {
             $data = yield Kernel::gather($this->keyboard());
         } catch (\Async\Coroutine\Exceptions\CancelledError $e) {
