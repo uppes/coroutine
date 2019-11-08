@@ -521,12 +521,29 @@ class Kernel
 									$result = $tasks->result();
 								}
 
-								$results[$id] = $result;
+								if ($result instanceof \Throwable) {
+									// @codeCoverageIgnoreStart
+									$tasks->setState('erred');
+
+									// Update running task list.
+									self::updateList($coroutine, $id, $taskList, $onClear, false, true);
+
+									// Check and propagate/schedule the exception.
+									if ($gatherShouldError) {
+										$task->setException($result);
+										$coroutine->schedule($tasks);
+									}
+									// @codeCoverageIgnoreEnd
+								} else {
+									$results[$id] = $result;
+
+									// Update running task list.
+									self::updateList($coroutine, $id);
+								}
+
 								$count--;
 								unset($taskList[$id]);
 
-								// Update running task list.
-								self::updateList($coroutine, $id);
 								// end loop, if set and race count reached
 								if ($gatherSet) {
 									$subCount--;
