@@ -10,7 +10,7 @@ use PHPUnit\Framework\TestCase;
 
 class KernelTest extends TestCase
 {
-	protected function setUp(): void
+    protected function setUp(): void
     {
         \coroutine_clear();
     }
@@ -56,7 +56,8 @@ class KernelTest extends TestCase
         );
     }
 
-    public function factorial($name, $number) {
+    public function factorial($name, $number)
+    {
         $f = 1;
         foreach (range(2, $number + 1) as $i) {
             yield \sleep_for(1);
@@ -66,8 +67,10 @@ class KernelTest extends TestCase
         return $f;
     }
 
-    public function taskGather() {
+    public function taskGather()
+    {
         $this->controller();
+        \gather_options(2);
         $factorials = yield \gather(
             $this->factorial("A", 2),
             $this->factorial("B", 3),
@@ -75,7 +78,7 @@ class KernelTest extends TestCase
         );
 
         $this->assertNotEmpty($factorials);
-        $this->assertCount(3, $factorials);
+        $this->assertCount(2, $factorials);
     }
 
     public function testGather()
@@ -101,7 +104,7 @@ class KernelTest extends TestCase
         $done = yield Kernel::sleepFor(1, 'done sleeping');
         $t1 = \microtime(true);
         $this->assertEquals('done sleeping', $done);
-        $this->assertGreaterThan(1, (float) ($t1-$t0));
+        $this->assertGreaterThan(1, (float) ($t1 - $t0));
     }
 
     public function taskInput()
