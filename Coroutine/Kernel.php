@@ -437,6 +437,7 @@ class Kernel
                     $completeList = $coroutine->completedList();
                     $countComplete = \count($completeList);
                     $gatherCompleteCount = 0;
+                    $isResultsException = false;
 
                     // Check and handle tasks already completed before entering/executing gather().
                     if ($countComplete > 0) {
@@ -448,7 +449,14 @@ class Kernel
                                     $result = $tasks->result();
                                 }
 
-                                $results[$id] = $result;
+                                if ($result instanceof \Throwable) {
+                                    // @codeCoverageIgnoreStart
+                                    $isResultsException = $result;
+                                    // @codeCoverageIgnoreEnd
+                                } else {
+                                    $results[$id] = $result;
+                                }
+
                                 $count--;
                                 $gatherCompleteCount++;
                                 unset($taskIdList[$id]);
@@ -604,9 +612,16 @@ class Kernel
                     }
                 }
 
-                self::$gatherResumer = null;
-                $task->sendValue($results);
-                $coroutine->schedule($task);
+                if ($gatherShouldError && $isResultsException !== false) {
+                    // @codeCoverageIgnoreStart
+                    $task->setException($isResultsException);
+                    $coroutine->schedule($tasks);
+                    // @codeCoverageIgnoreEnd
+                } else {
+                    self::$gatherResumer = null;
+                    $task->sendValue($results);
+                    $coroutine->schedule($task);
+                }
             }
         );
     }
