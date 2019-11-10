@@ -2,7 +2,7 @@
 
 namespace Async\Coroutine\Exceptions;
 
-use RuntimeException;
+use Async\Coroutine\Exceptions\RuntimeException;
 
 class CancelledError extends RuntimeException
 {

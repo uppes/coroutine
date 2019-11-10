@@ -13,6 +13,8 @@ use Async\Coroutine\ReturnValueCoroutine;
 use Async\Coroutine\PlainValueCoroutine;
 use Async\Coroutine\CoroutineInterface;
 use Async\Processor\ProcessInterface;
+use Async\Coroutine\Exceptions\CancelledError;
+use Async\Coroutine\Exceptions\InvalidArgumentException;
 
 /**
  * The Scheduler
@@ -206,7 +208,7 @@ class Coroutine implements CoroutineInterface
             if ($value instanceof Kernel) {
                 try {
                     $value($task, $this);
-                } catch (\Async\Coroutine\Exceptions\CancelledError $e) {
+                } catch (CancelledError $e) {
                     $task->clearResult();
                     $task->setState('cancelled');
                     $task->setException($e);
@@ -472,7 +474,7 @@ class Coroutine implements CoroutineInterface
         //Check on STDIN stream
         $blocking = \stream_set_blocking(\STDIN, false);
         if ($error && !$blocking) {
-            throw new \InvalidArgumentException('Non-blocking STDIN, could not be enabled.');
+            throw new InvalidArgumentException('Non-blocking STDIN, could not be enabled.');
         }
 
         yield Kernel::readWait(\STDIN);

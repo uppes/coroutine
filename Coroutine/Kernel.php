@@ -7,6 +7,8 @@ namespace Async\Coroutine;
 use Async\Coroutine\Channel;
 use Async\Coroutine\Coroutine;
 use Async\Coroutine\TaskInterface;
+use Async\Coroutine\Exceptions\LengthException;
+use Async\Coroutine\Exceptions\InvalidArgumentException;
 use Async\Coroutine\Exceptions\TimeoutError;
 use Async\Coroutine\Exceptions\CancelledError;
 
@@ -206,7 +208,7 @@ class Kernel
                     $task->sendValue(true);
                     $coroutine->schedule($task);
                 } else {
-                    throw new \InvalidArgumentException($errorMessage);
+                    throw new InvalidArgumentException($errorMessage);
                 }
             }
         );
@@ -427,7 +429,7 @@ class Kernel
                     if ($gatherSet) {
                         // @codeCoverageIgnoreStart
                         if ($count < $gatherCount) {
-                            throw new \LengthException(\sprintf('The (%d) tasks, not enough to fulfill the `options(%d)` count!', $count, $gatherCount));
+                            throw new LengthException(\sprintf('The (%d) tasks, not enough to fulfill the `options(%d)` count!', $count, $gatherCount));
                         }
                         // @codeCoverageIgnoreEnd
                     }
@@ -480,6 +482,11 @@ class Kernel
                     } elseif ($gatherCompleteCount == $gatherCount) {
                         $count = 0;
                     }
+                }
+
+                // Skip wait, just proceed to propagate/schedule the exception, if set.
+                if ($gatherShouldError && $isResultsException !== false) {
+                    $count = 0;
                 }
 
                 // Run and wait until race or count is reached.
@@ -612,13 +619,14 @@ class Kernel
                     }
                 }
 
+                self::$gatherResumer = null;
+
                 if ($gatherShouldError && $isResultsException !== false) {
                     // @codeCoverageIgnoreStart
                     $task->setException($isResultsException);
                     $coroutine->schedule($tasks);
                     // @codeCoverageIgnoreEnd
                 } else {
-                    self::$gatherResumer = null;
                     $task->sendValue($results);
                     $coroutine->schedule($task);
                 }
