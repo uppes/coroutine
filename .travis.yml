@@ -15,7 +15,7 @@ php:
 before_script:
     - pecl channel-update pecl.php.net
     - pecl install uv-beta
-    - php -m
+    - cd /home/travis/build/symplely/coroutine
     - composer self-update
 
 after_success:
