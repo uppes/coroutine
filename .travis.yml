@@ -3,7 +3,7 @@ language: php
 addons:
   apt:
     packages:
-      - libuv1
+      - libuv1-dev
       - php-pear
 
 php:
@@ -13,6 +13,7 @@ php:
     - 7.4
 
 before_script:
+    - pecl channel-update pecl.php.net
     - pecl install uv-beta
     - php -m
     - composer self-update
