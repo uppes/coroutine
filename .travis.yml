@@ -13,7 +13,7 @@ php:
     - 7.4
 
 before_script:
-    - pecl install uv
+    - pecl install uv-beta
     - php -m
     - composer self-update
 
