@@ -17,9 +17,10 @@ before_script:
     - pecl install uv-beta
     - cd /home/travis/build/symplely/coroutine
     - composer self-update
+    - composer require php-coveralls/php-coveralls
 
 after_success:
     - bash <(curl -s https://codecov.io/bash)
 
 script:
-    - vendor/bin/phpunit --coverage-clover=coverage.xml
+    - ./vendor/bin/phpunit --coverage-clover=coverage.xml
