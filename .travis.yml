@@ -1,13 +1,21 @@
 language: php
 
+addons:
+  apt:
+    packages:
+      - libuv1
+      - php-pear
+
 php:
     - 7.1
     - 7.2
     - 7.3
+    - 7.4
 
 before_script:
+    - pecl install uv
+    - php -m
     - composer self-update
-    - composer require php-coveralls/php-coveralls
 
 after_success:
     - bash <(curl -s https://codecov.io/bash)
