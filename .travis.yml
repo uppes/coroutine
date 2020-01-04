@@ -15,9 +15,7 @@ php:
 before_script:
     - pecl channel-update pecl.php.net
     - pecl install uv-beta
-    - cd /home/travis/build/symplely/coroutine
-    - composer self-update
-    - composer require php-coveralls/php-coveralls
+    - composer install
 
 after_success:
     - bash <(curl -s https://codecov.io/bash)
