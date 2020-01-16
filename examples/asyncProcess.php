@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @see https://github.com/amphp/parallel/blob/master/examples/worker-pool.php
  */
@@ -22,10 +23,11 @@ function repeat()
     }
 }
 
-function enqueue($index, $task) {
-    echo 'started '.$index.\EOL;
+function enqueue($index, $task)
+{
+    echo 'started ' . $index . \EOL;
     // return to caller, let other tasks start, otherwise block after
-    $result = yield \await_process(function () use($task) {
+    $result = yield \await_process(function () use ($task) {
         return \file_get_contents($task);
     });
 
@@ -35,7 +37,8 @@ function enqueue($index, $task) {
 };
 
 // Event loop for parallel tasks
-function main() {
+function main()
+{
     global $results, $tasks;
 
     $coroutinesId = [];
@@ -43,7 +46,7 @@ function main() {
         $coroutinesId[] = yield \await(\enqueue($index, $parameters));
     }
 
-    try{
+    try {
         // will throw exception and stop/kill progress printout '.' after 1 seconds
         yield \wait_for(\repeat(), 1);
     } catch (\Async\Coroutine\Exceptions\TimeoutError $e) {

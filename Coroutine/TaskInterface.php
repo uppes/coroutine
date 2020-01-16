@@ -22,6 +22,8 @@ interface TaskInterface
 
     public function isFinished(): bool;
 
+    public function parallelTask();
+
     /**
      * Store custom state of the task.
      */

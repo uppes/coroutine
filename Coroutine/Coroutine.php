@@ -7,7 +7,9 @@ namespace Async\Coroutine;
 use Async\Coroutine\Kernel;
 use Async\Coroutine\Task;
 use Async\Coroutine\Parallel;
+use Async\Coroutine\ParallelInterface;
 use Async\Coroutine\Process;
+use Async\Coroutine\Signaler;
 use Async\Coroutine\TaskInterface;
 use Async\Coroutine\ReturnValueCoroutine;
 use Async\Coroutine\PlainValueCoroutine;
@@ -23,54 +25,283 @@ use Async\Coroutine\Exceptions\InvalidArgumentException;
  */
 class Coroutine implements CoroutineInterface
 {
+    /**
+     * a task's unique id number
+     *
+     * @var int
+     */
     protected $maxTaskId = 0;
-    protected $taskMap = []; // taskId => task
+
+    /**
+     * List of currently running tasks
+     *
+     * @var array[] taskId => task
+     */
+    protected $taskMap = [];
+
+    /**
+     * List of completed tasks
+     *
+     * @var array
+     */
     protected $completedMap = [];
+
+    /**
+     * Queue of `Task`, holding all created `coroutines/generators`
+     *
+     * @var \SplQueue
+     */
     protected $taskQueue;
 
     /**
-     * A list of timers, added by addTimeout.
+     * A list of timers, or **UV** timer handles, added by `addTimeout`.
      *
      * @var array
      */
     protected $timers = [];
 
     /**
-     * Combined list of readable socket/streams and read callbacks.
+     * Combined list of readable `id` of socket/streams/events, and read callbacks.
      *
-     * for stream_select, indexed by stream id.
-     * @var resource[] [stream, tasks]
+     * @var resource[] [id, tasks]
      */
     protected $waitingForRead = [];
 
     /**
-     * Combined list of writable socket/streams and write callbacks.
+     * Combined list of writable `id` of socket/streams/events, and write callbacks.
      *
-     * for stream_select, indexed by stream id.
-     * @var resource[] [stream, tasks]
+     * @var resource[] [id, tasks]
      */
     protected $waitingForWrite = [];
 
-    protected $pcntl = null;
-    protected $process = null;
-    protected $parallel = null;
+    /**
+     * The **UV** event loop instance,
+     * If not set, will use PHP built-in `stream_select`
+     *
+     * @var \UVLoop
+     */
+    protected $uv;
 
-    public function __construct()
+    /**
+     * The **UV** Stream/Socket/FD event callback
+     *
+     * @var callable
+     */
+    protected $onEvent;
+
+    /**
+     * The **UV** timer event callback
+     *
+     * @var callable
+     */
+    protected $onTimer;
+
+    /**
+     * The **UV** signal event callback
+     *
+     * @var callable
+     */
+    protected $onSignal;
+
+    /**
+     * list of **UV** event handles, added by `addReader`, `addWriter`
+     *
+     * @var \UVHandle[]
+     */
+    protected $events = [];
+
+    /**
+     * list of **UV** signal handles, added by ``, ``
+     *
+     * @var \UVSignal[]
+     */
+    protected $signals = [];
+
+    /**
+     * @var bool
+     */
+    protected $pcntl;
+
+    /**
+     * @var Process
+     */
+    protected $process = null;
+
+    /**
+     * @var Parallel
+     */
+    protected $parallel;
+
+    /**
+     * @var Signaler
+     */
+    protected $signaler;
+
+    /**
+     * Check for prefer high-resolution timer, available as of PHP 7.3+
+     *
+     * @var bool
+     */
+    protected $isHighTimer;
+
+    /**
+     * This scheduler will detect if the [`ext-uv` PECL extension](https://pecl.php.net/package/uv) is
+     * installed, which provides an interface to `libuv` library. An native like event loop engine.
+     *
+     * @param string|null $driver set event loop to use, override detection.
+     *
+     * @see https://github.com/bwoebi/php-uv
+     */
+    public function __construct(?string $driver = 'auto')
     {
         global $__coroutine__;
         $__coroutine__ = $this;
+        $this->initSignals();
+/*
+        if (\in_array($driver, ['auto', 'uv']) && \function_exists('uv_loop_new')) {
+            $this->uv = \uv_loop_new();
 
+            $this->onEvent = function ($event, $status, $events, $stream) {
+                if ($status !== 0) {
+                    $this->pollEvent($stream);
+                    if ($events === 0) {
+                        $events = \UV::READABLE | \UV::WRITABLE;
+                    }
+                }
+
+                if (isset($this->waitingForRead[(int) $stream]) && ($events & \UV::READABLE)) {
+                    $this->updateScheduler('read', $stream);
+                }
+
+                if (isset($this->waitingForWrite[(int) $stream]) && ($events & \UV::WRITABLE)) {
+                    $this->updateScheduler('write', $stream);
+                }
+            };
+
+            $this->onTimer = function ($timer) {
+                $taskTimer = $this->timers[(int) $timer];
+                @\uv_timer_stop($timer);
+                unset($this->timers[(int) $timer]);
+                $this->executeTask($taskTimer[1], $timer);
+            };
+
+            $this->onSignal = function ($signal, $number) {
+            };
+        }
+*/
+        $this->isHighTimer = \function_exists('hrtime');
         $this->parallel = new Parallel($this);
         $this->taskQueue = new \SplQueue();
     }
 
-    public function parallelInstance(): Parallel
+    protected function timestamp()
+    {
+        return (float) ($this->isHighTimer ? \hrtime(true) / 1e+9 : \microtime(true));
+    }
+
+    protected function addEvent($stream)
+    {
+        if (!isset($this->events[(int) $stream])) {
+            $meta = \stream_get_meta_data($stream);
+            switch ($meta['stream_type'] ?? '') {
+                case 'STDIO':
+                    if ($meta['wrapper_type'] == 'plainfile') {
+
+                        break;
+                    }
+                case 'tcp_socket/ssl':
+                    $this->events[(int) $stream] = \uv_poll_init($this->uv, $stream);
+                    break;
+                default:
+                    $this->events[(int) $stream] = \uv_poll_init_socket($this->uv, $stream);
+            }
+        }
+
+        if ($this->events[(int) $stream] !== false) {
+            $this->pollEvent($stream);
+        }
+    }
+
+    protected function removeReadEvent($stream)
+    {
+        if (!isset($this->events[(int) $stream])) {
+            return;
+        }
+
+        if (isset($this->waitingForRead[(int) $stream])) {
+            \uv_poll_stop($this->events[(int) $stream]);
+            \uv_close($this->events[(int) $stream]);
+            unset($this->events[(int) $stream]);
+            return;
+        }
+
+        $this->pollEvent($stream);
+    }
+
+    protected function removeWriteEvent($stream)
+    {
+        if (!isset($this->events[(int) $stream])) {
+            return;
+        }
+
+        if (isset($this->waitingForWrite[(int) $stream])) {
+            \uv_poll_stop($this->events[(int) $stream]);
+            \uv_close($this->events[(int) $stream]);
+            unset($this->events[(int) $stream]);
+            return;
+        }
+
+        $this->pollEvent($stream);
+    }
+
+    protected function pollEvent($stream)
+    {
+        if (!isset($this->events[(int) $stream])) {
+            return;
+        }
+
+        $flags = 0;
+        if (isset($this->waitingForRead[(int) $stream])) {
+            $flags |= \UV::READABLE;
+        }
+
+        if (isset($this->waitingForWrite[(int) $stream])) {
+            $flags |= \UV::WRITABLE;
+        }
+
+        \uv_poll_start($this->events[(int) $stream], $flags, $this->onEvent);
+    }
+
+    /**
+     * @deprecated 1.3.9
+     *
+     * @return ParallelInterface
+     */
+    public function parallelInstance()
+    {
+        return $this->getParallel();
+    }
+
+    public function getParallel(): ParallelInterface
     {
         return $this->parallel;
     }
 
+    /**
+     * @deprecated 1.3.9
+     *
+     * @return Process
+     */
     public function processInstance($timedOutCallback = null, $finishCallback = null, $failCallback = null)
     {
+        return $this->getProcess();
+    }
+
+    public function getProcess(
+        ?callable $timedOutCallback = null,
+        ?callable $finishCallback = null,
+        ?callable $failCallback = null
+    ): Process {
         if (!empty($this->process)) {
             $this->process->stopAll();
             $this->process = null;
@@ -81,18 +312,23 @@ class Coroutine implements CoroutineInterface
     }
 
     /**
-     * Add callable for parallel processing, in an separate php process
-     *
-     * @see https://docs.python.org/3.8/library/asyncio-subprocess.html#creating-subprocesses
-     *
-     * @param callable $callable
-     * @param int $timeout
+     * @deprecated 1.3.9
      *
      * @return ProcessInterface
      */
     public function createSubProcess($callable, int $timeout = 300): ProcessInterface
     {
+        return $this->addProcess($callable, $timeout);
+    }
+
+    public function addProcess($callable, int $timeout = 300): ProcessInterface
+    {
         return $this->parallel->add($callable, $timeout);
+    }
+
+    public function isUvActive(): bool
+    {
+        return !empty($this->uv) && \is_object($this->uv);
     }
 
     public function isPcntl(): bool
@@ -117,6 +353,41 @@ class Coroutine implements CoroutineInterface
         $this->taskQueue->enqueue($task);
     }
 
+    /**
+     * A `stream/socket/fd` or `event` is free, ready or has data.
+     * Retrieve `Task`, remove and update scheduler for it's execution.
+     *
+     * @param string $type `read` or `write`
+     * @param mixed $stream
+     */
+    protected function updateScheduler(string $type, $stream)
+    {
+        if ($type == 'read') {
+            list(, $tasks) = $this->waitingForRead[(int) $stream];
+            $this->removeReader($stream);
+
+            foreach ($tasks as $task) {
+                $this->executeTask($task, $stream);
+            }
+        } elseif ($type == 'write') {
+            list(, $tasks) = $this->waitingForWrite[(int) $stream];
+            $this->removeWriter($stream);
+
+            foreach ($tasks as $task) {
+                $this->executeTask($task, $stream);
+            }
+        }
+    }
+
+    public function executeTask($task, $parameters = null)
+    {
+        if ($task instanceof TaskInterface) {
+            $this->schedule($task);
+        } elseif ($task($parameters) instanceof \Generator) {
+            $this->createTask($task($parameters));
+        }
+    }
+
     public function shutdown()
     {
         if (!empty($this->taskMap)) {
@@ -138,6 +409,28 @@ class Coroutine implements CoroutineInterface
 
                 $task->customState('shutdown');
             }
+        }
+
+        if ($this->isUvActive()) {
+            \uv_stop($this->uv);
+            foreach ($this->timers as $timer) {
+                \uv_timer_stop($timer);
+            }
+
+            foreach ($this->signals as $signal) {
+                \uv_signal_stop($signal);
+            }
+
+            foreach ($this->events as $event) {
+                \uv_close($event);
+            }
+
+            $this->timers = [];
+            $this->signals = [];
+            $this->events = [];
+            $this->waitingForRead = [];
+            $this->waitingForWrite = [];
+            \uv_run($this->uv, \UV::RUN_NOWAIT);
         }
     }
 
@@ -168,7 +461,17 @@ class Coroutine implements CoroutineInterface
         return true;
     }
 
+    /**
+     * @deprecated 1.3.9
+     *
+     * @return array|null
+     */
     public function taskList()
+    {
+        return $this->currentTask();
+    }
+
+    public function currentTask(): ?array
     {
         if (!isset($this->taskMap)) {
             return null;
@@ -177,7 +480,17 @@ class Coroutine implements CoroutineInterface
         return $this->taskMap;
     }
 
+    /**
+     * @deprecated 1.3.9
+     *
+     * @return array|null
+     */
     public function completedList()
+    {
+        return $this->completedTask();
+    }
+
+    public function completedTask(): ?array
     {
         if (!isset($this->completedMap)) {
             return null;
@@ -186,7 +499,15 @@ class Coroutine implements CoroutineInterface
         return $this->completedMap;
     }
 
+    /**
+     * @deprecated 1.3.9
+     */
     public function updateCompleted($taskMap = [])
+    {
+        $this->updateCompletedTask($taskMap);
+    }
+
+    public function updateCompletedTask($taskMap = [])
     {
         $this->completedMap = $taskMap;
     }
@@ -197,7 +518,7 @@ class Coroutine implements CoroutineInterface
         return $this->execute();
     }
 
-    public function execute($useReturn = false)
+    public function execute($isReturn = false)
     {
         while (!$this->taskQueue->isEmpty()) {
             $task = $this->taskQueue->dequeue();
@@ -232,7 +553,7 @@ class Coroutine implements CoroutineInterface
                 $this->schedule($task);
             }
 
-            if ($useReturn) {
+            if ($isReturn) {
                 return;
             }
         }
@@ -245,23 +566,29 @@ class Coroutine implements CoroutineInterface
      */
     protected function runTimers()
     {
+        if ($this->isUvActive()) {
+            return (\count($this->timers) > 0) ? 1 : false;
+        }
+
+        //$now = $this->timestamp();
         $now = \microtime(true);
         while (($timer = \array_pop($this->timers)) && $timer[0] < $now) {
-            if ($timer[1] instanceof TaskInterface) {
-                $this->schedule($timer[1]);
-            } elseif ($timer[1]() instanceof \Generator) {
-                $this->createTask($timer[1]());
-            }
+            $this->executeTask($timer[1]);
         }
 
         // Add the last timer back to the array.
         if ($timer) {
             $this->timers[] = $timer;
 
+            //return \max(0, $timer[0] - $this->timestamp());
             return \max(0, $timer[0] - \microtime(true));
         }
     }
 
+    /**
+     * Check for I/O events, streams/sockets/fd activity and `yield`,
+     * will exit if nothing is pending.
+     */
     protected function ioWaiting()
     {
         while (true) {
@@ -271,6 +598,7 @@ class Coroutine implements CoroutineInterface
                 && empty($this->waitingForWrite)
                 && empty($this->timers)
                 && $this->process->isEmpty()
+                && !$this->isSignaling()
             ) {
                 break;
             } else {
@@ -288,11 +616,22 @@ class Coroutine implements CoroutineInterface
                     // There's a running 'process', wait some before rechecking.
                     $streamWait = $this->process->sleepingTime();
 
-                yield $this->ioSocketStream($streamWait);
+                if ($this->isUvActive()) {
+                    \uv_run($this->uv, $streamWait ? \UV::RUN_ONCE : \UV::RUN_NOWAIT);
+                } else {
+                    $this->ioSocketStream($streamWait);
+                }
+
+                yield;
             }
         }
     }
 
+    /**
+     * Wait for activity, or until the next timer is due.
+     *
+     * @param integer|null $timeout microseconds, or null to wait forever.
+     */
     protected function ioSocketStream($timeout)
     {
         if (empty($this->waitingForRead) && empty($this->waitingForWrite)) {
@@ -321,78 +660,152 @@ class Coroutine implements CoroutineInterface
         }
 
         foreach ($rSocks as $socket) {
-            list(, $tasks) = $this->waitingForRead[(int) $socket];
-            $this->removeReader($socket);
-
-            foreach ($tasks as $task) {
-                if ($task instanceof TaskInterface) {
-                    $this->schedule($task);
-                } elseif ($task() instanceof \Generator) {
-                    $this->createTask($task());
-                }
-            }
+            $this->updateScheduler('read', $socket);
         }
 
         foreach ($wSocks as $socket) {
-            list(, $tasks) = $this->waitingForWrite[(int) $socket];
-            $this->removeWriter($socket);
-
-            foreach ($tasks as $task) {
-                if ($task instanceof TaskInterface) {
-                    $this->schedule($task);
-                } elseif ($task() instanceof \Generator) {
-                    $this->createTask($task());
-                }
-            }
+            $this->updateScheduler('write', $socket);
         }
     }
 
-    public function addReader($stream, $task)
+    public function addReader($stream, $task): CoroutineInterface
     {
+        $already = true;
         if (isset($this->waitingForRead[(int) $stream])) {
+            $already = false;
             $this->waitingForRead[(int) $stream][1][] = $task;
         } else {
             $this->waitingForRead[(int) $stream] = [$stream, [$task]];
         }
 
+        if ($this->isUvActive() && $already)
+            $this->addEvent($stream);
+
         return $this;
     }
 
-    public function addWriter($stream, $task)
+    public function addWriter($stream, $task): CoroutineInterface
     {
+        $already = true;;
         if (isset($this->waitingForWrite[(int) $stream])) {
+            $already = false;
             $this->waitingForWrite[(int) $stream][1][] = $task;
         } else {
             $this->waitingForWrite[(int) $stream] = [$stream, [$task]];
         }
 
+        if ($this->isUvActive() && $already)
+            $this->addEvent($stream);
+
         return $this;
     }
 
-    public function removeReader($stream)
+    public function removeReader($stream): CoroutineInterface
     {
+        if ($this->isUvActive()) {
+            $this->removeReadEvent($stream);
+        }
+
         unset($this->waitingForRead[(int) $stream]);
 
         return $this;
     }
 
-    public function removeWriter($stream)
+    public function removeWriter($stream): CoroutineInterface
     {
+        if ($this->isUvActive()) {
+            $this->removeWriteEvent($stream);
+        }
+
         unset($this->waitingForWrite[(int) $stream]);
 
         return $this;
     }
 
+    public function addSignal($signal, $listener)
+    {
+        if (!$this->signaler || $this->pcntl === false)
+            return;
+
+        $first = $this->signaler->count($signal) === 0;
+        $this->signaler->add($signal, $listener);
+
+        if ($this->isUvActive()) {
+            if (!isset($this->signals[$signal])) {
+                $signals = $this->signaler;
+                $this->signals[$signal] = \uv_signal_init($this->uv);
+                \uv_signal_start($this->signals[$signal], function () use ($signals, $signal) {
+                    $signals->execute($signal);
+                }, $signal);
+            }
+        } elseif ($first) {
+            \pcntl_signal($signal, array($this->signaler, 'execute'));
+        }
+    }
+
+    public function removeSignal($signal, $listener)
+    {
+        if (!$this->signaler || $this->pcntl === false)
+            return;
+
+        if (!$this->signaler->count($signal)) {
+            return;
+        }
+
+        $this->signaler->remove($signal, $listener);
+
+        if ($this->isUvActive()) {
+           if (isset($this->signals[$signal]) && $this->signaler->count($signal) === 0) {
+                \uv_signal_stop($this->signals[$signal]);
+                unset($this->signals[$signal]);
+            }
+        } elseif ($this->signaler->count($signal) === 0) {
+            \pcntl_signal($signal, \SIG_DFL);
+        }
+    }
+
     /**
-     * Executes a function after x seconds.
-     *
-     * @param callable $task
-     * @param float $timeout
-     */
+	 * Setup Signal listener.
+	 */
+	public function initSignals()
+	{
+		if (empty($this->signaler) && ($this->isPcntl() || $this->isUvActive())) {
+            $this->signaler = new Signaler($this);
+
+            if (!$this->isUvActive()) {
+                \pcntl_async_signals(true);
+            }
+        }
+    }
+
+    public function isSignaling()
+    {
+        if (!$this->signaler)
+            return;
+
+        return !$this->signaler->isEmpty();
+    }
+
+    protected function addTimer($interval, $callback)
+    {
+        $timer = \uv_timer_init($this->uv);
+        $this->timers[(int) $timer] = [$interval, $callback];
+        \uv_timer_start(
+            $timer,
+            (($interval < 0) ? 0 : \floor($interval * 1000)),
+            0,
+            $this->onTimer
+        );
+    }
+
     public function addTimeout($task, float $timeout)
     {
-        $triggerTime = \microtime(true) + ($timeout);
+        if ($this->isUvActive()) {
+            return $this->addTimer($timeout, $task);
+        }
 
+        //$triggerTime = $this->timestamp() + ($timeout);
+        $triggerTime = \microtime(true) + ($timeout);
         if (!$this->timers) {
             // Special case when the timers array was empty.
             $this->timers[] = [$triggerTime, $task];
@@ -422,53 +835,22 @@ class Coroutine implements CoroutineInterface
         }
     }
 
-    /**
-     * Executes a function every x seconds.
-     *
-     * @param callable $task
-     * @param float $timeout
-     */
-    public function setInterval($task, float $timeout): array
-    {
-        $keepGoing = true;
-        $f = null;
-
-        $f = function () use ($task, &$f, $timeout, &$keepGoing) {
-            if ($keepGoing) {
-                $task();
-                $this->addTimeout($f, $timeout);
-            }
-        };
-        $this->addTimeout($f, $timeout);
-
-        return ['I\'m an implementation detail', &$keepGoing];
-    }
-
-    /**
-     * Stops a running interval.
-     */
-    public function clearInterval(array $intervalId)
-    {
-        $intervalId[1] = false;
-    }
-
     public static function value($value)
     {
         return new ReturnValueCoroutine($value);
     }
 
-    /**
-     * Creates an object instance of the value which will signal
-     * `Coroutine::create` that itÃ¢â‚¬â„¢s a return value.
-     *
-     * @param mixed $value
-     * @return PlainValueCoroutine
-     */
     public static function plain($value)
     {
         return new PlainValueCoroutine($value);
     }
 
+    /**
+     * Wait on keyboard input.
+     * Will not block other task on `Linux`, will continue other tasks until `enter` key is pressed,
+     * Will block on Windows, once an key is typed/pressed, will continue other tasks `ONLY` if no key is pressed.
+     * - This function needs to be prefixed with `yield`
+     */
     public static function input(int $size = 256, bool $error = false)
     {
         //Check on STDIN stream
@@ -535,13 +917,13 @@ class Coroutine implements CoroutineInterface
 
                 try {
                     $sendValue = (yield $gen->key() => $value);
-                } catch (\Exception $e) {
+                } catch (\Throwable $e) {
                     $gen->throw($e);
                     continue;
                 }
 
                 $gen->send($sendValue);
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 if ($stack->isEmpty()) {
                     throw $e;
                 }

@@ -221,19 +221,4 @@ class CoroutineTest extends TestCase
         $coroutine->run();
         $this->assertEquals(['b', 'a', 'c'], $check);
     }
-
-    function testSetInterval()
-	{
-        $coroutine = new Coroutine();
-        $check = 0;
-        $intervalId = [];
-        $intervalId = $coroutine->setInterval(function() use (&$check, &$intervalId, $coroutine) {
-            $check++;
-            if ($check > 5) {
-                $coroutine->clearInterval($intervalId);
-            }
-        }, 0.02);
-        $coroutine->run();
-        $this->assertEquals(6, $check);
-    }
 }

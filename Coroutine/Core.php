@@ -48,6 +48,16 @@ if (!\function_exists('coroutine_run')) {
      *
      * @return int $task id
      */
+    function away($awaitableFunction, ...$args)
+    {
+        return Kernel::away($awaitableFunction, ...$args);
+    }
+
+    /**
+     * @deprecated 1.3.9
+     *
+     * @return int — $task id
+     */
     function await($awaitableFunction, ...$args)
     {
         return Kernel::await($awaitableFunction, ...$args);
@@ -96,6 +106,23 @@ if (!\function_exists('coroutine_run')) {
     }
 
     /**
+     * Add an blocking io subprocess, that will run in parallel.
+     * This function will return `int` immediately, use `gather()` to get the result.
+     * - This function needs to be prefixed with `yield`
+     *
+     * @param callable|shell $command
+     * @param int $timeout
+     *
+     * @return int
+     */
+    function spawn_process($command, $timeout = 300)
+    {
+        return Kernel::away(function ($command, int $timeout = 300) {
+            return Kernel::awaitProcess($command, $timeout);
+        }, $command, $timeout);
+    }
+
+    /**
      * Add and wait for result of an blocking io subprocess, will run in parallel.
      * - This function needs to be prefixed with `yield`
      *
@@ -112,10 +139,11 @@ if (!\function_exists('coroutine_run')) {
         return Kernel::awaitProcess($command, $timeout);
     }
 
+
     /**
-     * Wrap the callable with `yield`, this makes sure every callable is a generator function,
-     * and will switch at least once without actually executing.
-     * Then function is used by `await` not really called directly.
+     * Wrap the callable with `yield`, this insure the first attempt to execute
+     * act like a generator function, will switch at least once without actually executing.
+     * Then function is used by `away()` not really called directly.
      *
      * @see https://docs.python.org/3.7/library/asyncio-task.html#awaitables
      *
@@ -124,7 +152,7 @@ if (!\function_exists('coroutine_run')) {
      *
      * @return mixed
      */
-    function awaitAble(callable $awaitableFunction, ...$args)
+    function awaitable(callable $awaitableFunction, ...$args)
     {
         return yield yield $awaitableFunction(...$args);
     }
@@ -145,7 +173,7 @@ if (!\function_exists('coroutine_run')) {
     }
 
     /**
-     * Creates an communications Channel between coroutines
+     * Creates an communications Channel between coroutines.
      * Similar to Google Go language - basic, still needs additional functions
      * - This function needs to be prefixed with `yield`
      *
@@ -162,7 +190,7 @@ if (!\function_exists('coroutine_run')) {
      *
      * @param Channel $channel
      * @param mixed $message
-     * @param int $taskId
+     * @param int $taskId override send to different task, not set by `receiver()`
      */
     function sender(Channel $channel, $message = null, int $taskId = 0)
     {
@@ -196,7 +224,7 @@ if (!\function_exists('coroutine_run')) {
      */
     function go($goFunction, ...$args)
     {
-        return Kernel::await($goFunction, ...$args);
+        return Kernel::away($goFunction, ...$args);
     }
 
     /**
@@ -270,7 +298,7 @@ if (!\function_exists('coroutine_run')) {
         return Coroutine::input($size, $error);
     }
 
-    function is_type($var, string $comparing = null)
+    function is_type($var, string $comparedWith = null)
     {
         $checks = [
             'is_callable' => 'callable',
@@ -286,16 +314,18 @@ if (!\function_exists('coroutine_run')) {
 
         foreach ($checks as $func => $val) {
             if ($func($var)) {
-                return (empty($comparing)) ? $val : ($comparing == $val);
+                return (empty($comparedWith)) ? $val : ($comparedWith == $val);
             }
         }
 
         return 'unknown';
     }
 
-    function coroutine_instance()
+    function coroutine_instance(): ?CoroutineInterface
     {
-        return \coroutine_create();
+        global $__coroutine__;
+
+        return $__coroutine__;
     }
 
     function coroutine_clear()
@@ -305,17 +335,16 @@ if (!\function_exists('coroutine_run')) {
         unset($GLOBALS['__coroutine__']);
     }
 
-    function coroutine_create(\Generator $coroutine = null)
+    function coroutine_create(\Generator $routine = null, ?string $driver = null)
     {
-        global $__coroutine__;
+        $coroutine = \coroutine_instance();
+        if (!$coroutine instanceof CoroutineInterface)
+            $coroutine = new Coroutine($driver);
 
-        if (!$__coroutine__ instanceof CoroutineInterface)
-            $__coroutine__ = new Coroutine();
+        if (!empty($routine))
+            $coroutine->createTask($routine);
 
-        if (!empty($coroutine))
-            $__coroutine__->createTask($coroutine);
-
-        return $__coroutine__;
+        return $coroutine;
     }
 
     /**
@@ -325,11 +354,12 @@ if (!\function_exists('coroutine_run')) {
      *
      * @see https://docs.python.org/3.8/library/asyncio-task.html#asyncio.run
      *
-     * @param Generator $coroutine
+     * @param Generator $routine
+     * @param string $driver event loop driver to use, either `auto`, `uv`, or `stream_select`
      */
-    function coroutine_run(\Generator $coroutine = null)
+    function coroutine_run(\Generator $routine = null, ?string $driver = 'auto')
     {
-        $coroutine = \coroutine_create($coroutine);
+        $coroutine = \coroutine_create($routine, $driver);
 
         if ($coroutine instanceof CoroutineInterface) {
             $coroutine->run();
@@ -350,20 +380,34 @@ if (!\function_exists('coroutine_run')) {
         $coroutine = \coroutine_instance();
 
         if ($coroutine instanceof CoroutineInterface)
-            return $coroutine->createSubProcess($callable, $timeout);
+            return $coroutine->addProcess($callable, $timeout);
+
+        return \coroutine_create()->addProcess($callable, $timeout);
     }
 
     /**
      * Get/create process worker pool of an parallel instance.
      *
-     * @return ProcessInterface
+     * @return ParallelInterface
      */
-    function parallel_instance(): ParallelInterface
+    function parallel_poll(): ParallelInterface
     {
         $coroutine = \coroutine_instance();
 
         if ($coroutine instanceof CoroutineInterface)
-            return $coroutine->parallelInstance();
+            return $coroutine->getParallel();
+
+        return \coroutine_create()->getParallel();
+    }
+
+    /**
+     * @deprecated 1.3.9
+     *
+     * @return ParallelInterface
+     */
+    function parallel_instance()
+    {
+        return \parallel_poll();
     }
 
     /**
@@ -386,7 +430,7 @@ if (!\function_exists('coroutine_run')) {
      */
     function parallel_wait(): ?array
     {
-        $pool = \parallel_instance();
+        $pool = \parallel_poll();
 
         if ($pool instanceof ParallelInterface)
             return $pool->wait();

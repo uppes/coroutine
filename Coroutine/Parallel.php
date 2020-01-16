@@ -12,6 +12,9 @@ use Async\Coroutine\CoroutineInterface;
 use Async\Processor\Processor;
 use Async\Processor\ProcessInterface;
 
+/**
+ * @internal
+ */
 class Parallel implements ArrayAccess, ParallelInterface
 {
     private $coroutine = null;
@@ -29,7 +32,11 @@ class Parallel implements ArrayAccess, ParallelInterface
     public function __construct(CoroutineInterface $coroutine = null)
     {
         $this->coroutine = empty($coroutine) ? \coroutine_instance() : $coroutine;
-        $this->processor = $this->coroutine->processInstance(
+        if (!$this->coroutine instanceof CoroutineInterface) {
+            $this->coroutine = \coroutine_create();
+        }
+
+        $this->processor = $this->coroutine->getProcess(
             [$this, 'markAsTimedOut'],
             [$this, 'markAsFinished'],
             [$this, 'markAsFailed']

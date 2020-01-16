@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Async\Coroutine;
 
 use Async\Processor\ProcessInterface;
-use Async\Coroutine\TaskInterface;
 use Async\Coroutine\CoroutineInterface;
 
 /**
@@ -22,7 +21,7 @@ class Process
     private $coroutine = null;
 
     public function __construct(
-        CoroutineInterface $coroutine = null,
+        ?CoroutineInterface $coroutine = null,
         $timedOutCallback = null,
         $finishCallback = null,
         $failCallback = null
@@ -65,12 +64,7 @@ class Process
             foreach ($this->processes as $process) {
                 if ($process->isTimedOut()) {
                     $this->remove($process);
-                    $markTimedOuted = $this->timedOutCallback;
-
-                    if ($markTimedOuted($process) instanceof \Generator)
-                        $this->coroutine->createTask($markTimedOuted($process));
-                    elseif ($markTimedOuted instanceof TaskInterface)
-                        $this->coroutine->schedule($markTimedOuted);
+                    $this->coroutine->executeTask($this->timedOutCallback, $process);
                 }
 
                 if (!$this->pcntl) {
@@ -78,20 +72,10 @@ class Process
                         continue;
                     } elseif ($process->isSuccessful()) {
                         $this->remove($process);
-                        $markFinished = $this->finishCallback;
-
-                        if ($markFinished($process) instanceof \Generator)
-                            $this->coroutine->createTask($markFinished($process));
-                        elseif ($markFinished instanceof TaskInterface)
-                            $this->coroutine->schedule($markFinished);
+                        $this->coroutine->executeTask($this->finishCallback, $process);
                     } elseif ($process->isTerminated()) {
                         $this->remove($process);
-                        $markFailed = $this->failCallback;
-
-                        if ($markFailed($process) instanceof \Generator)
-                            $this->coroutine->createTask($markFailed($process));
-                        elseif ($markFailed instanceof TaskInterface)
-                            $this->coroutine->schedule($markFailed);
+                        $this->coroutine->executeTask($this->failCallback, $process);
                     }
                 }
             }
@@ -152,23 +136,13 @@ class Process
 
                 if ($status['status'] === 0) {
                     $this->remove($process);
-                    $markFinished = $this->finishCallback;
-
-                    if ($markFinished($process) instanceof \Generator)
-                        $this->coroutine->createTask($markFinished($process));
-                    elseif ($markFinished instanceof TaskInterface)
-                        $this->coroutine->schedule($markFinished);
+                    $this->coroutine->executeTask($this->finishCallback, $process);
 
                     continue;
                 }
 
                 $this->remove($process);
-                $markFailed = $this->failCallback;
-
-                if ($markFailed($process) instanceof \Generator)
-                    $this->coroutine->createTask($markFailed($process));
-                elseif ($markFailed instanceof TaskInterface)
-                    $this->coroutine->schedule($markFailed);
+                $this->coroutine->executeTask($this->failCallback, $process);
             }
         });
     }

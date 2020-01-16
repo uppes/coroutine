@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Async\Coroutine;
 
 use Async\Coroutine\Channel;
-use Async\Coroutine\Coroutine;
+use Async\Coroutine\CoroutineInterface;
 use Async\Coroutine\TaskInterface;
 use Async\Coroutine\Exceptions\LengthException;
 use Async\Coroutine\Exceptions\InvalidArgumentException;
@@ -175,7 +175,7 @@ class Kernel
     {
         return new Kernel(
             function (TaskInterface $task, CoroutineInterface $coroutine) use ($channel, $message, $taskId) {
-                $taskList = $coroutine->taskList();
+                $taskList = $coroutine->currentTask();
 
                 if (isset($taskList[$channel->receiverId()]))
                     $newTask = $taskList[$channel->receiverId()];
@@ -222,7 +222,7 @@ class Kernel
     {
         return new Kernel(
             function (TaskInterface $task, CoroutineInterface $coroutine) {
-                $tasks = $coroutine->taskList();
+                $tasks = $coroutine->currentTask();
                 $coroutine->shutdown();
                 $coroutine->schedule($tasks[1]);
             }
@@ -289,13 +289,25 @@ class Kernel
         );
     }
 
+    /**
+     * Add and wait for result of an blocking io subprocess, will run in parallel.
+     * - This function needs to be prefixed with `yield`
+     *
+     * @see https://docs.python.org/3.7/library/asyncio-subprocess.html#subprocesses
+     * @see https://docs.python.org/3.7/library/asyncio-dev.html#running-blocking-code
+     *
+     * @param callable|shell $command
+     * @param int $timeout
+     *
+     * @return mixed
+     */
     public static function awaitProcess($callable, $timeout = 300)
     {
         return new Kernel(
             function (TaskInterface $task, CoroutineInterface $coroutine) use ($callable, $timeout) {
                 $task->parallelTask();
                 $task->setState('process');
-                $coroutine->createSubProcess($callable, $timeout)
+                $coroutine->addProcess($callable, $timeout)
                     ->then(function ($result) use ($task, $coroutine) {
                         $task->setState('completed');
                         $task->sendValue($result);
@@ -434,9 +446,9 @@ class Kernel
                         // @codeCoverageIgnoreEnd
                     }
 
-                    $taskList = $coroutine->taskList();
+                    $taskList = $coroutine->currentTask();
 
-                    $completeList = $coroutine->completedList();
+                    $completeList = $coroutine->completedTask();
                     $countComplete = \count($completeList);
                     $gatherCompleteCount = 0;
                     $isResultsException = false;
@@ -496,7 +508,7 @@ class Kernel
                             $tasks = $taskList[$id];
                             // Handle if parallel task.
                             if ($tasks->isParallel()) {
-                                $completeList = $coroutine->completedList();
+                                $completeList = $coroutine->completedTask();
                                 if (isset($completeList[$id])) {
                                     $tasks = $completeList[$id];
                                     if (\is_callable($onPreComplete)) {
@@ -606,8 +618,8 @@ class Kernel
                 if ($gatherSet && (\is_callable($onClear) || $gatherShouldClearCancelled)) {
                     $resultId = \array_keys($results);
                     $abortList = \array_diff($gatherIdList, $resultId);
-                    $currentList = $coroutine->taskList();
-                    $finishedList = $coroutine->completedList();
+                    $currentList = $coroutine->currentTask();
+                    $finishedList = $coroutine->completedTask();
                     foreach ($abortList as $id) {
                         if (isset($finishedList[$id])) {
                             // Update task list removing tasks already completed that will not be used, mark and execute any custom update/cancel routines
@@ -653,14 +665,14 @@ class Kernel
             $coroutine->cancelTask($taskId);
         } else {
             if (empty($completeList) || $forceUpdate) {
-                $completeList = $coroutine->completedList();
+                $completeList = $coroutine->completedTask();
             }
 
             if (isset($completeList[$taskId])) {
                 unset($completeList[$taskId]);
             }
 
-            $coroutine->updateCompleted($completeList);
+            $coroutine->updateCompletedTask($completeList);
         }
     }
 
@@ -688,7 +700,7 @@ class Kernel
                         $task->setException(new TimeoutError($timeout));
                         $coroutine->schedule($task);
                     } else {
-                        $completeList = $coroutine->completedList();
+                        $completeList = $coroutine->completedTask();
                         if (isset($completeList[$taskId])) {
                             $tasks = $completeList[$taskId];
                             $result = $tasks->result();
@@ -720,6 +732,16 @@ class Kernel
     }
 
     /**
+     * @deprecated 1.3.9
+     *
+     * @return int — $task id
+     */
+    public static function await($asyncLabel, ...$args)
+    {
+        return self::away($asyncLabel, ...$args);
+    }
+
+    /**
      * Add/schedule an `yield`-ing `function/callable/task` for execution.
      * - This function needs to be prefixed with `yield`
      *
@@ -731,7 +753,7 @@ class Kernel
      *
      * @return int $task id
      */
-    public static function await($asyncLabel, ...$args)
+    public static function away($asyncLabel, ...$args)
     {
         $isLabel = false;
         if (!\is_array($asyncLabel) && !\is_callable($asyncLabel) && !$asyncLabel instanceof \Generator) {
@@ -747,7 +769,7 @@ class Kernel
                     if ($asyncLabel instanceof \Generator) {
                         $tid = $coroutine->createTask($asyncLabel);
                         if (!empty($args)) {
-                            $taskList = $coroutine->taskList();
+                            $taskList = $coroutine->currentTask();
                             if (($args[0] === 'true') || ($args[0] === true))
                                 $taskList[$tid]->customState(true);
                             else
