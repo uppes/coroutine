@@ -214,7 +214,7 @@ interface UVTty extends UVStream
  *  handles, the loop will perform a zero timeout poll instead of blocking for i/o.
  *
  * `Warning:` Despite the name, idle handles will get their callbacks called on every loop
- *  iteration, not when the loop is actually “idle”.
+ *  iteration, not when the loop is actually *idle*.
  */
 interface UVIdle extends UVHandle
 {

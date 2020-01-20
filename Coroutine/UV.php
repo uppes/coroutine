@@ -45,7 +45,7 @@ final class UV
     const RUN_ONCE = 1;
 
     /**
-     * Poll for i/o once but don’t block if there are no pending callbacks.
+     * Poll for i/o once but don't block if there are no pending callbacks.
      * Mode used to run the loop with.
      */
     const RUN_NOWAIT = 2;
@@ -310,7 +310,7 @@ final class UV
 
     /**
      * The SIGTRAP signal is sent to a process when an exception (or trap) occurs: a condition that a debugger has
-     * requested to be informed of — for example, when a particular function is executed, or when a particular variable
+     * requested to be informed of - for example, when a particular function is executed, or when a particular variable
      * changes value.
      */
     const SIGTRAP = 5;

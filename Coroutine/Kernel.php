@@ -313,7 +313,7 @@ class Kernel
                         $task->sendValue($result);
                         $coroutine->schedule($task);
                     })
-                    ->catch(function (\Exception $error) use ($task, $coroutine) {
+                    ->catch(function (\Throwable $error) use ($task, $coroutine) {
                         $task->setState('erred');
                         $task->setException(new \RuntimeException($error->getMessage()));
                         $coroutine->schedule($task);
@@ -529,15 +529,15 @@ class Kernel
                                 }
 
                                 // Handle if parallel task process not running, force run.
-                                if ($tasks->process()) {
+                                if ($tasks->isProcess()) {
                                     $coroutine->execute();
                                 }
                                 // Handle if task not running/pending, force run.
-                            } elseif ($tasks->isCustomState($isCustomSate) || $tasks->pending() || $tasks->rescheduled()) {
+                            } elseif ($tasks->isCustomState($isCustomSate) || $tasks->isPending() || $tasks->isRescheduled()) {
                                 if (\is_callable($onProcessing)) {
                                     $onProcessing($tasks, $coroutine);
                                 } else {
-                                    if (($tasks->pending() || $tasks->rescheduled()) && $tasks->isCustomState(true)) {
+                                    if (($tasks->isPending() || $tasks->isRescheduled()) && $tasks->isCustomState(true)) {
                                         $tasks->customState();
                                         $coroutine->schedule($tasks);
                                         $tasks->run();
@@ -547,7 +547,7 @@ class Kernel
                                     $coroutine->execute();
                                 }
                                 // Handle if task finished.
-                            } elseif ($tasks->completed()) {
+                            } elseif ($tasks->isCompleted()) {
                                 if (\is_callable($onCompleted)) {
                                     $result = $onCompleted($tasks);
                                 } else {
@@ -584,13 +584,13 @@ class Kernel
                                         break;
                                 }
                                 // Handle if task erred or cancelled.
-                            } elseif ($tasks->erred() || $tasks->cancelled()) {
-                                if ($tasks->erred() && \is_callable($onError)) {
+                            } elseif ($tasks->isErred() || $tasks->isCancelled()) {
+                                if ($tasks->isErred() && \is_callable($onError)) {
                                     $result = $onError($tasks);
-                                } elseif ($tasks->cancelled() && \is_callable($onCancel)) {
+                                } elseif ($tasks->isCancelled() && \is_callable($onCancel)) {
                                     $result = $onCancel($tasks);
                                 } else {
-                                    $result = $tasks->cancelled() ? new CancelledError() : $tasks->exception();
+                                    $result = $tasks->isCancelled() ? new CancelledError() : $tasks->exception();
                                 }
 
                                 $exception = $result;
@@ -734,7 +734,7 @@ class Kernel
     /**
      * @deprecated 1.3.9
      *
-     * @return int — $task id
+     * @return int $task id
      */
     public static function await($asyncLabel, ...$args)
     {

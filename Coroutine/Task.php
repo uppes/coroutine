@@ -132,11 +132,6 @@ class Task implements TaskInterface
         $this->exception = $exception;
     }
 
-    public function isFinished(): bool
-    {
-        return !$this->coroutine->valid();
-    }
-
     public function setState(string $status)
     {
         $this->state = $status;
@@ -169,11 +164,6 @@ class Task implements TaskInterface
         return $customData;
     }
 
-    public function isCustomState($state): bool
-    {
-        return ($this->customState === $state);
-    }
-
     public function exception(): ?\Exception
     {
         $error = $this->error;
@@ -186,39 +176,49 @@ class Task implements TaskInterface
         $this->taskType = 'paralleled';
     }
 
+    public function isCustomState($state): bool
+    {
+        return ($this->customState === $state);
+    }
+
     public function isParallel(): bool
     {
         return ($this->taskType == 'paralleled');
     }
 
-    public function process(): bool
+    public function isProcess(): bool
     {
         return ($this->state == 'process');
     }
 
-    public function erred(): bool
+    public function isErred(): bool
     {
         return ($this->state == 'erred');
     }
 
-    public function pending(): bool
+    public function isPending(): bool
     {
         return ($this->state == 'pending');
     }
 
-    public function cancelled(): bool
+    public function isCancelled(): bool
     {
         return ($this->state == 'cancelled');
     }
 
-    public function completed(): bool
+    public function isCompleted(): bool
     {
         return ($this->state == 'completed');
     }
 
-    public function rescheduled(): bool
+    public function isRescheduled(): bool
     {
         return ($this->state == 'rescheduled');
+    }
+
+    public function isFinished(): bool
+    {
+        return !$this->coroutine->valid();
     }
 
     public function clearResult()
@@ -228,11 +228,11 @@ class Task implements TaskInterface
 
     public function result()
     {
-        if ($this->completed()) {
+        if ($this->isCompleted()) {
             $result = $this->result;
             $this->result = null;
             return $result;
-        } elseif ($this->cancelled() || $this->erred()) {
+        } elseif ($this->isCancelled() || $this->isErred()) {
             throw $this->error;
         } else {
             throw new InvalidStateError();

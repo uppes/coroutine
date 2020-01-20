@@ -118,11 +118,6 @@ class Coroutine implements CoroutineInterface
     protected $signals = [];
 
     /**
-     * @var bool
-     */
-    protected $pcntl;
-
-    /**
      * @var Process
      */
     protected $process = null;
@@ -333,10 +328,8 @@ class Coroutine implements CoroutineInterface
 
     public function isPcntl(): bool
     {
-        $this->pcntl = \extension_loaded('pcntl') && \function_exists('pcntl_async_signals')
+        return \extension_loaded('pcntl') && \function_exists('pcntl_async_signals')
             && \function_exists('posix_kill');
-
-        return $this->pcntl;
     }
 
     public function createTask(\Generator $coroutine)
@@ -724,7 +717,7 @@ class Coroutine implements CoroutineInterface
 
     public function addSignal($signal, $listener)
     {
-        if (!$this->signaler || $this->pcntl === false)
+        if (!$this->signaler)
             return;
 
         $first = $this->signaler->count($signal) === 0;
@@ -745,7 +738,7 @@ class Coroutine implements CoroutineInterface
 
     public function removeSignal($signal, $listener)
     {
-        if (!$this->signaler || $this->pcntl === false)
+        if (!$this->signaler)
             return;
 
         if (!$this->signaler->count($signal)) {

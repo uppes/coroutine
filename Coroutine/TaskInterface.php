@@ -20,8 +20,6 @@ interface TaskInterface
 
     public function run();
 
-    public function isFinished(): bool;
-
     public function parallelTask();
 
     /**
@@ -56,35 +54,39 @@ interface TaskInterface
      *
      * @return bool
      */
-    public function process(): bool;
+    public function isProcess(): bool;
 
     /**
      * A flag that indicates whether or not the task has an error.
      *
      * @return bool
      */
-    public function erred(): bool;
+    public function isErred(): bool;
 
     /**
      * A flag that indicates whether or not the task has started.
      *
      * @return bool
      */
-    public function pending(): bool;
+    public function isPending(): bool;
 
     /**
      * A flag that indicates whether or not the task was cancelled.
      *
      * @return bool
      */
-    public function cancelled(): bool;
+    public function isCancelled(): bool;
 
     /**
      * A flag that indicates whether or not the task has run to completion.
      *
      * @return bool
      */
-    public function completed(): bool;
+    public function isCompleted(): bool;
+
+    public function isRescheduled(): bool;
+
+    public function isFinished(): bool;
 
     /**
      * Return the result of the Task.
