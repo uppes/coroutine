@@ -849,6 +849,7 @@ class Coroutine implements CoroutineInterface
         return new PlainValueCoroutine($value);
     }
 
+// @codeCoverageIgnoreStart
     /**
      * Wait on keyboard input.
      * Will not block other task on `Linux`, will continue other tasks until `enter` key is pressed,
@@ -878,6 +879,7 @@ class Coroutine implements CoroutineInterface
 
         return \trim(\stream_get_line(\STDIN, $size, \EOL));
     }
+// @codeCoverageIgnoreEnd
 
     public static function create(\Generator $gen)
     {

@@ -89,13 +89,7 @@ class KernelTest extends TestCase
     public function lapse(int $taskId = null)
     {
         yield \cancel_task($taskId);
-    }
-
-    public function keyboard()
-    {
-        $tid = yield \task_id();
-        yield \await($this->lapse($tid));
-        return yield Coroutine::input(256);
+        yield;
     }
 
     public function taskSleepFor()
@@ -105,15 +99,6 @@ class KernelTest extends TestCase
         $t1 = \microtime(true);
         $this->assertEquals('done sleeping', $done);
         $this->assertGreaterThan(1, (float) ($t1 - $t0));
-    }
-
-    public function taskInput()
-    {
-        try {
-            $data = yield Kernel::gather($this->keyboard());
-        } catch (\Async\Coroutine\Exceptions\CancelledError $e) {
-            $this->assertInstanceOf(\Async\Coroutine\Exceptions\CancelledError::class, $e);
-        }
     }
 
     public function taskWaitFor()
@@ -135,11 +120,6 @@ class KernelTest extends TestCase
     public function testWaitFor()
     {
         \coroutine_run($this->taskWaitFor());
-    }
-
-    public function testInputAndGather()
-    {
-        \coroutine_run($this->taskInput());
     }
 
     public function testCancel()

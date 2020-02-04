@@ -18,9 +18,14 @@
     <filter>
         <whitelist>
             <directory suffix=".php">Coroutine/</directory>
+            <exclude>
+                <file>./Coroutine/UV.php</file>
+                <file>./Coroutine/UVFunctions.php</file>
+                <file>./Coroutine/UVInterfaces.php</file>
+            </exclude>
         </whitelist>
     </filter>
-	
+
 	<logging>
         <log type="tap" target="build/report.tap"/>
         <log type="junit" target="build/report.junit.xml"/>
