@@ -3,6 +3,7 @@
         "autoload",
         "curryied",
         "hrtime",
+        "libuv",
         "phpunit",
         "plainfile",
         "symfony",

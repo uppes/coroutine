@@ -17,7 +17,9 @@
 
 ## Introduction
 
-A Coroutine are special functions that are based on __generators__, with the use of `yield` and `yield from`. When used they release the flow of control back to the calling function, with bring with an object.
+A Coroutine are special crafted functions that are based on __generators__, with the use of `yield` and `yield from`. When used, they **control context**, meaning `capture/release` an application's execution flow.
+
+When `yield` is placed within an block of code, it indicates to the calling function, that an object will be returned instead, the code is not immediately executed.
 
 This package represent that calling function, an __scheduler__, similar to an **event loop**. A coroutine needs to be scheduled to run, and once scheduled coroutines are wrapped in an `Task`, which are a type of **Promise**.
 
