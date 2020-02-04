@@ -189,6 +189,7 @@ class Coroutine implements CoroutineInterface
         $this->taskQueue = new \SplQueue();
     }
 
+// @codeCoverageIgnoreStart
     protected function timestamp()
     {
         return (float) ($this->isHighTimer ? \hrtime(true) / 1e+9 : \microtime(true));
@@ -270,6 +271,16 @@ class Coroutine implements CoroutineInterface
     /**
      * @deprecated 1.3.9
      *
+     * @return Process
+     */
+    public function processInstance($timedOutCallback = null, $finishCallback = null, $failCallback = null)
+    {
+        return $this->getProcess();
+    }
+
+    /**
+     * @deprecated 1.3.9
+     *
      * @return ParallelInterface
      */
     public function parallelInstance()
@@ -277,19 +288,49 @@ class Coroutine implements CoroutineInterface
         return $this->getParallel();
     }
 
-    public function getParallel(): ParallelInterface
+    /**
+     * @deprecated 1.3.9
+     *
+     * @return ProcessInterface
+     */
+    public function createSubProcess($callable, int $timeout = 300): ProcessInterface
     {
-        return $this->parallel;
+        return $this->addProcess($callable, $timeout);
     }
 
     /**
      * @deprecated 1.3.9
      *
-     * @return Process
+     * @return array|null
      */
-    public function processInstance($timedOutCallback = null, $finishCallback = null, $failCallback = null)
+    public function taskList()
     {
-        return $this->getProcess();
+        return $this->currentTask();
+    }
+
+    /**
+     * @deprecated 1.3.9
+     *
+     * @return array|null
+     */
+    public function completedList()
+    {
+        return $this->completedTask();
+    }
+
+    /**
+     * @deprecated 1.3.9
+     */
+    public function updateCompleted($taskMap = [])
+    {
+        $this->updateCompletedTask($taskMap);
+    }
+// @codeCoverageIgnoreEnd
+
+
+    public function getParallel(): ParallelInterface
+    {
+        return $this->parallel;
     }
 
     public function getProcess(
@@ -306,25 +347,17 @@ class Coroutine implements CoroutineInterface
         return $this->process;
     }
 
-    /**
-     * @deprecated 1.3.9
-     *
-     * @return ProcessInterface
-     */
-    public function createSubProcess($callable, int $timeout = 300): ProcessInterface
-    {
-        return $this->addProcess($callable, $timeout);
-    }
-
     public function addProcess($callable, int $timeout = 300): ProcessInterface
     {
         return $this->parallel->add($callable, $timeout);
     }
 
+// @codeCoverageIgnoreStart
     public function isUvActive(): bool
     {
         return !empty($this->uv) && \is_object($this->uv);
     }
+// @codeCoverageIgnoreEnd
 
     public function isPcntl(): bool
     {
@@ -404,6 +437,7 @@ class Coroutine implements CoroutineInterface
             }
         }
 
+// @codeCoverageIgnoreStart
         if ($this->isUvActive()) {
             \uv_stop($this->uv);
             foreach ($this->timers as $timer) {
@@ -425,6 +459,7 @@ class Coroutine implements CoroutineInterface
             $this->waitingForWrite = [];
             \uv_run($this->uv, \UV::RUN_NOWAIT);
         }
+// @codeCoverageIgnoreEnd
     }
 
     public function cancelTask(int $tid, $customState = null)
@@ -454,16 +489,6 @@ class Coroutine implements CoroutineInterface
         return true;
     }
 
-    /**
-     * @deprecated 1.3.9
-     *
-     * @return array|null
-     */
-    public function taskList()
-    {
-        return $this->currentTask();
-    }
-
     public function currentTask(): ?array
     {
         if (!isset($this->taskMap)) {
@@ -473,16 +498,6 @@ class Coroutine implements CoroutineInterface
         return $this->taskMap;
     }
 
-    /**
-     * @deprecated 1.3.9
-     *
-     * @return array|null
-     */
-    public function completedList()
-    {
-        return $this->completedTask();
-    }
-
     public function completedTask(): ?array
     {
         if (!isset($this->completedMap)) {
@@ -490,14 +505,6 @@ class Coroutine implements CoroutineInterface
         }
 
         return $this->completedMap;
-    }
-
-    /**
-     * @deprecated 1.3.9
-     */
-    public function updateCompleted($taskMap = [])
-    {
-        $this->updateCompletedTask($taskMap);
     }
 
     public function updateCompletedTask($taskMap = [])
@@ -552,6 +559,7 @@ class Coroutine implements CoroutineInterface
         }
     }
 
+// @codeCoverageIgnoreStart
     /**
      * Runs all pending timers.
      *
@@ -577,6 +585,7 @@ class Coroutine implements CoroutineInterface
             return \max(0, $timer[0] - \microtime(true));
         }
     }
+// @codeCoverageIgnoreEnd
 
     /**
      * Check for I/O events, streams/sockets/fd activity and `yield`,
@@ -779,6 +788,7 @@ class Coroutine implements CoroutineInterface
         return !$this->signaler->isEmpty();
     }
 
+// @codeCoverageIgnoreStart
     protected function addTimer($interval, $callback)
     {
         $timer = \uv_timer_init($this->uv);
@@ -790,6 +800,7 @@ class Coroutine implements CoroutineInterface
             $this->onTimer
         );
     }
+// @codeCoverageIgnoreEnd
 
     public function addTimeout($task, float $timeout)
     {

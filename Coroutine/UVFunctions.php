@@ -1,5 +1,5 @@
 <?php
-
+// @codeCoverageIgnoreStart
 /**
  * create a `new` loop handle.
  *
@@ -1750,3 +1750,4 @@ function uv_ip4_name($address)
 function uv_ip6_name($address)
 {
 }
+// @codeCoverageIgnoreEnd
