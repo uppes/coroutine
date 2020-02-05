@@ -93,6 +93,7 @@ if (!\function_exists('coroutine_run')) {
         return Kernel::gather(...$taskId);
     }
 
+// @codeCoverageIgnoreStart
     /**
      * Add an blocking io subprocess, that will run in parallel.
      * This function will return `int` immediately, use `gather()` to get the result.
@@ -107,8 +108,9 @@ if (!\function_exists('coroutine_run')) {
     {
         return Kernel::away(function () use ($command, $timeout) {
             return Kernel::awaitProcess($command, $timeout);
-        }, $command, $timeout);
+        });
     }
+// @codeCoverageIgnoreEnd
 
     /**
      * Add and wait for result of an blocking io subprocess, will run in parallel.
