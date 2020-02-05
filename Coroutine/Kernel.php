@@ -215,8 +215,7 @@ class Kernel
     }
 
     /**
-     * Performs a clean shutdown.
-     * Should be called at application exit.
+     * Performs a clean application exit and shutdown.
      */
     public static function shutdown()
     {

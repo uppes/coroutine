@@ -51,7 +51,6 @@ install:
     - IF %PHP%==1 echo xdebug.remote_autostart=1 >> php.ini
     - IF %PHP%==1 echo xdebug.profiler_enable=off >> php.ini
     - cd c:\projects\php-project-workspace
-    - php -m
     - composer self-update
 
 on_success:

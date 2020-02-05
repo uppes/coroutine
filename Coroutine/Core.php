@@ -128,8 +128,8 @@ if (!\function_exists('coroutine_run')) {
     }
 
     /**
-     * Wrap the callable with `yield`, this insure the first attempt to execute
-     * act like a generator function, will switch at least once without actually executing.
+     * Wrap the callable with `yield`, this insure the first attempt to execute will behave
+     * like a generator function, will switch at least once without actually executing, return object instead.
      * Then function is used by `away()` not really called directly.
      *
      * @see https://docs.python.org/3.7/library/asyncio-task.html#awaitables
@@ -137,7 +137,7 @@ if (!\function_exists('coroutine_run')) {
      * @param Generator|callable $awaitableFunction
      * @param mixed $args
      *
-     * @return mixed
+     * @return \Generator
      */
     function awaitable(callable $awaitableFunction, ...$args)
     {
@@ -240,7 +240,7 @@ if (!\function_exists('coroutine_run')) {
     }
 
     /**
-     * Performs a clean shutdown.
+     * Performs a clean application exit and shutdown.
      *
      * - This function needs to be prefixed with `yield`
      */
@@ -308,7 +308,13 @@ if (!\function_exists('coroutine_run')) {
     }
 // @codeCoverageIgnoreEnd
 
-    function is_type($var, string $comparedWith = null)
+    /**
+     * Return the `string` of a variable type, or does a check, compared with string of the type.
+     * Types are: `callable`, `string`, `int`, `float`, `null`, `bool`, `array`, `object`, or `resource`
+     *
+     * @return string|bool
+     */
+    function is_type(string $variable, string $comparedWith = null)
     {
         $checks = [
             'is_callable' => 'callable',
@@ -323,8 +329,8 @@ if (!\function_exists('coroutine_run')) {
         ];
 
         foreach ($checks as $func => $val) {
-            if ($func($var)) {
-                return (empty($comparedWith)) ? $val : ($comparedWith == $val);
+            if ($func($variable)) {
+                return (empty($comparedWith)) ? $variable : ($comparedWith == $val);
             }
         }
 

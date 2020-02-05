@@ -99,24 +99,30 @@ const EOL = PHP_EOL;
 const DS = DIRECTORY_SEPARATOR;
 
 /**
- * Makes an resolvable function from label name that's callable with `await`
+ * Makes an resolvable function from label name that's callable with `away`
  */
 \async(string $labelFunction, $asyncFunction);
 
 /**
- * Add/schedule an `yield`-ing `function/callable/task` for execution.
+ * Add/schedule an `yield`-ing `function/callable/task` for background execution.
  * Will immediately return an `int`, and continue to the next instruction.
  * Returns an task Id
  * - This function needs to be prefixed with `yield`
  *
  * @see https://docs.python.org/3.7/library/asyncio-task.html#asyncio.create_task
  */
-yield \await($awaitedFunction, ...$args) ;
+yield \away($awaitedFunction, ...$args) ;
 
 /**
- * Wrap the callable with `yield`, this makes sure every callable is a generator function,
- * and will switch at least once without actually executing.
- * This function is used by `await` not really called directly.
+ * Performs a clean application exit and shutdown.
+ * - This function needs to be prefixed with `yield`
+ */
+yield \shutdown()
+
+/**
+ * Wrap the callable with `yield`, this insure the first attempt to execute will behave
+ * like a generator function, will switch at least once without actually executing, return object instead.
+ * This function is used by `away` not really called directly.
  *
  * @see https://docs.python.org/3.7/library/asyncio-task.html#awaitables
  */
@@ -214,7 +220,7 @@ yield \go($goFunction, ...$args);
  * Return the task ID
  * - This function needs to be prefixed with `yield`
  */
-yield \task_id();
+yield \get_task();
 
 /**
  * kill/remove an task using task id
@@ -264,13 +270,20 @@ yield \input_wait($size);
 
 ```php
 /**
- * Add and wait for result of an blocking io subprocess, will run in parallel.
+ * Add and wait for result of a blocking `subprocess`, will run in parallel.
  * - This function needs to be prefixed with `yield`
  *
  * @see https://docs.python.org/3.7/library/asyncio-subprocess.html#subprocesses
  * @see https://docs.python.org/3.7/library/asyncio-dev.html#running-blocking-code
  */
-yield \await_process($command, $timeout)
+yield \await_process($command, $timeout);
+
+/**
+ * Add a blocking `subprocess`, that will run in parallel.
+ * This function will return `int` immediately, use `gather()` to get the result.
+ * - This function needs to be prefixed with `yield`
+ */
+yield \spawn_process($command, $timeout);
 ```
 
 ```php
@@ -299,7 +312,7 @@ yield \await_process($command, $timeout)
 /**
  * Get/create process worker pool of an parallel instance.
  */
-\parallel_instance();
+\parallel_pool();
 
 /**
  * Add something/callable to parallel instance process pool.
@@ -378,7 +391,7 @@ function needName() {
 }
 
 function main() {
-    yield \await(\needName());
+    yield \away(\needName());
     echo \EOL.'You typed: '.(yield \keyboard()).\EOL;
 
     try {
@@ -475,9 +488,9 @@ You can also use [Facebook's Hack](https://hhvm.com/). However, this too not an 
 
 The [**PHP Internals**](https://phpinternals.news/11) team has recently released [Parallel](https://www.php.net/manual/en/book.parallel.php). It's available on [PECL](https://pecl.php.net/package/parallel), [krakjoe/parallel](https://github.com/krakjoe/parallel). Looks promising, however this ___`Coroutine`___ package does everything listed in there **Parallel concurrency API** without the unnecessary restrictions, PHP 7.2, and limits on **Tasks**. They too modeling after Google's Go ease of use, but still directly handling the **Future/Promise** concepts. Whenever, some examples are produced, will recreate and benchmark the examples here. Will also create alias function calls for items with the same functionality.
 
-There is also [Async Extension for PHP](https://github.com/concurrent-php/ext-async#async-extension-for-php). Haven't seen this before starting this project, similar concepts but require a lot more coding to do simply things, require *PHP 7.3*, and has a *PECL* module. Has *Async* and *Await* keywords, but definitely not following the norms in usage as other languages. No way near the way Google's Go, Pythons, or C# work, seeing there [examples](https://github.com/concurrent-php/ext-async/tree/master/examples).
+There is also [Async Extension for PHP](https://github.com/concurrent-php/ext-async#async-extension-for-php). Haven't seen this before starting this project, similar concepts but require a lot more coding to do simply things, require *PHP 7.3*, and no *PECL* module. Has *Async* and *Await* keywords, but definitely not following the norms in usage as other languages. No way near the way Google's Go, Pythons, or C# work, seeing there [examples](https://github.com/concurrent-php/ext-async/tree/master/examples).
 
-> The **Async Extension for PHP** seemed to have stopped development, and the main repo removed for unknown reasons. It has been forked at [dreamsxin/ext-async](https://github.com/dreamsxin/ext-async).
+> The **Async Extension for PHP** seemed to have stopped development, and the main repo removed for unknown reasons. It has been forked at [dreamsxin/ext-async](https://github.com/dreamsxin/ext-async), with the [examples](https://github.com/dreamsxin/ext-async/tree/master/examples). The downloadable pre-compiled DLL **Windows** module was link to the author repo, which too no longer exists.
 
 ____Other main asynchronous PHP libraries____
 
@@ -507,7 +520,7 @@ This ___`Coroutine`___ package differs, mainly because it just managing the flow
 
  **Christopher Pitt** [Co-operative PHP Multitasking](https://medium.com/async-php/co-operative-php-multitasking-ce4ef52858a0)
 
-**Parallel** class package here is a restructured/rewrite of [spatie/async](https://github.com/spatie/async), with _Windows_. This class pulls in [symplely/processor](https://github.com/symplely/processor) as an dependency which includes, [symfony/process](https://github.com/symfony/process) class, which is going to be used instead of my own implementation for **subprocess** management/execution. It has better **Windows** support, with no issues running parallel PHP processes, not seeing any blocking issues. The **Processor** package also has [opis/closure](https://github.com/opis/closure) as an dependency, it's used to overcome **PHP** serialization limitations.
+**Parallel** class package here is a restructured/rewrite of [spatie/async](https://github.com/spatie/async), it mainly differs in that it offers true __Windows__ support. This class pulls in [symplely/processor](https://github.com/symplely/processor) as an dependency which includes, [symfony/process](https://github.com/symfony/process) class, which is going to be used for **subprocess** management/execution. It has better **Windows** support, with no issues running parallel PHP processes, not seeing any blocking issues. The **Processor** package also has [opis/closure](https://github.com/opis/closure) as an dependency, it's used to overcome **PHP** serialization limitations.
 
 ---
 [Concurrency in Go](https://youtu.be/LvgVSSpwND8) __video__

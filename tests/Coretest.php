@@ -26,6 +26,7 @@ class CoreTest extends TestCase
     {
         $tid = yield \get_task();
         $childTid = yield \away([$this, 'childTask']);
+        $this->assertEquals('int', \is_type($childTid));
 
         for ($i = 1; $i <= 6; ++$i) {
             $this->task .= "Parent task $tid iteration $i.\n";
@@ -33,7 +34,7 @@ class CoreTest extends TestCase
 
             if ($i == 3) {
                 $bool = yield \cancel_task($childTid);
-                $this->assertTrue($bool);
+                $this->assertTrue(\is_type($bool, 'bool'));
             }
         }
     }
