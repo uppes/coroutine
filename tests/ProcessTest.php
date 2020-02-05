@@ -2,7 +2,6 @@
 
 namespace Async\Tests;
 
-use Async\Coroutine\Kernel;
 use Async\Coroutine\Coroutine;
 use PHPUnit\Framework\TestCase;
 
@@ -20,7 +19,7 @@ class ProcessTest extends TestCase
 
     public function childTask()
     {
-        $childId = (yield Kernel::taskId());
+        $childId = (yield \get_task());
         $this->assertNotNull($childId);
         $this->childId = $childId;
 
@@ -37,8 +36,8 @@ class ProcessTest extends TestCase
 
     public function taskProcess()
     {
-        $childId = yield \await($this->childTask());
-        $result = yield Kernel::awaitProcess(function () {
+        $childId = yield \away($this->childTask());
+        $result = yield \await_process(function () {
             usleep(1000);
             return 3;
         });
@@ -52,10 +51,10 @@ class ProcessTest extends TestCase
 
     public function taskProcessError()
     {
-        $childId = yield \await([$this, 'childTask']);
+        $childId = yield \away([$this, 'childTask']);
         $result = null;
         try {
-            $result = yield Kernel::awaitProcess(function () {
+            $result = yield \await_process(function () {
                 usleep(1000);
                 throw new \Exception('3');
             });
@@ -71,9 +70,9 @@ class ProcessTest extends TestCase
 
     public function taskProcessTimeOut()
     {
-        $childId = yield await($this->childTask());
+        $childId = yield away($this->childTask());
         try {
-            yield Kernel::awaitProcess(function () {
+            yield \await_process(function () {
                 \sleep(1.5);
             }, 1);
         } catch (\Async\Coroutine\Exceptions\TimeoutError $error) {
@@ -92,7 +91,7 @@ class ProcessTest extends TestCase
         $this->counterResult = 0;
 
         $coroutine = new Coroutine();
-        $parallel = $coroutine->parallelInstance();
+        $parallel = $coroutine->getParallel();
 
         $coroutine->createTask($this->taskProcess());
         $coroutine->run();
@@ -112,7 +111,7 @@ class ProcessTest extends TestCase
         $this->counterResult = 0;
 
         $coroutine = new Coroutine();
-        $parallel = $coroutine->parallelInstance();
+        $parallel = $coroutine->getParallel();
 
         $coroutine->createTask($this->taskProcessError());
         $coroutine->run();
@@ -132,7 +131,7 @@ class ProcessTest extends TestCase
         $this->counterResult = 0;
 
         $coroutine = new Coroutine();
-        $parallel = $coroutine->parallelInstance();
+        $parallel = $coroutine->getParallel();
 
         $coroutine->createTask($this->taskProcessTimeOut());
         $coroutine->run();

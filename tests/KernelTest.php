@@ -89,7 +89,6 @@ class KernelTest extends TestCase
     public function lapse(int $taskId = null)
     {
         yield \cancel_task($taskId);
-        yield;
     }
 
     public function taskSleepFor()
@@ -105,7 +104,7 @@ class KernelTest extends TestCase
     {
         try {
             // Wait for at most 0.2 second
-            yield Kernel::waitFor($this->taskSleepFor(), 0.2);
+            yield \wait_for($this->taskSleepFor(), 0.2);
         } catch (\Async\Coroutine\Exceptions\TimeoutError $e) {
             $this->assertInstanceOf(\Async\Coroutine\Exceptions\TimeoutError::class, $e);
             yield Kernel::shutdown();

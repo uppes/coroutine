@@ -267,66 +267,7 @@ class Coroutine implements CoroutineInterface
 
         \uv_poll_start($this->events[(int) $stream], $flags, $this->onEvent);
     }
-
-    /**
-     * @deprecated 1.3.9
-     *
-     * @return Process
-     */
-    public function processInstance($timedOutCallback = null, $finishCallback = null, $failCallback = null)
-    {
-        return $this->getProcess();
-    }
-
-    /**
-     * @deprecated 1.3.9
-     *
-     * @return ParallelInterface
-     */
-    public function parallelInstance()
-    {
-        return $this->getParallel();
-    }
-
-    /**
-     * @deprecated 1.3.9
-     *
-     * @return ProcessInterface
-     */
-    public function createSubProcess($callable, int $timeout = 300): ProcessInterface
-    {
-        return $this->addProcess($callable, $timeout);
-    }
-
-    /**
-     * @deprecated 1.3.9
-     *
-     * @return array|null
-     */
-    public function taskList()
-    {
-        return $this->currentTask();
-    }
-
-    /**
-     * @deprecated 1.3.9
-     *
-     * @return array|null
-     */
-    public function completedList()
-    {
-        return $this->completedTask();
-    }
-
-    /**
-     * @deprecated 1.3.9
-     */
-    public function updateCompleted($taskMap = [])
-    {
-        $this->updateCompletedTask($taskMap);
-    }
 // @codeCoverageIgnoreEnd
-
 
     public function getParallel(): ParallelInterface
     {

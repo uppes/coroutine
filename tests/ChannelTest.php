@@ -3,10 +3,7 @@
 namespace Async\Tests;
 
 use Async\Coroutine\Kernel;
-use Async\Coroutine\Coroutine;
-use Async\Coroutine\StreamSocket;
 use Async\Coroutine\Channel;
-use Async\Coroutine\StreamSocketInterface;
 use PHPUnit\Framework\TestCase;
 
 class ChannelTest extends TestCase
@@ -20,16 +17,15 @@ class ChannelTest extends TestCase
     {
         yield \sleep_for(2);
         $this->assertTrue($channel instanceof Channel);
-        yield Kernel::sender($channel, 'true');
+        yield \sender($channel, 'true');
     }
 
     public function taskMake()
     {
-        $channel = yield Kernel::make();
+        $channel = yield \make();
         $this->assertTrue($channel instanceof Channel);
         yield \go($this->taskSender($channel));
-        yield Kernel::receiver($channel);
-        $done = yield Kernel::receive($channel);
+        $done = yield \receiver($channel);
         $this->assertEquals('true', $done);
     }
 

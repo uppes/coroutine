@@ -34,15 +34,15 @@ function needName() {
 }
 
 function main() {
-    yield \await(\needName());
+    yield \away(\needName());
     echo \EOL.'You typed: '.(yield \keyboard()).\EOL;
-    
+
     try {
         // Wait for at most 0.5 second
         yield \wait_for(\eternity(), 0.5);
 	} catch (TimeoutError $e) {
         print("\ntimeout!");
-        // this script should have exited automatically, since 
+        // this script should have exited automatically, since
         // there are no streams open, nor tasks running, this exception killed `eternity` task
         // currently, will continue to run
         yield \cancel_task(2); // task id 2 is `ioSocketPoll` task, the scheduler added for listening for streams

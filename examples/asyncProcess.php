@@ -31,7 +31,7 @@ function enqueue($index, $task)
         return \file_get_contents($task);
     });
 
-    $tid = yield \task_id();
+    $tid = yield \get_task();
     \printf("\nRead from %d, task %d: %d bytes\n", $index, $tid, \strlen($result));
     return $result;
 };
@@ -43,7 +43,7 @@ function main()
 
     $coroutinesId = [];
     foreach ($tasks as $index => $parameters) {
-        $coroutinesId[] = yield \await(\enqueue($index, $parameters));
+        $coroutinesId[] = yield \away(\enqueue($index, $parameters));
     }
 
     try {

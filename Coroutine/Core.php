@@ -17,11 +17,12 @@ if (!\function_exists('coroutine_run')) {
     \define('EOL', \PHP_EOL);
     \define('DS', \DIRECTORY_SEPARATOR);
 
+// @codeCoverageIgnoreStart
     /**
-     * Makes an resolvable function from label name that's callable with `await`
+     * Makes an resolvable function from label name that's callable with `away`
      * The passed in `function/callable/task` is wrapped to be `awaitAble`
      *
-     * This will create closure function in global namespace with supplied name as variable
+     * This will create closure function in global namespace with supplied name as variable.
      *
      * @param string $labelFunction
      * @param Generator|callable $asyncFunction
@@ -30,14 +31,11 @@ if (!\function_exists('coroutine_run')) {
     {
         Kernel::async($labelFunction, $asyncFunction);
     }
+// @codeCoverageIgnoreEnd
 
     /**
-     * Add/schedule an `yield`-ing `function/callable/task` for execution.
+     * Add/schedule an `yield`-ing `function/callable/task` for background execution.
      * Will immediately return an `int`, and continue to the next instruction.
-     *
-     * If used in conjunction with `async()` then `$awaitableFunction` is an variable that will be placed
-     * in global namespace, your local calling function will need use `global` keyword with same variable
-     * in local namespace also.
      *
      * @see https://docs.python.org/3.7/library/asyncio-task.html#asyncio.create_task
      *
@@ -51,16 +49,6 @@ if (!\function_exists('coroutine_run')) {
     function away($awaitableFunction, ...$args)
     {
         return Kernel::away($awaitableFunction, ...$args);
-    }
-
-    /**
-     * @deprecated 1.3.9
-     *
-     * @return int — $task id
-     */
-    function await($awaitableFunction, ...$args)
-    {
-        return Kernel::await($awaitableFunction, ...$args);
     }
 
     /**
@@ -117,7 +105,7 @@ if (!\function_exists('coroutine_run')) {
      */
     function spawn_process($command, $timeout = 300)
     {
-        return Kernel::away(function ($command, int $timeout = 300) {
+        return Kernel::away(function () use ($command, $timeout) {
             return Kernel::awaitProcess($command, $timeout);
         }, $command, $timeout);
     }
@@ -138,7 +126,6 @@ if (!\function_exists('coroutine_run')) {
     {
         return Kernel::awaitProcess($command, $timeout);
     }
-
 
     /**
      * Wrap the callable with `yield`, this insure the first attempt to execute
@@ -242,14 +229,19 @@ if (!\function_exists('coroutine_run')) {
     }
 
     /**
+     * kill/remove an task using task id.
+     * Optionally pass custom cancel state and error message for third party code integration.
+     *
      * - This function needs to be prefixed with `yield`
      */
-    function cancel_task(int $tid)
+    function cancel_task(int $tid, $customState = null, string $errorMessage = 'Invalid task ID!')
     {
-        return Kernel::cancelTask($tid);
+        return Kernel::cancelTask($tid, $customState, $errorMessage);
     }
 
     /**
+     * Performs a clean shutdown.
+     *
      * - This function needs to be prefixed with `yield`
      */
     function shutdown()
@@ -258,12 +250,28 @@ if (!\function_exists('coroutine_run')) {
     }
 
     /**
+     * Returns the current context task ID
+     *
      * - This function needs to be prefixed with `yield`
+     *
+     * @return int
+     */
+    function get_task()
+    {
+        return Kernel::taskId();
+    }
+
+// @codeCoverageIgnoreStart
+    /**
+     * @deprecated 1.4.1
+     *
+     * @return int $task id
      */
     function task_id()
     {
         return Kernel::taskId();
     }
+// @codeCoverageIgnoreEnd
 
     /**
      * Wait on read stream socket to be ready read from,
@@ -287,6 +295,7 @@ if (!\function_exists('coroutine_run')) {
         return Kernel::writeWait($stream, $immediately);
     }
 
+// @codeCoverageIgnoreStart
     /**
      * Wait on keyboard input.
      * Will not block other task on `Linux`, will continue other tasks until `enter` key is pressed,
@@ -297,6 +306,7 @@ if (!\function_exists('coroutine_run')) {
     {
         return Coroutine::input($size, $error);
     }
+// @codeCoverageIgnoreEnd
 
     function is_type($var, string $comparedWith = null)
     {
@@ -390,7 +400,7 @@ if (!\function_exists('coroutine_run')) {
      *
      * @return ParallelInterface
      */
-    function parallel_poll(): ParallelInterface
+    function parallel_pool(): ParallelInterface
     {
         $coroutine = \coroutine_instance();
 
@@ -398,16 +408,6 @@ if (!\function_exists('coroutine_run')) {
             return $coroutine->getParallel();
 
         return \coroutine_create()->getParallel();
-    }
-
-    /**
-     * @deprecated 1.3.9
-     *
-     * @return ParallelInterface
-     */
-    function parallel_instance()
-    {
-        return \parallel_poll();
     }
 
     /**
@@ -430,7 +430,7 @@ if (!\function_exists('coroutine_run')) {
      */
     function parallel_wait(): ?array
     {
-        $pool = \parallel_poll();
+        $pool = \parallel_pool();
 
         if ($pool instanceof ParallelInterface)
             return $pool->wait();

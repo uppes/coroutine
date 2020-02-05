@@ -207,7 +207,7 @@ class ParallelTest extends TestCase
 
     public function testIt_can_use_a_class_from_the_parent_process()
     {
-        $parallel = \parallel_instance();
+        $parallel = \parallel_pool();
 
         /** @var MyClass $result */
         $result = null;
@@ -230,7 +230,7 @@ class ParallelTest extends TestCase
 
     public function testIt_works_with_global_helper_functions()
     {
-        $workers = \parallel_instance();
+        $workers = \parallel_pool();
 
         $counter = 0;
 
@@ -251,7 +251,7 @@ class ParallelTest extends TestCase
 
     public function testIt_can_run_invokable_classes()
     {
-        $parallel = \parallel_instance();
+        $parallel = \parallel_pool();
 
         $parallel->add(new InvokableClass());
 
@@ -264,7 +264,7 @@ class ParallelTest extends TestCase
     {
         $this->expectException(\InvalidArgumentException::class);
 
-        $parallel = \parallel_instance();
+        $parallel = \parallel_pool();
 
         $parallel->add(new NonInvokableClass());
     }

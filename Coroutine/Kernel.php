@@ -191,8 +191,8 @@ class Kernel
     }
 
     /**
-     * kill/remove an task using task id,
-     * optionally pass custom cancel state and error message for third party code integration.
+     * kill/remove an task using task id.
+     * Optionally pass custom cancel state and error message for third party code integration.
      *
      * @param int $tid
      * @param mixed $customState
@@ -729,16 +729,6 @@ class Kernel
             $return = yield $asyncFunction(...$args);
             return Coroutine::plain($return);
         };
-    }
-
-    /**
-     * @deprecated 1.3.9
-     *
-     * @return int $task id
-     */
-    public static function await($asyncLabel, ...$args)
-    {
-        return self::away($asyncLabel, ...$args);
     }
 
     /**

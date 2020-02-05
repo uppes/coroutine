@@ -85,7 +85,7 @@ The steps, that's taking place when an `yield` is introduced.
 
 The terminology/naming used here is more in line with [Python's Asyncio](https://www.python.org/dev/peps/pep-0492/) and [Curio](https://curio.readthedocs.io/en/latest/index.html#) usage. In fact, most of the source code method calls has been change to match theres.
 
-This package should be seen/used as an **userland** extension, it's usage of `yield` has been envisioned from [RFC](https://wiki.php.net/rfc/generator-delegation) creators.
+This package should be seen/used as an **user-land** extension, it's usage of `yield` has been envisioned from [RFC](https://wiki.php.net/rfc/generator-delegation) creators.
 
 The [Lua](https://www.lua.org/pil/9.4.html) language has similar functionality.
 
@@ -475,7 +475,9 @@ You can also use [Facebook's Hack](https://hhvm.com/). However, this too not an 
 
 The [**PHP Internals**](https://phpinternals.news/11) team has recently released [Parallel](https://www.php.net/manual/en/book.parallel.php). It's available on [PECL](https://pecl.php.net/package/parallel), [krakjoe/parallel](https://github.com/krakjoe/parallel). Looks promising, however this ___`Coroutine`___ package does everything listed in there **Parallel concurrency API** without the unnecessary restrictions, PHP 7.2, and limits on **Tasks**. They too modeling after Google's Go ease of use, but still directly handling the **Future/Promise** concepts. Whenever, some examples are produced, will recreate and benchmark the examples here. Will also create alias function calls for items with the same functionality.
 
-There is also [Async Extension for PHP](https://github.com/concurrent-php/ext-async#async-extension-for-php). Haven't seen this before starting this project, similar concepts but require a lot more coding to do simply things, require *PHP 7.3*, no *PECL* module yet. Has *Async* and *Await* keywords, but definitely not following the norms in usage as other languages. No way near the way Google's Go, Pythons, or C# work, seeing there [examples](https://github.com/concurrent-php/ext-async/tree/master/examples).
+There is also [Async Extension for PHP](https://github.com/concurrent-php/ext-async#async-extension-for-php). Haven't seen this before starting this project, similar concepts but require a lot more coding to do simply things, require *PHP 7.3*, and has a *PECL* module. Has *Async* and *Await* keywords, but definitely not following the norms in usage as other languages. No way near the way Google's Go, Pythons, or C# work, seeing there [examples](https://github.com/concurrent-php/ext-async/tree/master/examples).
+
+> The **Async Extension for PHP** seemed to have stopped development, and the main repo removed for unknown reasons. It has been forked at [dreamsxin/ext-async](https://github.com/dreamsxin/ext-async).
 
 ____Other main asynchronous PHP libraries____
 
@@ -505,9 +507,7 @@ This ___`Coroutine`___ package differs, mainly because it just managing the flow
 
  **Christopher Pitt** [Co-operative PHP Multitasking](https://medium.com/async-php/co-operative-php-multitasking-ce4ef52858a0)
 
-**Parallel** class package here is a restructured/rewrite of [spatie/async](https://github.com/spatie/async). The old package following there implementation, but with _Windows_ support can be found [here](https://github.com/techno-express/async/tree/windows-patch).
-
-**Parallel** class also pulls in [symplely/processor](https://github.com/symplely/processor) as an dependency which includes, [symfony/process](https://github.com/symfony/process) class, which is going to be used instead of my own implementation for **subprocess** management/execution. It has better **Windows** support, no issues running parallel PHP processes, not seeing any blocking issues. The **Processor** package also has [opis/closure](https://github.com/opis/closure) as an dependency. Used to overcome **PHP** serialization limitations.
+**Parallel** class package here is a restructured/rewrite of [spatie/async](https://github.com/spatie/async), with _Windows_. This class pulls in [symplely/processor](https://github.com/symplely/processor) as an dependency which includes, [symfony/process](https://github.com/symfony/process) class, which is going to be used instead of my own implementation for **subprocess** management/execution. It has better **Windows** support, with no issues running parallel PHP processes, not seeing any blocking issues. The **Processor** package also has [opis/closure](https://github.com/opis/closure) as an dependency, it's used to overcome **PHP** serialization limitations.
 
 ---
 [Concurrency in Go](https://youtu.be/LvgVSSpwND8) __video__

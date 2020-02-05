@@ -15,7 +15,7 @@ class CoreTest extends TestCase
 
     public function childTask()
     {
-        $tid = yield \task_id();
+        $tid = yield \get_task();
         while (true) {
             $this->task .= "Child task $tid still alive!\n";
             yield;
@@ -24,8 +24,8 @@ class CoreTest extends TestCase
 
     public function parentTask()
     {
-        $tid = yield \task_id();
-        $childTid = yield \await([$this, 'childTask']);
+        $tid = yield \get_task();
+        $childTid = yield \away([$this, 'childTask']);
 
         for ($i = 1; $i <= 6; ++$i) {
             $this->task .= "Parent task $tid iteration $i.\n";

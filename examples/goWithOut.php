@@ -17,7 +17,7 @@ function f(int $n) {
 
 function main() {
     for ($i = 0; $i < 10; $i++) {
-      $func = yield \await(\f($i));
+      $func = yield \away(\f($i));
       print ("\nCreated function: f($i), Task id: $func - ");
     }
 
