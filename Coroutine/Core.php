@@ -330,7 +330,7 @@ if (!\function_exists('coroutine_run')) {
 
         foreach ($checks as $func => $val) {
             if ($func($variable)) {
-                return (empty($comparedWith)) ? $variable : ($comparedWith == $val);
+                return (empty($comparedWith)) ? $val : ($comparedWith == $val);
             }
         }
 
