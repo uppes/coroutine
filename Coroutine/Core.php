@@ -314,7 +314,7 @@ if (!\function_exists('coroutine_run')) {
      *
      * @return string|bool
      */
-    function is_type(string $variable, string $comparedWith = null)
+    function is_type($variable, string $comparedWith = null)
     {
         $checks = [
             'is_callable' => 'callable',
