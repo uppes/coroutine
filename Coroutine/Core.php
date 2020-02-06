@@ -27,7 +27,7 @@ if (!\function_exists('coroutine_run')) {
      * @param string $labelFunction
      * @param Generator|callable $asyncFunction
      */
-    function async(string $labelFunction = '__f', callable $asyncFunction)
+    function async(string $labelFunction, callable $asyncFunction)
     {
         Kernel::async($labelFunction, $asyncFunction);
     }
@@ -99,6 +99,9 @@ if (!\function_exists('coroutine_run')) {
      * This function will return `int` immediately, use `gather()` to get the result.
      * - This function needs to be prefixed with `yield`
      *
+     * @see https://docs.python.org/3.7/library/asyncio-subprocess.html#subprocesses
+     * @see https://docs.python.org/3.7/library/asyncio-dev.html#running-blocking-code
+     *
      * @param callable|shell $command
      * @param int $timeout
      *
@@ -106,9 +109,7 @@ if (!\function_exists('coroutine_run')) {
      */
     function spawn_process($command, $timeout = 300)
     {
-        return Kernel::away(function () use ($command, $timeout) {
-            return Kernel::awaitProcess($command, $timeout);
-        });
+        return Kernel::spawnProcess($command, $timeout);
     }
 // @codeCoverageIgnoreEnd
 

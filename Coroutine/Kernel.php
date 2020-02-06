@@ -326,6 +326,36 @@ class Kernel
         );
     }
 
+// @codeCoverageIgnoreStart
+    /**
+     * Add an blocking io subprocess, that will run in parallel.
+     * This function will return `int` immediately, use `gather()` to get the result.
+     * - This function needs to be prefixed with `yield`
+     *
+     * @see https://docs.python.org/3.7/library/asyncio-subprocess.html#subprocesses
+     * @see https://docs.python.org/3.7/library/asyncio-dev.html#running-blocking-code
+     *
+     * @param callable|shell $command
+     * @param int $timeout
+     *
+     * @return int
+     */
+    public static function spawnProcess($callable, $timeout = 300)
+    {
+        return new Kernel(
+            function (TaskInterface $task, CoroutineInterface $coroutine) use ($callable, $timeout) {
+                $command = \awaitAble(function () use ($callable, $timeout) {
+                    $result = Kernel::awaitProcess($callable, $timeout);
+                    return yield Coroutine::value($result);
+                });
+
+                $task->sendValue($coroutine->createTask($command));
+                $coroutine->schedule($task);
+            }
+        );
+    }
+// @codeCoverageIgnoreEnd
+
     /**
      * Controls how the `gather()` function operates.
      * `gather` will behave like **Promise** functions `All`, `Some`, `Any` in JavaScript.

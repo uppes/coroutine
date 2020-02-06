@@ -23,17 +23,6 @@ function repeat()
     }
 }
 
-function enqueue($index, $task)
-{
-    echo 'started ' . $index . \EOL;
-    // return to caller, let other tasks start, otherwise block after
-    $result = \file_get_contents($task);
-
-    $tid = yield \get_task();
-    \printf("\nRead from %d, task %d: %d bytes\n", $index, $tid, \strlen($result));
-    return $result;
-};
-
 // Event loop for parallel tasks
 function main()
 {
@@ -53,12 +42,9 @@ function main()
     } catch (\Async\Coroutine\Exceptions\TimeoutError $e) {
         $results = yield \gather($coroutinesId);
         foreach($results as $tid => $result) {
-            \printf("\nRead from task %d: %d bytes\n", $tid, \strlen($result[0]));
+            \printf("\nRead from task %d: %d bytes\n", $tid, \strlen($result));
         }
     }
 };
 
 \coroutine_run(\main());
-
-echo "\nResult array keys:\n";
-echo \var_export(\array_keys($results), true);
