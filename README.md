@@ -229,6 +229,13 @@ yield \get_task();
 yield \cancel_task($tid);
 
 /**
+ * Add/execute a blocking `subprocess` task that runs in parallel.
+ * This function will return `int` immediately, use `gather()` to get the result.
+ * - This function needs to be prefixed with `yield`
+ */
+yield \spawn_task($command, $timeout);
+
+/**
  * Wait for the callable/task to complete with a timeout.
  * Will continue other tasks until so.
  * - This function needs to be prefixed with `yield`
@@ -270,20 +277,13 @@ yield \input_wait($size);
 
 ```php
 /**
- * Add and wait for result of a blocking `subprocess`, will run in parallel.
+ * Add and wait for result of a blocking `subprocess` that runs in parallel.
  * - This function needs to be prefixed with `yield`
  *
  * @see https://docs.python.org/3.7/library/asyncio-subprocess.html#subprocesses
  * @see https://docs.python.org/3.7/library/asyncio-dev.html#running-blocking-code
  */
 yield \await_process($command, $timeout);
-
-/**
- * Add a blocking `subprocess`, that will run in parallel.
- * This function will return `int` immediately, use `gather()` to get the result.
- * - This function needs to be prefixed with `yield`
- */
-yield \spawn_process($command, $timeout);
 ```
 
 ```php

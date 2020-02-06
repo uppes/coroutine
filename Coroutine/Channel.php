@@ -6,6 +6,7 @@ namespace Async\Coroutine;
 
 use Async\Coroutine\Coroutine;
 use Async\Coroutine\TaskInterface;
+use Async\Coroutine\CoroutineInterface;
 
 /**
  * Channels provide a way for two coroutines to communicate with one another

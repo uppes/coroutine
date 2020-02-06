@@ -251,7 +251,7 @@ class Task implements TaskInterface
             return $value;
         } else {
             $value = $this->coroutine->send($this->sendValue);
-            if (!empty($value) && ($this->taskType == 'awaited')) {
+            if (!empty($value)) {
                 $this->result = $value;
             }
 

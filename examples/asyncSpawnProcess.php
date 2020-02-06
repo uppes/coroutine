@@ -31,7 +31,7 @@ function main()
     $coroutinesId = [];
     foreach ($tasks as $index => $parameters) {
         echo 'started ' . $index . ' ' . $parameters . \EOL;
-        $coroutinesId[] = yield \spawn_process(function () use ($parameters) {
+        $coroutinesId[] = yield \spawn_task(function () use ($parameters) {
             return \file_get_contents($parameters);
         });
     }

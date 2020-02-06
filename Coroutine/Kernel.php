@@ -90,11 +90,11 @@ class Kernel
     }
 
     /**
-     * Return the task ID
+     * Returns the current context task ID
      *
      * @return int
      */
-    public static function taskId()
+    public static function getTask()
     {
         return new Kernel(
             function (TaskInterface $task, CoroutineInterface $coroutine) {
@@ -289,7 +289,7 @@ class Kernel
     }
 
     /**
-     * Add and wait for result of an blocking io subprocess, will run in parallel.
+     * Add and wait for result of an blocking `I/O` subprocess that runs in parallel.
      * - This function needs to be prefixed with `yield`
      *
      * @see https://docs.python.org/3.7/library/asyncio-subprocess.html#subprocesses
@@ -326,9 +326,8 @@ class Kernel
         );
     }
 
-// @codeCoverageIgnoreStart
     /**
-     * Add an blocking io subprocess, that will run in parallel.
+     * Add/execute a blocking `I/O` subprocess task that runs in parallel.
      * This function will return `int` immediately, use `gather()` to get the result.
      * - This function needs to be prefixed with `yield`
      *
@@ -340,13 +339,13 @@ class Kernel
      *
      * @return int
      */
-    public static function spawnProcess($callable, $timeout = 300)
+    public static function spawnTask($callable, $timeout = 300)
     {
         return new Kernel(
             function (TaskInterface $task, CoroutineInterface $coroutine) use ($callable, $timeout) {
                 $command = \awaitAble(function () use ($callable, $timeout) {
-                    $result = Kernel::awaitProcess($callable, $timeout);
-                    return yield Coroutine::value($result);
+                    $result = yield yield Kernel::awaitProcess($callable, $timeout);
+                    return $result;
                 });
 
                 $task->sendValue($coroutine->createTask($command));
@@ -354,7 +353,6 @@ class Kernel
             }
         );
     }
-// @codeCoverageIgnoreEnd
 
     /**
      * Controls how the `gather()` function operates.

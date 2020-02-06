@@ -126,4 +126,21 @@ class KernelTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         \coroutine_run($this->lapse(99));
     }
+
+    public function taskSpawnTask()
+    {
+        $result = yield \spawn_task(function () {
+            usleep(1000);
+            return 'subprocess';
+        });
+
+        $this->assertTrue(\is_type($result, 'int'));
+        $output = yield \gather($result);
+        $this->assertEquals('subprocess', $output[$result]);
+    }
+
+    public function testSpawnTask()
+    {
+        \coroutine_run($this->taskSpawnTask());
+    }
 }

@@ -93,9 +93,8 @@ if (!\function_exists('coroutine_run')) {
         return Kernel::gather(...$taskId);
     }
 
-// @codeCoverageIgnoreStart
     /**
-     * Add an blocking io subprocess, that will run in parallel.
+     * Add/execute a blocking `I/O` subprocess task that runs in parallel.
      * This function will return `int` immediately, use `gather()` to get the result.
      * - This function needs to be prefixed with `yield`
      *
@@ -107,14 +106,13 @@ if (!\function_exists('coroutine_run')) {
      *
      * @return int
      */
-    function spawn_process($command, $timeout = 300)
+    function spawn_task($command, $timeout = 300)
     {
-        return Kernel::spawnProcess($command, $timeout);
+        return Kernel::spawnTask($command, $timeout);
     }
-// @codeCoverageIgnoreEnd
 
     /**
-     * Add and wait for result of an blocking io subprocess, will run in parallel.
+     * Add and wait for result of an blocking `I/O` subprocess that runs in parallel.
      * - This function needs to be prefixed with `yield`
      *
      * @see https://docs.python.org/3.7/library/asyncio-subprocess.html#subprocesses
@@ -261,20 +259,8 @@ if (!\function_exists('coroutine_run')) {
      */
     function get_task()
     {
-        return Kernel::taskId();
+        return Kernel::getTask();
     }
-
-// @codeCoverageIgnoreStart
-    /**
-     * @deprecated 1.4.1
-     *
-     * @return int $task id
-     */
-    function task_id()
-    {
-        return Kernel::taskId();
-    }
-// @codeCoverageIgnoreEnd
 
     /**
      * Wait on read stream socket to be ready read from,
