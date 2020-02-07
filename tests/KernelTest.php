@@ -176,4 +176,28 @@ class KernelTest extends TestCase
     {
         \coroutine_run($this->taskReadWait());
     }
+
+    public function taskWriteWait()
+    {
+        yield \away($this->childTask());
+        $resource = fopen('php://temp', 'r+');
+        \stream_set_blocking($resource, false);
+        yield \write_wait($resource);
+        \fwrite($resource, 'hello world');
+        \rewind($resource);
+        yield \read_wait($resource);
+        $result = \stream_get_contents($resource);
+        \fclose($resource);
+        $this->assertEquals('hello world', $result);
+        $this->assertGreaterThanOrEqual(3, $this->counterResult);
+        $this->assertEquals('string', \is_type($result));
+        yield;
+        $this->assertGreaterThanOrEqual(4, $this->counterResult);
+        yield \shutdown();
+    }
+
+    public function testWriteWait()
+    {
+        \coroutine_run($this->taskWriteWait());
+    }
 }

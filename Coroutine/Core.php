@@ -372,6 +372,7 @@ if (!\function_exists('coroutine_run')) {
         }
     }
 
+// @codeCoverageIgnoreStart
     /**
      * Add something/callable to `coroutine` process pool
      *
@@ -389,6 +390,7 @@ if (!\function_exists('coroutine_run')) {
 
         return \coroutine_create()->addProcess($callable, $timeout);
     }
+// @codeCoverageIgnoreEnd
 
     /**
      * Get/create process worker pool of an parallel instance.
