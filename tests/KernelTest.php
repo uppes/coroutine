@@ -10,6 +10,8 @@ use PHPUnit\Framework\TestCase;
 
 class KernelTest extends TestCase
 {
+    protected $counterResult = null;
+
     protected function setUp(): void
     {
         \coroutine_clear();
@@ -142,5 +144,36 @@ class KernelTest extends TestCase
     public function testSpawnTask()
     {
         \coroutine_run($this->taskSpawnTask());
+    }
+
+    public function childTask()
+    {
+        $counter = 0;
+        while (true) {
+            $counter++;
+            $this->counterResult = $counter;
+            yield;
+        }
+
+    }
+
+    public function taskReadWait()
+    {
+        yield \away($this->childTask());
+        $resource = @\fopen(__DIR__ . \DS . 'list.txt', 'rb');
+        \stream_set_blocking($resource, false);
+        yield \read_wait($resource);
+        $contents = \stream_get_contents($resource);
+        \fclose($resource);
+        $this->assertGreaterThanOrEqual(2, $this->counterResult);
+        $this->assertEquals('string', \is_type($contents));
+        yield;
+        $this->assertGreaterThanOrEqual(3, $this->counterResult);
+        yield \shutdown();
+    }
+
+    public function testReadWait()
+    {
+        \coroutine_run($this->taskReadWait());
     }
 }
