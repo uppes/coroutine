@@ -11,6 +11,11 @@ php:
     - 7.2
     - 7.4
 
+matrix:
+    allow_failures:
+      - php: 7.1
+    fast_finish: true
+
 before_script:
     - pecl channel-update pecl.php.net
     - pecl install uv-beta
