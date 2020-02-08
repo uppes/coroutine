@@ -452,9 +452,7 @@ class Kernel
                         } elseif (\is_int($value)) {
                             $taskIdList[$value] = $value;
                         } else {
-                            // @codeCoverageIgnoreStart
                             \panic("Invalid access, only array of integers, or generator objects allowed!");
-                            // @codeCoverageIgnoreEnd
                         }
                     }
 
@@ -466,11 +464,9 @@ class Kernel
                     $count = \count($taskIdList);
                     $gatherSet = ($gatherCount > 0);
                     if ($gatherSet) {
-                        // @codeCoverageIgnoreStart
                         if ($count < $gatherCount) {
                             throw new LengthException(\sprintf('The (%d) tasks, not enough to fulfill the `options(%d)` count!', $count, $gatherCount));
                         }
-                        // @codeCoverageIgnoreEnd
                     }
 
                     $taskList = $coroutine->currentTask();
@@ -491,9 +487,7 @@ class Kernel
                                 }
 
                                 if ($result instanceof \Throwable) {
-                                    // @codeCoverageIgnoreStart
                                     $isResultsException = $result;
-                                    // @codeCoverageIgnoreEnd
                                 } else {
                                     $results[$id] = $result;
                                 }
@@ -524,7 +518,7 @@ class Kernel
                 }
 
                 // Skip wait, just proceed to propagate/schedule the exception, if set.
-                if ($gatherShouldError && $isResultsException !== false) {
+                if ($gatherShouldError && ($isResultsException !== false)) {
                     $count = 0;
                 }
 
@@ -582,7 +576,6 @@ class Kernel
                                 }
 
                                 if ($result instanceof \Throwable) {
-                                    // @codeCoverageIgnoreStart
                                     $tasks->setState('erred');
 
                                     // Update running task list.
@@ -593,7 +586,6 @@ class Kernel
                                         $task->setException($result);
                                         $coroutine->schedule($tasks);
                                     }
-                                    // @codeCoverageIgnoreEnd
                                 } else {
                                     $results[$id] = $result;
 
@@ -660,11 +652,9 @@ class Kernel
 
                 self::$gatherResumer = null;
 
-                if ($gatherShouldError && $isResultsException !== false) {
-                    // @codeCoverageIgnoreStart
+                if ($gatherShouldError && ($isResultsException !== false)) {
                     $task->setException($isResultsException);
                     $coroutine->schedule($tasks);
-                    // @codeCoverageIgnoreEnd
                 } else {
                     $task->sendValue($results);
                     $coroutine->schedule($task);

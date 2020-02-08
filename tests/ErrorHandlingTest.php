@@ -2,8 +2,6 @@
 
 namespace Async\Tests;
 
-use Error;
-use ParseError;
 use Async\Coroutine\Parallel;
 use PHPUnit\Framework\TestCase;
 

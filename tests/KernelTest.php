@@ -2,10 +2,14 @@
 
 namespace Async\Tests;
 
-use Async\Coroutine\Coroutine;
 use Async\Coroutine\Kernel;
 use Async\Coroutine\TaskInterface;
 use Async\Coroutine\CoroutineInterface;
+use Async\Coroutine\Exceptions\Panicking;
+use Async\Coroutine\Exceptions\TimeoutError;
+use Async\Coroutine\Exceptions\CancelledError;
+use Async\Coroutine\Exceptions\LengthException;
+use Async\Coroutine\Exceptions\InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
 class KernelTest extends TestCase
@@ -71,12 +75,25 @@ class KernelTest extends TestCase
 
     public function taskGather()
     {
+        \async('factorizing', function ($name, $number)
+        {
+            $f = 1;
+            foreach (range(2, $number + 1) as $i) {
+                yield \sleep_for(1);
+                $f *= $i;
+            }
+
+            return $f;
+        });
+
+        $async = yield \away('factorizing', 'C', 4);
+
         $this->controller();
         \gather_options(2);
         $factorials = yield \gather(
             $this->factorial("A", 2),
             $this->factorial("B", 3),
-            $this->factorial("C", 4)
+            $async
         );
 
         $this->assertNotEmpty($factorials);
@@ -86,6 +103,44 @@ class KernelTest extends TestCase
     public function testGather()
     {
         \coroutine_run($this->taskGather());
+    }
+
+    public function taskGatherException()
+    {
+        $this->expectException(Panicking::class);
+        yield \gather('$one,$two, $this->factorial("C", 4)');
+        yield \shutdown();
+    }
+
+    public function testGatherException()
+    {
+        \coroutine_run($this->taskGatherException());
+    }
+
+    public function taskGatherCancelled()
+    {
+        $this->expectException(CancelledError::class);
+        $one = yield \away($this->childTask(true));
+        yield \gather($one);
+        yield \shutdown();
+    }
+
+    public function testGatherCancelled()
+    {
+        \coroutine_run($this->taskGatherCancelled());
+    }
+
+    public function taskGatherOption()
+    {
+        $this->expectException(LengthException::class);
+        \gather_options(3);
+        yield \gather([1]);
+        yield \shutdown();
+    }
+
+    public function testGatherOption()
+    {
+        \coroutine_run($this->taskGatherOption());
     }
 
     public function lapse(int $taskId = null)
@@ -107,8 +162,8 @@ class KernelTest extends TestCase
         try {
             // Wait for at most 0.2 second
             yield \wait_for($this->taskSleepFor(), 0.2);
-        } catch (\Async\Coroutine\Exceptions\TimeoutError $e) {
-            $this->assertInstanceOf(\Async\Coroutine\Exceptions\TimeoutError::class, $e);
+        } catch (TimeoutError $e) {
+            $this->assertInstanceOf(TimeoutError::class, $e);
             yield Kernel::shutdown();
         }
     }
@@ -125,7 +180,7 @@ class KernelTest extends TestCase
 
     public function testCancel()
     {
-        $this->expectException(\InvalidArgumentException::class);
+        $this->expectException(InvalidArgumentException::class);
         \coroutine_run($this->lapse(99));
     }
 
@@ -146,12 +201,16 @@ class KernelTest extends TestCase
         \coroutine_run($this->taskSpawnTask());
     }
 
-    public function childTask()
+    public function childTask($break = false)
     {
         $counter = 0;
         while (true) {
             $counter++;
             $this->counterResult = $counter;
+            if ($break && ($counter == 2)) {
+                throw new CancelledError();
+            }
+
             yield;
         }
 

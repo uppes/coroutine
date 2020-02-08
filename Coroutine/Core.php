@@ -17,7 +17,6 @@ if (!\function_exists('coroutine_run')) {
     \define('EOL', \PHP_EOL);
     \define('DS', \DIRECTORY_SEPARATOR);
 
-// @codeCoverageIgnoreStart
     /**
      * Makes an resolvable function from label name that's callable with `away`
      * The passed in `function/callable/task` is wrapped to be `awaitAble`
@@ -31,7 +30,6 @@ if (!\function_exists('coroutine_run')) {
     {
         Kernel::async($labelFunction, $asyncFunction);
     }
-// @codeCoverageIgnoreEnd
 
     /**
      * Add/schedule an `yield`-ing `function/callable/task` for background execution.
@@ -248,6 +246,7 @@ if (!\function_exists('coroutine_run')) {
     function shutdown()
     {
         return Kernel::shutdown();
+        \coroutine_clear();
     }
 
     /**
@@ -284,18 +283,18 @@ if (!\function_exists('coroutine_run')) {
         return Kernel::writeWait($stream, $immediately);
     }
 
-// @codeCoverageIgnoreStart
     /**
      * Wait on keyboard input.
      * Will not block other task on `Linux`, will continue other tasks until `enter` key is pressed,
      * Will block on Windows, once an key is typed/pressed, will continue other tasks `ONLY` if no key is pressed.
      * - This function needs to be prefixed with `yield`
+     *
+     * @codeCoverageIgnore
      */
     function input_wait(int $size = 256, bool $error = false)
     {
         return Coroutine::input($size, $error);
     }
-// @codeCoverageIgnoreEnd
 
     /**
      * Return the `string` of a variable type, or does a check, compared with string of the type.
