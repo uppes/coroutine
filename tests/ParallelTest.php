@@ -260,6 +260,15 @@ class ParallelTest extends TestCase
         $this->assertEquals(2, $results[0]);
     }
 
+    public function testIt_can_run_invokable_again()
+    {
+        \parallel(new InvokableClass());
+
+        $results = \parallel_wait();
+
+        $this->assertEquals(2, $results[0]);
+    }
+
     public function testIt_reports_error_for_non_invokable_classes()
     {
         $this->expectException(\InvalidArgumentException::class);

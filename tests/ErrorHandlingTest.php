@@ -34,7 +34,7 @@ class ErrorHandlingTest extends TestCase
     public function testIt_throws_the_exception_if_no_catch_callback()
     {
         $this->expectException(\Exception::class);
-        $this->expectExceptionMessageRegExp('/test/');
+        $this->expectExceptionMessageMatches('/test/');
 
         $parallel = new Parallel();
 
