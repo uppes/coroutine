@@ -189,12 +189,17 @@ class Coroutine implements CoroutineInterface
         $this->taskQueue = new \SplQueue();
     }
 
-// @codeCoverageIgnoreStart
+    /**
+     * @codeCoverageIgnore
+     */
     protected function timestamp()
     {
         return (float) ($this->isHighTimer ? \hrtime(true) / 1e+9 : \microtime(true));
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
     protected function addEvent($stream)
     {
         if (!isset($this->events[(int) $stream])) {
@@ -218,6 +223,9 @@ class Coroutine implements CoroutineInterface
         }
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
     protected function removeReadEvent($stream)
     {
         if (!isset($this->events[(int) $stream])) {
@@ -234,6 +242,9 @@ class Coroutine implements CoroutineInterface
         $this->pollEvent($stream);
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
     protected function removeWriteEvent($stream)
     {
         if (!isset($this->events[(int) $stream])) {
@@ -250,6 +261,9 @@ class Coroutine implements CoroutineInterface
         $this->pollEvent($stream);
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
     protected function pollEvent($stream)
     {
         if (!isset($this->events[(int) $stream])) {
@@ -267,7 +281,6 @@ class Coroutine implements CoroutineInterface
 
         \uv_poll_start($this->events[(int) $stream], $flags, $this->onEvent);
     }
-// @codeCoverageIgnoreEnd
 
     public function getParallel(): ParallelInterface
     {
@@ -293,12 +306,13 @@ class Coroutine implements CoroutineInterface
         return $this->parallel->add($callable, $timeout);
     }
 
-// @codeCoverageIgnoreStart
+    /**
+     * @codeCoverageIgnore
+     */
     public function isUvActive(): bool
     {
         return !empty($this->uv) && \is_object($this->uv);
     }
-// @codeCoverageIgnoreEnd
 
     public function isPcntl(): bool
     {
@@ -378,7 +392,9 @@ class Coroutine implements CoroutineInterface
             }
         }
 
-// @codeCoverageIgnoreStart
+        /**
+         * @codeCoverageIgnore
+         */
         if ($this->isUvActive()) {
             \uv_stop($this->uv);
             foreach ($this->timers as $timer) {
@@ -400,7 +416,6 @@ class Coroutine implements CoroutineInterface
             $this->waitingForWrite = [];
             \uv_run($this->uv, \UV::RUN_NOWAIT);
         }
-// @codeCoverageIgnoreEnd
     }
 
     public function cancelTask(int $tid, $customState = null)
@@ -500,11 +515,12 @@ class Coroutine implements CoroutineInterface
         }
     }
 
-// @codeCoverageIgnoreStart
     /**
      * Runs all pending timers.
      *
      * @return int|void
+     *
+     * @codeCoverageIgnore
      */
     protected function runTimers()
     {
@@ -526,7 +542,6 @@ class Coroutine implements CoroutineInterface
             return \max(0, $timer[0] - \microtime(true));
         }
     }
-// @codeCoverageIgnoreEnd
 
     /**
      * Check for I/O events, streams/sockets/fd activity and `yield`,
@@ -729,7 +744,9 @@ class Coroutine implements CoroutineInterface
         return !$this->signaler->isEmpty();
     }
 
-// @codeCoverageIgnoreStart
+    /**
+     * @codeCoverageIgnore
+     */
     protected function addTimer($interval, $callback)
     {
         $timer = \uv_timer_init($this->uv);
@@ -741,7 +758,6 @@ class Coroutine implements CoroutineInterface
             $this->onTimer
         );
     }
-// @codeCoverageIgnoreEnd
 
     public function addTimeout($task, float $timeout)
     {
@@ -790,12 +806,12 @@ class Coroutine implements CoroutineInterface
         return new PlainValueCoroutine($value);
     }
 
-// @codeCoverageIgnoreStart
     /**
      * Wait on keyboard input.
      * Will not block other task on `Linux`, will continue other tasks until `enter` key is pressed,
      * Will block on Windows, once an key is typed/pressed, will continue other tasks `ONLY` if no key is pressed.
      * - This function needs to be prefixed with `yield`
+     * @codeCoverageIgnore
      */
     public static function input(int $size = 256, bool $error = false)
     {
@@ -820,7 +836,6 @@ class Coroutine implements CoroutineInterface
 
         return \trim(\stream_get_line(\STDIN, $size, \EOL));
     }
-// @codeCoverageIgnoreEnd
 
     public static function create(\Generator $gen)
     {
