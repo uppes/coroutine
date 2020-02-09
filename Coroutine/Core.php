@@ -16,6 +16,8 @@ if (!\function_exists('coroutine_run')) {
     \define('MILLISECOND', 0.001);
     \define('EOL', \PHP_EOL);
     \define('DS', \DIRECTORY_SEPARATOR);
+    \define('IS_WINDOWS', ('\\' === \DIRECTORY_SEPARATOR));
+    \define('IS_LINUX', ('/' === \DIRECTORY_SEPARATOR));
 
     /**
      * Makes an resolvable function from label name that's callable with `away`
@@ -289,7 +291,7 @@ if (!\function_exists('coroutine_run')) {
      * Will block on Windows, once an key is typed/pressed, will continue other tasks `ONLY` if no key is pressed.
      * - This function needs to be prefixed with `yield`
      *
-     * @codeCoverageIgnore
+     * @return string
      */
     function input_wait(int $size = 256, bool $error = false)
     {

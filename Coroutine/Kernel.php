@@ -565,7 +565,18 @@ class Kernel
                                         continue;
                                     }
 
-                                    $coroutine->execute();
+                                    try {
+                                        $coroutine->execute();
+                                    } catch (\Throwable $error) {
+                                        $tasks->setState(
+                                            ($error instanceof CancelledError ? 'cancelled' : 'erred')
+                                        );
+
+                                        $tasks->setException($error);
+                                        $coroutine->schedule($tasks);
+                                        $tasks->run();
+                                        continue;
+                                    }
                                 }
                                 // Handle if task finished.
                             } elseif ($tasks->isCompleted()) {
@@ -732,7 +743,7 @@ class Kernel
     }
 
     /**
-     * Makes an resolvable function from label name that's callable with `await`
+     * Makes an resolvable function from label name that's callable with `away`
      * The passed in `function/callable/task` is wrapped to be `awaitAble`
      *
      * This will create closure function in global namespace with supplied name as variable

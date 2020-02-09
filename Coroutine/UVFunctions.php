@@ -1,5 +1,7 @@
 <?php
 
+use Async\Coroutine\UV;
+
 /**
  * create a `new` loop handle.
  *

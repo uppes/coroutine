@@ -1,5 +1,7 @@
 <?php
 
+namespace Async\Coroutine;
+
 /**
  * Full-featured event loop backed by epoll, kqueue, IOCP, event ports.
  * - Asynchronous TCP and UDP sockets

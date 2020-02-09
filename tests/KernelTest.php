@@ -162,7 +162,7 @@ class KernelTest extends TestCase
         try {
             // Wait for at most 0.2 second
             yield \wait_for($this->taskSleepFor(), 0.2);
-        } catch (TimeoutError $e) {
+        } catch (\Throwable $e) {
             $this->assertInstanceOf(TimeoutError::class, $e);
             yield Kernel::shutdown();
         }
@@ -258,5 +258,30 @@ class KernelTest extends TestCase
     public function testWriteWait()
     {
         \coroutine_run($this->taskWriteWait());
+    }
+
+    public function keyboard()
+    {
+        if (\IS_WINDOWS) {
+            $this->expectException(InvalidArgumentException::class);
+        }
+
+        return yield \input_wait(256, \IS_WINDOWS);
+    }
+
+    public function taskInput()
+    {
+        try {
+            yield \wait_for($this->keyboard(), 0.1);
+        } catch (\Throwable $e) {
+            $this->assertInstanceOf(TimeoutError::class, $e);
+        }
+
+        yield \shutdown();
+    }
+
+    public function testInputAndGather()
+    {
+        \coroutine_run($this->taskInput());
     }
 }

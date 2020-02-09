@@ -2,7 +2,7 @@
 
 namespace Async\Tests;
 
-use Async\Coroutine\Kernel;
+use Async\Coroutine\UV;
 use Async\Coroutine\Coroutine;
 use PHPUnit\Framework\TestCase;
 
@@ -12,8 +12,11 @@ class CoroutineSignalerTest extends TestCase
 
     protected function setUp(): void
     {
-        if (!function_exists('posix_kill') || !function_exists('posix_getpid')) {
-            $this->markTestSkipped('Signal test skipped because functions "posix_kill" and "posix_getpid" are missing.');
+        if (!\function_exists('posix_kill') || !\function_exists('posix_getpid')) {
+            if (!\function_exists('uv_loop_new'))
+                $this->markTestSkipped(
+                    'Signal test skipped because functions "posix_kill" and "posix_getpid", or "uv_loop_new" are missing.'
+                );
         }
 
         \coroutine_clear();
@@ -28,14 +31,18 @@ class CoroutineSignalerTest extends TestCase
         };
         $loop->addTimeout(function () {
         }, 1);
-        $loop->addSignal(SIGUSR1, $func);
-        $loop->addSignal(SIGUSR1, $func);
-        $loop->addTimeout(function () {
-            posix_kill(posix_getpid(), SIGUSR1);
+        $loop->addSignal(UV::SIGUSR1, $func);
+        $loop->addSignal(UV::SIGUSR1, $func);
+        $loop->addTimeout(function ()  use ($loop) {
+            if (function_exists('posix_kill') || function_exists('posix_getpid'))
+                posix_kill(posix_getpid(), UV::SIGUSR1);
+            else
+                $loop->getSignaler()->execute(UV::SIGUSR1);
         }, 0.4);
         $loop->addTimeout(function () use (&$func, $loop) {
-            $loop->removeSignal(SIGUSR1, $func);
+            $loop->removeSignal(UV::SIGUSR1, $func);
         }, 0.9);
+
         $loop->run();
         $this->assertSame(1, $funcCallCount);
     }
@@ -45,9 +52,9 @@ class CoroutineSignalerTest extends TestCase
         $loop = $this->loop = new Coroutine();
         $function = function () {
         };
-        $loop->addSignal(SIGUSR1, $function);
+        $loop->addSignal(UV::SIGUSR1, $function);
         $loop->addTimeout(function () use ($function, $loop) {
-            $loop->removeSignal(SIGUSR1, $function);
+            $loop->removeSignal(UV::SIGUSR1, $function);
         }, 1.5);
         $this->assertRunFasterThan(1.6);
     }
