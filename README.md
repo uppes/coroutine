@@ -2,6 +2,10 @@
 
 [![Build status](https://ci.appveyor.com/api/projects/status/77foelnve2y1wgsb/branch/master?svg=true)](https://ci.appveyor.com/project/techno-express/coroutine-0fmbc/branch/master)[![Build Status](https://travis-ci.org/symplely/coroutine.svg?branch=master)](https://travis-ci.org/symplely/coroutine)[![codecov](https://codecov.io/gh/symplely/coroutine/branch/master/graph/badge.svg)](https://codecov.io/gh/symplely/coroutine)[![Codacy Badge](https://api.codacy.com/project/badge/Grade/44a6f32f03194872b7d4cd6a2411ff79)](https://www.codacy.com/app/techno-express/coroutine?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=symplely/coroutine&amp;utm_campaign=Badge_Grade)[![Maintainability](https://api.codeclimate.com/v1/badges/1bfc3497fde67b111a04/maintainability)](https://codeclimate.com/github/symplely/coroutine/maintainability)
 
+> This version `1.5.x` onward will begin adding features of an PHP extension [UV](https://github.com/bwoebi/php-uv), of **Node.js** [libuv](https://github.com/libuv/libuv) library, see the online [book](https://nikhilm.github.io/uvbook/index.html) for a full tutorial overview.
+
+> Currently all `libuv` [network](https://github.com/bwoebi/php-uv/issues) `socket/stream/udp/tcp` like features are broken on *Windows*, as such will not be implemented, that includes *Linux*, which do work as expected.
+
 ## Table of Contents
 
 * [Introduction](#introduction)
@@ -17,7 +21,30 @@
 
 ## Introduction
 
-A Coroutine are special crafted functions that are based on __generators__, with the use of `yield` and `yield from`. When used, they **control context**, meaning `capture/release` an application's execution flow.
+__What is Async?__
+Simply avoiding the blocking of very next instruction. The mechanism of *capturing* and *running later*.
+
+__What issues the current PHP implementations this package address?__
+*Ease of use*. [Amp](#[Amp]) and [ReactPHP](#[ReactPHP]) both do and get you asynchronous results. But both require more setup by the *__user/developer__* to get a simple line of code to run. There is **Swoole** and **Hhvm**, but neither are standard PHP installations.
+
+When using **Amp** or **ReactPHP** and some of the packages based upon them, is you must, not only manage the `Callbacks` you provided, but also the returned `Promise` object, and the `Event Loop` object. These libraries modeling themselves around old school **Javascript**, where `Javascript` nowadays moving towards simple `async/await` syntax. Which brings up this question.
+
+__What does `ease of use` mean?__
+We can start by reviewing other programming languages implementations. And the fact you already have a working application, that you want various parts to run more responsive, which translates to do more.
+
+[Go](https://golang.org/doc/effective_go.html#goroutines) has it's **Goroutine** keyword `go` then your function and statements.
+
+These links of [Python](https://docs.python.org/3/library/asyncio-task.html), [Ruby](https://ruby-concurrency.github.io/concurrent-ruby/1.1.4/Concurrent/Async.html), [Rust](https://rust-lang.github.io/async-book/01_getting_started/04_async_await_primer.html#asyncawait-primer), [Nim](https://nim-lang.org/docs/asyncnet.html), [C#](https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/concepts/async/), [Elixir](https://hexdocs.pm/elixir/Task.html#module-async-and-await), [Java](https://github.com/electronicarts/ea-async), and [C++](https://lewissbaker.github.io/2017/11/17/understanding-operator-co-await) have keywords `async/await` then your function and statements.
+
+When using they return the actual results you want, no medalling with any objects, no callbacks, and upon calling everything to up that point continues to run.
+
+The thing about each, is the history leading to the feature, the actual behavior, the underlying concepts are the same, and a simple calling structure statement. They all reference in various ways the use of `yield` or `iterators`, which this package relies upon and makes the following true.
+
+__The end result, and the only thing you will do to make your code `asynchronous`, is placing `yield` within, and `getting` the actual `results` you want.__
+
+-------
+
+A **Coroutine** here are specially crafted functions that are based on __generators__, with the use of `yield` and `yield from`. When used, they **control context**, meaning `capture/release` an application's execution flow.
 
 When `yield` is placed within an block of code, it indicates to the calling function, that an object will be returned instead, the code is not immediately executed.
 
@@ -142,7 +169,7 @@ yield \shutdown()
  * The order of result values corresponds to the order of awaitables in taskId.
  *
  * The first raised exception is immediately propagated to the task that awaits on gather().
- * Other awaitables in the sequence won’t be cancelled and will continue to run.
+ * Other awaitables in the sequence won't be cancelled and will continue to run.
  * - This function needs to be prefixed with `yield`
  *
  * @see https://docs.python.org/3.7/library/asyncio-task.html#asyncio.gather
@@ -331,6 +358,50 @@ yield \await_process($command, $timeout);
 composer require symplely/coroutine
 ```
 
+This version will use **libuv** features if available. Do one of the following to install.
+
+For **Debian** like distributions, Ubuntu...
+
+```bash
+apt-get install libuv1-dev php-pear -y
+```
+
+For **RedHat** like distributions, CentOS...
+
+```bash
+yum install libuv-devel php-pear -y
+```
+
+Now have **Pecl** auto compile, install, and setup.
+
+```bash
+pecl channel-update pecl.php.net
+pecl install uv-beta
+```
+
+For **Windows** there is good news, native *async* thru `libuv` has arrived.
+
+Windows builds for stable PHP versions are available [from PECL](https://pecl.php.net/package/uv).
+
+Directly download latest from https://windows.php.net/downloads/pecl/releases/uv/0.2.4/
+
+Extract `libuv.dll` to sample directory as `PHP` binary executable, and extract `php_uv.dll` to `ext\` directory.
+
+Enable extension `php_sockets.dll` and `php_uv.dll` in php.ini
+
+```powershell
+cd C:\Php
+Invoke-WebRequest "https://windows.php.net/downloads/pecl/releases/uv/0.2.4/php_uv-0.2.4-7.2-ts-vc15-x64.zip" -OutFile "php_uv-0.2.4.zip"
+#Invoke-WebRequest "https://windows.php.net/downloads/pecl/releases/uv/0.2.4/php_uv-0.2.4-7.3-nts-vc15-x64.zip" -OutFile "php_uv-0.2.4.zip"
+#Invoke-WebRequest "https://windows.php.net/downloads/pecl/releases/uv/0.2.4/php_uv-0.2.4-7.4-ts-vc15-x64.zip" -OutFile "php_uv-0.2.4.zip"
+7z x -y php_uv-0.2.4.zip libuv.dll php_uv.dll
+copy php_uv.dll ext\php_uv.dll
+del php_uv.dll
+del php_uv-0.2.4.zip
+echo extension=php_sockets.dll >> php.ini
+echo extension=php_uv.dll >> php.ini
+```
+
 ## Usage
 
 In general, any method/function having the `yield` keyword, will operate as an interruption point, suspend current routine, do something else, then return/resume. For an quick how to watch [Advanced Asyncio: Solving Real World Production Problems](https://youtu.be/yKfenooKl6M).
@@ -494,18 +565,20 @@ There is also [Async Extension for PHP](https://github.com/concurrent-php/ext-as
 
 ____Other main asynchronous PHP libraries____
 
-[Amp](https://github.com/amphp)
+### [Amp](https://github.com/amphp)
 
 * Using *`yield`* generators. However, using *`Promises`* also, which mandates the normal *Event Loop*.
 * Users would need to totally restructure the normal way they develope with there package.
 * There package necessitate there framework, all there packages bring in many files.
 * Try creating the **Google's `Go`** like example with this package as I have an example of above, in the same number of lines.
 
-[ReactPHP](https://github.com/reactphp) and [Guzzle Promises](https://github.com/guzzle/promises)
+### [ReactPHP](https://github.com/reactphp)
+
+### [Guzzle Promises](https://github.com/guzzle/promises)
 
 * Using *`Promises`*, which mandates the normal *Event Loop*. Neither can run each other promises without issues, if they following specs, the logic, they should be getting the same results, regardless of the internal code routines used. That necessitated my own [techno-express/promiseplus](https://github.com/techno-express/promiseplus), that runs both, which is archived.
 
-[Recoil](https://github.com/recoilphp/recoil)
+### [Recoil](https://github.com/recoilphp/recoil)
 
 * Based on *ReactPHP*, but using `yield`, not using standard terminology/naming conventions, making it hard to follow. Many additional libraries, and files. But, it could run the the example above after much effort. In the end, not worth using, after all the additions, bringing in *ReactPHP* `Promise`'s and `Event Loop`.
 

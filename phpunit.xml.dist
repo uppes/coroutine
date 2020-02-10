@@ -12,6 +12,7 @@
     <testsuites>
         <testsuite name="Coroutine Test Suite">
             <directory suffix=".php">tests/</directory>
+            <directory suffix=".phpt">tests/libuv/</directory>
         </testsuite>
     </testsuites>
 

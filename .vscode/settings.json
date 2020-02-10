@@ -1,8 +1,14 @@
 {
     "cSpell.words": [
+        "CREAT",
+        "IRUSR",
+        "RDONLY",
         "SIGUSR",
+        "Swoole",
+        "WRONLY",
         "autoload",
         "curryied",
+        "hhvm",
         "hrtime",
         "libuv",
         "phpunit",

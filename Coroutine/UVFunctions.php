@@ -567,12 +567,12 @@ function uv_pipe_pending_instances(UVPipe $handle, $count)
 }
 
 /**
- * @param UVHandle $fd
+ * @param UVHandle|resource $fd
  * @param integer $flags
  *
  * @return UVStdio
  */
-function uv_stdio_new(UVHandle $fd, int $flags)
+function uv_stdio_new($fd, int $flags)
 {
 }
 
