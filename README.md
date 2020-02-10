@@ -25,22 +25,24 @@ __What is Async?__
 Simply avoiding the blocking of very next instruction. The mechanism of *capturing* and *running later*.
 
 __What issues the current PHP implementations this package address?__
-*Ease of use*. [Amp](#[Amp]) and [ReactPHP](#[ReactPHP]) both do and get you asynchronous results. But both require more setup by the *__user/developer__* to get a simple line of code to run. There is **Swoole** and **Hhvm**, but neither are standard PHP installations.
+*Ease of use*. [Amp](#[Amp]) and [ReactPHP](#[ReactPHP]) both do and get you asynchronous results. But both require more setup by the *__user/developer__* to get a simple line of code to run. There is also **Swoole** and **Hhvm**, but neither are standard PHP installations.
 
-When using **Amp** or **ReactPHP** and some of the packages based upon them, is you must, not only manage the `Callbacks` you provided, but also the returned `Promise` object, and the `Event Loop` object. These libraries modeling themselves around old school **Javascript**, where `Javascript` nowadays moving towards simple `async/await` syntax. Which brings up this question.
+When using **Amp** or **ReactPHP** and some of the packages based upon them, is you must not only manage the `Callbacks` you provided, but also the returned `Promise` object, and the `Event Loop` object. These libraries modeling themselves around old school **Javascript**, where `Javascript` nowadays moving towards simple `async/await` syntax. Which brings up this question.
 
 __What does `ease of use` mean?__
 We can start by reviewing other programming languages implementations. And the fact you already have a working application, that you want various parts to run more responsive, which translates to do more.
 
 [Go](https://golang.org/doc/effective_go.html#goroutines) has it's **Goroutine** keyword `go` then your function and statements.
 
-These links of [Python](https://docs.python.org/3/library/asyncio-task.html), [Ruby](https://ruby-concurrency.github.io/concurrent-ruby/1.1.4/Concurrent/Async.html), [Rust](https://rust-lang.github.io/async-book/01_getting_started/04_async_await_primer.html#asyncawait-primer), [Nim](https://nim-lang.org/docs/asyncnet.html), [C#](https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/concepts/async/), [Elixir](https://hexdocs.pm/elixir/Task.html#module-async-and-await), [Java](https://github.com/electronicarts/ea-async), and [C++](https://lewissbaker.github.io/2017/11/17/understanding-operator-co-await) have keywords `async/await` then your function and statements.
+These links of [Python](https://docs.python.org/3/library/asyncio-task.html), [Ruby](https://ruby-concurrency.github.io/concurrent-ruby/1.1.4/Concurrent/Async.html), [Rust](https://rust-lang.github.io/async-book/01_getting_started/04_async_await_primer.html#asyncawait-primer), [Nim](https://nim-lang.org/docs/asyncnet.html), [C#](https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/concepts/async/), [Elixir](https://hexdocs.pm/elixir/Task.html#module-async-and-await), [Java](https://github.com/electronicarts/ea-async), and [C++](https://lewissbaker.github.io/2017/11/17/understanding-operator-co-await) details keywords `async/await` and constructs of function and statements.
 
 When using they return the actual results you want, no medalling with any objects, no callbacks, and upon calling everything to up that point continues to run.
 
 The thing about each, is the history leading to the feature, the actual behavior, the underlying concepts are the same, and a simple calling structure statement. They all reference in various ways the use of `yield` or `iterators`, which this package relies upon and makes the following true.
 
-__The end result, and the only thing you will do to make your code `asynchronous`, is placing `yield` within, and `getting` the actual `results` you want.__
+The only thing you will do to **make** your code `asynchronous`, is **placing** `yield` _within_, and **prefix** _calling_ your **code** with `yield` to **get** _actual_ `results` you want.
+
+With this package you will have a **PHP** version of `async/await`, by just using **`yield`**.
 
 -------
 
