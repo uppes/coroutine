@@ -736,6 +736,7 @@ class Coroutine implements CoroutineInterface
             $this->signaler = new Signaler($this);
 
             if ($this->isPcntl()) {
+                $this->isUvSignal = false;
                 \pcntl_async_signals(true);
             }
         }
