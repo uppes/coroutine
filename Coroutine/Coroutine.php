@@ -577,7 +577,7 @@ class Coroutine implements CoroutineInterface
                 if ($this->isUvActive()) {
                     \uv_run($this->uv, $streamWait ? UV::RUN_ONCE : UV::RUN_NOWAIT);
                 } else {
-                    if ($this->isUvSignal && $this->isSignaling()) {
+                    if ($this->isUvSignal && $this->isSignaling() && !$this->isPcntl()) {
                         \uv_run(\uv_default_loop(), UV::RUN_NOWAIT);
                     }
 
