@@ -44,6 +44,10 @@ The only thing you will do to **make** your code `asynchronous`, is **placing** 
 
 With this package you will have a **PHP** version of `async/await`, by just using **`yield`**.
 
+There are a few helper functions available to tie everything together. Mainly, `away()` that's similar to Python's [create_task()](https://docs.python.org/3/library/asyncio-task.html#id4), that behaves like Google's [go()](https://golang.org/doc/effective_go.html#goroutines) keyword, which is included here as a alias function `go()`.
+
+By using, it immediately returns a number, that can be used with `gather()`, another Python like [function](https://docs.python.org/3/library/asyncio-task.html#asyncio.gather), which also behaves like Google's [WaitGroup](https://golang.org/pkg/sync/#WaitGroup). This will wait and return the result of a code distant/**detached** for running in the `background`.
+
 -------
 
 A **Coroutine** here are specially crafted functions that are based on __generators__, with the use of `yield` and `yield from`. When used, they **control context**, meaning `capture/release` an application's execution flow.

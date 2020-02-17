@@ -1,9 +1,19 @@
 <?php
 
-namespace Async\Coroutine;
-
 /**
- * Full-featured event loop backed by epoll, kqueue, IOCP, event ports.
+ * Base handle type for `libuv` handles.
+ * All handle types (including stream types) subclass
+ * - UVTcp,
+ * - UVUdp,
+ * - UVPipe,
+ * - ...etc
+ *
+ * All API functions defined here work with any handle type.
+ * `Libuv` handles are not movable. Pointers to handle structures passed
+ * to functions must remain valid for the duration of the requested operation.
+ * Take care when using stack allocated handles.
+ *
+ * This is a full-featured event loop backed by epoll, kqueue, IOCP, event ports.
  * - Asynchronous TCP and UDP sockets
  * - Asynchronous DNS resolution
  * - Asynchronous file and file system operations
@@ -18,7 +28,7 @@ namespace Async\Coroutine;
  *
  * @see https://libuv.org/
  */
-final class UV
+abstract class UV
 {
     /**
      * This flag indicates an event that becomes active when the provided file
@@ -47,7 +57,7 @@ final class UV
     const RUN_ONCE = 1;
 
     /**
-     * Poll for i/o once but don't block if there are no pending callbacks.
+     * Poll for i/o once but don’t block if there are no pending callbacks.
      * Mode used to run the loop with.
      */
     const RUN_NOWAIT = 2;
@@ -312,7 +322,7 @@ final class UV
 
     /**
      * The SIGTRAP signal is sent to a process when an exception (or trap) occurs: a condition that a debugger has
-     * requested to be informed of - for example, when a particular function is executed, or when a particular variable
+     * requested to be informed of — for example, when a particular function is executed, or when a particular variable
      * changes value.
      */
     const SIGTRAP = 5;
@@ -475,4 +485,24 @@ final class UV
     const SIGSYS = 31;
 
     const SIGBABY = 31;
+
+    const UV_UNKNOWN_HANDLE = 0;
+    const UV_ASYNC = 1;
+    const UV_CHECK = 2;
+    const UV_FS_EVENT = 3;
+    const UV_FS_POLL = 4;
+    const UV_HANDLE = 5;
+    const UV_IDLE = 6;
+    const UV_NAMED_PIPE = 7;
+    const UV_POLL = 8;
+    const UV_PREPARE = 9;
+    const UV_PROCESS = 10;
+    const UV_STREAM = 11;
+    const UV_TCP = 12;
+    const UV_TIMER = 13;
+    const UV_TTY = 14;
+    const UV_UDP = 15;
+    const UV_SIGNAL = 16;
+    const UV_FILE = 17;
+    const UV_HANDLE_TYPE_MAX = 18;
 }

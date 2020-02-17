@@ -2,7 +2,6 @@
 
 namespace Async\Tests;
 
-use Async\Coroutine\UV;
 use Async\Coroutine\Signaler;
 use PHPUnit\Framework\TestCase;
 
@@ -30,40 +29,40 @@ class SignalerTest extends TestCase
 
         $this->assertSame(0, $callCount);
 
-        $signals->add(UV::SIGUSR1, $func);
+        $signals->add(SIGUSR1, $func);
         $this->assertSame(0, $callCount);
 
-        $signals->add(UV::SIGUSR1, $func);
+        $signals->add(SIGUSR1, $func);
         $this->assertSame(0, $callCount);
 
-        $signals->add(UV::SIGUSR1, $func);
+        $signals->add(SIGUSR1, $func);
         $this->assertSame(0, $callCount);
 
-        $signals->execute(UV::SIGUSR1);
+        $signals->execute(SIGUSR1);
         $this->assertSame(1, $callCount);
 
-        $signals->add(UV::SIGUSR2, $func);
+        $signals->add(SIGUSR2, $func);
         $this->assertSame(1, $callCount);
 
-        $signals->add(UV::SIGUSR2, $func);
+        $signals->add(SIGUSR2, $func);
         $this->assertSame(1, $callCount);
 
-        $signals->execute(UV::SIGUSR2);
+        $signals->execute(SIGUSR2);
         $this->assertSame(2, $callCount);
 
-        $signals->remove(UV::SIGUSR2, $func);
+        $signals->remove(SIGUSR2, $func);
         $this->assertSame(2, $callCount);
 
-        $signals->remove(UV::SIGUSR2, $func);
+        $signals->remove(SIGUSR2, $func);
         $this->assertSame(2, $callCount);
 
-        $signals->execute(UV::SIGUSR2);
+        $signals->execute(SIGUSR2);
         $this->assertSame(2, $callCount);
 
-        $signals->remove(UV::SIGUSR1, $func);
+        $signals->remove(SIGUSR1, $func);
         $this->assertSame(2, $callCount);
 
-        $signals->execute(UV::SIGUSR1);
+        $signals->execute(SIGUSR1);
         $this->assertSame(2, $callCount);
     }
 }

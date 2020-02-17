@@ -9,15 +9,44 @@ use Async\Coroutine\Coroutine;
 use Async\Coroutine\CoroutineInterface;
 use Async\Processor\Processor;
 use Async\Coroutine\ParallelInterface;
-use Async\Processor\ProcessInterface;
+use Async\Processor\LauncherInterface;
 use Async\Coroutine\Exceptions\Panic;
 
 if (!\function_exists('coroutine_run')) {
     \define('MILLISECOND', 0.001);
     \define('EOL', \PHP_EOL);
     \define('DS', \DIRECTORY_SEPARATOR);
-    \define('IS_WINDOWS', ('\\' === \DIRECTORY_SEPARATOR));
-    \define('IS_LINUX', ('/' === \DIRECTORY_SEPARATOR));
+    \define('IS_WINDOWS', ('\\' === \DS));
+    \define('IS_LINUX', ('/' === \DS));
+
+    if (\IS_WINDOWS) {
+        /**
+         * The SIGUSR1 signal is sent to a process to indicate user-defined conditions.
+         */
+        \define('SIGUSR1', 10);
+
+        /**
+         * The SIGUSR2 signa2 is sent to a process to indicate user-defined conditions.
+         */
+        \define('SIGUSR2', 12);
+
+        /**
+         * The SIGHUP signal is sent to a process when its controlling terminal is closed.
+         */
+        \define('SIGHUP', 1);
+
+        /**
+         * The SIGINT signal is sent to a process by its controlling terminal
+         * when a user wishes to interrupt the process.
+         */
+        \define('SIGINT', 2);
+
+        /**
+         * The SIGQUIT signal is sent to a process by its controlling terminal
+         * when the user requests that the process quit.
+         */
+        \define('SIGQUIT', 3);
+    }
 
     /**
      * Makes an resolvable function from label name that's callable with `away`
@@ -379,9 +408,9 @@ if (!\function_exists('coroutine_run')) {
      * @param callable $callable
      * @param int $timeout
      *
-     * @return ProcessInterface
+     * @return LauncherInterface
      */
-    function parallel($callable, int $timeout = 300): ProcessInterface
+    function parallel($callable, int $timeout = 300): LauncherInterface
     {
         $coroutine = \coroutine_instance();
 
@@ -412,9 +441,9 @@ if (!\function_exists('coroutine_run')) {
      * @param callable $somethingToRun
      * @param int $timeout
      *
-     * @return ProcessInterface
+     * @return LauncherInterface
      */
-    function parallel_add($somethingToRun, int $timeout = 300): ProcessInterface
+    function parallel_add($somethingToRun, int $timeout = 300): LauncherInterface
     {
         return Processor::create($somethingToRun, $timeout);
     }

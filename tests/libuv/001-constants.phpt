@@ -1,7 +1,5 @@
 --TEST--
 Check for php-uv constants
---SKIPIF--
-<?php require 'vendor/autoload.php'; ?>
 --FILE--
 <?php
 
@@ -33,11 +31,6 @@ if (!defined("UV::O_TRUNC")) {
 }
 if (!defined("UV::O_APPEND")) {
   echo "FAILED UV::O_APPEND" . PHP_EOL;
-}
-if (!defined("UV::O_NOCTTY")) {
-  if (!UV::O_NOCTTY) {
-    echo "FAILED UV::O_NOCTTY" . PHP_EOL;
-  }
 }
 if (!defined("UV::S_IRWXU")) {
   echo "FAILED UV::S_IRWXU" . PHP_EOL;

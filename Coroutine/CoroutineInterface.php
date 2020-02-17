@@ -4,7 +4,7 @@ namespace Async\Coroutine;
 
 use Async\Coroutine\Process;
 use Async\Coroutine\TaskInterface;
-use Async\Processor\ProcessInterface;
+use Async\Processor\LauncherInterface;
 use Async\Coroutine\ParallelInterface;
 
 interface CoroutineInterface
@@ -159,9 +159,9 @@ interface CoroutineInterface
      * @param callable $callable
      * @param int $timeout
      *
-     * @return ProcessInterface
+     * @return LauncherInterface
      */
-    public function addProcess($callable, int $timeout = 300): ProcessInterface;
+    public function addProcess($callable, int $timeout = 300): LauncherInterface;
 
     public function getProcess(
         ?callable $timedOutCallback = null,

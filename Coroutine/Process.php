@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Async\Coroutine;
 
-use Async\Processor\ProcessInterface;
+use Async\Processor\LauncherInterface;
 use Async\Coroutine\CoroutineInterface;
 
 /**
@@ -33,17 +33,17 @@ class Process
             $this->registerProcess();
     }
 
-    public function add(ProcessInterface $process)
+    public function add(LauncherInterface $process)
     {
         $this->processes[$process->getPid()] = $process;
     }
 
-    public function remove(ProcessInterface $process)
+    public function remove(LauncherInterface $process)
     {
         unset($this->processes[$process->getPid()]);
     }
 
-    public function stop(ProcessInterface $process)
+    public function stop(LauncherInterface $process)
     {
         $this->remove($process);
         $process->stop();

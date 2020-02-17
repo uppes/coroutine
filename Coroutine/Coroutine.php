@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Async\Coroutine;
 
-use Async\Coroutine\UV;
 use Async\Coroutine\Kernel;
 use Async\Coroutine\Task;
 use Async\Coroutine\Parallel;
@@ -15,7 +14,7 @@ use Async\Coroutine\TaskInterface;
 use Async\Coroutine\ReturnValueCoroutine;
 use Async\Coroutine\PlainValueCoroutine;
 use Async\Coroutine\CoroutineInterface;
-use Async\Processor\ProcessInterface;
+use Async\Processor\LauncherInterface;
 use Async\Coroutine\Exceptions\CancelledError;
 use Async\Coroutine\Exceptions\InvalidArgumentException;
 
@@ -114,7 +113,7 @@ class Coroutine implements CoroutineInterface
     /**
      * list of **UV** event handles, added by `addReader`, `addWriter`
      *
-     * @var \UVHandle[]
+     * @var \UV[]
      */
     protected $events = [];
 
@@ -277,11 +276,11 @@ class Coroutine implements CoroutineInterface
 
         $flags = 0;
         if (isset($this->waitingForRead[(int) $stream])) {
-            $flags |= UV::READABLE;
+            $flags |= \UV::READABLE;
         }
 
         if (isset($this->waitingForWrite[(int) $stream])) {
-            $flags |= UV::WRITABLE;
+            $flags |= \UV::WRITABLE;
         }
 
         \uv_poll_start($this->events[(int) $stream], $flags, $this->onEvent);
@@ -306,7 +305,7 @@ class Coroutine implements CoroutineInterface
         return $this->process;
     }
 
-    public function addProcess($callable, int $timeout = 300): ProcessInterface
+    public function addProcess($callable, int $timeout = 300): LauncherInterface
     {
         return $this->parallel->add($callable, $timeout);
     }
@@ -417,7 +416,7 @@ class Coroutine implements CoroutineInterface
             $this->events = [];
             $this->waitingForRead = [];
             $this->waitingForWrite = [];
-            \uv_run($this->uv, UV::RUN_NOWAIT);
+            \uv_run($this->uv, \UV::RUN_NOWAIT);
         }
     }
 
@@ -575,10 +574,10 @@ class Coroutine implements CoroutineInterface
                     $streamWait = $this->process->sleepingTime();
 
                 if ($this->isUvActive()) {
-                    \uv_run($this->uv, $streamWait ? UV::RUN_ONCE : UV::RUN_NOWAIT);
+                    \uv_run($this->uv, $streamWait ? \UV::RUN_ONCE : \UV::RUN_NOWAIT);
                 } else {
                     if ($this->isUvSignal && $this->isSignaling()) {
-                        \uv_run(\uv_default_loop(), UV::RUN_NOWAIT);
+                        \uv_run(\uv_default_loop(), \UV::RUN_NOWAIT);
                     }
 
                     $this->ioSocketStream($streamWait);
@@ -855,7 +854,7 @@ class Coroutine implements CoroutineInterface
 
         for (;;) {
             try {
-                if ($exception) {
+                if ($exception instanceof \Throwable) {
                     $gen->throw($exception);
                     $exception = null;
                     continue;
