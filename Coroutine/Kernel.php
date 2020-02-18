@@ -8,6 +8,7 @@ use Async\Coroutine\Channel;
 use Async\Coroutine\CoroutineInterface;
 use Async\Coroutine\TaskInterface;
 use Async\Coroutine\Exceptions\LengthException;
+use Async\Coroutine\Exceptions\InvalidStateError;
 use Async\Coroutine\Exceptions\InvalidArgumentException;
 use Async\Coroutine\Exceptions\TimeoutError;
 use Async\Coroutine\Exceptions\CancelledError;
@@ -475,6 +476,13 @@ class Kernel
                     $countComplete = \count($completeList);
                     $gatherCompleteCount = 0;
                     $isResultsException = false;
+
+                    foreach($gatherIdList as $nan => $tid) {
+                        if (isset($taskList[$tid]) || isset($completeList[$tid]))
+                            continue;
+                        else
+                            throw new InvalidStateError('Task ' . $tid . ' does not exists.');
+                    }
 
                     // Check and handle tasks already completed before entering/executing gather().
                     if ($countComplete > 0) {

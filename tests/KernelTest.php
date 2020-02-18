@@ -9,6 +9,7 @@ use Async\Coroutine\Exceptions\Panicking;
 use Async\Coroutine\Exceptions\TimeoutError;
 use Async\Coroutine\Exceptions\CancelledError;
 use Async\Coroutine\Exceptions\LengthException;
+use Async\Coroutine\Exceptions\InvalidStateError;
 use Async\Coroutine\Exceptions\InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
@@ -115,6 +116,18 @@ class KernelTest extends TestCase
     public function testGatherException()
     {
         \coroutine_run($this->taskGatherException());
+    }
+
+    public function taskGatherInvalidStateError()
+    {
+        $this->expectException(InvalidStateError::class);
+        yield \gather(5);
+        yield \shutdown();
+    }
+
+    public function testGatherInvalidStateError()
+    {
+        \coroutine_run($this->taskGatherInvalidStateError());
     }
 
     public function taskGatherCancelled()

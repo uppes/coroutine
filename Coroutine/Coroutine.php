@@ -706,12 +706,8 @@ class Coroutine implements CoroutineInterface
 
     public function removeSignal($signal, $listener)
     {
-        if (!$this->signaler)
+        if (!$this->signaler || !$this->signaler->count($signal))
             return;
-
-        if (!$this->signaler->count($signal)) {
-            return;
-        }
 
         $this->signaler->remove($signal, $listener);
 
