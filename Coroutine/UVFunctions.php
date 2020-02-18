@@ -11,8 +11,8 @@ function uv_loop_new()
 
 /**
  * Returns the initialized default loop.
- * It may return NULL in case of allocation failure. This function is just a convenient
- * way for having a global loop throughout an application, the default loop is in no way
+ * This function is just a convenient way for having a global loop
+ * throughout an application, the default loop is in no way
  * different than the ones initialized with `uv_loop_new()`.
  *
  * @return UVLoop
@@ -43,12 +43,13 @@ function uv_run(UVLoop $loop = null, int $mode = UV::RUN_DEFAULT)
 /**
  * start polling.
  *
- * If you want to use a socket. please use uv_poll_init_socket instead of this. Windows can't handle socket with this function.
+ * If you want to use a socket. please use `uv_poll_init_socket` instead of this.
+ * Windows can't handle socket with this function.
  *
  * @param UVPoll $poll
  * @param int $events UV::READABLE and UV::WRITABLE flags.
- * @param callable $callback expects (UVPoll $poll, int $status, int $events, mixed $connection)
- * - the connection parameter passes uv_poll_init `$fd`.
+ * @param callable $callback expects (UVPoll $poll, int $status, int $events, resource $fd)
+ * - the callback `$fd` parameter is the same from `uv_poll_init`.
  */
 function uv_poll_start(UVPoll $poll, $events, ?callable $callback = null)
 {
@@ -56,7 +57,7 @@ function uv_poll_start(UVPoll $poll, $events, ?callable $callback = null)
 
 /**
  * Initialize the poll watcher using a socket descriptor. On unix this is
- * identical to uv_poll_init. On windows it takes a SOCKET handle.
+ * identical to `uv_poll_init`. On windows it takes a `SOCKET` handle.
  *
  * @param UVLoop $loop
  * @param resource $socket
@@ -97,7 +98,7 @@ function uv_poll_stop(UVPoll $poll)
  * `$callback` will still be deferred to the next iteration of the event loop.
  * It gives you a chance to free up any resources associated with the handle.
  *
- * In-progress requests, like uv_connect_t or uv_write_t, are cancelled and
+ * In-progress requests, like uv_connect or uv_write, are cancelled and
  * have their callbacks called asynchronously with status=UV_ECANCELED.
  *
  * @param UV $handle
@@ -198,7 +199,8 @@ function uv_read_start(UVStream $handle, callable $callback)
 
 /**
  * open specified file,
- * execute a blocking system call asynchronously (in a thread pool) and call the specified callback in the specified loop after completion.
+ * Executes a blocking system call asynchronously (in a thread pool) and call the specified callback in
+ * the specified loop after completion.
  *
  * @param UVLoop $loop
  * @param string $path file path
@@ -224,7 +226,8 @@ function uv_fs_close(UVLoop $loop, $fd, callable $callback)
 
 /**
  * async read,
- * execute a blocking system call asynchronously (in a thread pool) and call the specified callback in the specified loop after completion.
+ * Executes a blocking system call asynchronously (in a thread pool) and call the specified callback in
+ * the specified loop after completion.
  *
  * @param UVLoop $loop
  * @param resource $fd PHP `stream`, or `socket`
@@ -232,15 +235,11 @@ function uv_fs_close(UVLoop $loop, $fd, callable $callback)
  * @param int $length
  * @param callable $callback - `$callable` expects (resource $stream, $data).
  *
- * `$read` is > 0 if there is data available, 0 if libuv is done reading for
+ * `$data` is > 0 if there is data available, 0 if libuv is done reading for
  * now, or < 0 on error.
  *
  * The callee is responsible for closing the `$stream` when an error happens.
  * Trying to read from the `$stream` again is undefined.
- *
- * The callee is responsible for freeing the `$buffer`, libuv does not reuse it.
- * The `$buffer` may be a null `$buffer` (where buf->base=NULL and buf->len=0) on
- * EOF or error.
  */
 function uv_fs_read(UVLoop $loop, $fd, int $offset, int $length, callable $callback)
 {
@@ -248,7 +247,8 @@ function uv_fs_read(UVLoop $loop, $fd, int $offset, int $length, callable $callb
 
 /**
  * async write,
- * execute a blocking system call asynchronously (in a thread pool) and call the specified callback in the specified loop after completion.
+ * Executes a blocking system call asynchronously (in a thread pool) and call the specified callback in
+ * the specified loop after completion.
  *
  * @param UVLoop $loop
  * @param resource $fd PHP `stream`, or `socket`
@@ -274,6 +274,8 @@ function uv_fs_fdatasync(UVLoop $loop, $fd, callable $callback)
 
 /**
  * async scandir.
+ * Executes a blocking system call asynchronously (in a thread pool) and call the specified callback in
+ * the specified loop after completion.
  *
  * @param UVLoop $loop
  * @param string $path
@@ -286,7 +288,8 @@ function uv_fs_scandir(UVLoop $loop, string $path, callable $callback, int $flag
 
 /**
  * async stat,
- * execute a blocking system call asynchronously (in a thread pool) and call the specified callback in the specified loop after completion.
+ * Executes a blocking system call asynchronously (in a thread pool) and call the specified callback in
+ * the specified loop after completion.
  *
  * @param UVLoop $loop
  * @param string $path
@@ -298,7 +301,8 @@ function uv_fs_stat(UVLoop $loop, string $path, callable $callback)
 
 /**
  * async lstat,
- * execute a blocking system call asynchronously (in a thread pool) and call the specified callback in the specified loop after completion.
+ * Executes a blocking system call asynchronously (in a thread pool) and call the specified callback in
+ * the specified loop after completion.
  *
  * @param UVLoop $loop
  * @param string $path
@@ -310,7 +314,8 @@ function uv_fs_lstat(UVLoop $loop, string $path, callable $callback)
 
 /**
  * async fstat,
- * execute a blocking system call asynchronously (in a thread pool) and call the specified callback in the specified loop after completion.
+ * Executes a blocking system call asynchronously (in a thread pool) and call the specified callback in
+ * the specified loop after completion.
  *
  * @param UVLoop $loop
  * @param resource $fd
@@ -322,7 +327,8 @@ function uv_fs_fstat(UVLoop $loop, $fd, callable $callback)
 
 /**
  * async fstat,
- * execute a blocking system call asynchronously (in a thread pool) and call the specified callback in the specified loop after completion.
+ * Executes a blocking system call asynchronously (in a thread pool) and call the specified callback in
+ * the specified loop after completion.
  *
  * @param UVLoop $loop
  * @param resource $out_fd
@@ -340,17 +346,17 @@ function uv_fs_sendfile(UVLoop $loop, $out_fd, $in_fd, int $offset, int $length,
  *
  * What "active" means depends on the type of handle:
  *
- * - A uv_async_t handle is always active and cannot be deactivated, except
+ * - A uv_async handle is always active and cannot be deactivated, except
  *  by closing it with uv_close().
  *
- * - A UVPipe_t, UVTcp_t, UVUdp_t, etc. handle - basically any handle that
+ * - A UVPipe, UVTcp, UVUdp, etc. handle - basically any handle that
  *  deals with I/O - is active when it is doing something that involves I/O,
  *  like reading, writing, connecting, accepting new connections, etc.
  *
- * - A uv_check_t, uv_idle_t, uv_timer_t, etc. handle is active when it has
+ * - A uv_check, uv_idle, uv_timer, etc. handle is active when it has
  *  been started with a call to uv_check_start(), uv_idle_start(), etc.
  *
- * Rule of thumb: if a handle of type uv_foo_t has a uv_foo_start()
+ * Rule of thumb: if a handle of type uv_foo has a uv_foo_start()
  * function, then it's active from the moment that function is called.
  * Likewise, uv_foo_stop() deactivates the handle again.
  *
@@ -371,7 +377,7 @@ function uv_is_active(UV $handle)
  * or the error reason changes).
  *
  * When `status == 0`, your callback receives pointers to the old and new
- * `uv_stat_t` structs. They are valid for the duration of the callback
+ * `uv_stat` structs. They are valid for the duration of the callback
  * only!
  *
  * For maximum portability, use multi-second intervals. Sub-second intervals
@@ -495,8 +501,8 @@ function uv_spawn(
     string $cwd,
     array $env = array(),
     callable $callback,
-    int $flags,
-    array $options
+    int $flags = 0,
+    array $options = []
 ) {
 }
 
@@ -639,7 +645,7 @@ function uv_async_send(UVAsync $handle)
 /**
  * Initializes a work request which will run the given `$callback` in a thread from the threadpool.
  * Once `$callback` is completed, `$after_callback` will be called on the loop thread.
- * Execute callbacks in another thread (requires Thread Safe enabled PHP).
+ * Executes callbacks in another thread (requires Thread Safe enabled PHP).
  *
  * @param UVLoop $loop
  * @param callable $callback
@@ -1009,7 +1015,7 @@ function uv_ip6_addr(string $ipv6_addr, int $port)
 /**
  * Establish an IPv4 TCP connection.
  *
- * Provide an initialized TCP handle and an uninitialized uv_connect_t. addr
+ * Provide an initialized TCP handle and an uninitialized uv_connect. addr
  * should point to an initialized struct sockaddr_in.
  *
  * On Windows if the addr is initialized to point to an unspecified address (0.0.0.0 or ::)
@@ -1031,7 +1037,7 @@ function uv_tcp_connect(UVTcp $handle, UVSockAddr $ipv4_addr, callable $callback
 /**
  * Establish an IPv6 TCP connection.
  *
- * Provide an initialized TCP handle and an uninitialized uv_connect_t. addr
+ * Provide an initialized TCP handle and an uninitialized uv_connect. addr
  * should point to an initialized struct sockaddr_in6.
  *
  * On Windows if the addr is initialized to point to an unspecified address (0.0.0.0 or ::)
@@ -1052,8 +1058,6 @@ function uv_tcp_connect6(UVTcp $handle, UVSockAddrIPv6 $ipv6_addr, callable $cal
 
 /**
  * Stop the timer, and if it is repeating restart it using the repeat value as the timeout.
- *
- * ~~If the timer has never been started before it returns UV_EINVAL.~~
  *
  * @param UVTimer $timer uv_timer resource.
  *
@@ -1113,15 +1117,8 @@ function uv_timer_get_repeat(UVTimer $timer)
  *
  * $hints is a pointer to a struct addrinfo with additional address type constraints, or NULL.
  *
- * ~~Consult man -s 3 getaddrinfo for more details.~~
- *
  * Returns 0 on success or an error code < 0 on failure. If successful, the callback will get
  * called sometime in the future with the lookup result, which is either:
- *
- * ~~ status == 0, the res argument points to a valid struct addrinfo, or ~~
- * ~~ status < 0, the res argument is NULL. See the UV_EAI_* constants. ~~
- *
- * ~~ Call uv_freeaddrinfo() to free the addrinfo structure. ~~
  *
  * @param UVLoop $loop
  * @param callable $callback callable expects (array|int $addresses_or_error).
@@ -1224,8 +1221,6 @@ function uv_udp_bind6(UVUdp $resource, UVSockAddr $address, int $flags = 0)
  * - handle – UDP handle. Should have been initialized with uv_udp_init().
  * - callback – Callback to invoke with received data.
  *
- * ~~Returns:	0 on success, or an error code < 0 on failure.~~
- *
  * @param UVUdp $handle UV handle (udp).
  * @param callable $callback callback expects (UVUdp $handle, $data, int $flags).
  *
@@ -1239,8 +1234,6 @@ function uv_udp_recv_start(UVUdp $handle, callable $callback)
  * Stop listening for incoming datagrams.
  *
  * - handle – UDP handle. Should have been initialized with uv_udp_init().
- *
- * ~~Returns:	0 on success, or an error code < 0 on failure.~~
  *
  * @param UVUdp $handle
  *
@@ -1275,9 +1268,7 @@ function uv_udp_set_membership(UVUdp $handle, string $multicast_addr, string $in
  * Makes multicast packets loop back to local sockets.
  *
  * - handle – UDP handle. Should have been initialized with uv_udp_init().
- * - on – 1 for on, 0 for off.
- *
- * ~~Returns:	0 on success, or an error code < 0 on failure.~~
+ * - on – `true` for on, `false` for off.
 
  * @param UVUdp $handle UV handle (udp).
  * @param bool $enabled
@@ -1294,8 +1285,6 @@ function uv_udp_set_multicast_loop(UVUdp $handle, bool $enabled)
  * - handle – UDP handle. Should have been initialized with uv_udp_init().
  * - ttl – 1 through 255.
  *
- * ~~Returns:	0 on success, or an error code < 0 on failure.~~
- *
  * @param UVUdp $handle UV handle (udp).
  * @param int $ttl multicast ttl.
  *
@@ -1310,8 +1299,6 @@ function uv_udp_set_multicast_ttl(UVUdp $handle, int $ttl)
  *
  * - handle – UDP handle. Should have been initialized with uv_udp_init().
  * - on – 1 for on, 0 for off.
- *
- * ~~Returns:	0 on success, or an error code < 0 on failure.~~
  *
  * @param UVUdp $handle UV handle (udp).
  * @param bool $enabled
@@ -1331,16 +1318,10 @@ function uv_udp_set_broadcast(UVUdp $handle, bool $enabled)
  * On Windows if the addr is initialized to point to an unspecified address (0.0.0.0 or ::)
  * it will be changed to point to localhost. This is done to match the behavior of Linux systems.
  *
- * ~~For connected UDP handles, addr must be set to NULL, otherwise it will return UV_EISCONN error.~~
- *
- * ~~For connectionless UDP handles, addr cannot be NULL, otherwise it will return UV_EDESTADDRREQ error.~~
- *
  * - handle – UDP handle. Should have been initialized with uv_udp_init().
  * - data – to send.
  * - uv_addr – struct sockaddr_in or struct sockaddr_in6 with the address and port of the remote peer.
  * - callback – Callback to invoke when the data has been sent out.
- *
- * ~~Returns:	0 on success, or an error code < 0 on failure.~~
  *
  * @param UVUdp $handle UV handle (udp).
  * @param string $data data.
@@ -1362,16 +1343,10 @@ function uv_udp_send(UVUdp $handle, string $data, UVSockAddr $uv_addr, callable 
  * On Windows if the addr is initialized to point to an unspecified address (0.0.0.0 or ::)
  * it will be changed to point to localhost. This is done to match the behavior of Linux systems.
  *
- * ~~For connected UDP handles, addr must be set to NULL, otherwise it will return UV_EISCONN error.~~
- *
- * ~~For connectionless UDP handles, addr cannot be NULL, otherwise it will return UV_EDESTADDRREQ error.~~
- *
  * - handle – UDP handle. Should have been initialized with uv_udp_init().
  * - data – to send.
  * - uv_addr – struct sockaddr_in6 with the address and port of the remote peer.
  * - callback – Callback to invoke when the data has been sent out.
- *
- * ~~Returns:	0 on success, or an error code < 0 on failure.~~
  *
  * @param UVUdp $handle UV handle (udp).
  * @param string $data data.
@@ -1594,6 +1569,8 @@ function uv_hrtime()
 
 /**
  * Async fsync.
+ * Executes a blocking system call asynchronously (in a thread pool) and call the specified callback in
+ * the specified loop after completion.
  *
  * @param UVLoop $loop uv loop handle.
  * @param resource $fd
@@ -1607,6 +1584,8 @@ function uv_fs_fsync(UVLoop $loop, $fd, callable $callback)
 
 /**
  * Async ftruncate.
+ * Executes a blocking system call asynchronously (in a thread pool) and call the specified callback in
+ * the specified loop after completion.
  *
  * @param UVLoop $loop uv loop handle.
  * @param resource $fd
@@ -1621,6 +1600,8 @@ function uv_fs_ftruncate(UVLoop $loop, $fd, int $offset, callable $callback)
 
 /**
  * Async mkdir.
+ * Executes a blocking system call asynchronously (in a thread pool) and call the specified callback in
+ * the specified loop after completion.
  *
  * @param UVLoop $loop uv loop handle
  * @param string $path
@@ -1635,6 +1616,8 @@ function uv_fs_mkdir(UVLoop $loop, string $path, int $mode, callable $callback)
 
 /**
  * Async rmdir.
+ * Executes a blocking system call asynchronously (in a thread pool) and call the specified callback in
+ * the specified loop after completion.
  *
  * @param UVLoop $loop uv loop handle
  * @param string $path
@@ -1648,6 +1631,8 @@ function uv_fs_rmdir(UVLoop $loop, string $path, callable $callback)
 
 /**
  * Async unlink.
+ * Executes a blocking system call asynchronously (in a thread pool) and call the specified callback in
+ * the specified loop after completion.
  *
  * @param UVLoop $loop uv loop handle
  * @param string $path
@@ -1661,6 +1646,8 @@ function uv_fs_unlink(UVLoop $loop, string $path, callable $callback)
 
 /**
  * Async rename.
+ * Executes a blocking system call asynchronously (in a thread pool) and call the specified callback in
+ * the specified loop after completion.
  *
  * @param UVLoop $loop uv loop handle.
  * @param string $from
@@ -1675,6 +1662,8 @@ function uv_fs_rename(UVLoop $loop, string $from, string $to, callable $callback
 
 /**
  * Async utime.
+ * Executes a blocking system call asynchronously (in a thread pool) and call the specified callback in
+ * the specified loop after completion.
  *
  * @param UVLoop $loop uv loop handle.
  * @param string $path
@@ -1690,6 +1679,8 @@ function uv_fs_utime(UVLoop $loop, string $path, int $utime, int $atime, callabl
 
 /**
  * Async futime.
+ * Executes a blocking system call asynchronously (in a thread pool) and call the specified callback in
+ * the specified loop after completion.
  *
  * @param UVLoop $loop uv loop handle.
  * @param resource $fd
@@ -1705,6 +1696,8 @@ function uv_fs_futime(UVLoop $loop, $fd, int $utime, int $atime, callable $callb
 
 /**
  * Async chmod.
+ * Executes a blocking system call asynchronously (in a thread pool) and call the specified callback in
+ * the specified loop after completion.
  *
  * @param UVLoop $loop uv loop handle.
  * @param string $path
@@ -1719,6 +1712,8 @@ function uv_fs_chmod(UVLoop $loop, string $path, int $mode, callable $callback)
 
 /**
  * Async fchmod.
+ * Executes a blocking system call asynchronously (in a thread pool) and call the specified callback in
+ * the specified loop after completion.
  *
  * @param UVLoop $loop uv loop handle.
  * @param resource $fd
@@ -1733,6 +1728,8 @@ function uv_fs_fchmod(UVLoop $loop, $fd, int $mode, callable $callback)
 
 /**
  * Async chown.
+ * Executes a blocking system call asynchronously (in a thread pool) and call the specified callback in
+ * the specified loop after completion.
  *
  * @param UVLoop $loop uv loop handle.
  * @param string $path
@@ -1748,6 +1745,8 @@ function uv_fs_chown(UVLoop $loop, string $path, int $uid, int $gid, callable $c
 
 /**
  * Async fchown.
+ * Executes a blocking system call asynchronously (in a thread pool) and call the specified callback in
+ * the specified loop after completion.
  *
  * @param UVLoop $loop uv loop handle.
  * @param resource $fd
@@ -1763,6 +1762,8 @@ function uv_fs_fchown(UVLoop $loop, $fd, int $uid, int $gid, callable $callback)
 
 /**
  * Async link.
+ * Executes a blocking system call asynchronously (in a thread pool) and call the specified callback in
+ * the specified loop after completion.
  *
  * @param UVLoop $loop uv loop handle.
  * @param string $from
@@ -1777,6 +1778,8 @@ function uv_fs_link(UVLoop $loop, string $from, string $to, callable $callback)
 
 /**
  * Async symlink.
+ * Executes a blocking system call asynchronously (in a thread pool) and call the specified callback in
+ * the specified loop after completion.
  *
  * @param UVLoop $loop uv loop handle.
  * @param string $from
@@ -1792,6 +1795,8 @@ function uv_fs_symlink(UVLoop $loop, string $from, string $to, int $flags, calla
 
 /**
  * Async readlink.
+ * Executes a blocking system call asynchronously (in a thread pool) and call the specified callback in
+ * the specified loop after completion.
  *
  * @param UVLoop $loop uv loop handle
  * @param string $path
@@ -1805,6 +1810,8 @@ function uv_fs_readlink(UVLoop $loop, string $path, callable $callback)
 
 /**
  * Async readdir.
+ * Executes a blocking system call asynchronously (in a thread pool) and call the specified callback in
+ * the specified loop after completion.
  *
  * @param UVLoop $loop  uv loop handle
  * @param string $path
@@ -1994,19 +2001,6 @@ function uv_resident_set_memory()
 {
 }
 
-////////////////////////
-// Not part of `libuv`
-////////////////////////
-
-/**
- * @param UVLoop|null $uv_loop
- *
- * @return void
- */
-function uv_run_once(UVLoop $uv_loop = null)
-{
-}
-
 /**
  * Returns UV handle type.
  *
@@ -2035,5 +2029,18 @@ function uv_run_once(UVLoop $uv_loop = null)
  * - UV_HANDLE_TYPE_MAX = 18;
  */
 function uv_handle_get_type(UV $uv)
+{
+}
+
+////////////////////////
+// Not part of `libuv`
+////////////////////////
+
+/**
+ * @param UVLoop|null $uv_loop
+ *
+ * @return void
+ */
+function uv_run_once(UVLoop $uv_loop = null)
 {
 }
