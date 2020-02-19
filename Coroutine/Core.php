@@ -203,6 +203,20 @@ if (!\function_exists('coroutine_run')) {
     }
 
     /**
+     * Wrap the value with `yield`, this insure that any *function/method* will be `awaitable`
+     * and the actual return value is picked up properly by `gather()`.
+     *
+     * @param mixed $value
+     *
+     * @return Generator<mixed,mixed>
+     */
+    function value($value)
+    {
+        yield;
+        return yield $value;
+    }
+
+    /**
      * Add/schedule an `yield`-ing `function/callable/task` for background execution.
      * Will immediately return an `int`, and continue to the next instruction.
      *

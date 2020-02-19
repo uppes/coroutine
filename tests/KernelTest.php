@@ -156,6 +156,35 @@ class KernelTest extends TestCase
         \coroutine_run($this->taskGatherOption());
     }
 
+    public function already($value = 0)
+    {
+        return \value($value);
+    }
+
+    public function taskGatherAlreadyCompleted()
+    {
+        $one = yield \away(function () {
+            yield;
+            return '1';
+        });
+
+        \async('alreadyLabel', function ($value = 0) {
+            return \value($value);
+        });
+
+        $two = yield \away($this->already(2));
+        $three =  yield \away('alreadyLabel', 3);
+        $result = yield \gather($one, $two, $three);
+
+        $this->assertEquals([3 => '1', 4 => 2, 5 => 3], $result);
+        yield \shutdown();
+    }
+
+    public function testGatherAlreadyCompleted()
+    {
+        \coroutine_run($this->taskGatherAlreadyCompleted());
+    }
+
     public function lapse(int $taskId = null)
     {
         yield \cancel_task($taskId);
@@ -226,7 +255,6 @@ class KernelTest extends TestCase
 
             yield;
         }
-
     }
 
     public function taskReadWait()
