@@ -129,7 +129,7 @@ class Task implements TaskInterface
 
     public function setException($exception)
     {
-        $this->exception = $exception;
+        $this->error = $this->exception = $exception;
     }
 
     public function setState(string $status)
@@ -164,7 +164,7 @@ class Task implements TaskInterface
         return $customData;
     }
 
-    public function exception(): ?\Exception
+    public function exception(): \Exception
     {
         $error = $this->error;
         $this->error = null;
@@ -233,7 +233,11 @@ class Task implements TaskInterface
             $this->result = null;
             return $result;
         } elseif ($this->isCancelled() || $this->isErred()) {
-            throw $this->error;
+            $error = $this->exception();
+            $message = $error->getMessage();
+            $class = \get_class($error);
+            $message = \str_replace('The operation has been cancelled, with: ', '', $message);
+            return new $class($message);
         } else {
             throw new InvalidStateError();
         }

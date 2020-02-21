@@ -31,7 +31,7 @@ class Kernel
      * Custom `Gather` not started state.
      * @var string
      */
-    protected static $isCustomSate = '';
+    protected static $isCustomSate = 'n/a';
 
     /**
      * Execute on already pre-completed `Gather` tasks.
@@ -404,7 +404,7 @@ class Kernel
      * @param null|callable $onClear - for cleanup on tasks not to be used any longer
      */
     public static function gatherController(
-        string $isCustomSate = '',
+        string $isCustomSate = 'n/a',
         ?callable $onPreComplete = null,
         ?callable $onProcessing = null,
         ?callable $onCompleted = null,
@@ -443,7 +443,9 @@ class Kernel
                 $gatherCount = self::$gatherCount;
                 $gatherShouldError = self::$gatherShouldError;
                 $gatherShouldClearCancelled = self::$gatherShouldClearCancelled;
-                self::gatherOptions();
+                self::$gatherCount = 0;
+                self::$gatherShouldError = true;
+                self::$gatherShouldClearCancelled = true;
 
                 $isCustomSate = self::$isCustomSate;
                 $onPreComplete = self::$onPreComplete;
@@ -591,18 +593,7 @@ class Kernel
                                             ($error instanceof CancelledError ? 'cancelled' : 'erred')
                                         );
 
-                                        $count--;
-                                        unset($taskList[$id]);
-                                        self::updateList($coroutine, $id, $taskList, $onClear, false, true);
-
-                                        $isResultsException = $error;
-                                        if ($gatherShouldError) {
-                                            $count = 0;
-                                            break;
-                                        } else {
-                                            $results[$id] = $error;
-                                            $isResultsException = false;
-                                        }
+                                        $tasks->setException($error);
                                     }
                                 }
                                 // Handle if task finished.
@@ -643,7 +634,7 @@ class Kernel
                                 } elseif ($tasks->isCancelled() && \is_callable($onCancel)) {
                                     $isResultsException = $onCancel($tasks);
                                 } else {
-                                    $isResultsException = $tasks->isCancelled() ? new CancelledError() : $tasks->exception();
+                                    $isResultsException = $tasks->result();
                                 }
 
                                 $count--;
