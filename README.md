@@ -137,6 +137,13 @@ const DS = DIRECTORY_SEPARATOR;
 \async(string $labelFunction, $asyncFunction);
 
 /**
+ * Wrap the value with `yield`, when placed within this insure that
+ * any *function/method* will be `awaitable` and the actual return
+ * value is picked up properly by `gather()`.
+ */
+return \value($value)
+
+/**
  * Add/schedule an `yield`-ing `function/callable/task` for background execution.
  * Will immediately return an `int`, and continue to the next instruction.
  * Returns an task Id
@@ -162,10 +169,16 @@ yield \shutdown()
 \awaitAble($awaitableFunction, ...$args);
 
 /**
+ * Run awaitable objects in the tasks set concurrently and block until the condition specified by race.
+ *
  * Controls how the `gather()` function operates.
- * `gather` will behave like **Promise** functions `All`, `Some`, `Any` in JavaScript.
+ * `gather_wait` will behave like **Promise** functions `All`, `Some`, `Any` in JavaScript.
+ *
+ * - This function needs to be prefixed with `yield`
+ *
+ * @see https://docs.python.org/3.7/library/asyncio-task.html#waiting-primitives
  */
-\gather_options($race, $exception);
+yield \gather_wait(array $tasks, int $race = 0, bool $exception = true, bool $clear = true)
 
 /**
  * Run awaitable objects in the taskId sequence concurrently.

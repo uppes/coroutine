@@ -23,9 +23,6 @@ use Async\Coroutine\Exceptions\CancelledError;
 class Kernel
 {
     protected $callback;
-
-    protected static $gatherResumer = null;
-
     protected static $gatherCount = 0;
     protected static $gatherShouldError = true;
     protected static $gatherShouldClearCancelled = true;
@@ -356,24 +353,42 @@ class Kernel
     }
 
     /**
-     * Controls how the `gather()` function operates.
-     * `gather` will behave like **Promise** functions `All`, `Some`, `Any` in JavaScript.
-     *
-     * @param int $race - If set, initiate a competitive race between multiple tasks.
-     * - When amount of tasks as completed, the `gather` will return with task results.
-     * - When `0` (default), will wait for all to complete.
-     * @param bool $exception - If `true` (default), the first raised exception is
-     * immediately propagated to the task that awaits on gather(). Other awaitables in
-     * the aws sequence won't be cancelled and will continue to run.
-     * - If `false`, exceptions are treated the same as successful results, and aggregated in the result list.
-     * @param bool $clear - If `true` (default), close/cancel remaining results
-     * @throws \LengthException - If the number of tasks less than the desired $race count.
+     * @deprecated 1.6.1
      */
     public static function gatherOptions(int $race = 0, bool $exception = true, bool $clear = true): void
     {
         self::$gatherCount = $race;
         self::$gatherShouldError = $exception;
         self::$gatherShouldClearCancelled = $clear;
+    }
+
+    /**
+     * Run awaitable objects in the tasks set concurrently and block until the condition specified by race.
+     *
+     * Controls how the `gather()` function operates.
+     * `gather_wait` will behave like **Promise** functions `All`, `Some`, `Any` in JavaScript.
+     *
+     * @param array<int|\Generator> $tasks
+     * @param int $race - If set, initiate a competitive race between multiple tasks.
+     * - When amount of tasks as completed, the `gather` will return with task results.
+     * - When `0` (default), will wait for all to complete.
+     * @param bool $exception - If `true` (default), the first raised exception is immediately
+     *  propagated to the task that awaits on gather().
+     * Other awaitables in the aws sequence won't be cancelled and will continue to run.
+     * - If `false`, exceptions are treated the same as successful results, and aggregated in the result list.
+     * @param bool $clear - If `true` (default), close/cancel remaining results
+     * @throws \LengthException - If the number of tasks less than the desired $race count.
+     *
+     * @see https://docs.python.org/3.7/library/asyncio-task.html#waiting-primitives
+     *
+     * @return array associative `$taskId` => `$result`
+     */
+    public static function gatherWait(array $tasks, int $race = 0, bool $exception = true, bool $clear = true)
+    {
+        self::$gatherCount = $race;
+        self::$gatherShouldError = $exception;
+        self::$gatherShouldClearCancelled = $clear;
+        return self::gather( ...$tasks);
     }
 
     /**
@@ -419,98 +434,94 @@ class Kernel
      * @see https://docs.python.org/3.7/library/asyncio-task.html#asyncio.gather
      *
      * @param int|array $taskId
-     * @return array
+     * @return array associative `$taskId` => `$result`
      */
     public static function gather(...$taskId)
     {
         return new Kernel(
             function (TaskInterface $task, CoroutineInterface $coroutine) use ($taskId) {
-                if (!empty(self::$gatherResumer)) {
-                    [$taskIdList, $count, $results, $taskList] = self::$gatherResumer;
-                } else {
-                    $gatherCount = self::$gatherCount;
-                    $gatherShouldError = self::$gatherShouldError;
-                    $gatherShouldClearCancelled = self::$gatherShouldClearCancelled;
-                    self::gatherOptions();
+                $gatherCount = self::$gatherCount;
+                $gatherShouldError = self::$gatherShouldError;
+                $gatherShouldClearCancelled = self::$gatherShouldClearCancelled;
+                self::gatherOptions();
 
-                    $isCustomSate = self::$isCustomSate;
-                    $onPreComplete = self::$onPreComplete;
-                    $onProcessing = self::$onProcessing;
-                    $onCompleted = self::$onCompleted;
-                    $onError = self::$onError;
-                    $onCancel = self::$onCancel;
-                    $onClear = self::$onClear;
-                    self::gatherController();
+                $isCustomSate = self::$isCustomSate;
+                $onPreComplete = self::$onPreComplete;
+                $onProcessing = self::$onProcessing;
+                $onCompleted = self::$onCompleted;
+                $onError = self::$onError;
+                $onCancel = self::$onCancel;
+                $onClear = self::$onClear;
+                self::gatherController();
 
-                    $taskIdList = [];
-                    $isGatherListGenerator = false;
-                    $gatherIdList = (\is_array($taskId[0])) ? $taskId[0] : $taskId;
-                    foreach ($gatherIdList as $id => $value) {
-                        if ($value instanceof \Generator) {
-                            $isGatherListGenerator = true;
-                            $id = $coroutine->createTask($value);
-                            $taskIdList[$id] = $id;
-                        } elseif (\is_int($value)) {
-                            $taskIdList[$value] = $value;
-                        } else {
-                            \panic("Invalid access, only array of integers, or generator objects allowed!");
-                        }
+                $taskIdList = [];
+                $isGatherListGenerator = false;
+                $gatherIdList = (\is_array($taskId[0])) ? $taskId[0] : $taskId;
+                foreach ($gatherIdList as $id => $value) {
+                    if ($value instanceof \Generator) {
+                        $isGatherListGenerator = true;
+                        $id = $coroutine->createTask($value);
+                        $taskIdList[$id] = $id;
+                    } elseif (\is_int($value)) {
+                        $taskIdList[$value] = $value;
+                    } else {
+                        \panic("Invalid access, only array of integers, or generator objects allowed!");
                     }
+                }
 
-                    if ($isGatherListGenerator) {
-                        $gatherIdList = \array_keys($taskIdList);
+                if ($isGatherListGenerator) {
+                    $gatherIdList = \array_keys($taskIdList);
+                }
+
+                $results = [];
+                $count = \count($taskIdList);
+                $gatherSet = ($gatherCount > 0);
+                if ($gatherSet) {
+                    if ($count < $gatherCount) {
+                        throw new LengthException(\sprintf('The (%d) tasks, not enough to fulfill the `options(%d)` count!', $count, $gatherCount));
                     }
+                }
 
-                    $results = [];
-                    $count = \count($taskIdList);
-                    $gatherSet = ($gatherCount > 0);
-                    if ($gatherSet) {
-                        if ($count < $gatherCount) {
-                            throw new LengthException(\sprintf('The (%d) tasks, not enough to fulfill the `options(%d)` count!', $count, $gatherCount));
-                        }
-                    }
+                $taskList = $coroutine->currentTask();
 
-                    $taskList = $coroutine->currentTask();
+                $completeList = $coroutine->completedTask();
+                $countComplete = \count($completeList);
+                $gatherCompleteCount = 0;
+                $isResultsException = false;
 
-                    $completeList = $coroutine->completedTask();
-                    $countComplete = \count($completeList);
-                    $gatherCompleteCount = 0;
-                    $isResultsException = false;
+                foreach ($gatherIdList as $nan => $tid) {
+                    if (isset($taskList[$tid]) || isset($completeList[$tid]))
+                        continue;
+                    else
+                        throw new InvalidStateError('Task ' . $tid . ' does not exists.');
+                }
 
-                    foreach($gatherIdList as $nan => $tid) {
-                        if (isset($taskList[$tid]) || isset($completeList[$tid]))
-                            continue;
-                        else
-                            throw new InvalidStateError('Task ' . $tid . ' does not exists.');
-                    }
-
-                    // Check and handle tasks already completed before entering/executing gather().
-                    if ($countComplete > 0) {
-                        foreach ($completeList as $id => $tasks) {
-                            if (isset($taskIdList[$id])) {
-                                if (\is_callable($onPreComplete)) {
-                                    $result = $onPreComplete($tasks);
-                                } else {
-                                    $result = $tasks->result();
-                                }
-
-                                if ($result instanceof \Throwable) {
-                                    $isResultsException = $result;
-                                } else {
-                                    $results[$id] = $result;
-                                }
-
-                                $count--;
-                                $gatherCompleteCount++;
-                                unset($taskIdList[$id]);
-
-                                // Update running task list.
-                                self::updateList($coroutine, $id, $completeList);
-
-                                // end loop, if gather race count reached
-                                if ($gatherCompleteCount == $gatherCount)
-                                    break;
+                // Check and handle tasks already completed before entering/executing gather().
+                if ($countComplete > 0) {
+                    foreach ($completeList as $id => $tasks) {
+                        if (isset($taskIdList[$id])) {
+                            if (\is_callable($onPreComplete)) {
+                                $result = $onPreComplete($tasks);
+                            } else {
+                                $result = $tasks->result();
                             }
+
+                            if ($result instanceof \Throwable) {
+                                $isResultsException = $result;
+                            } else {
+                                $results[$id] = $result;
+                            }
+
+                            $count--;
+                            $gatherCompleteCount++;
+                            unset($taskIdList[$id]);
+
+                            // Update running task list.
+                            self::updateList($coroutine, $id, $completeList);
+
+                            // end loop, if gather race count reached
+                            if ($gatherCompleteCount == $gatherCount)
+                                break;
                         }
                     }
                 }
@@ -574,16 +585,24 @@ class Kernel
                                     }
 
                                     try {
-                                        $coroutine->execute();
+                                        $coroutine->execute(true);
                                     } catch (\Throwable $error) {
                                         $tasks->setState(
                                             ($error instanceof CancelledError ? 'cancelled' : 'erred')
                                         );
 
-                                        $tasks->setException($error);
-                                        $coroutine->schedule($tasks);
-                                        $tasks->run();
-                                        continue;
+                                        $count--;
+                                        unset($taskList[$id]);
+                                        self::updateList($coroutine, $id, $taskList, $onClear, false, true);
+
+                                        $isResultsException = $error;
+                                        if ($gatherShouldError) {
+                                            $count = 0;
+                                            break;
+                                        } else {
+                                            $results[$id] = $error;
+                                            $isResultsException = false;
+                                        }
                                     }
                                 }
                                 // Handle if task finished.
@@ -594,27 +613,23 @@ class Kernel
                                     $result = $tasks->result();
                                 }
 
-                                if ($result instanceof \Throwable) {
-                                    $tasks->setState('erred');
-
-                                    // Update running task list.
-                                    self::updateList($coroutine, $id, $taskList, $onClear, false, true);
-
-                                    // Check and propagate/schedule the exception.
-                                    if ($gatherShouldError) {
-                                        $task->setException($result);
-                                        $coroutine->schedule($tasks);
-                                    }
-                                } else {
-                                    $results[$id] = $result;
-
-                                    // Update running task list.
-                                    self::updateList($coroutine, $id);
-                                }
-
                                 $count--;
                                 unset($taskList[$id]);
 
+                                if ($result instanceof \Throwable) {
+                                    $tasks->setState(($error instanceof CancelledError ? 'cancelled' : 'erred'));
+                                    self::updateList($coroutine, $id, $taskList, $onClear, false, true);
+                                    // Check and propagate/schedule the exception.
+                                    if ($gatherShouldError) {
+                                        $isResultsException = $result;
+                                        $count = 0;
+                                        break;
+                                    }
+                                } else {
+                                    self::updateList($coroutine, $id);
+                                }
+
+                                $results[$id] = $result;
                                 // end loop, if set and race count reached
                                 if ($gatherSet) {
                                     $subCount--;
@@ -624,36 +639,31 @@ class Kernel
                                 // Handle if task erred or cancelled.
                             } elseif ($tasks->isErred() || $tasks->isCancelled()) {
                                 if ($tasks->isErred() && \is_callable($onError)) {
-                                    $result = $onError($tasks);
+                                    $isResultsException = $onError($tasks);
                                 } elseif ($tasks->isCancelled() && \is_callable($onCancel)) {
-                                    $result = $onCancel($tasks);
+                                    $isResultsException = $onCancel($tasks);
                                 } else {
-                                    $result = $tasks->isCancelled() ? new CancelledError() : $tasks->exception();
+                                    $isResultsException = $tasks->isCancelled() ? new CancelledError() : $tasks->exception();
                                 }
 
-                                $exception = $result;
                                 $count--;
                                 unset($taskList[$id]);
-
-                                // Update running task list.
                                 self::updateList($coroutine, $id, $taskList, $onClear, false, true);
-
                                 // Check and propagate/schedule the exception.
                                 if ($gatherShouldError) {
-                                    self::$gatherResumer = [$taskIdList, $count, $results, $taskList];
-                                    $task->setException($exception);
-                                    $coroutine->schedule($tasks);
-                                    return;
+                                    $count = 0;
+                                    break;
+                                } else {
+                                    $results[$id] = $isResultsException;
+                                    $isResultsException = false;
                                 }
                             }
-
-                            $result = null;
                         }
                     }
                 }
 
                 // Check for, update and cancel/close any result not part of race gather count.
-                if ($gatherSet && (\is_callable($onClear) || $gatherShouldClearCancelled)) {
+                if ($gatherSet && (\is_callable($onClear) || $gatherShouldClearCancelled) && ($isResultsException === false)) {
                     $resultId = \array_keys($results);
                     $abortList = \array_diff($gatherIdList, $resultId);
                     $currentList = $coroutine->currentTask();
@@ -669,15 +679,13 @@ class Kernel
                     }
                 }
 
-                self::$gatherResumer = null;
-
                 if ($gatherShouldError && ($isResultsException !== false)) {
                     $task->setException($isResultsException);
-                    $coroutine->schedule($tasks);
                 } else {
                     $task->sendValue($results);
-                    $coroutine->schedule($task);
                 }
+
+                $coroutine->schedule($task);
             }
         );
     }

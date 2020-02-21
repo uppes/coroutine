@@ -203,8 +203,11 @@ if (!\function_exists('coroutine_run')) {
     }
 
     /**
-     * Wrap the value with `yield`, this insure that any *function/method* will be `awaitable`
-     * and the actual return value is picked up properly by `gather()`.
+     * Wrap the value with `yield`, when placed within this insure that
+     * any *function/method* will be `awaitable` and the actual return
+     * value is picked up properly by `gather()`.
+     *
+     * use as: `return \value($value);`
      *
      * @param mixed $value
      *
@@ -235,9 +238,12 @@ if (!\function_exists('coroutine_run')) {
     }
 
     /**
-     * Controls how the `gather()` function operates.
-     * `gather` will behave like **Promise** functions `All`, `Some`, `Any` in JavaScript.
+     * Run awaitable objects in the tasks set concurrently and block until the condition specified by race.
      *
+     * Controls how the `gather()` function operates.
+     * `gather_wait` will behave like **Promise** functions `All`, `Some`, `Any` in JavaScript.
+     *
+     * @param array<int|\Generator> $tasks
      * @param int $race - If set, initiate a competitive race between multiple tasks.
      * - When amount of tasks as completed, the `gather` will return with task results.
      * - When `0` (default), will wait for all to complete.
@@ -248,6 +254,17 @@ if (!\function_exists('coroutine_run')) {
      * @param bool $clear - If `true` (default), close/cancel remaining results
      * @throws \LengthException - If the number of tasks less than the desired $race count.
      *
+     * @see https://docs.python.org/3.7/library/asyncio-task.html#waiting-primitives
+     *
+     * @return array associative `$taskId` => `$result`
+     */
+    function gather_wait(array $tasks, int $race = 0, bool $exception = true, bool $clear = true)
+    {
+        return Kernel::gatherWait($tasks, $race, $exception, $clear);
+    }
+
+    /**
+     * @deprecated 1.6.1
      */
     function gather_options(int $race = 0, bool $exception = true, bool $clear = true)
     {
@@ -269,7 +286,7 @@ if (!\function_exists('coroutine_run')) {
      * - This function needs to be prefixed with `yield`
      *
      * @param int|array $taskId
-     * @return array
+     * @return array associative `$taskId` => `$result`
      */
     function gather(...$taskId)
     {

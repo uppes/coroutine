@@ -394,10 +394,8 @@ class Coroutine implements CoroutineInterface
             }
         }
 
-        /**
-         * @codeCoverageIgnore
-         */
         if ($this->isUvActive()) {
+            // @codeCoverageIgnoreStart
             \uv_stop($this->uv);
             foreach ($this->timers as $timer) {
                 \uv_timer_stop($timer);
@@ -417,6 +415,7 @@ class Coroutine implements CoroutineInterface
             $this->waitingForRead = [];
             $this->waitingForWrite = [];
             \uv_run($this->uv, \UV::RUN_NOWAIT);
+            // @codeCoverageIgnoreEnd
         }
     }
 
@@ -827,6 +826,7 @@ class Coroutine implements CoroutineInterface
             throw new InvalidArgumentException('Non-blocking STDIN, could not be enabled.');
         }
 
+        // @codeCoverageIgnoreStart
         yield Kernel::readWait(\STDIN);
         $windows7 = \strpos(\php_uname('v'), 'Windows 7') !== false;
         // kinda of workaround to allow non blocking under Windows 10, if no key is typed, will block after key press
@@ -841,6 +841,7 @@ class Coroutine implements CoroutineInterface
         }
 
         return \trim(\stream_get_line(\STDIN, $size, \EOL));
+        // @codeCoverageIgnoreEnd
     }
 
     public static function create(\Generator $gen)

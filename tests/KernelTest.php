@@ -132,8 +132,14 @@ class KernelTest extends TestCase
 
     public function taskGatherCancelled()
     {
+        \async('cancelledLabel', function () {
+            yield;
+            yield;
+            throw new CancelledError('closure cancelled!');
+        });
+
         $this->expectException(CancelledError::class);
-        $one = yield \away($this->childTask(true));
+        $one = yield \away('cancelledLabel');
         yield \gather($one);
         yield \shutdown();
     }
@@ -183,6 +189,31 @@ class KernelTest extends TestCase
     public function testGatherAlreadyCompleted()
     {
         \coroutine_run($this->taskGatherAlreadyCompleted());
+    }
+
+    public function taskGatherDoesNotError()
+    {
+        $one = yield \away(function () {
+            yield;
+            yield;
+            return '1';
+        });
+
+        \async('errorLabel', function () {
+            yield;
+            yield;
+            throw new \Exception('closure error!');
+        });
+
+        $three =  yield \away('errorLabel');
+        $result = yield \gather_wait([$one, $three], 0, false);
+        $this->assertEquals([3 => '1', 4 => (new \Exception('closure error!'))], $result);
+        yield \shutdown();
+    }
+
+    public function testGatherDoesNotError()
+    {
+        \coroutine_run($this->taskGatherDoesNotError());
     }
 
     public function lapse(int $taskId = null)

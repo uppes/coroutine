@@ -3,7 +3,7 @@
 <phpunit bootstrap="vendor/autoload.php"
 		 backupGlobals="false"
          backupStaticAttributes="false"
-         colors="false"
+         colors="true"
          convertErrorsToExceptions="true"
          convertNoticesToExceptions="true"
          convertWarningsToExceptions="true"
@@ -22,7 +22,7 @@
             <exclude>
                 <file>./Coroutine/UV.php</file>
                 <file>./Coroutine/UVFunctions.php</file>
-                <file>./Coroutine/UVInterfaces.php</file>
+                <file>./Coroutine/UVHandles.php</file>
             </exclude>
         </whitelist>
     </filter>

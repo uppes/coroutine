@@ -8,7 +8,7 @@ This library will use [PCNTL](http://php.net/manual/en/book.pcntl.php) extension
 This works under Windows OS, which differs in it's fork of [spatie/async
 ](https://github.com/spatie/async). In that it allows running of different processes in parallel on Windows without any additional software.
 
-> This package is an complete rewrite of `spatie/async`. The old package following there implementation, but with windows support can be found [here](https://github.com/techno-express/async/tree/windows-patch).
+> This package is an complete rewrite of `spatie/async`. The old package following there implementation, but with windows support can be found [here](https://github.com/techno-express/parallel).
 
 This package should be used when wanting non-blocking with an function normally blocking.
 
