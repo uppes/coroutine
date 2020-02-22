@@ -155,9 +155,13 @@ yield \away($awaitedFunction, ...$args) ;
 
 /**
  * Performs a clean application exit and shutdown.
+ *
+ * Provide $skipTask incase called by an Signal Handler. Defaults to the main parent task.
+ * - Use `get_task()` to retrieve caller's task id.
+ *
  * - This function needs to be prefixed with `yield`
  */
-yield \shutdown()
+yield \shutdown($skipTask)
 
 /**
  * Wrap the callable with `yield`, this insure the first attempt to execute will behave

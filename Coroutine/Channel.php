@@ -12,7 +12,7 @@ use Async\Coroutine\CoroutineInterface;
  * Channels provide a way for two coroutines to communicate with one another
  * and synchronize their execution.
  */
-class Channel
+final class Channel
 {
     protected $targetTaskId;
     protected $buffer = null;

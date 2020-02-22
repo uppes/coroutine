@@ -28,10 +28,15 @@ interface CoroutineInterface
     public function schedule(TaskInterface $task);
 
     /**
-     * Performs a clean shutdown.
-     * Should be called at application exit.
+     * Performs a clean application exit and shutdown.
+     *
+     * Provide $skipTask incase called by an Signal Handler.
+     *
+     * @param int $skipTask - Defaults to the main parent task.
+     * - The calling `$skipTask` task id will not get cancelled, the script execution will return to.
+     * - Use `getTask()` to retrieve caller's task id.
      */
-    public function shutdown();
+    public function shutdown(int $skipTask = 1);
 
     /**
      * kill/remove an task using task id,

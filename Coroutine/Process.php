@@ -10,7 +10,7 @@ use Async\Coroutine\CoroutineInterface;
 /**
  * @internal
  */
-class Process
+final class Process
 {
     private $processes = array();
     private $sleepTime = 15000;

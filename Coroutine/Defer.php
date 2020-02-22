@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Async\Coroutine;
 
-class Defer
+final class Defer
 {
     /**
      * @var callable

@@ -17,7 +17,7 @@ use Async\Coroutine\Exceptions\InvalidStateError;
  *
  * @see https://curio.readthedocs.io/en/latest/reference.html#tasks
  */
-class Task implements TaskInterface
+final class Task implements TaskInterface
 {
     /**
      * The task’s id.

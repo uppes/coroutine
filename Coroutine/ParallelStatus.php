@@ -8,7 +8,7 @@ use Async\Coroutine\Parallel;
 use Async\Processor\Launcher;
 use Async\Processor\SerializableException;
 
-class ParallelStatus
+final class ParallelStatus
 {
     protected $parallelPool;
 

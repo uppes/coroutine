@@ -15,7 +15,7 @@ use Async\Processor\LauncherInterface;
 /**
  * @internal
  */
-class Parallel implements ArrayAccess, ParallelInterface
+final class Parallel implements ArrayAccess, ParallelInterface
 {
     private $coroutine = null;
     private $processor = null;

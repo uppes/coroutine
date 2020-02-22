@@ -4,5 +4,5 @@ namespace Async\Coroutine;
 
 use Async\Coroutine\AbstractCoroutine;
 
-class ReturnValueCoroutine extends AbstractCoroutine
+final class ReturnValueCoroutine extends AbstractCoroutine
 { }

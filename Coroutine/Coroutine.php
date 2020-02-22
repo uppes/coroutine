@@ -23,7 +23,7 @@ use Async\Coroutine\Exceptions\InvalidArgumentException;
  *
  * @see https://docs.python.org/3/library/asyncio-task.html#coroutines
  */
-class Coroutine implements CoroutineInterface
+final class Coroutine implements CoroutineInterface
 {
     /**
      * a task's unique id number
@@ -370,16 +370,16 @@ class Coroutine implements CoroutineInterface
         }
     }
 
-    public function shutdown()
+    public function shutdown(int $skipTask = 1)
     {
         $this->process->stopAll();
         if (!empty($this->taskMap)) {
             $map = \array_reverse($this->taskMap, true);
             $keys = \array_keys($map);
             foreach ($keys as $id) {
-                if ($id == 1)
-                    break;
-                $this->cancelTask((int) $id);
+                if ($id !== $skipTask && $id > 0) {
+                    $this->cancelTask((int) $id);
+                }
             }
         }
 

@@ -13,7 +13,7 @@ use Async\Coroutine\CoroutineInterface;
  *
  * @internal
  */
-class Signaler
+final class Signaler
 {
     private $signals = array();
     private $coroutine;

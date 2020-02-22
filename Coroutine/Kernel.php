@@ -20,7 +20,7 @@ use Async\Coroutine\Exceptions\CancelledError;
  * The `yield` keyword in your code, act both as an interrupt and as a way to
  * pass information to (and from) the scheduler.
  */
-class Kernel
+final class Kernel
 {
     protected $callback;
     protected static $gatherCount = 0;
@@ -214,14 +214,20 @@ class Kernel
 
     /**
      * Performs a clean application exit and shutdown.
+     *
+     * Provide $skipTask incase called by an Signal Handler.
+     *
+     * @param int $skipTask - Defaults to the main parent task.
+     * - The calling `$skipTask` task id will not get cancelled, the script execution will return to.
+     * - Use `getTask()` to retrieve caller's task id.
      */
-    public static function shutdown()
+    public static function shutdown(int $skipTask = 1)
     {
         return new Kernel(
-            function (TaskInterface $task, CoroutineInterface $coroutine) {
+            function (TaskInterface $task, CoroutineInterface $coroutine) use ($skipTask){
                 $tasks = $coroutine->currentTask();
-                $coroutine->shutdown();
-                $coroutine->schedule($tasks[1]);
+                $coroutine->shutdown($skipTask);
+                $coroutine->schedule($tasks[$skipTask]);
             }
         );
     }
@@ -569,14 +575,14 @@ class Kernel
                                 if (\is_callable($onProcessing)) {
                                     $onProcessing($tasks, $coroutine);
                                 } else {
-                                    if (($tasks->isPending() || $tasks->isRescheduled()) && $tasks->isCustomState(true)) {
-                                        $tasks->customState();
-                                        $coroutine->schedule($tasks);
-                                        $tasks->run();
-                                        continue;
-                                    }
-
                                     try {
+                                        if (($tasks->isPending() || $tasks->isRescheduled()) && $tasks->isCustomState(true)) {
+                                            $tasks->customState();
+                                            $coroutine->schedule($tasks);
+                                            $tasks->run();
+                                            continue;
+                                        }
+
                                         $coroutine->execute(true);
                                     } catch (\Throwable $error) {
                                         $tasks->setState(
@@ -596,20 +602,7 @@ class Kernel
 
                                 $count--;
                                 unset($taskList[$id]);
-
-                                if ($result instanceof \Throwable) {
-                                    $tasks->setState(($error instanceof CancelledError ? 'cancelled' : 'erred'));
-                                    self::updateList($coroutine, $id, $taskList, $onClear, false, true);
-                                    // Check and propagate/schedule the exception.
-                                    if ($gatherShouldError) {
-                                        $isResultsException = $result;
-                                        $count = 0;
-                                        break;
-                                    }
-                                } else {
-                                    self::updateList($coroutine, $id);
-                                }
-
+                                self::updateList($coroutine, $id);
                                 $results[$id] = $result;
                                 // end loop, if set and race count reached
                                 if ($gatherSet) {
