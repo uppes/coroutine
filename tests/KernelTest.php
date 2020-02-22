@@ -90,11 +90,13 @@ class KernelTest extends TestCase
         $async = yield \away('factorizing', 'C', 4);
 
         $this->controller();
-        \gather_options(2);
-        $factorials = yield \gather(
-            $this->factorial("A", 2),
-            $this->factorial("B", 3),
-            $async
+        $factorials = yield \gather_wait(
+            [
+                $this->factorial("A", 2),
+                $this->factorial("B", 3),
+                $async
+            ],
+            2
         );
 
         $this->assertNotEmpty($factorials);
@@ -152,8 +154,7 @@ class KernelTest extends TestCase
     public function taskGatherOption()
     {
         $this->expectException(LengthException::class);
-        \gather_options(3);
-        yield \gather([1]);
+        yield \gather_wait([1], 3);
         yield \shutdown();
     }
 

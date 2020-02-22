@@ -264,14 +264,6 @@ if (!\function_exists('coroutine_run')) {
     }
 
     /**
-     * @deprecated 1.6.1
-     */
-    function gather_options(int $race = 0, bool $exception = true, bool $clear = true)
-    {
-        Kernel::gatherOptions($race, $exception, $clear);
-    }
-
-    /**
      * Run awaitable objects in the taskId sequence concurrently.
      * If any awaitable in taskId is a coroutine, it is automatically scheduled as a Task.
      *

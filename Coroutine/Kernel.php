@@ -64,7 +64,7 @@ class Kernel
     protected static $onProcessing;
 
     /**
-     * Execute cleanup on `Gather Options` race tasks no longer needed.
+     * Execute cleanup on `GatherWait()` race tasks no longer needed.
      * @var callable
      */
     protected static $onClear;
@@ -350,16 +350,6 @@ class Kernel
                 $coroutine->schedule($task);
             }
         );
-    }
-
-    /**
-     * @deprecated 1.6.1
-     */
-    public static function gatherOptions(int $race = 0, bool $exception = true, bool $clear = true): void
-    {
-        self::$gatherCount = $race;
-        self::$gatherShouldError = $exception;
-        self::$gatherShouldClearCancelled = $clear;
     }
 
     /**

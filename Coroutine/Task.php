@@ -237,6 +237,9 @@ class Task implements TaskInterface
             $message = $error->getMessage();
             $class = \get_class($error);
             $message = \str_replace('The operation has been cancelled, with: ', '', $message);
+            $message = \str_replace('The operation has exceeded the given deadline: ', '', $message);
+            $message = \str_replace('Coroutine task has erred: ', '', $message);
+            $message = \str_replace('Invalid internal state called on: ', '', $message);
             return new $class($message);
         } else {
             throw new InvalidStateError();

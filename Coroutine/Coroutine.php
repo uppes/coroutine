@@ -646,7 +646,7 @@ class Coroutine implements CoroutineInterface
 
     public function addWriter($stream, $task): CoroutineInterface
     {
-        $already = true;;
+        $already = true;
         if (isset($this->waitingForWrite[(int) $stream])) {
             $already = false;
             $this->waitingForWrite[(int) $stream][1][] = $task;
