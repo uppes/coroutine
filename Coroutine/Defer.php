@@ -54,7 +54,7 @@ final class Defer
      *
      * @throws \Exception
      */
-    public static function deferring(&$previous, $callback, $args, $recover = false)
+    public static function deferring(&$previous, $callback, $args, bool $recover = false)
     {
         if (!\is_callable($callback)) {
             if (\is_string($callback) && !\function_exists($callback)) {

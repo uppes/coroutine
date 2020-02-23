@@ -8,7 +8,7 @@ class DeferTest extends TestCase
 {
     protected $task = null;
 
-	protected function setUp(): void
+    protected function setUp(): void
     {
         \coroutine_clear();
     }
@@ -18,12 +18,24 @@ class DeferTest extends TestCase
         echo "in defer 3-{$a}\n";
     }
 
-    function task() {
+    function task()
+    {
         echo "before defer\n";
         \defer($task, [$this, "taskDelay"], 1);
         \defer($task, [$this, "taskDelay"], 2);
         \defer($task, [$this, "taskDelay"], 3);
         echo "after defer\n";
+    }
+
+    public function taskException()
+    {
+        throw new \Exception('Defer error!');
+    }
+
+    public function testDeferExceptionDestruct()
+    {
+        $this->expectException(\Exception::class);
+        \defer($none, [$this, "taskException"]);
     }
 
     public function testDefer()
@@ -44,15 +56,17 @@ class DeferTest extends TestCase
             defer($e, 'printf', $i);
             $i++;
         }
-        variableReference();echo "\n";
+        variableReference();
+        echo "\n";
 
         function variableReferenceII()
         {
-            for($i = 0; $i < 4; $i++){
+            for ($i = 0; $i < 4; $i++) {
                 defer($a, 'printf', $i);
             }
         }
-        variableReferenceII();echo "\n";
+        variableReferenceII();
+        echo "\n";
 
         function variableReferenceReturn()
         {
@@ -70,24 +84,31 @@ class DeferTest extends TestCase
 
         list($i, $o) = variableReferenceReturn();
         echo "{$i}-{$o->i}\n";
-	}
+    }
 
-    function error($a) {
+    function error($a)
+    {
         \recover($task, [$this, 'taskPanic'], $a);
         if ($a == 2) {
             print("Panicking!\n");
             \panic();
         }
     }
-    function taskFoo($a) {
+
+    function taskFoo($a)
+    {
         print "in defer 3-{$a}\n";
         $this->error($a);
     }
-    function taskPanic($a = 0) {
+
+    function taskPanic($a = 0)
+    {
         print "Panic Catcher!\n";
         print("Recovered in taskFoo($a)\n");
     }
-    function taskStart() {
+
+    function taskStart()
+    {
         print "before defer\n";
         \defer($task, [$this, "taskFoo"], 1);
         \defer($task, [$this, "taskFoo"], 2);
@@ -102,5 +123,17 @@ class DeferTest extends TestCase
         print "start\n";
         $this->taskStart();
         print "end\n";
-	}
+    }
+
+    public function testDeferException()
+    {
+        $this->expectException(\Exception::class);
+        \defer($task, [$this, "taskNone"]);
+    }
+
+    public function testDeferExceptionString()
+    {
+        $this->expectException(\Exception::class);
+        \defer($task, "taskNone");
+    }
 }

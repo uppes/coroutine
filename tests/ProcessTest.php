@@ -34,6 +34,28 @@ class ProcessTest extends TestCase
         $this->counterResult = $counter;
     }
 
+    public function taskProcessStopAll()
+    {
+        yield \away(function () {
+            yield;
+            return '1';
+        });
+
+        yield \away($this->childTask());
+        yield \away(function() {
+            yield yield shutdown(yield \get_task());
+        });
+
+        $result = yield \await_process(function () {
+            usleep(3000);
+            return 3;
+        });
+
+        $this->mainResult = $result;
+
+        $this->assertNull($result);
+    }
+
     public function taskProcess()
     {
         $childId = yield \away($this->childTask());
@@ -101,6 +123,22 @@ class ProcessTest extends TestCase
         $this->assertGreaterThan(15, $this->counterResult);
         $this->assertEquals($this->mainResult, $this->childId, (string) $parallel->status());
         $this->assertEquals($this->mainResult, $parallel->results()[0], (string) $parallel->status());
+    }
+
+    public function testProcessShutDownStopAll()
+    {
+        $this->mainResult = 0;
+        $this->childId = 0;
+        $this->counterResult = 0;
+
+        $coroutine = new Coroutine();
+
+        $coroutine->createTask($this->taskProcessStopAll());
+        $coroutine->run();
+
+        $this->assertNull($this->mainResult);
+        $this->assertNotEquals(0, $this->childId);
+        $this->assertEquals(0, $this->counterResult);
     }
 
     public function testProcessError()
