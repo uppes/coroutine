@@ -325,7 +325,7 @@ function uv_fs_fstat(UVLoop $loop, $fd, callable $callback)
 }
 
 /**
- * async fstat.
+ * async sendfile.
  * Executes a blocking system call asynchronously (in a thread pool) and call the specified callback in
  * the specified loop after completion.
  *
@@ -2070,6 +2070,20 @@ function uv_tcp_open(UVTcp $handle, int $tcpfd)
  * @return int|false
  */
 function uv_udp_open(UVUdp $handle, int $udpfd)
+{
+}
+
+/**
+ * Returns non-zero if the handle is closing or closed, zero otherwise.
+ *
+ * `Note:` This function should only be used between the initialization of
+ * the handle and the arrival of the close callback.
+ *
+ * @param UV $handle
+ *
+ * @return bool
+ */
+function uv_is_closing(UV $handle)
 {
 }
 

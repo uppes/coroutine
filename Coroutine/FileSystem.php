@@ -35,6 +35,11 @@ final class FileSystem
         'x+' => \UV::O_RDWR | \UV::O_CREAT | \UV::O_EXCL,
     );
 
+    /**
+     * Check for UV for only file operations.
+     *
+     * @return bool
+     */
     protected static function justUvFs(): bool
     {
         return \function_exists('uv_default_loop');
@@ -99,6 +104,70 @@ final class FileSystem
 
         return Kernel::awaitProcess(function () use ($path, $context) {
             return \unlink($path, $context);
+        });
+    }
+
+    /**
+     * Create a hard link
+     *
+     * @param string $from
+     * @param string $to
+     */
+    public static function link(string $from, string $to)
+    {
+        if (FileSystem::justUvFs()) {
+            return new Kernel(
+                function (TaskInterface $task, CoroutineInterface $coroutine) use ($from, $to) {
+                    $coroutine->fsAdd();
+                    \uv_fs_link(
+                        $coroutine->getUV(),
+                        $from,
+                        $to,
+                        function (int $result) use ($task, $coroutine) {
+                            $coroutine->fsRemove();
+                            $task->sendValue($result);
+                            $coroutine->schedule($task);
+                        }
+                    );
+                }
+            );
+        }
+
+        return Kernel::awaitProcess(function () use ($from, $to) {
+            return \link($from, $to);
+        });
+    }
+
+    /**
+     * Creates a symbolic link
+     *
+     * @param string $from
+     * @param string $to
+     * @param int $flag
+     */
+    public static function symlink(string $from, string $to, int $flag)
+    {
+        if (FileSystem::justUvFs()) {
+            return new Kernel(
+                function (TaskInterface $task, CoroutineInterface $coroutine) use ($from, $to, $flag) {
+                    $coroutine->fsAdd();
+                    \uv_fs_symlink(
+                        $coroutine->getUV(),
+                        $from,
+                        $to,
+                        $flag,
+                        function ($fd, int $result) use ($task, $coroutine) {
+                            $coroutine->fsRemove();
+                            $task->sendValue($result);
+                            $coroutine->schedule($task);
+                        }
+                    );
+                }
+            );
+        }
+
+        return Kernel::awaitProcess(function () use ($from, $to) {
+            return \symlink($from, $to);
         });
     }
 
@@ -195,6 +264,103 @@ final class FileSystem
         });
     }
 
+    /**
+     * Changes file owner
+     *
+     * @param string $path
+     * @param int $uid
+     * @param int $gid
+     */
+    public static function chown(string $path, int $uid, int $gid)
+    {
+        if (FileSystem::justUvFs()) {
+            return new Kernel(
+                function (TaskInterface $task, CoroutineInterface $coroutine) use ($path, $uid, $gid) {
+                    $coroutine->fsAdd();
+                    \uv_fs_chown(
+                        $coroutine->getUV(),
+                        $path,
+                        $uid,
+                        $gid,
+                        function ($fd, int $result) use ($task, $coroutine) {
+                            $coroutine->fsRemove();
+                            $task->sendValue($result);
+                            $coroutine->schedule($task);
+                        }
+                    );
+                }
+            );
+        }
+
+        return Kernel::awaitProcess(function () use ($path, $uid, $gid) {
+            return \chown($path, $uid);
+        });
+    }
+
+    /**
+     * Changes file owner by file descriptor
+     *
+     * @param resource $fd
+     * @param int $uid
+     * @param int $gid
+     */
+    public static function fchown(string $fd, int $uid, int $gid)
+    {
+        if (FileSystem::justUvFs()) {
+            return new Kernel(
+                function (TaskInterface $task, CoroutineInterface $coroutine) use ($fd, $uid, $gid) {
+                    $coroutine->fsAdd();
+                    \uv_fs_fchown(
+                        $coroutine->getUV(),
+                        $fd,
+                        $uid,
+                        $gid,
+                        function ($fd, int $result) use ($task, $coroutine) {
+                            $coroutine->fsRemove();
+                            $task->sendValue($result);
+                            $coroutine->schedule($task);
+                        }
+                    );
+                }
+            );
+        }
+    }
+
+    /**
+     * Changes file mode by file descriptor
+     *
+     * @param resource $fd
+     * @param integer $mode
+     */
+    public static function fchmod(string $fd, int $mode)
+    {
+        if (FileSystem::justUvFs()) {
+            return new Kernel(
+                function (TaskInterface $task, CoroutineInterface $coroutine) use ($fd, $mode) {
+                    $coroutine->fsAdd();
+                    \uv_fs_fchmod(
+                        $coroutine->getUV(),
+                        $fd,
+                        $mode,
+                        function ($fd, int $result) use ($task, $coroutine) {
+                            $coroutine->fsRemove();
+                            $task->sendValue($result);
+                            $coroutine->schedule($task);
+                        }
+                    );
+                }
+            );
+        }
+    }
+
+    /**
+     * Truncate a file to a specified offset by file descriptor
+     *
+     * @param resource $fd
+     * @param int $offset
+     *
+     * @return void
+     */
     public static function ftruncate($fd, int $offset)
     {
         if (FileSystem::justUvFs()) {
@@ -281,7 +447,7 @@ final class FileSystem
     /**
      * Gets information about a file using an open file pointer
      *
-     * @param string $path
+     * @param resource $fd
      */
     public static function fstat(string $fd)
     {
@@ -373,9 +539,126 @@ final class FileSystem
     }
 
     /**
-     * Open specified file.
-     * File access `$flag`. It can be:
+     * Change file last access and modification times
      *
+     * @param string $path
+     * @param int $utime
+     * @param int $atime
+     */
+    public static function utime(string $path, int $utime, int $atime)
+    {
+        if (FileSystem::justUvFs()) {
+            return new Kernel(
+                function (TaskInterface $task, CoroutineInterface $coroutine) use ($path, $utime, $atime) {
+                    $coroutine->fsAdd();
+                    \uv_fs_utime(
+                        $coroutine->getUV(),
+                        $path,
+                        $utime,
+                        $atime,
+                        function ($fd, int $result) use ($task, $coroutine) {
+                            $coroutine->fsRemove();
+                            $task->sendValue($result);
+                            $coroutine->schedule($task);
+                        }
+                    );
+                }
+            );
+        }
+    }
+
+    /**
+     * change file timestamps using file descriptor
+     *
+     * @param string $fd
+     * @param int $utime
+     * @param int $atime
+     */
+    public static function futime(string $fd, int $utime, int $atime)
+    {
+        if (FileSystem::justUvFs()) {
+            return new Kernel(
+                function (TaskInterface $task, CoroutineInterface $coroutine) use ($fd, $utime, $atime) {
+                    $coroutine->fsAdd();
+                    \uv_fs_futime(
+                        $coroutine->getUV(),
+                        $fd,
+                        $utime,
+                        $atime,
+                        function ($fd, int $result) use ($task, $coroutine) {
+                            $coroutine->fsRemove();
+                            $task->sendValue($result);
+                            $coroutine->schedule($task);
+                        }
+                    );
+                }
+            );
+        }
+    }
+
+    /**
+     * Read value of a symbolic link
+     *
+     * @param string $path
+     * @param int $utime
+     * @param int $atime
+     */
+    public static function readlink(string $path, int $utime, int $atime)
+    {
+        if (FileSystem::justUvFs()) {
+            return new Kernel(
+                function (TaskInterface $task, CoroutineInterface $coroutine) use ($path) {
+                    $coroutine->fsAdd();
+                    \uv_fs_readlink(
+                        $coroutine->getUV(),
+                        $path,
+                        function ($fd, int $result) use ($task, $coroutine) {
+                            $coroutine->fsRemove();
+                            $task->sendValue($result);
+                            $coroutine->schedule($task);
+                        }
+                    );
+                }
+            );
+        }
+    }
+
+    /**
+     * Transfer data between file descriptors
+     *
+     * @param resource $out_fd
+     * @param resource $in_fd
+     * @param int $offset
+     * @param int $length
+     */
+    public static function sendfile($out_fd, $in_fd, int $offset, int $length)
+    {
+        if (FileSystem::justUvFs()) {
+            return new Kernel(
+                function (TaskInterface $task, CoroutineInterface $coroutine) use ($out_fd, $in_fd, $offset, $length) {
+                    $coroutine->fsAdd();
+                    \uv_fs_sendfile(
+                        $coroutine->getUV(),
+                        $out_fd,
+                        $in_fd,
+                        $offset,
+                        $length,
+                        function ($result) use ($task, $coroutine) {
+                            $coroutine->fsRemove();
+                            $task->sendValue($result);
+                            $coroutine->schedule($task);
+                        }
+                    );
+                }
+            );
+        }
+    }
+
+    /**
+     * Open specified `$path` file with access `$flag`.
+     *
+     * @param string $path
+     * @param string $flag either 'r', 'r+', 'w', 'w+', 'a', 'a+', 'x', 'x+':
      * - "`r`"	`read`: Open file for input operations. The file must exist.
      * - "`w`"	`write`: Create an empty file for output operations.
      * If a file with the same name already exists, its contents are discarded and the
@@ -394,21 +677,84 @@ final class FileSystem
      * to the end of file. The file is created if it does not exist.
      * - "`x`" `Write only`: Creates a new file. Returns `FALSE` and an error if file already exists.
      * - "`x+`" `Read/Write`: Creates a new file. Returns `FALSE` and an error if file already exists
-     *
-     * @param string $path
-     * @param string $flag either 'r', 'r+', 'w', 'w+', 'a', 'a+', 'x', 'x+'
      */
     public static function open(string $path, string $flag, int $mode = 0)
     {
         if (isset(self::$fileFlags[$flag])) {
+            if (FileSystem::justUvFs()) {
+                return new Kernel(
+                    function (TaskInterface $task, CoroutineInterface $coroutine) use ($path, $flag, $mode) {
+                        $coroutine->fsAdd();
+                        \uv_fs_open(
+                            $coroutine->getUV(),
+                            $path,
+                            self::$fileFlags[$flag],
+                            $mode,
+                            function ($stream) use ($task, $coroutine) {
+                                $coroutine->fsRemove();
+                                $task->sendValue($stream);
+                                $coroutine->schedule($task);
+                            }
+                        );
+                    }
+                );
+            }
+        }
+    }
+
+    public static function read($fd, int $offset, int $length)
+    {
+        if (FileSystem::justUvFs()) {
             return new Kernel(
-                function (TaskInterface $task, CoroutineInterface $coroutine) use ($path, $flag, $mode) {
+                function (TaskInterface $task, CoroutineInterface $coroutine) use ($fd, $offset, $length) {
                     $coroutine->fsAdd();
-                    \uv_fs_open(
+                    \uv_fs_read(
                         $coroutine->getUV(),
-                        $path,
-                        self::$fileFlags[$flag],
-                        $mode,
+                        $fd,
+                        $offset,
+                        $length,
+                        function ($fd, $data) use ($task, $coroutine) {
+                            $coroutine->fsRemove();
+                            $task->sendValue($data);
+                            $coroutine->schedule($task);
+                        }
+                    );
+                }
+            );
+        }
+    }
+
+    public static function write($fd, $buffer, $position)
+    {
+        if (FileSystem::justUvFs()) {
+            return new Kernel(
+                function (TaskInterface $task, CoroutineInterface $coroutine) use ($fd, $buffer, $position) {
+                    $coroutine->fsAdd();
+                    \uv_fs_write(
+                        $coroutine->getUV(),
+                        $fd,
+                        $buffer,
+                        $position,
+                        function ($fd, int $status) use ($task, $coroutine) {
+                            $coroutine->fsRemove();
+                            $task->sendValue($status);
+                            $coroutine->schedule($task);
+                        }
+                    );
+                }
+            );
+        }
+    }
+
+    public static function close($fd)
+    {
+        if (FileSystem::justUvFs()) {
+            return new Kernel(
+                function (TaskInterface $task, CoroutineInterface $coroutine) use ($fd) {
+                    $coroutine->fsAdd();
+                    \uv_fs_close(
+                        $coroutine->getUV(),
+                        $fd,
                         function ($stream) use ($task, $coroutine) {
                             $coroutine->fsRemove();
                             $task->sendValue($stream);
@@ -418,35 +764,5 @@ final class FileSystem
                 }
             );
         }
-    }
-
-    public static function read($fd, int $offset, int $length)
-    {
-        return new Kernel(
-            function (TaskInterface $task, CoroutineInterface $coroutine) use ($fd, $offset, $length) {
-                $coroutine->fsAdd();
-                \uv_fs_read(
-                    $coroutine->getUV(),
-                    $fd,
-                    $offset,
-                    $length,
-                    function ($fd, $data) use ($task, $coroutine) {
-                        $coroutine->fsRemove();
-                        $task->sendValue($data);
-                        $coroutine->schedule($task);
-                    }
-                );
-            }
-        );
-    }
-
-    public static function write($fd, $buffer, $position, $callback)
-    {
-        uv_fs_write(uv_default_loop(), $fd, $buffer, $position, $callback);
-    }
-
-    public static function close($fd, $callback)
-    {
-        uv_fs_close(uv_default_loop(), $fd, $callback);
     }
 }
