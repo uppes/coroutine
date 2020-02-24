@@ -6,6 +6,7 @@ use Async\Coroutine\Process;
 use Async\Coroutine\TaskInterface;
 use Async\Processor\LauncherInterface;
 use Async\Coroutine\ParallelInterface;
+use Async\Coroutine\Exceptions\RuntimeException;
 
 interface CoroutineInterface
 {
@@ -106,7 +107,7 @@ interface CoroutineInterface
     public function addTimeout($task, float $timeout);
 
     /**
-     * Creates an object instance of the value which will signal
+     * Creates an object instance of the value which will signal.
      * `Coroutine::create` that it's a return value.
      *
      *  - yield Coroutine::value("I'm a return value!");
@@ -119,7 +120,7 @@ interface CoroutineInterface
     public static function value($value);
 
     /**
-     * Creates an object instance of the value which will signal
+     * Creates an object instance of the value which will signal.
      * `Coroutine::create` that it's a return value.
      *
      * @internal
@@ -168,23 +169,75 @@ interface CoroutineInterface
      */
     public function addProcess($callable, int $timeout = 300): LauncherInterface;
 
+    /**
+     * The number of UV file system operations still pending, not finish.
+     *
+     * @return integer
+     */
+    public function fsCount(): int;
+
+    /**
+     * Add a UV file system operation to counter.
+     *
+     * @return integer
+     */
+    public function fsAdd(): void;
+
+    /**
+     * Remove a UV file system operation from counter.
+     *
+     * @return integer
+     */
+    public function fsRemove(): void;
+
+    /**
+     * Return the `Coroutine` class `libuv` loop handle, otherwise throw exception, if enabled.
+     *
+     * @return null|\UVLoop
+     * @throws RuntimeException
+     */
+    public function getUV(): ?\UVLoop;
+
+    /**
+     * Enable `libuv` feature usage, if installed.
+     */
+    public function uvOn();
+
+    /**
+     * Disable `libuv` feature usage, if installed.
+     */
+    public function uvOff();
+
+    /**
+     * The `Process` class manager instance for Blocking I/O.
+     *
+     * @param callable|null $timedOutCallback
+     * @param callable|null $finishCallback
+     * @param callable|null $failCallback
+     * @return Process
+     */
     public function getProcess(
         ?callable $timedOutCallback = null,
         ?callable $finishCallback = null,
         ?callable $failCallback = null
     ): Process;
 
+    /**
+     * The `Parallel` class pool process instance.
+     *
+     * @return ParallelInterface
+     */
     public function getParallel(): ParallelInterface;
 
     /**
-     * Check if **UV** event loop `libuv` engine is available for native asynchronous handling
+     * Check if **UV** event loop `libuv` engine is available for native asynchronous handling.
      *
      * @return bool
      */
     public function isUvActive(): bool;
 
     /**
-     * Check if `PCNTL` extension is available for asynchronous signaling
+     * Check if `PCNTL` extension is available for asynchronous signaling.
      *
      * @return bool
      */

@@ -384,7 +384,7 @@ final class Kernel
         self::$gatherCount = $race;
         self::$gatherShouldError = $exception;
         self::$gatherShouldClearCancelled = $clear;
-        return self::gather( ...$tasks);
+        return Kernel::gather( ...$tasks);
     }
 
     /**

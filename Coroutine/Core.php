@@ -19,7 +19,7 @@ if (!\function_exists('coroutine_run')) {
     \define('IS_WINDOWS', ('\\' === \DS));
     \define('IS_LINUX', ('/' === \DS));
 
-    if (\IS_WINDOWS) {
+    if (\IS_WINDOWS && \function_exists('uv_loop_new')) {
         /**
          * The SIGUSR1 signal is sent to a process to indicate user-defined conditions.
          */

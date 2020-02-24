@@ -111,6 +111,20 @@ final class Coroutine implements CoroutineInterface
     protected $isUvSignal;
 
     /**
+     * Check/counter for `libuv` UV File System feature.
+     *
+     * @var int
+     */
+    protected $uvFileSystem = 0;
+
+    /**
+     * Status to control general use of `libuv` features.
+     *
+     * @var int
+     */
+    protected $useUv = false;
+
+    /**
      * list of **UV** event handles, added by `addReader`, `addWriter`
      *
      * @var \UV[]
@@ -159,10 +173,11 @@ final class Coroutine implements CoroutineInterface
         global $__coroutine__;
         $__coroutine__ = $this;
         $this->initSignals();
-/*
+
         if (\in_array($driver, ['auto', 'uv']) && \function_exists('uv_loop_new')) {
             $this->uv = \uv_loop_new();
 
+            // @codeCoverageIgnoreStart
             $this->onEvent = function ($event, $status, $events, $stream) {
                 if ($status !== 0) {
                     $this->pollEvent($stream);
@@ -183,14 +198,13 @@ final class Coroutine implements CoroutineInterface
             $this->onTimer = function ($timer) {
                 $taskTimer = $this->timers[(int) $timer];
                 @\uv_timer_stop($timer);
+                \uv_unref($timer);
                 unset($this->timers[(int) $timer]);
                 $this->executeTask($taskTimer[1], $timer);
             };
-
-            $this->onSignal = function ($signal, $number) {
-            };
+            // @codeCoverageIgnoreEnd
         }
-*/
+
         $this->isHighTimer = \function_exists('hrtime');
         $this->parallel = new Parallel($this);
         $this->taskQueue = new \SplQueue();
@@ -291,6 +305,62 @@ final class Coroutine implements CoroutineInterface
         return $this->parallel;
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
+    public function fsCount(): int
+    {
+        return $this->uvFileSystem;
+    }
+
+    /**
+     * @codeCoverageIgnore
+     */
+    public function fsAdd(): void
+    {
+        $this->uvFileSystem++;
+    }
+
+    /**
+     * @codeCoverageIgnore
+     */
+    public function fsRemove(): void
+    {
+        $this->uvFileSystem--;
+    }
+
+    /**
+     * @codeCoverageIgnore
+     */
+    public function getUV(): ?\UVLoop
+    {
+        if ($this->uv instanceof \UVLoop)
+            return $this->uv;
+        elseif (\function_exists('uv_default_loop'))
+            return \uv_default_loop();
+
+        if ($this->useUv)
+            throw new \RuntimeException('Calling method when "libuv" driver not loaded!');
+
+        return null;
+    }
+
+    /**
+     * @codeCoverageIgnore
+     */
+    public function uvOn()
+    {
+        $this->useUv = true;
+    }
+
+    /**
+     * @codeCoverageIgnore
+     */
+    public function uvOff()
+    {
+        $this->useUv = false;
+    }
+
     public function getProcess(
         ?callable $timedOutCallback = null,
         ?callable $finishCallback = null,
@@ -312,7 +382,7 @@ final class Coroutine implements CoroutineInterface
 
     public function isUvActive(): bool
     {
-        return !empty($this->uv) && \is_object($this->uv);
+        return !empty($this->uv) && \is_object($this->uv) && $this->useUv;
     }
 
     public function isPcntl(): bool
@@ -575,7 +645,7 @@ final class Coroutine implements CoroutineInterface
                 if ($this->isUvActive()) {
                     \uv_run($this->uv, $streamWait ? \UV::RUN_ONCE : \UV::RUN_NOWAIT);
                 } else {
-                    if ($this->isUvSignal && $this->isSignaling()) {
+                    if (($this->isUvSignal && $this->isSignaling()) || $this->fsCount() > 0) {
                         \uv_run(\uv_default_loop(), \UV::RUN_NOWAIT);
                     }
 

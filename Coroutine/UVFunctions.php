@@ -198,9 +198,8 @@ function uv_read_start(UVStream $handle, callable $callback)
 }
 
 /**
- * open specified file,
- * Executes a blocking system call asynchronously (in a thread pool) and call
- * the specified callback in the specified loop after completion.
+ * open specified file.
+ * Executes a blocking system call asynchronously (in a thread pool) and call the specified callback in the specified loop after completion.
  *
  * @param UVLoop $loop
  * @param string $path file path
@@ -225,7 +224,7 @@ function uv_fs_close(UVLoop $loop, $fd, callable $callback)
 }
 
 /**
- * async read,
+ * async read.
  * Executes a blocking system call asynchronously (in a thread pool) and call the specified callback in
  * the specified loop after completion.
  *
@@ -246,7 +245,7 @@ function uv_fs_read(UVLoop $loop, $fd, int $offset, int $length, callable $callb
 }
 
 /**
- * async write,
+ * async write.
  * Executes a blocking system call asynchronously (in a thread pool) and call the specified callback in
  * the specified loop after completion.
  *
@@ -287,7 +286,7 @@ function uv_fs_scandir(UVLoop $loop, string $path, callable $callback, int $flag
 }
 
 /**
- * async stat,
+ * async stat.
  * Executes a blocking system call asynchronously (in a thread pool) and call the specified callback in
  * the specified loop after completion.
  *
@@ -300,7 +299,7 @@ function uv_fs_stat(UVLoop $loop, string $path, callable $callback)
 }
 
 /**
- * async lstat,
+ * async lstat.
  * Executes a blocking system call asynchronously (in a thread pool) and call the specified callback in
  * the specified loop after completion.
  *
@@ -326,7 +325,7 @@ function uv_fs_fstat(UVLoop $loop, $fd, callable $callback)
 }
 
 /**
- * async fstat,
+ * async fstat.
  * Executes a blocking system call asynchronously (in a thread pool) and call the specified callback in
  * the specified loop after completion.
  *
