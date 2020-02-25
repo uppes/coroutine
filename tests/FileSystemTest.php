@@ -40,7 +40,7 @@ class FileSystemTest extends TestCase
 
         $bool = yield FileSystem::close($fd);
         $this->assertTrue($bool);
-        $this->assertGreaterThanOrEqual(5, $this->counterResult);
+        $this->assertGreaterThanOrEqual(4, $this->counterResult);
         yield \shutdown();
     }
 
@@ -63,7 +63,7 @@ class FileSystemTest extends TestCase
 
         $bool = yield FileSystem::close($fd);
         $this->assertTrue($bool);
-        $this->assertGreaterThanOrEqual(7, $this->counterResult);
+        $this->assertGreaterThanOrEqual(4, $this->counterResult);
         yield \shutdown();
     }
 
@@ -86,15 +86,15 @@ class FileSystemTest extends TestCase
 
         $fd = yield FileSystem::fdatasync($fd);
         $this->assertEquals('resource', \is_type($fd));
-        $this->assertGreaterThanOrEqual(15, $this->counterResult);
+        $this->assertGreaterThanOrEqual(10, $this->counterResult);
 
         $bool = yield FileSystem::close($fd);
         $this->assertTrue($bool);
-        $this->assertGreaterThanOrEqual(17, $this->counterResult);
+        $this->assertGreaterThanOrEqual(11, $this->counterResult);
 
         $bool = yield FileSystem::unlink("./tmp");
         $this->assertEquals(1, $bool);
-        $this->assertGreaterThanOrEqual(20, $this->counterResult);
+        $this->assertGreaterThanOrEqual(12, $this->counterResult);
         yield \shutdown();
     }
 
