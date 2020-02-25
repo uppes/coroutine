@@ -16,33 +16,6 @@ class ParallelTest extends TestCase
         \coroutine_clear();
     }
 
-    public function testIt_can_check_for_asynchronous_support_speed()
-    {
-        $parallel = new Parallel();
-
-        $stopwatch = \microtime(true);
-
-        foreach (range(1, 5) as $i) {
-            $parallel->add(function () {
-                usleep(1000);
-            });
-        }
-
-        $parallel->wait();
-
-        $stopwatchResult = \microtime(true) - $stopwatch;
-
-		if ('\\' !== \DIRECTORY_SEPARATOR) {
-			$expect = (float) 0.6;
-            $this->assertTrue($parallel->isPcntl());
-        } else {
-            $expect = (float) 0.7;
-            $this->assertFalse($parallel->isPcntl());
-        }
-
-        $this->assertLessThan($expect, $stopwatchResult, "Execution time was {$stopwatchResult}, expected less than {$expect}.\n".(string) $parallel->status());
-    }
-
     public function testIt_can_create_and_return_results()
     {
         $parallel = Parallel::create();
@@ -277,4 +250,32 @@ class ParallelTest extends TestCase
 
         $parallel->add(new NonInvokableClass());
     }
+
+    public function testIt_can_check_for_asynchronous_support_speed()
+    {
+        $parallel = new Parallel();
+
+        $stopwatch = \microtime(true);
+
+        foreach (range(1, 5) as $i) {
+            $parallel->add(function () {
+                usleep(1000);
+            });
+        }
+
+        $parallel->wait();
+
+        $stopwatchResult = \microtime(true) - $stopwatch;
+
+		if ('\\' !== \DIRECTORY_SEPARATOR) {
+			$expect = (float) 0.6;
+            $this->assertTrue($parallel->isPcntl());
+        } else {
+            $expect = (float) 0.7;
+            $this->assertFalse($parallel->isPcntl());
+        }
+
+        $this->assertLessThan($expect, $stopwatchResult, "Execution time was {$stopwatchResult}, expected less than {$expect}.\n".(string) $parallel->status());
+    }
+
 }
