@@ -16,7 +16,7 @@ class FileSystemTest extends TestCase
             \define("FIXTURE_PATH", dirname(__FILE__) . "/libuv/fixtures/hello.data");
     }
 
-    public function childTask()
+    public function counterTask()
     {
         $counter = 0;
         while (true) {
@@ -28,14 +28,14 @@ class FileSystemTest extends TestCase
 
     public function taskOpenRead()
     {
-        yield \away($this->childTask());
+        yield \away($this->counterTask());
         $fd = yield FileSystem::open(FIXTURE_PATH, 'r');
         $this->assertEquals('resource', \is_type($fd));
 
         $data = yield FileSystem::read($fd, 0, 32);
         $this->assertEquals('string', \is_type($data));
 
-        $this->assertEquals('Hello', rtrim($data));
+        $this->assertEquals('Hello', \rtrim($data));
         $this->assertGreaterThanOrEqual(3, $this->counterResult);
 
         $bool = yield FileSystem::close($fd);
@@ -51,14 +51,14 @@ class FileSystemTest extends TestCase
 
     public function taskOpenReadOffset()
     {
-        yield \away($this->childTask());
+        yield \away($this->counterTask());
         $fd = yield FileSystem::open(FIXTURE_PATH, 'r');
         $this->assertEquals('resource', \is_type($fd));
 
         $data = yield FileSystem::read($fd, 1, 32);
         $this->assertEquals('string', \is_type($data));
 
-        $this->assertEquals('ello', rtrim($data));
+        $this->assertEquals('ello', \rtrim($data));
         $this->assertGreaterThanOrEqual(3, $this->counterResult);
 
         $bool = yield FileSystem::close($fd);
@@ -74,7 +74,7 @@ class FileSystemTest extends TestCase
 
     public function taskWrite()
     {
-        yield \away($this->childTask());
+        yield \away($this->counterTask());
         $fd = yield FileSystem::open("./tmp", 'a', \UV::S_IRWXU | \UV::S_IRUSR);
         $this->assertEquals('resource', \is_type($fd));
 
@@ -86,15 +86,15 @@ class FileSystemTest extends TestCase
 
         $fd = yield FileSystem::fdatasync($fd);
         $this->assertEquals('resource', \is_type($fd));
-        $this->assertGreaterThanOrEqual(10, $this->counterResult);
+        $this->assertGreaterThanOrEqual(8, $this->counterResult);
 
         $bool = yield FileSystem::close($fd);
         $this->assertTrue($bool);
-        $this->assertGreaterThanOrEqual(11, $this->counterResult);
+        $this->assertGreaterThanOrEqual(9, $this->counterResult);
 
         $bool = yield FileSystem::unlink("./tmp");
         $this->assertEquals(1, $bool);
-        $this->assertGreaterThanOrEqual(12, $this->counterResult);
+        $this->assertGreaterThanOrEqual(10, $this->counterResult);
         yield \shutdown();
     }
 
