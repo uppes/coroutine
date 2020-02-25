@@ -14,8 +14,6 @@ use Async\Coroutine\CoroutineInterface;
  * - All file system operations functions as defined by `libuv` are run in a **thread pool**.
  * - If `libuv` is not installed, all operations are run in a **child/subprocess** by
  * using `awaitProcess()`.
- *
- * @codeCoverageIgnore
  */
 final class FileSystem
 {
@@ -26,7 +24,7 @@ final class FileSystem
      */
     protected static $fileFlags = array(
         'r' => \UV::O_RDONLY,
-        'w' => \UV::O_WRONLY | \UV::O_CREAT | \UV::O_TRUNC,
+        'w' => \UV::O_WRONLY | \UV::O_CREAT,
         'a' => \UV::O_WRONLY | \UV::O_APPEND | \UV::O_CREAT,
         'r+' => \UV::O_RDWR,
         'w+' => \UV::O_RDWR | \UV::O_CREAT | \UV::O_TRUNC,
@@ -46,7 +44,9 @@ final class FileSystem
     }
 
     /**
-     * Renames a file or directory
+     * Renames a file or directory.
+     *
+     * @codeCoverageIgnore
      *
      * @param string $from
      * @param string $to
@@ -78,7 +78,7 @@ final class FileSystem
     }
 
     /**
-     * Deletes a file
+     * Deletes a file.
      *
      * @param string $path
      * @param mixed $context
@@ -102,13 +102,17 @@ final class FileSystem
             );
         }
 
+        // @codeCoverageIgnoreStart
         return Kernel::awaitProcess(function () use ($path, $context) {
             return \unlink($path, $context);
         });
+        // @codeCoverageIgnoreEnd
     }
 
     /**
-     * Create a hard link
+     * Create a hard link.
+     *
+     * @codeCoverageIgnore
      *
      * @param string $from
      * @param string $to
@@ -139,7 +143,9 @@ final class FileSystem
     }
 
     /**
-     * Creates a symbolic link
+     * Creates a symbolic link.
+     *
+     * @codeCoverageIgnore
      *
      * @param string $from
      * @param string $to
@@ -174,6 +180,8 @@ final class FileSystem
     /**
      * Attempts to create the directory specified by pathname.
      *
+     * @codeCoverageIgnore
+     *
      * @param string $path
      * @param integer $mode
      * @param boolean $recursive
@@ -204,7 +212,9 @@ final class FileSystem
         });
     }
     /**
-     * Removes directory
+     * Removes directory.
+     *
+     * @codeCoverageIgnore
      *
      * @param string $path
      * @param mixed $context
@@ -234,7 +244,9 @@ final class FileSystem
     }
 
     /**
-     * Changes file mode
+     * Changes file mode.
+     *
+     * @codeCoverageIgnore
      *
      * @param string $filename
      * @param integer $mode
@@ -265,7 +277,9 @@ final class FileSystem
     }
 
     /**
-     * Changes file owner
+     * Changes file owner.
+     *
+     * @codeCoverageIgnore
      *
      * @param string $path
      * @param int $uid
@@ -298,7 +312,9 @@ final class FileSystem
     }
 
     /**
-     * Changes file owner by file descriptor
+     * Changes file owner by file descriptor.
+     *
+     * @codeCoverageIgnore
      *
      * @param resource $fd
      * @param int $uid
@@ -327,7 +343,9 @@ final class FileSystem
     }
 
     /**
-     * Changes file mode by file descriptor
+     * Changes file mode by file descriptor.
+     *
+     * @codeCoverageIgnore
      *
      * @param resource $fd
      * @param integer $mode
@@ -354,7 +372,9 @@ final class FileSystem
     }
 
     /**
-     * Truncate a file to a specified offset by file descriptor
+     * Truncate a file to a specified offset by file descriptor.
+     *
+     * @codeCoverageIgnore
      *
      * @param resource $fd
      * @param int $offset
@@ -387,7 +407,63 @@ final class FileSystem
     }
 
     /**
-     * Gives information about a file or symbolic link
+     * Synchronize a file's in-core state with storage device by file descriptor.
+     *
+     * @codeCoverageIgnore
+     *
+     * @param resource $fd
+     */
+    public static function fsync($fd)
+    {
+        if (FileSystem::justUvFs()) {
+            return new Kernel(
+                function (TaskInterface $task, CoroutineInterface $coroutine) use ($fd) {
+                    $coroutine->fsAdd();
+                    \uv_fs_fsync(
+                        $coroutine->getUV(),
+                        $fd,
+                        function ($fd, int $result) use ($task, $coroutine) {
+                            $coroutine->fsRemove();
+                            $task->sendValue($result);
+                            $coroutine->schedule($task);
+                        }
+                    );
+                }
+            );
+        }
+    }
+
+    /**
+     * Synchronize a file's in-core state with storage device by file descriptor.
+     *
+     * @codeCoverageIgnore
+     *
+     * @param resource $fd
+     */
+    public static function fdatasync($fd)
+    {
+        if (FileSystem::justUvFs()) {
+            return new Kernel(
+                function (TaskInterface $task, CoroutineInterface $coroutine) use ($fd) {
+                    $coroutine->fsAdd();
+                    \uv_fs_fdatasync(
+                        $coroutine->getUV(),
+                        $fd,
+                        function ($fd) use ($task, $coroutine) {
+                            $coroutine->fsRemove();
+                            $task->sendValue($fd);
+                            $coroutine->schedule($task);
+                        }
+                    );
+                }
+            );
+        }
+    }
+
+    /**
+     * Gives information about a file or symbolic link.
+     *
+     * @codeCoverageIgnore
      *
      * @param string $path
      */
@@ -416,7 +492,9 @@ final class FileSystem
     }
 
     /**
-     * Gives information about a file
+     * Gives information about a file.
+     *
+     * @codeCoverageIgnore
      *
      * @param string $path
      */
@@ -445,7 +523,9 @@ final class FileSystem
     }
 
     /**
-     * Gets information about a file using an open file pointer
+     * Gets information about a file using an open file pointer.
+     *
+     * @codeCoverageIgnore
      *
      * @param resource $fd
      */
@@ -474,7 +554,9 @@ final class FileSystem
     }
 
     /**
-     * Read entry from directory
+     * Read entry from directory.
+     *
+     * @codeCoverageIgnore
      *
      * @param string $path
      * @param integer $flag
@@ -506,7 +588,9 @@ final class FileSystem
     }
 
     /**
-     * List files and directories inside the specified path
+     * List files and directories inside the specified path.
+     *
+     * @codeCoverageIgnore
      *
      * @param string $path
      * @param integer $flag
@@ -539,7 +623,9 @@ final class FileSystem
     }
 
     /**
-     * Change file last access and modification times
+     * Change file last access and modification times.
+     *
+     * @codeCoverageIgnore
      *
      * @param string $path
      * @param int $utime
@@ -568,7 +654,9 @@ final class FileSystem
     }
 
     /**
-     * change file timestamps using file descriptor
+     * change file timestamps using file descriptor.
+     *
+     * @codeCoverageIgnore
      *
      * @param string $fd
      * @param int $utime
@@ -597,7 +685,9 @@ final class FileSystem
     }
 
     /**
-     * Read value of a symbolic link
+     * Read value of a symbolic link.
+     *
+     * @codeCoverageIgnore
      *
      * @param string $path
      * @param int $utime
@@ -624,7 +714,9 @@ final class FileSystem
     }
 
     /**
-     * Transfer data between file descriptors
+     * Transfer data between file descriptors.
+     *
+     * @codeCoverageIgnore
      *
      * @param resource $out_fd
      * @param resource $in_fd
@@ -713,9 +805,21 @@ final class FileSystem
                         $fd,
                         $offset,
                         $length,
-                        function ($fd, $data) use ($task, $coroutine) {
+                        function ($fd, $status, $data) use ($task, $coroutine) {
                             $coroutine->fsRemove();
-                            $task->sendValue($data);
+                            // @codeCoverageIgnoreStart
+                            if ($status <= 0) {
+                                if ($status < 0) {
+                                    $task->setException(new \Exception("read error"));
+                                }
+
+                                \uv_fs_close($coroutine->getUV(), $fd, function () {
+                                });
+                                // @codeCoverageIgnoreEnd
+                            } else {
+                                $task->sendValue($data);
+                            }
+
                             $coroutine->schedule($task);
                         }
                     );
@@ -724,7 +828,7 @@ final class FileSystem
         }
     }
 
-    public static function write($fd, $buffer, $position)
+    public static function write($fd, $buffer, $position = -1)
     {
         if (FileSystem::justUvFs()) {
             return new Kernel(
@@ -735,9 +839,9 @@ final class FileSystem
                         $fd,
                         $buffer,
                         $position,
-                        function ($fd, int $status) use ($task, $coroutine) {
+                        function ($fd, int $result) use ($task, $coroutine) {
                             $coroutine->fsRemove();
-                            $task->sendValue($status);
+                            $task->sendValue($result);
                             $coroutine->schedule($task);
                         }
                     );
@@ -755,9 +859,9 @@ final class FileSystem
                     \uv_fs_close(
                         $coroutine->getUV(),
                         $fd,
-                        function ($stream) use ($task, $coroutine) {
+                        function (bool $bool) use ($task, $coroutine) {
                             $coroutine->fsRemove();
-                            $task->sendValue($stream);
+                            $task->sendValue($bool);
                             $coroutine->schedule($task);
                         }
                     );

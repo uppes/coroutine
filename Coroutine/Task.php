@@ -235,12 +235,14 @@ final class Task implements TaskInterface
         } elseif ($this->isCancelled() || $this->isErred()) {
             $error = $this->exception();
             $message = $error->getMessage();
+            $code = $error->getCode();
+            $throwable = $error->getPrevious();
             $class = \get_class($error);
             $message = \str_replace('The operation has been cancelled, with: ', '', $message);
             $message = \str_replace('The operation has exceeded the given deadline: ', '', $message);
             $message = \str_replace('Coroutine task has erred: ', '', $message);
             $message = \str_replace('Invalid internal state called on: ', '', $message);
-            return new $class($message);
+            return new $class($message, $code, $throwable);
         } else {
             throw new InvalidStateError();
         }
