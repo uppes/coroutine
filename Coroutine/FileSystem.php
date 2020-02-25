@@ -62,7 +62,7 @@ final class FileSystem
                         $coroutine->getUV(),
                         $from,
                         $to,
-                        function ($fd, int $result) use ($task, $coroutine) {
+                        function (int $result) use ($task, $coroutine) {
                             $coroutine->fsRemove();
                             $task->sendValue($result);
                             $coroutine->schedule($task);
@@ -92,7 +92,7 @@ final class FileSystem
                     \uv_fs_unlink(
                         $coroutine->getUV(),
                         $path,
-                        function ($fd, int $result) use ($task, $coroutine) {
+                        function (int $result) use ($task, $coroutine) {
                             $coroutine->fsRemove();
                             $task->sendValue($result);
                             $coroutine->schedule($task);
@@ -156,7 +156,7 @@ final class FileSystem
                         $from,
                         $to,
                         $flag,
-                        function ($fd, int $result) use ($task, $coroutine) {
+                        function (int $result) use ($task, $coroutine) {
                             $coroutine->fsRemove();
                             $task->sendValue($result);
                             $coroutine->schedule($task);
@@ -189,7 +189,7 @@ final class FileSystem
                         $coroutine->getUV(),
                         $path,
                         $mode,
-                        function ($fd, int $result) use ($task, $coroutine) {
+                        function (int $result) use ($task, $coroutine) {
                             $coroutine->fsRemove();
                             $task->sendValue($result);
                             $coroutine->schedule($task);
@@ -218,7 +218,7 @@ final class FileSystem
                     \uv_fs_rmdir(
                         $coroutine->getUV(),
                         $path,
-                        function ($fd, int $result) use ($task, $coroutine) {
+                        function (int $result) use ($task, $coroutine) {
                             $coroutine->fsRemove();
                             $task->sendValue($result);
                             $coroutine->schedule($task);
@@ -249,7 +249,7 @@ final class FileSystem
                         $coroutine->getUV(),
                         $filename,
                         $mode,
-                        function ($fd, int $result) use ($task, $coroutine) {
+                        function (int $result) use ($task, $coroutine) {
                             $coroutine->fsRemove();
                             $task->sendValue($result);
                             $coroutine->schedule($task);
@@ -282,7 +282,7 @@ final class FileSystem
                         $path,
                         $uid,
                         $gid,
-                        function ($fd, int $result) use ($task, $coroutine) {
+                        function (int $result) use ($task, $coroutine) {
                             $coroutine->fsRemove();
                             $task->sendValue($result);
                             $coroutine->schedule($task);
@@ -315,7 +315,7 @@ final class FileSystem
                         $fd,
                         $uid,
                         $gid,
-                        function ($fd, int $result) use ($task, $coroutine) {
+                        function (int $result) use ($task, $coroutine) {
                             $coroutine->fsRemove();
                             $task->sendValue($result);
                             $coroutine->schedule($task);
@@ -342,7 +342,7 @@ final class FileSystem
                         $coroutine->getUV(),
                         $fd,
                         $mode,
-                        function ($fd, int $result) use ($task, $coroutine) {
+                        function (int $result) use ($task, $coroutine) {
                             $coroutine->fsRemove();
                             $task->sendValue($result);
                             $coroutine->schedule($task);
@@ -400,7 +400,7 @@ final class FileSystem
                     \uv_fs_lstat(
                         $coroutine->getUV(),
                         $path,
-                        function ($fd, int $result) use ($task, $coroutine) {
+                        function (int $result) use ($task, $coroutine) {
                             $coroutine->fsRemove();
                             $task->sendValue($result);
                             $coroutine->schedule($task);
@@ -429,7 +429,7 @@ final class FileSystem
                     \uv_fs_stat(
                         $coroutine->getUV(),
                         $path,
-                        function ($fd, int $result) use ($task, $coroutine) {
+                        function (int $result) use ($task, $coroutine) {
                             $coroutine->fsRemove();
                             $task->sendValue($result);
                             $coroutine->schedule($task);
@@ -490,7 +490,7 @@ final class FileSystem
                         $coroutine->getUV(),
                         $path,
                         $flag,
-                        function ($fd, int $result) use ($task, $coroutine) {
+                        function ($result) use ($task, $coroutine) {
                             $coroutine->fsRemove();
                             $task->sendValue($result);
                             $coroutine->schedule($task);
@@ -643,7 +643,7 @@ final class FileSystem
                         $in_fd,
                         $offset,
                         $length,
-                        function ($result) use ($task, $coroutine) {
+                        function ($out_fd, $result) use ($task, $coroutine) {
                             $coroutine->fsRemove();
                             $task->sendValue($result);
                             $coroutine->schedule($task);
