@@ -46,7 +46,7 @@ class ProcessTest extends TestCase
             yield yield shutdown(yield \get_task());
         });
 
-        $result = yield \await_process(function () {
+        $result = yield \add_process(function () {
             usleep(3000);
             return 3;
         });
@@ -59,7 +59,7 @@ class ProcessTest extends TestCase
     public function taskProcess()
     {
         $childId = yield \away($this->childTask());
-        $result = yield \await_process(function () {
+        $result = yield \add_process(function () {
             usleep(1000);
             return 3;
         });
@@ -70,13 +70,25 @@ class ProcessTest extends TestCase
         $this->assertEquals($result, $childId);
         yield;
     }
+/*
+    public function taskProcessDisplay()
+    {
+        $tid = yield \away($this->childTask());
+        $result = yield \add_process(function () {
+            echo 'here!';
+        }, 300, true);
+
+        $this->mainResult = $tid;
+        $this->assertNull($result);
+        yield;
+    }*/
 
     public function taskProcessError()
     {
         $childId = yield \away([$this, 'childTask']);
         $result = null;
         try {
-            $result = yield \await_process(function () {
+            $result = yield \add_process(function () {
                 usleep(1000);
                 throw new \Exception('3');
             });
@@ -124,7 +136,21 @@ class ProcessTest extends TestCase
         $this->assertEquals($this->mainResult, $this->childId, (string) $parallel->status());
         $this->assertEquals($this->mainResult, $parallel->results()[0], (string) $parallel->status());
     }
+/*
+    public function testProcessDisplay()
+    {
+        $this->mainResult = 0;
+        $this->childId = 0;
+        $this->counterResult = 0;
 
+        $coroutine = new Coroutine();
+        $parallel = $coroutine->getParallel();
+
+        $this->expectOutputString('here!');
+        $coroutine->createTask($this->taskProcessDisplay());
+        $coroutine->run();
+    }
+*/
     public function testProcessShutDownStopAll()
     {
         $this->mainResult = 0;

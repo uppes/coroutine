@@ -298,9 +298,9 @@ if (!\function_exists('coroutine_run')) {
      *
      * @return int
      */
-    function spawn_task($command, $timeout = 300)
+    function spawn_task($command, $timeout = 300, bool $display = false)
     {
-        return Kernel::spawnTask($command, $timeout);
+        return Kernel::spawnTask($command, $timeout, $display);
     }
 
     /**
@@ -309,6 +309,41 @@ if (!\function_exists('coroutine_run')) {
      *
      * @see https://docs.python.org/3.7/library/asyncio-subprocess.html#subprocesses
      * @see https://docs.python.org/3.7/library/asyncio-dev.html#running-blocking-code
+     *
+     * @param callable|shell $command
+     * @param int $timeout
+     *
+     * @return mixed
+     */
+    function spawn_await($callable, $timeout = 300, bool $display = false)
+    {
+        return \awaitable(function () use ($callable, $timeout, $display) {
+            return yield Kernel::addProcess($callable, $timeout, $display);
+        });
+    }
+
+    /**
+     * Add and wait for result of an blocking `I/O` subprocess that runs in parallel.
+     * This function turns the calling function internal __state/type__ used by `gather()`
+     * to **process/paralleled** which is handled differently.
+     *
+     * - This function needs to be prefixed with `yield`
+     *
+     * @see https://docs.python.org/3.7/library/asyncio-subprocess.html#subprocesses
+     * @see https://docs.python.org/3.7/library/asyncio-dev.html#running-blocking-code
+     *
+     * @param callable|shell $command
+     * @param int $timeout
+     *
+     * @return mixed
+     */
+    function add_process($command, $timeout = 300, bool $display = false)
+    {
+        return Kernel::addProcess($command, $timeout, $display);
+    }
+
+    /**
+     * @deprecated 1.6.3 use `add_process()`
      *
      * @param callable|shell $command
      * @param int $timeout

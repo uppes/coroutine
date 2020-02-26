@@ -32,6 +32,8 @@ final class FileSystem
         'x+' => \UV::O_RDWR | \UV::O_CREAT | \UV::O_EXCL,
     );
 
+    protected static $useUv = true;
+
     /**
      * Check for UV for only file operations.
      *
@@ -39,7 +41,36 @@ final class FileSystem
      */
     protected static function justUvFs(): bool
     {
-        return \function_exists('uv_default_loop');
+        return \function_exists('uv_default_loop') && self::$useUv;
+    }
+
+    /**
+     * @codeCoverageIgnore
+     */
+    public static function uvOn()
+    {
+        self::$useUv = true;
+    }
+
+    /**
+     * @codeCoverageIgnore
+     */
+    public static function uvOff()
+    {
+        self::$useUv = false;
+    }
+
+    /**
+     * @codeCoverageIgnore
+     */
+    protected static function enqueue($command, ...$args)
+    {
+        yield;
+        $result = yield \add_process(function () use ($command, $args) {
+            return $command( ...$args);
+        });
+
+        return $result;
     }
 
     /**
@@ -96,6 +127,10 @@ final class FileSystem
                 }
             );
         }
+
+        // @codeCoverageIgnoreStart
+        return self::enqueue('unlink', $path, $context);
+        // @codeCoverageIgnoreEnd
     }
 
     /**
@@ -496,6 +531,11 @@ final class FileSystem
                 }
             );
         }
+
+        return \spawn_await(function () use ($path, $info) {
+            $result = \stat($path);
+            return isset($result[$info]) ? $result[$info] : $result;
+        });
     }
 
     /**

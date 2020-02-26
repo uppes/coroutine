@@ -27,7 +27,7 @@ function enqueue($index, $task)
 {
     echo 'started ' . $index . \EOL;
     // return to caller, let other tasks start, otherwise block after
-    $result = yield \await_process(function () use ($task) {
+    $result = yield \add_process(function () use ($task) {
         return \file_get_contents($task);
     });
 

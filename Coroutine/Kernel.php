@@ -293,6 +293,9 @@ final class Kernel
 
     /**
      * Add and wait for result of an blocking `I/O` subprocess that runs in parallel.
+     * This function turns the calling function internal state/type used by `gather()`
+     * to **process/paralleled** which is handled differently.
+     *
      * - This function needs to be prefixed with `yield`
      *
      * @see https://docs.python.org/3.7/library/asyncio-subprocess.html#subprocesses
@@ -303,13 +306,13 @@ final class Kernel
      *
      * @return mixed
      */
-    public static function awaitProcess($callable, $timeout = 300)
+    public static function addProcess($callable, $timeout = 300, bool $display = false)
     {
         return new Kernel(
-            function (TaskInterface $task, CoroutineInterface $coroutine) use ($callable, $timeout) {
+            function (TaskInterface $task, CoroutineInterface $coroutine) use ($callable, $timeout, $display) {
                 $task->parallelTask();
                 $task->setState('process');
-                $coroutine->addProcess($callable, $timeout)
+                $coroutine->addProcess($callable, $timeout, $display)
                     ->then(function ($result) use ($task, $coroutine) {
                         $task->setState('completed');
                         $task->sendValue($result);
@@ -330,6 +333,19 @@ final class Kernel
     }
 
     /**
+     * @deprecated 1.6.3 use `addProcess()`
+     *
+     * @param callable|shell $command
+     * @param int $timeout
+     *
+     * @return mixed
+     */
+    public static function awaitProcess($callable, $timeout = 300)
+    {
+        return self::addProcess($callable, $timeout);
+    }
+
+    /**
      * Add/execute a blocking `I/O` subprocess task that runs in parallel.
      * This function will return `int` immediately, use `gather()` to get the result.
      * - This function needs to be prefixed with `yield`
@@ -342,12 +358,12 @@ final class Kernel
      *
      * @return int
      */
-    public static function spawnTask($callable, $timeout = 300)
+    public static function spawnTask($callable, $timeout = 300, bool $display = false)
     {
         return new Kernel(
-            function (TaskInterface $task, CoroutineInterface $coroutine) use ($callable, $timeout) {
-                $command = \awaitAble(function () use ($callable, $timeout) {
-                    $result = yield yield Kernel::awaitProcess($callable, $timeout);
+            function (TaskInterface $task, CoroutineInterface $coroutine) use ($callable, $timeout, $display) {
+                $command = \awaitAble(function () use ($callable, $timeout, $display) {
+                    $result = yield yield Kernel::addProcess($callable, $timeout, $display);
                     return $result;
                 });
 
