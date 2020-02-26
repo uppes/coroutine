@@ -27,6 +27,8 @@ class ChannelTest extends TestCase
         yield \go($this->taskSender($channel));
         $done = yield \receiver($channel);
         $this->assertEquals('true', $done);
+        $false = yield \sender($channel, 'false', 1);
+        $this->assertEquals('false', $false);
     }
 
     public function testMake()

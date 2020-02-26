@@ -174,13 +174,12 @@ final class Kernel
         return new Kernel(
             function (TaskInterface $task, CoroutineInterface $coroutine) use ($channel, $message, $taskId) {
                 $taskList = $coroutine->currentTask();
-
-                if (isset($taskList[$channel->receiverId()]))
-                    $newTask = $taskList[$channel->receiverId()];
-                elseif (isset($taskList[$taskId]))
+                $newTask = $channel->senderTask();
+                if (isset($taskList[$taskId])) {
                     $newTask = $taskList[$taskId];
-                else
-                    $newTask = $channel->senderTask();
+                } elseif (isset($taskList[$channel->receiverId()])) {
+                    $newTask = $taskList[$channel->receiverId()];
+                }
 
                 $newTask->sendValue($message);
                 $coroutine->schedule($newTask);

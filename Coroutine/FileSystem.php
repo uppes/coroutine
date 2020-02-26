@@ -12,8 +12,7 @@ use Async\Coroutine\CoroutineInterface;
  * Executes a blocking system call asynchronously.
  *
  * - All file system operations functions as defined by `libuv` are run in a **thread pool**.
- * - If `libuv` is not installed, all operations are run in a **child/subprocess** by
- * using `awaitProcess()`.
+ * - @todo If `libuv` is not installed, all operations are run in a **child/subprocess**.
  */
 final class FileSystem
 {
@@ -71,10 +70,6 @@ final class FileSystem
                 }
             );
         }
-
-        return Kernel::awaitProcess(function () use ($from, $to, $context) {
-            return \rename($from, $to, $context);
-        });
     }
 
     /**
@@ -94,19 +89,13 @@ final class FileSystem
                         $path,
                         function (int $result) use ($task, $coroutine) {
                             $coroutine->fsRemove();
-                            $task->sendValue($result);
+                            $task->sendValue((bool) $result);
                             $coroutine->schedule($task);
                         }
                     );
                 }
             );
         }
-
-        // @codeCoverageIgnoreStart
-        return Kernel::awaitProcess(function () use ($path, $context) {
-            return \unlink($path, $context);
-        });
-        // @codeCoverageIgnoreEnd
     }
 
     /**
@@ -400,10 +389,6 @@ final class FileSystem
                 }
             );
         }
-
-        return Kernel::awaitProcess(function () use ($fd, $offset) {
-            return \ftruncate($fd, $offset);
-        });
     }
 
     /**
@@ -485,72 +470,57 @@ final class FileSystem
                 }
             );
         }
-
-        return Kernel::awaitProcess(function () use ($path) {
-            return \lstat($path);
-        });
     }
 
     /**
      * Gives information about a file.
      *
-     * @codeCoverageIgnore
-     *
      * @param string $path
+     * @param string $info
      */
-    public static function stat(string $path)
+    public static function stat(string $path, ?string $info = null)
     {
         if (FileSystem::justUvFs()) {
             return new Kernel(
-                function (TaskInterface $task, CoroutineInterface $coroutine) use ($path) {
+                function (TaskInterface $task, CoroutineInterface $coroutine) use ($path, $info) {
                     $coroutine->fsAdd();
                     \uv_fs_stat(
                         $coroutine->getUV(),
                         $path,
-                        function (int $result) use ($task, $coroutine) {
+                        function (bool $status, $result) use ($task, $coroutine, $info) {
                             $coroutine->fsRemove();
-                            $task->sendValue($result);
+                            $task->sendValue((isset($result[$info]) ? $result[$info] : $result));
                             $coroutine->schedule($task);
                         }
                     );
                 }
             );
         }
-
-        return Kernel::awaitProcess(function () use ($path) {
-            return \stat($path);
-        });
     }
 
     /**
      * Gets information about a file using an open file pointer.
      *
-     * @codeCoverageIgnore
-     *
      * @param resource $fd
      */
-    public static function fstat(string $fd)
+    public static function fstat($fd, ?string $info = null)
     {
         if (FileSystem::justUvFs()) {
             return new Kernel(
-                function (TaskInterface $task, CoroutineInterface $coroutine) use ($fd) {
+                function (TaskInterface $task, CoroutineInterface $coroutine) use ($fd, $info) {
                     $coroutine->fsAdd();
                     \uv_fs_fstat(
                         $coroutine->getUV(),
                         $fd,
-                        function ($fd, int $result) use ($task, $coroutine) {
+                        function ($fd, $result) use ($task, $coroutine, $info) {
                             $coroutine->fsRemove();
-                            $task->sendValue($result);
+                            $task->sendValue((isset($result[$info]) ? $result[$info] : $result));
                             $coroutine->schedule($task);
                         }
                     );
                 }
             );
         }
-
-        return Kernel::awaitProcess(function () use ($fd) {
-            return \fstat($fd);
-        });
     }
 
     /**
@@ -581,10 +551,6 @@ final class FileSystem
                 }
             );
         }
-
-        return Kernel::awaitProcess(function () use ($path) {
-            return \readdir($path);
-        });
     }
 
     /**
@@ -616,10 +582,6 @@ final class FileSystem
                 }
             );
         }
-
-        return Kernel::awaitProcess(function () use ($path, $sorting_order, $context) {
-            return \scandir($path, $sorting_order, $context);
-        });
     }
 
     /**

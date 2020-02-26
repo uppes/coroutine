@@ -49,27 +49,31 @@ class FileSystemTest extends TestCase
         \coroutine_run($this->taskOpenRead());
     }
 
-    public function taskOpenReadOffset()
+    public function taskOpenReadOffsetFstat()
     {
         yield \away($this->counterTask());
         $fd = yield FileSystem::open(FIXTURE_PATH, 'r');
         $this->assertEquals('resource', \is_type($fd));
 
-        $data = yield FileSystem::read($fd, 1, 32);
+        $size = yield FileSystem::fstat($fd, 'size');
+        $this->assertEquals('int', \is_type($size));
+        $this->assertGreaterThanOrEqual(3, $this->counterResult);
+
+        $data = yield FileSystem::read($fd, 1, $size);
         $this->assertEquals('string', \is_type($data));
 
         $this->assertEquals('ello', \rtrim($data));
-        $this->assertGreaterThanOrEqual(3, $this->counterResult);
+        $this->assertGreaterThanOrEqual(4, $this->counterResult);
 
         $bool = yield FileSystem::close($fd);
         $this->assertTrue($bool);
-        $this->assertGreaterThanOrEqual(4, $this->counterResult);
+        $this->assertGreaterThanOrEqual(5, $this->counterResult);
         yield \shutdown();
     }
 
-    public function testOpenReadOffset()
+    public function testOpenReadOffsetFstat()
     {
-        \coroutine_run($this->taskOpenReadOffset());
+        \coroutine_run($this->taskOpenReadOffsetFstat());
     }
 
     public function taskWrite()
@@ -92,9 +96,13 @@ class FileSystemTest extends TestCase
         $this->assertTrue($bool);
         $this->assertGreaterThanOrEqual(9, $this->counterResult);
 
-        $bool = yield FileSystem::unlink("./tmp");
-        $this->assertEquals(1, $bool);
+        $size = yield FileSystem::stat("./tmp", 'size');
+        $this->assertEquals('int', \is_type($size));
         $this->assertGreaterThanOrEqual(10, $this->counterResult);
+
+        $bool = yield FileSystem::unlink("./tmp");
+        $this->assertTrue($bool);
+        $this->assertGreaterThanOrEqual(12, $this->counterResult);
         yield \shutdown();
     }
 
