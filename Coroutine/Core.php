@@ -16,6 +16,8 @@ if (!\function_exists('coroutine_run')) {
     \define('MILLISECOND', 0.001);
     \define('EOL', \PHP_EOL);
     \define('DS', \DIRECTORY_SEPARATOR);
+    if (!defined('_DS'))
+        \define('_DS', \DIRECTORY_SEPARATOR);
     \define('IS_WINDOWS', ('\\' === \DS));
     \define('IS_LINUX', ('/' === \DS));
 
