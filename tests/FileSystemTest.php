@@ -96,13 +96,16 @@ class FileSystemTest extends TestCase
         $this->assertTrue($bool);
         $this->assertGreaterThanOrEqual(9, $this->counterResult);
 
-        $size = yield FileSystem::stat("./tmp", 'size');
+        $size = yield FileSystem::size("./tmp");
         $this->assertEquals('int', \is_type($size));
         $this->assertGreaterThanOrEqual(10, $this->counterResult);
 
-        $bool = yield FileSystem::unlink("./tmp");
+        $bool = yield FileSystem::rename("./tmp", "./tmpNew");
         $this->assertTrue($bool);
-        $this->assertGreaterThanOrEqual(12, $this->counterResult);
+
+        $bool = yield FileSystem::unlink("./tmpNew");
+        $this->assertTrue($bool);
+        $this->assertGreaterThanOrEqual(14, $this->counterResult);
         yield \shutdown();
     }
 
@@ -110,5 +113,4 @@ class FileSystemTest extends TestCase
     {
         \coroutine_run($this->taskWrite());
     }
-
 }

@@ -11,6 +11,7 @@ use Async\Processor\Processor;
 use Async\Coroutine\ParallelInterface;
 use Async\Processor\LauncherInterface;
 use Async\Coroutine\Exceptions\Panic;
+use Async\Coroutine\FileSystem;
 
 if (!\function_exists('coroutine_run')) {
     \define('MILLISECOND', 0.001);
@@ -319,9 +320,24 @@ if (!\function_exists('coroutine_run')) {
      */
     function spawn_await($callable, $timeout = 300, bool $display = false)
     {
-        return \awaitable(function () use ($callable, $timeout, $display) {
-            return yield Kernel::addProcess($callable, $timeout, $display);
+        return \awaitable_process(function () use ($callable, $timeout, $display) {
+            return Kernel::addProcess($callable, $timeout, $display);
         });
+    }
+
+    /**
+     * Executes a blocking system call asynchronously in a **child/subprocess**.
+     *
+     * Use if `libuv` is not installed.
+     *
+     * @codeCoverageIgnore
+     *
+     * @param string $command - An `PHP` builtin file operation command
+     * @param mixed ...$parameters
+     */
+    function spawn_system(string $command, ...$parameters)
+    {
+        return FileSystem::wrapper($command, ...$parameters);
     }
 
     /**
@@ -372,6 +388,23 @@ if (!\function_exists('coroutine_run')) {
     function awaitable(callable $awaitableFunction, ...$args)
     {
         return yield yield $awaitableFunction(...$args);
+    }
+
+    /**
+     * Wrap the a spawn `process` with `yield`, this insure the the execution
+     * and return result is handled properly.
+     * Then function is used by `spawn_await()` not really called directly.
+     *
+     * @see https://docs.python.org/3.7/library/asyncio-task.html#awaitables
+     *
+     * @param Generator|callable $awaitableFunction
+     * @param mixed $args
+     *
+     * @return \Generator
+     */
+    function awaitable_process(callable $awaitableFunction, ...$args)
+    {
+        return yield $awaitableFunction(...$args);
     }
 
     /**
@@ -553,7 +586,9 @@ if (!\function_exists('coroutine_run')) {
             }
         }
 
+        // @codeCoverageIgnoreStart
         return 'unknown';
+        // @codeCoverageIgnoreEnd
     }
 
     function coroutine_instance(): ?CoroutineInterface
@@ -753,7 +788,7 @@ if (!\function_exists('coroutine_run')) {
         }
         $count = $required ?
             $reflection->getNumberOfRequiredParameters() : $reflection->getNumberOfParameters();
-        return curry_n($count, $function);
+        return \curry_n($count, $function);
     }
 
     /**

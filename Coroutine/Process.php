@@ -62,7 +62,6 @@ final class Process
     {
         if (!empty($this->processes)) {
             foreach ($this->processes as $process) {
-                $process->display();
                 if ($process->isTimedOut()) {
                     $this->remove($process);
                     $this->coroutine->executeTask($this->timedOutCallback, $process);
