@@ -333,19 +333,6 @@ final class Kernel
     }
 
     /**
-     * @deprecated 1.6.3 use `addProcess()`
-     *
-     * @param callable|shell $command
-     * @param int $timeout
-     *
-     * @return mixed
-     */
-    public static function awaitProcess($callable, $timeout = 300)
-    {
-        return self::addProcess($callable, $timeout);
-    }
-
-    /**
      * Add/execute a blocking `I/O` subprocess task that runs in parallel.
      * This function will return `int` immediately, use `gather()` to get the result.
      * - This function needs to be prefixed with `yield`

@@ -361,19 +361,6 @@ if (!\function_exists('coroutine_run')) {
     }
 
     /**
-     * @deprecated 1.6.3 use `add_process()`
-     *
-     * @param callable|shell $command
-     * @param int $timeout
-     *
-     * @return mixed
-     */
-    function await_process($command, $timeout = 300)
-    {
-        return Kernel::awaitProcess($command, $timeout);
-    }
-
-    /**
      * Wrap the callable with `yield`, this insure the first attempt to execute will behave
      * like a generator function, will switch at least once without actually executing, return object instead.
      * Then function is used by `away()` not really called directly.

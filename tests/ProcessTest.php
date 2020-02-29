@@ -106,7 +106,7 @@ class ProcessTest extends TestCase
     {
         $childId = yield away($this->childTask());
         try {
-            yield \await_process(function () {
+            yield \add_process(function () {
                 \sleep(1.5);
             }, 1);
         } catch (\Async\Coroutine\Exceptions\TimeoutError $error) {
