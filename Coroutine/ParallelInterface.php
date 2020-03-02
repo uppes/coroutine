@@ -22,11 +22,13 @@ interface ParallelInterface
     public function status(): ParallelStatus;
 
     /**
-     * @param LauncherInterface|callable $process
-     * @param int $timeout
+     * @param Launcher|callable $process
+     * @param int|float|null $timeout The timeout in seconds or null to disable
+     * @param Channel|resource|mixed|null $channel IPC communication to be pass to the underlying process standard input.
+     *
      * @return LauncherInterface
      */
-    public function add($process, int $timeout = 300): LauncherInterface;
+    public function add($process, int $timeout = 300, $channel = null): LauncherInterface;
 
     public function retry(LauncherInterface $process = null): LauncherInterface;
 

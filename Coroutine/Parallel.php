@@ -80,19 +80,14 @@ final class Parallel implements ArrayAccess, ParallelInterface
         return $this->status;
     }
 
-    /**
-     * @param LauncherInterface|callable $process
-     *
-     * @return LauncherInterface
-     */
-    public function add($process, int $timeout = 300): LauncherInterface
+    public function add($process, int $timeout = 300, $channel = null): LauncherInterface
     {
         if (!is_callable($process) && !$process instanceof LauncherInterface) {
             throw new InvalidArgumentException('The process passed to Parallel::add should be callable.');
         }
 
         if (!$process instanceof LauncherInterface) {
-            $process = Processor::create($process, $timeout);
+            $process = Processor::create($process, $timeout, $channel);
         }
 
         $this->putInQueue($process);

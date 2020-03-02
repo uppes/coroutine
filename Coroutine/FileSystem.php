@@ -7,6 +7,8 @@ namespace Async\Coroutine;
 use Async\Coroutine\Kernel;
 use Async\Coroutine\TaskInterface;
 use Async\Coroutine\CoroutineInterface;
+use Async\Processor\Channel as Channeled;
+use Async\Processor\ChannelInterface;
 
 /**
  * Executes a blocking system call asynchronously.
@@ -64,7 +66,14 @@ final class FileSystem
                 break;
             case 'touch':
                 $system = function () use ($parameters) {
-                    [$path, $time, $atime] = $parameters;
+                    [$path] = $parameters;
+                    $time = null;
+                    $atime = null;
+                    if (\count($parameters) === 3)
+                        [$path, $time, $atime] = $parameters;
+                    elseif (\count($parameters) === 2)
+                        [$path, $time] = $parameters;
+
                     return \touch($path, $time, $atime);
                 };
                 break;
@@ -88,7 +97,14 @@ final class FileSystem
                 break;
             case 'mkdir':
                 $system = function () use ($parameters) {
-                    [$path, $mode, $recursive] = $parameters;
+                    [$path] = $parameters;
+                    $mode = 0777;
+                    $recursive = false;
+                    if (\count($parameters) === 3)
+                        [$path, $mode, $recursive] = $parameters;
+                    elseif (\count($parameters) === 2)
+                        [$path, $mode] = $parameters;
+
                     return \mkdir($path, $mode, $recursive);
                 };
                 break;
@@ -112,15 +128,23 @@ final class FileSystem
                 break;
             case 'stat':
                 $system = function () use ($parameters) {
-                    [$path, $info] = $parameters;
+                    [$path] = $parameters;
+                    $info = 'n/a';
+                    if (\count($parameters) === 2)
+                        [$path, $info] = $parameters;
+
                     $result = \stat($path);
                     return isset($result[$info]) ? $result[$info] : $result;
                 };
                 break;
             case 'scandir':
                 $system = function () use ($parameters) {
-                    [$path, $flagSortingOrder] = $parameters;
-                    return \scandir($path, $flagSortingOrder);
+                    [$path] = $parameters;
+                    $sortingOrder = null;
+                    if (\count($parameters) === 2)
+                        [$path, $sortingOrder] = $parameters;
+
+                    return \scandir($path, $sortingOrder);
                 };
                 break;
             case 'readlink':

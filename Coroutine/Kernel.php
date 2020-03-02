@@ -306,13 +306,13 @@ final class Kernel
      *
      * @return mixed
      */
-    public static function addProcess($callable, $timeout = 300, bool $display = false)
+    public static function addProcess($callable, $timeout = 300, bool $display = false, $channel = null)
     {
         return new Kernel(
-            function (TaskInterface $task, CoroutineInterface $coroutine) use ($callable, $timeout, $display) {
+            function (TaskInterface $task, CoroutineInterface $coroutine) use ($callable, $timeout, $display, $channel) {
                 $task->parallelTask();
                 $task->setState('process');
-                $coroutine->addProcess($callable, $timeout, $display)
+                $coroutine->addProcess($callable, $timeout, $display, $channel)
                     ->then(function ($result) use ($task, $coroutine) {
                         $task->setState('completed');
                         $task->sendValue($result);

@@ -163,11 +163,13 @@ interface CoroutineInterface
      * @see https://docs.python.org/3.8/library/asyncio-subprocess.html#creating-subprocesses
      *
      * @param callable $callable
-     * @param int $timeout
+     * @param int|float|null $timeout The timeout in seconds or null to disable
+     * @param bool $display set show child process output
+     * @param Channel|resource|mixed|null $channel IPC communication to be pass to the underlying process standard input.
      *
      * @return LauncherInterface
      */
-    public function addProcess($callable, int $timeout = 300, bool $display = false): LauncherInterface;
+    public function addProcess($callable, int $timeout = 300, bool $display = false, $channel = null): LauncherInterface;
 
     /**
      * The number of UV file system operations still pending, not finish.

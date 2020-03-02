@@ -297,13 +297,15 @@ if (!\function_exists('coroutine_run')) {
      * @see https://docs.python.org/3.7/library/asyncio-dev.html#running-blocking-code
      *
      * @param callable|shell $command
-     * @param int $timeout
+     * @param int|float|null $timeout The timeout in seconds or null to disable
+     * @param bool $display set to show child process output
+     * @param Channel|resource|mixed|null $channel IPC communication to be pass to the underlying process standard input.
      *
      * @return int
      */
-    function spawn_task($command, $timeout = 300, bool $display = false)
+    function spawn_task($command, $timeout = 300, bool $display = false, $channel = null)
     {
-        return Kernel::spawnTask($command, $timeout, $display);
+        return Kernel::spawnTask($command, $timeout, $display, $channel);
     }
 
     /**
@@ -314,14 +316,16 @@ if (!\function_exists('coroutine_run')) {
      * @see https://docs.python.org/3.7/library/asyncio-dev.html#running-blocking-code
      *
      * @param callable|shell $command
-     * @param int $timeout
+     * @param int|float|null $timeout The timeout in seconds or null to disable
+     * @param bool $display set to show child process output
+     * @param Channel|resource|mixed|null $channel IPC communication to be pass to the underlying process standard input.
      *
      * @return mixed
      */
-    function spawn_await($callable, $timeout = 300, bool $display = false)
+    function spawn_await($callable, $timeout = 300, bool $display = false, $channel = null)
     {
-        return \awaitable_process(function () use ($callable, $timeout, $display) {
-            return Kernel::addProcess($callable, $timeout, $display);
+        return \awaitable_process(function () use ($callable, $timeout, $display, $channel) {
+            return Kernel::addProcess($callable, $timeout, $display, $channel);
         });
     }
 
@@ -351,13 +355,15 @@ if (!\function_exists('coroutine_run')) {
      * @see https://docs.python.org/3.7/library/asyncio-dev.html#running-blocking-code
      *
      * @param callable|shell $command
-     * @param int $timeout
+     * @param int|float|null $timeout The timeout in seconds or null to disable
+     * @param bool $display set to show child process output
+     * @param Channel|resource|mixed|null $channel IPC communication to be pass to the underlying process standard input.
      *
      * @return mixed
      */
-    function add_process($command, $timeout = 300, bool $display = false)
+    function add_process($command, $timeout = 300, bool $display = false, $channel = null)
     {
-        return Kernel::addProcess($command, $timeout, $display);
+        return Kernel::addProcess($command, $timeout, $display, $channel);
     }
 
     /**
