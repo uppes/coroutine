@@ -96,16 +96,24 @@ class FileSystemTest extends TestCase
         $this->assertTrue($bool);
         $this->assertGreaterThanOrEqual(9, $this->counterResult);
 
-        $size = yield FileSystem::size("./tmp");
+        $size = yield \file_size("./tmp");
         $this->assertEquals('int', \is_type($size));
         $this->assertGreaterThanOrEqual(10, $this->counterResult);
 
-        $bool = yield FileSystem::rename("./tmp", "./tmpNew");
+        $bool = yield \file_rename("./tmp", "./tmpNew");
         $this->assertTrue($bool);
 
-        $bool = yield FileSystem::unlink("./tmpNew");
+        $bool = yield \file_touch('./tmpNew');
         $this->assertTrue($bool);
         $this->assertGreaterThanOrEqual(14, $this->counterResult);
+
+        $bool = yield \file_unlink("./tmpNew");
+        $this->assertTrue($bool);
+        $this->assertGreaterThanOrEqual(15, $this->counterResult);
+
+        $bool = yield \file_touch("./tmpNew");
+        $this->assertFalse($bool);
+        $this->assertGreaterThanOrEqual(16, $this->counterResult);
         yield \shutdown();
     }
 
@@ -137,6 +145,11 @@ class FileSystemTest extends TestCase
         $bool = yield \file_unlink("./tmpRename");
         $this->assertTrue($bool);
         $this->assertGreaterThanOrEqual(16, $this->counterResult);
+
+        \file_operation(true);
+        $bool = yield \file_touch("./tmpNew");
+        $this->assertFalse($bool);
+
         yield \shutdown();
     }
 
