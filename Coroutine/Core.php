@@ -12,6 +12,8 @@ use Async\Coroutine\ParallelInterface;
 use Async\Processor\LauncherInterface;
 use Async\Coroutine\Exceptions\Panic;
 use Async\Coroutine\FileSystem;
+use Async\Processor\Channel as Channeled;
+use Async\Processor\ChannelInterface;
 
 if (!\function_exists('coroutine_run')) {
     \define('MILLISECOND', 0.001);
@@ -299,7 +301,7 @@ if (!\function_exists('coroutine_run')) {
      * @param callable|shell $command
      * @param int|float|null $timeout The timeout in seconds or null to disable
      * @param bool $display set to show child process output
-     * @param Channel|resource|mixed|null $channel IPC communication to be pass to the underlying process standard input.
+     * @param Channeled|resource|mixed|null $channel IPC communication to be pass to the underlying process standard input.
      *
      * @return int
      */
@@ -318,7 +320,7 @@ if (!\function_exists('coroutine_run')) {
      * @param callable|shell $command
      * @param int|float|null $timeout The timeout in seconds or null to disable
      * @param bool $display set to show child process output
-     * @param Channel|resource|mixed|null $channel IPC communication to be pass to the underlying process standard input.
+     * @param Channeled|resource|mixed|null $channel IPC communication to be pass to the underlying process standard input.
      *
      * @return mixed
      */
@@ -331,17 +333,196 @@ if (!\function_exists('coroutine_run')) {
 
     /**
      * Executes a blocking system call asynchronously in a **child/subprocess**.
-     *
      * Use if `libuv` is not installed.
+     * - This function needs to be prefixed with `yield`
      *
      * @codeCoverageIgnore
      *
-     * @param string $command - An `PHP` builtin file operation command
+     * @param string $command - An `PHP` builtin system operation command
      * @param mixed ...$parameters
      */
     function spawn_system(string $command, ...$parameters)
     {
-        return FileSystem::wrapper($command, ...$parameters);
+        if (!\is_callable($command)) {
+            \panic('Not a valid PHP callable command!');
+        }
+
+        $system = function () use ($command, $parameters) {
+            return $command(...$parameters);
+        };
+
+        return \awaitable_process(function () use ($system) {
+            return Kernel::addProcess($system, 3);
+        });
+    }
+
+    /**
+     * Sets access and modification time of file.
+     *
+     * @param mixed $path
+     * @param mixed|null $time
+     * @param mixed|null $atime
+     *
+     * @return bool
+     */
+    function file_touch($path, $time = null, $atime = null)
+    {
+        return FileSystem::touch($path, $time, $atime);
+    }
+
+    /**
+     * Renames a file or directory.
+     *
+     * @param string $from
+     * @param string $to
+     *
+     * @return bool
+     */
+    function file_rename($from, $to)
+    {
+        return FileSystem::rename($from, $to);
+    }
+
+    /**
+     * Deletes a file.
+     *
+     * @param string $path
+     *
+     * @return bool
+     */
+    function file_unlink($path)
+    {
+        return FileSystem::unlink($path);
+    }
+
+    /**
+     * @codeCoverageIgnore
+     */
+    function file_link($from, $to)
+    {
+        return FileSystem::link($from, $to);
+    }
+
+    /**
+     * @codeCoverageIgnore
+     */
+    function file_symlink($from, $to, $flag = 0)
+    {
+        return FileSystem::symlink($from, $to, $flag);
+    }
+
+    /**
+     * @codeCoverageIgnore
+     */
+    function file_readlink($path)
+    {
+        return FileSystem::readlink($path);
+    }
+
+    /**
+     * @codeCoverageIgnore
+     */
+    function file_mkdir($path, $mode = 0777, $recursive = false)
+    {
+        return FileSystem::mkdir($path, $mode, $recursive);
+    }
+
+    /**
+     * @codeCoverageIgnore
+     */
+    function file_rmdir($path)
+    {
+        return FileSystem::rmdir($path);
+    }
+
+    /**
+     * @codeCoverageIgnore
+     */
+    function file_chmod($filename, $mode)
+    {
+        return FileSystem::chmod($filename, $mode);
+    }
+
+    /**
+     * @codeCoverageIgnore
+     */
+    function file_chown($path, $uid, $gid)
+    {
+        return FileSystem::chown($path, $uid, $gid);
+    }
+
+    /**
+     * @codeCoverageIgnore
+     */
+    function file_scandir($path, $sortingOrder = null)
+    {
+        return FileSystem::scandir($path, $sortingOrder);
+    }
+
+    /**
+     * Gives information about a file.
+     *
+     * @param string $path
+     * @param string $info
+     * - Numeric    `$info` Description
+     *````
+     * 0    dev     device number
+     * 1	ino	inode number
+     * 2	mode	inode protection mode
+     * 3	nlink	number of links
+     * 4	uid	userid of owner
+     * 5	gid	groupid of owner
+     * 6	rdev	device type, if inode device
+     * 7	size	size in bytes
+     * 8	atime	time of last access (Unix timestamp)
+     * 9	mtime	time of last modification (Unix timestamp)
+     * 10	ctime	time of last inode change (Unix timestamp)
+     * 11	blksize	blocksize of filesystem IO **
+     * 12	blocks	number of 512-byte blocks allocated **
+     *````
+
+     * @return array
+     */
+    function file_stat($path, $info = null)
+    {
+        return FileSystem::stat($path, $info);
+    }
+
+    /**
+     * Return file size.
+     *
+     * @param string $path
+     *
+     * @return int
+     */
+    function file_size($path)
+    {
+        return FileSystem::size($path);
+    }
+
+    /**
+     * Check if file exists.
+     *
+     * @param string $path
+     *
+     * @return bool
+     */
+    function file_exist($path)
+    {
+        $status = yield FileSystem::size($path);
+        return \is_int($status);
+    }
+
+    /**
+     * Turn `on/off` UV for file operations.
+     *
+     * @param bool $useUV
+     * - `true` use **thread pool**.
+     * - `false` use `child/subprocess`.
+     */
+    function file_operation(bool $useUV = false)
+    {
+        ($useUV === true) ? FileSystem::on() : FileSystem::off();
     }
 
     /**
@@ -357,7 +538,7 @@ if (!\function_exists('coroutine_run')) {
      * @param callable|shell $command
      * @param int|float|null $timeout The timeout in seconds or null to disable
      * @param bool $display set to show child process output
-     * @param Channel|resource|mixed|null $channel IPC communication to be pass to the underlying process standard input.
+     * @param Channeled|resource|mixed|null $channel IPC communication to be pass to the underlying process standard input.
      *
      * @return mixed
      */
@@ -369,7 +550,7 @@ if (!\function_exists('coroutine_run')) {
     /**
      * Wrap the callable with `yield`, this insure the first attempt to execute will behave
      * like a generator function, will switch at least once without actually executing, return object instead.
-     * Then function is used by `away()` not really called directly.
+     * This function is used by `away()` not really called directly.
      *
      * @see https://docs.python.org/3.7/library/asyncio-task.html#awaitables
      *
@@ -386,7 +567,7 @@ if (!\function_exists('coroutine_run')) {
     /**
      * Wrap the a spawn `process` with `yield`, this insure the the execution
      * and return result is handled properly.
-     * Then function is used by `spawn_await()` not really called directly.
+     * This function is used by `spawn_await()` not really called directly.
      *
      * @see https://docs.python.org/3.7/library/asyncio-task.html#awaitables
      *

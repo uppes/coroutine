@@ -7,6 +7,7 @@ use Async\Coroutine\TaskInterface;
 use Async\Processor\LauncherInterface;
 use Async\Coroutine\ParallelInterface;
 use Async\Coroutine\Exceptions\RuntimeException;
+use Async\Processor\Channel as Channeled;
 
 interface CoroutineInterface
 {
@@ -164,8 +165,8 @@ interface CoroutineInterface
      *
      * @param callable $callable
      * @param int|float|null $timeout The timeout in seconds or null to disable
-     * @param bool $display set show child process output
-     * @param Channel|resource|mixed|null $channel IPC communication to be pass to the underlying process standard input.
+     * @param bool $display set to show child process output
+     * @param Channeled|resource|mixed|null $channel IPC communication to be pass to the underlying process standard input.
      *
      * @return LauncherInterface
      */
@@ -288,7 +289,7 @@ interface CoroutineInterface
      * has no parameters at all.
      *
      * **Note: A listener can only be added once to the same signal, any
-     * attempts to add it more then once will be ignored.**
+     * attempts to add it more than once will be ignored.**
      *
      * @param int $signal
      * @param Task|\Generator|Callable $listener

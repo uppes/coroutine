@@ -12,6 +12,7 @@ use Async\Coroutine\Exceptions\InvalidStateError;
 use Async\Coroutine\Exceptions\InvalidArgumentException;
 use Async\Coroutine\Exceptions\TimeoutError;
 use Async\Coroutine\Exceptions\CancelledError;
+use Async\Processor\Channel as Channeled;
 
 /**
  * The Kernel
@@ -302,7 +303,9 @@ final class Kernel
      * @see https://docs.python.org/3.7/library/asyncio-dev.html#running-blocking-code
      *
      * @param callable|shell $command
-     * @param int $timeout
+     * @param int|float|null $timeout The timeout in seconds or null to disable
+     * @param bool $display set to show child process output
+     * @param Channeled|resource|mixed|null $channel IPC communication to be pass to the underlying process standard input.
      *
      * @return mixed
      */

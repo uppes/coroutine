@@ -113,4 +113,35 @@ class FileSystemTest extends TestCase
     {
         \coroutine_run($this->taskWrite());
     }
+
+    public function taskFileSystem()
+    {
+        \file_operation();
+        yield \away($this->counterTask());
+        $bool = yield \file_touch('./tmpTouch');
+        $this->assertTrue($bool);
+        $this->assertGreaterThanOrEqual(5, $this->counterResult);
+
+        $size = yield \file_size("./tmpTouch");
+        $this->assertEquals(0, $size);
+        $this->assertGreaterThanOrEqual(7, $this->counterResult);
+
+        $bool = yield \file_exist("./tmpTouch");
+        $this->assertTrue($bool);
+        $this->assertGreaterThanOrEqual(10, $this->counterResult);
+
+        $bool = yield \file_rename("./tmpTouch", "./tmpRename");
+        $this->assertTrue($bool);
+        $this->assertGreaterThanOrEqual(13, $this->counterResult);
+
+        $bool = yield \file_unlink("./tmpRename");
+        $this->assertTrue($bool);
+        $this->assertGreaterThanOrEqual(16, $this->counterResult);
+        yield \shutdown();
+    }
+
+    public function testFileSystem()
+    {
+        \coroutine_run($this->taskFileSystem());
+    }
 }

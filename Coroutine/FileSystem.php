@@ -7,8 +7,6 @@ namespace Async\Coroutine;
 use Async\Coroutine\Kernel;
 use Async\Coroutine\TaskInterface;
 use Async\Coroutine\CoroutineInterface;
-use Async\Processor\Channel as Channeled;
-use Async\Processor\ChannelInterface;
 
 /**
  * Executes a blocking system call asynchronously.
@@ -36,136 +34,43 @@ final class FileSystem
     );
 
     /**
-     * Check for UV for only file operations.
+     * Flag to control `UV` file operations.
+     *
+     * @var bool
+     */
+    protected static $useUV = true;
+
+    /**
+     * Check for UV and use for only file operations.
      *
      * @return bool
      */
-    protected static function justUvFs(): bool
+    protected static function useUvFs(): bool
     {
-        return \function_exists('uv_default_loop');
+        return \function_exists('uv_default_loop') && self::$useUV;
     }
 
     /**
-     * Executes a blocking system call asynchronously in a **child/subprocess**.
-     *
-     * Use if `libuv` is not installed.
-     *
-     * @codeCoverageIgnore
-     *
-     * @param string $command - An `PHP` builtin file operation command
-     * @param mixed ...$parameters
+     * Turn on UV for file operations, will use `libuv` **thread pool**.
      */
-    public static function wrapper(string $command, ...$parameters)
+    public static function on()
     {
-        switch ($command) {
-            case 'rename':
-                $system = function () use ($parameters) {
-                    [$from, $to] = $parameters;
-                    return \rename($from, $to);
-                };
-                break;
-            case 'touch':
-                $system = function () use ($parameters) {
-                    [$path] = $parameters;
-                    $time = null;
-                    $atime = null;
-                    if (\count($parameters) === 3)
-                        [$path, $time, $atime] = $parameters;
-                    elseif (\count($parameters) === 2)
-                        [$path, $time] = $parameters;
+        self::$useUV = true;
+    }
 
-                    return \touch($path, $time, $atime);
-                };
-                break;
-            case 'unlink':
-                $system = function () use ($parameters) {
-                    [$path] = $parameters;
-                    return \unlink($path);
-                };
-                break;
-            case 'link':
-                $system = function () use ($parameters) {
-                    [$from, $to] = $parameters;
-                    return \link($from, $to);
-                };
-                break;
-            case 'symlink':
-                $system = function () use ($parameters) {
-                    [$from, $to] = $parameters;
-                    return \symlink($from, $to);
-                };
-                break;
-            case 'mkdir':
-                $system = function () use ($parameters) {
-                    [$path] = $parameters;
-                    $mode = 0777;
-                    $recursive = false;
-                    if (\count($parameters) === 3)
-                        [$path, $mode, $recursive] = $parameters;
-                    elseif (\count($parameters) === 2)
-                        [$path, $mode] = $parameters;
+    /**
+     * Turn off UV for file operations, use system `child/subprocess`.
+     */
+    public static function Off()
+    {
+        self::$useUV = false;
+    }
 
-                    return \mkdir($path, $mode, $recursive);
-                };
-                break;
-            case 'rmdir':
-                $system = function () use ($parameters) {
-                    [$path] = $parameters;
-                    return \rmdir($path);
-                };
-                break;
-            case 'chmod':
-                $system = function () use ($parameters) {
-                    [$filename, $mode] = $parameters;
-                    return \chmod($filename, $mode);
-                };
-                break;
-            case 'chown':
-                $system = function () use ($parameters) {
-                    [$path, $uid] = $parameters;
-                    return \chown($path, $uid);
-                };
-                break;
-            case 'stat':
-                $system = function () use ($parameters) {
-                    [$path] = $parameters;
-                    $info = 'n/a';
-                    if (\count($parameters) === 2)
-                        [$path, $info] = $parameters;
+    public static function spawnStat($path, $info = null)
+    {
+        $result = yield \spawn_system('stat', $path);
 
-                    $result = \stat($path);
-                    return isset($result[$info]) ? $result[$info] : $result;
-                };
-                break;
-            case 'scandir':
-                $system = function () use ($parameters) {
-                    [$path] = $parameters;
-                    $sortingOrder = null;
-                    if (\count($parameters) === 2)
-                        [$path, $sortingOrder] = $parameters;
-
-                    return \scandir($path, $sortingOrder);
-                };
-                break;
-            case 'readlink':
-                $system = function () use ($parameters) {
-                    [$path] = $parameters;
-                    return \readlink($path);
-                };
-                break;
-            default:
-                if (!\is_callable($command)) {
-                    return false;
-                }
-
-                $system = function () use ($command, $parameters) {
-                    return $command(...$parameters);
-                };
-        }
-
-        return \awaitable_process(function () use ($system) {
-            return Kernel::addProcess($system, 3);
-        });
+        return empty($info) ? $result : $result[$info];
     }
 
     /**
@@ -173,11 +78,12 @@ final class FileSystem
      *
      * @param string $from
      * @param string $to
-     * @param mixed $context
+     *
+     * @return bool
      */
-    public static function rename(string $from, string $to, $context = null)
+    public static function rename(string $from, string $to)
     {
-        if (FileSystem::justUvFs()) {
+        if (FileSystem::useUvFs()) {
             return new Kernel(
                 function (TaskInterface $task, CoroutineInterface $coroutine) use ($from, $to) {
                     $coroutine->fsAdd();
@@ -194,16 +100,20 @@ final class FileSystem
                 }
             );
         }
+
+        return \spawn_system('rename', $from, $to);
     }
 
     /**
-     * @codeCoverageIgnore
+     * Sets access and modification time of file
      */
     public static function touch($path, $time = null, $atime = null)
     {
-        if (FileSystem::justUvFs()) {
+        if (FileSystem::useUvFs()) {
             return new Kernel(
                 function (TaskInterface $task, CoroutineInterface $coroutine) use ($path, $time, $atime) {
+                    $time = empty($time) ? \uv_now() : $time;
+                    $atime = empty($atime) ? \uv_now() : $atime;
                     $coroutine->fsAdd();
                     \uv_fs_utime(
                         $coroutine->getUV(),
@@ -212,24 +122,25 @@ final class FileSystem
                         $atime,
                         function (int $result) use ($task, $coroutine) {
                             $coroutine->fsRemove();
-                            $task->sendValue($result);
+                            $task->sendValue((bool) $result);
                             $coroutine->schedule($task);
                         }
                     );
                 }
             );
         }
+
+        return \spawn_system('touch', $path, $time, $atime);
     }
 
     /**
      * Deletes a file.
      *
      * @param string $path
-     * @param mixed $context
      */
-    public static function unlink(string $path, $context = null)
+    public static function unlink(string $path)
     {
-        if (FileSystem::justUvFs()) {
+        if (FileSystem::useUvFs()) {
             return new Kernel(
                 function (TaskInterface $task, CoroutineInterface $coroutine) use ($path) {
                     $coroutine->fsAdd();
@@ -245,6 +156,8 @@ final class FileSystem
                 }
             );
         }
+
+        return \spawn_system('unlink', $path);
     }
 
     /**
@@ -257,7 +170,7 @@ final class FileSystem
      */
     public static function link(string $from, string $to)
     {
-        if (FileSystem::justUvFs()) {
+        if (FileSystem::useUvFs()) {
             return new Kernel(
                 function (TaskInterface $task, CoroutineInterface $coroutine) use ($from, $to) {
                     $coroutine->fsAdd();
@@ -274,6 +187,8 @@ final class FileSystem
                 }
             );
         }
+
+        return \spawn_system('link', $from, $to);
     }
 
     /**
@@ -287,7 +202,7 @@ final class FileSystem
      */
     public static function symlink(string $from, string $to, int $flag)
     {
-        if (FileSystem::justUvFs()) {
+        if (FileSystem::useUvFs()) {
             return new Kernel(
                 function (TaskInterface $task, CoroutineInterface $coroutine) use ($from, $to, $flag) {
                     $coroutine->fsAdd();
@@ -305,6 +220,8 @@ final class FileSystem
                 }
             );
         }
+
+        return \spawn_system('symlink', $from, $to);
     }
 
     /**
@@ -319,7 +236,7 @@ final class FileSystem
      */
     public static function mkdir(string $path, int $mode = 0777, $recursive = false, $context = null)
     {
-        if (FileSystem::justUvFs()) {
+        if (FileSystem::useUvFs()) {
             return new Kernel(
                 function (TaskInterface $task, CoroutineInterface $coroutine) use ($path, $mode) {
                     $coroutine->fsAdd();
@@ -336,7 +253,10 @@ final class FileSystem
                 }
             );
         }
+
+        return \spawn_system('mkdir', $path, $mode, $recursive);
     }
+
     /**
      * Removes directory.
      *
@@ -347,7 +267,7 @@ final class FileSystem
      */
     public static function rmdir(string $path, $context = null)
     {
-        if (FileSystem::justUvFs()) {
+        if (FileSystem::useUvFs()) {
             return new Kernel(
                 function (TaskInterface $task, CoroutineInterface $coroutine) use ($path) {
                     $coroutine->fsAdd();
@@ -363,6 +283,8 @@ final class FileSystem
                 }
             );
         }
+
+        return \spawn_system('rmdir', $path);
     }
 
     /**
@@ -375,7 +297,7 @@ final class FileSystem
      */
     public static function chmod(string $filename, int $mode)
     {
-        if (FileSystem::justUvFs()) {
+        if (FileSystem::useUvFs()) {
             return new Kernel(
                 function (TaskInterface $task, CoroutineInterface $coroutine) use ($filename, $mode) {
                     $coroutine->fsAdd();
@@ -392,6 +314,8 @@ final class FileSystem
                 }
             );
         }
+
+        return \spawn_system('chmod', $filename, $mode);
     }
 
     /**
@@ -405,7 +329,7 @@ final class FileSystem
      */
     public static function chown(string $path, int $uid, int $gid)
     {
-        if (FileSystem::justUvFs()) {
+        if (FileSystem::useUvFs()) {
             return new Kernel(
                 function (TaskInterface $task, CoroutineInterface $coroutine) use ($path, $uid, $gid) {
                     $coroutine->fsAdd();
@@ -423,6 +347,8 @@ final class FileSystem
                 }
             );
         }
+
+        return \spawn_system('chown', $path, $uid);
     }
 
     /**
@@ -436,7 +362,7 @@ final class FileSystem
      */
     public static function fchown(string $fd, int $uid, int $gid)
     {
-        if (FileSystem::justUvFs()) {
+        if (FileSystem::useUvFs()) {
             return new Kernel(
                 function (TaskInterface $task, CoroutineInterface $coroutine) use ($fd, $uid, $gid) {
                     $coroutine->fsAdd();
@@ -466,7 +392,7 @@ final class FileSystem
      */
     public static function fchmod(string $fd, int $mode)
     {
-        if (FileSystem::justUvFs()) {
+        if (FileSystem::useUvFs()) {
             return new Kernel(
                 function (TaskInterface $task, CoroutineInterface $coroutine) use ($fd, $mode) {
                     $coroutine->fsAdd();
@@ -497,7 +423,7 @@ final class FileSystem
      */
     public static function ftruncate($fd, int $offset)
     {
-        if (FileSystem::justUvFs()) {
+        if (FileSystem::useUvFs()) {
             return new Kernel(
                 function (TaskInterface $task, CoroutineInterface $coroutine) use ($fd, $offset) {
                     $coroutine->fsAdd();
@@ -525,7 +451,7 @@ final class FileSystem
      */
     public static function fsync($fd)
     {
-        if (FileSystem::justUvFs()) {
+        if (FileSystem::useUvFs()) {
             return new Kernel(
                 function (TaskInterface $task, CoroutineInterface $coroutine) use ($fd) {
                     $coroutine->fsAdd();
@@ -552,7 +478,7 @@ final class FileSystem
      */
     public static function fdatasync($fd)
     {
-        if (FileSystem::justUvFs()) {
+        if (FileSystem::useUvFs()) {
             return new Kernel(
                 function (TaskInterface $task, CoroutineInterface $coroutine) use ($fd) {
                     $coroutine->fsAdd();
@@ -579,7 +505,7 @@ final class FileSystem
      */
     public static function lstat(string $path)
     {
-        if (FileSystem::justUvFs()) {
+        if (FileSystem::useUvFs()) {
             return new Kernel(
                 function (TaskInterface $task, CoroutineInterface $coroutine) use ($path) {
                     $coroutine->fsAdd();
@@ -621,7 +547,7 @@ final class FileSystem
      */
     public static function stat(string $path, ?string $info = null)
     {
-        if (FileSystem::justUvFs()) {
+        if (FileSystem::useUvFs()) {
             return new Kernel(
                 function (TaskInterface $task, CoroutineInterface $coroutine) use ($path, $info) {
                     $coroutine->fsAdd();
@@ -637,6 +563,8 @@ final class FileSystem
                 }
             );
         }
+
+        return self::spawnStat($path, $info);
     }
 
     /**
@@ -656,7 +584,7 @@ final class FileSystem
      */
     public static function fstat($fd, ?string $info = null)
     {
-        if (FileSystem::justUvFs()) {
+        if (FileSystem::useUvFs()) {
             return new Kernel(
                 function (TaskInterface $task, CoroutineInterface $coroutine) use ($fd, $info) {
                     $coroutine->fsAdd();
@@ -685,7 +613,7 @@ final class FileSystem
      */
     public static function readDir(string $path, int $flag = 0)
     {
-        if (FileSystem::justUvFs()) {
+        if (FileSystem::useUvFs()) {
             return new Kernel(
                 function (TaskInterface $task, CoroutineInterface $coroutine) use ($path, $flag) {
                     $coroutine->fsAdd();
@@ -702,6 +630,8 @@ final class FileSystem
                 }
             );
         }
+
+        return \spawn_system('readlink', $path);
     }
 
     /**
@@ -715,7 +645,7 @@ final class FileSystem
      */
     public static function scandir(string $path, int $flagSortingOrder = null, $context = null)
     {
-        if (FileSystem::justUvFs()) {
+        if (FileSystem::useUvFs()) {
             return new Kernel(
                 function (TaskInterface $task, CoroutineInterface $coroutine) use ($path, $flagSortingOrder) {
                     $coroutine->fsAdd();
@@ -732,6 +662,8 @@ final class FileSystem
                 }
             );
         }
+
+        return \spawn_system('scandir', $path, $flagSortingOrder);
     }
 
     /**
@@ -745,7 +677,7 @@ final class FileSystem
      */
     public static function utime(string $path, int $utime, int $atime)
     {
-        if (FileSystem::justUvFs()) {
+        if (FileSystem::useUvFs()) {
             return new Kernel(
                 function (TaskInterface $task, CoroutineInterface $coroutine) use ($path, $utime, $atime) {
                     $coroutine->fsAdd();
@@ -776,7 +708,7 @@ final class FileSystem
      */
     public static function futime(string $fd, int $utime, int $atime)
     {
-        if (FileSystem::justUvFs()) {
+        if (FileSystem::useUvFs()) {
             return new Kernel(
                 function (TaskInterface $task, CoroutineInterface $coroutine) use ($fd, $utime, $atime) {
                     $coroutine->fsAdd();
@@ -802,12 +734,10 @@ final class FileSystem
      * @codeCoverageIgnore
      *
      * @param string $path
-     * @param int $utime
-     * @param int $atime
      */
-    public static function readlink(string $path, int $utime, int $atime)
+    public static function readlink(string $path)
     {
-        if (FileSystem::justUvFs()) {
+        if (FileSystem::useUvFs()) {
             return new Kernel(
                 function (TaskInterface $task, CoroutineInterface $coroutine) use ($path) {
                     $coroutine->fsAdd();
@@ -837,7 +767,7 @@ final class FileSystem
      */
     public static function sendfile($out_fd, $in_fd, int $offset, int $length)
     {
-        if (FileSystem::justUvFs()) {
+        if (FileSystem::useUvFs()) {
             return new Kernel(
                 function (TaskInterface $task, CoroutineInterface $coroutine) use ($out_fd, $in_fd, $offset, $length) {
                     $coroutine->fsAdd();
@@ -885,7 +815,7 @@ final class FileSystem
     public static function open(string $path, string $flag, int $mode = 0)
     {
         if (isset(self::$fileFlags[$flag])) {
-            if (FileSystem::justUvFs()) {
+            if (FileSystem::useUvFs()) {
                 return new Kernel(
                     function (TaskInterface $task, CoroutineInterface $coroutine) use ($path, $flag, $mode) {
                         $coroutine->fsAdd();
@@ -908,7 +838,7 @@ final class FileSystem
 
     public static function read($fd, int $offset, int $length)
     {
-        if (FileSystem::justUvFs()) {
+        if (FileSystem::useUvFs()) {
             return new Kernel(
                 function (TaskInterface $task, CoroutineInterface $coroutine) use ($fd, $offset, $length) {
                     $coroutine->fsAdd();
@@ -942,7 +872,7 @@ final class FileSystem
 
     public static function write($fd, $buffer, $position = -1)
     {
-        if (FileSystem::justUvFs()) {
+        if (FileSystem::useUvFs()) {
             return new Kernel(
                 function (TaskInterface $task, CoroutineInterface $coroutine) use ($fd, $buffer, $position) {
                     $coroutine->fsAdd();
@@ -964,7 +894,7 @@ final class FileSystem
 
     public static function close($fd)
     {
-        if (FileSystem::justUvFs()) {
+        if (FileSystem::useUvFs()) {
             return new Kernel(
                 function (TaskInterface $task, CoroutineInterface $coroutine) use ($fd) {
                     $coroutine->fsAdd();
