@@ -120,10 +120,30 @@ final class FileSystem
                         $path,
                         $time,
                         $atime,
-                        function (int $result) use ($task, $coroutine) {
-                            $coroutine->fsRemove();
-                            $task->sendValue((bool) $result);
-                            $coroutine->schedule($task);
+                        function (int $result) use ($task, $coroutine, $path) {
+                            if ($result === 0) {
+                                \uv_fs_open(
+                                    $coroutine->getUV(),
+                                    $path,
+                                    self::$fileFlags['w'],
+                                    0,
+                                    function ($stream) use ($task, $coroutine) {
+                                        \uv_fs_close(
+                                            $coroutine->getUV(),
+                                            $stream,
+                                            function (bool $bool) use ($task, $coroutine) {
+                                                $coroutine->fsRemove();
+                                                $task->sendValue($bool);
+                                                $coroutine->schedule($task);
+                                            }
+                                        );
+                                    }
+                                );
+                            } else {
+                                $coroutine->fsRemove();
+                                $task->sendValue((bool) $result);
+                                $coroutine->schedule($task);
+                            }
                         }
                     );
                 }
@@ -227,14 +247,11 @@ final class FileSystem
     /**
      * Attempts to create the directory specified by pathname.
      *
-     * @codeCoverageIgnore
-     *
      * @param string $path
      * @param integer $mode
      * @param boolean $recursive
-     * @param mixed $context
      */
-    public static function mkdir(string $path, int $mode = 0777, $recursive = false, $context = null)
+    public static function mkdir(string $path, int $mode = 0777, $recursive = false)
     {
         if (FileSystem::useUvFs()) {
             return new Kernel(
@@ -246,7 +263,7 @@ final class FileSystem
                         $mode,
                         function (int $result) use ($task, $coroutine) {
                             $coroutine->fsRemove();
-                            $task->sendValue($result);
+                            $task->sendValue((bool) $result);
                             $coroutine->schedule($task);
                         }
                     );
@@ -260,12 +277,9 @@ final class FileSystem
     /**
      * Removes directory.
      *
-     * @codeCoverageIgnore
-     *
      * @param string $path
-     * @param mixed $context
      */
-    public static function rmdir(string $path, $context = null)
+    public static function rmdir(string $path)
     {
         if (FileSystem::useUvFs()) {
             return new Kernel(
@@ -276,7 +290,7 @@ final class FileSystem
                         $path,
                         function (int $result) use ($task, $coroutine) {
                             $coroutine->fsRemove();
-                            $task->sendValue($result);
+                            $task->sendValue((bool) $result);
                             $coroutine->schedule($task);
                         }
                     );
@@ -499,8 +513,6 @@ final class FileSystem
     /**
      * Gives information about a file or symbolic link.
      *
-     * @codeCoverageIgnore
-     *
      * @param string $path
      */
     public static function lstat(string $path)
@@ -669,26 +681,26 @@ final class FileSystem
     /**
      * Change file last access and modification times.
      *
-     * @codeCoverageIgnore
-     *
      * @param string $path
      * @param int $utime
      * @param int $atime
      */
-    public static function utime(string $path, int $utime, int $atime)
+    public static function utime(string $path, int $utime = null, int $atime = null)
     {
         if (FileSystem::useUvFs()) {
             return new Kernel(
                 function (TaskInterface $task, CoroutineInterface $coroutine) use ($path, $utime, $atime) {
                     $coroutine->fsAdd();
+                    $utime = empty($utime) ? \uv_now() : $utime;
+                    $atime = empty($atime) ? \uv_now() : $atime;
                     \uv_fs_utime(
                         $coroutine->getUV(),
                         $path,
                         $utime,
                         $atime,
-                        function ($fd, int $result) use ($task, $coroutine) {
+                        function (int $result) use ($task, $coroutine) {
                             $coroutine->fsRemove();
-                            $task->sendValue($result);
+                            $task->sendValue((bool) $result);
                             $coroutine->schedule($task);
                         }
                     );

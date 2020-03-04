@@ -167,10 +167,17 @@ interface CoroutineInterface
      * @param int|float|null $timeout The timeout in seconds or null to disable
      * @param bool $display set to show child process output
      * @param Channeled|resource|mixed|null $channel IPC communication to be pass to the underlying process standard input.
+     * @param int|null $channelTask The task id to use for realtime **child/subprocess** interaction.
      *
      * @return LauncherInterface
      */
-    public function addProcess($callable, int $timeout = 300, bool $display = false, $channel = null): LauncherInterface;
+    public function addProcess(
+        $callable,
+        int $timeout = 60,
+        bool $display = false,
+        $channel = null,
+        $channelTask = null
+    ): LauncherInterface;
 
     /**
      * The number of UV file system operations still pending, not finish.

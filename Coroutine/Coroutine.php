@@ -375,9 +375,15 @@ final class Coroutine implements CoroutineInterface
         return $this->process;
     }
 
-    public function addProcess($callable, int $timeout = 300, bool $display = false, $channel = null): LauncherInterface
+    public function addProcess(
+        $callable,
+        int $timeout = 60,
+        bool $display = false,
+        $channel = null,
+        $channelTask = null
+    ): LauncherInterface
     {
-        $launcher = $this->parallel->add($callable, $timeout, $channel);
+        $launcher = $this->parallel->add($callable, $timeout, $channel, $channelTask);
         return $display ? $launcher->displayOn() : $launcher;
     }
 

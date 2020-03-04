@@ -224,7 +224,7 @@ final class Kernel
     public static function shutdown(int $skipTask = 1)
     {
         return new Kernel(
-            function (TaskInterface $task, CoroutineInterface $coroutine) use ($skipTask){
+            function (TaskInterface $task, CoroutineInterface $coroutine) use ($skipTask) {
                 $tasks = $coroutine->currentTask();
                 $coroutine->shutdown($skipTask);
                 $coroutine->schedule($tasks[$skipTask]);
@@ -305,14 +305,21 @@ final class Kernel
      * @param callable|shell $command
      * @param int|float|null $timeout The timeout in seconds or null to disable
      * @param bool $display set to show child process output
-     * @param Channeled|resource|mixed|null $channel IPC communication to be pass to the underlying process standard input.
+     * @param Channeled|resource|mixed|null $channel IPC communication to be pass to the underlying `process` standard input.
+     * @param int|null $channelTask The task id to use for realtime **child/subprocess** interaction.
      *
      * @return mixed
      */
-    public static function addProcess($callable, $timeout = 300, bool $display = false, $channel = null)
-    {
+    public static function addProcess(
+        $callable,
+        $timeout = 300,
+        bool $display = false,
+        $channel = null,
+        $channelTask = null
+    ) {
         return new Kernel(
-            function (TaskInterface $task, CoroutineInterface $coroutine) use ($callable, $timeout, $display, $channel) {
+            function (TaskInterface $task, CoroutineInterface $coroutine)
+            use ($callable, $timeout, $display, $channel, $channelTask) {
                 $task->parallelTask();
                 $task->setState('process');
                 $coroutine->addProcess($callable, $timeout, $display, $channel)
@@ -330,6 +337,16 @@ final class Kernel
                         $task->setState('cancelled');
                         $task->setException(new TimeoutError($timeout));
                         $coroutine->schedule($task);
+                    })
+                    ->progress(function ($type, $data) use ($coroutine, $channel, $channelTask) {
+                        $taskList = $coroutine->currentTask();
+                        // @codeCoverageIgnoreStart
+                        if (isset($taskList[$channelTask]) && $taskList[$channelTask] instanceof TaskInterface) {
+                            $ipcTask = $taskList[$channelTask];
+                            $ipcTask->sendValue([$channel, $type, $data]);
+                            $coroutine->schedule($ipcTask);
+                        }
+                        // @codeCoverageIgnoreEnd
                     });
             }
         );
@@ -344,16 +361,25 @@ final class Kernel
      * @see https://docs.python.org/3.7/library/asyncio-dev.html#running-blocking-code
      *
      * @param callable|shell $command
-     * @param int $timeout
+     * @param int|float|null $timeout The timeout in seconds or null to disable
+     * @param bool $display set to show child process output
+     * @param Channeled|resource|mixed|null $channel IPC communication to be pass to the underlying `process` standard input.
+     * @param int|null $channelTask The task id to use for realtime **child/subprocess** interaction.
      *
      * @return int
      */
-    public static function spawnTask($callable, $timeout = 300, bool $display = false)
-    {
+    public static function spawnTask(
+        $callable,
+        $timeout = 300,
+        bool $display = false,
+        $channel = null,
+        $channelTask = null
+    ) {
         return new Kernel(
-            function (TaskInterface $task, CoroutineInterface $coroutine) use ($callable, $timeout, $display) {
-                $command = \awaitAble(function () use ($callable, $timeout, $display) {
-                    $result = yield yield Kernel::addProcess($callable, $timeout, $display);
+            function (TaskInterface $task, CoroutineInterface $coroutine)
+            use ($callable, $timeout, $display, $channel, $channelTask) {
+                $command = \awaitAble(function () use ($callable, $timeout, $display, $channel, $channelTask) {
+                    $result = yield yield Kernel::addProcess($callable, $timeout, $display, $channel, $channelTask);
                     return $result;
                 });
 
@@ -389,7 +415,7 @@ final class Kernel
         self::$gatherCount = $race;
         self::$gatherShouldError = $exception;
         self::$gatherShouldClearCancelled = $clear;
-        return Kernel::gather( ...$tasks);
+        return Kernel::gather(...$tasks);
     }
 
     /**

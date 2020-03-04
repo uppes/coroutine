@@ -302,12 +302,13 @@ if (!\function_exists('coroutine_run')) {
      * @param int|float|null $timeout The timeout in seconds or null to disable
      * @param bool $display set to show child process output
      * @param Channeled|resource|mixed|null $channel IPC communication to be pass to the underlying process standard input.
+     * @param int|null $channelTask The task id to use for realtime **child/subprocess** interaction.
      *
      * @return int
      */
-    function spawn_task($command, $timeout = 300, bool $display = false, $channel = null)
+    function spawn_task($command, $timeout = 60, bool $display = false, $channel = null, $channelTask = null)
     {
-        return Kernel::spawnTask($command, $timeout, $display, $channel);
+        return Kernel::spawnTask($command, $timeout, $display, $channel, $channelTask);
     }
 
     /**
@@ -321,13 +322,14 @@ if (!\function_exists('coroutine_run')) {
      * @param int|float|null $timeout The timeout in seconds or null to disable
      * @param bool $display set to show child process output
      * @param Channeled|resource|mixed|null $channel IPC communication to be pass to the underlying process standard input.
+     * @param int|null $channelTask The task id to use for realtime **child/subprocess** interaction.
      *
      * @return mixed
      */
-    function spawn_await($callable, $timeout = 300, bool $display = false, $channel = null)
+    function spawn_await($callable, $timeout = 60, bool $display = false, $channel = null, $channelTask = null)
     {
-        return \awaitable_process(function () use ($callable, $timeout, $display, $channel) {
-            return Kernel::addProcess($callable, $timeout, $display, $channel);
+        return \awaitable_process(function () use ($callable, $timeout, $display, $channel, $channelTask) {
+            return Kernel::addProcess($callable, $timeout, $display, $channel, $channelTask);
         });
     }
 
@@ -336,10 +338,11 @@ if (!\function_exists('coroutine_run')) {
      * Use if `libuv` is not installed.
      * - This function needs to be prefixed with `yield`
      *
-     * @codeCoverageIgnore
-     *
-     * @param string $command - An `PHP` builtin system operation command
+     * @param string $command Any `PHP` builtin system operation command.
      * @param mixed ...$parameters
+     *
+     * @return  mixed
+     * @throws Exception if not a callable.
      */
     function spawn_system(string $command, ...$parameters)
     {
@@ -420,7 +423,13 @@ if (!\function_exists('coroutine_run')) {
     }
 
     /**
-     * @codeCoverageIgnore
+     * Attempts to create the directory specified by pathname.
+     *
+     * @param string $path
+     * @param integer $mode
+     * @param boolean $recursive
+     *
+     * @return bool
      */
     function file_mkdir($path, $mode = 0777, $recursive = false)
     {
@@ -428,7 +437,11 @@ if (!\function_exists('coroutine_run')) {
     }
 
     /**
-     * @codeCoverageIgnore
+     * Removes directory.
+     *
+     * @param string $path
+     *
+     * @return bool
      */
     function file_rmdir($path)
     {
@@ -477,10 +490,9 @@ if (!\function_exists('coroutine_run')) {
      * 8	atime	time of last access (Unix timestamp)
      * 9	mtime	time of last modification (Unix timestamp)
      * 10	ctime	time of last inode change (Unix timestamp)
-     * 11	blksize	blocksize of filesystem IO **
-     * 12	blocks	number of 512-byte blocks allocated **
+     * 11	blksize	blocksize of filesystem IO
+     * 12	blocks	number of 512-byte blocks allocated
      *````
-
      * @return array
      */
     function file_stat($path, $info = null)
@@ -539,12 +551,13 @@ if (!\function_exists('coroutine_run')) {
      * @param int|float|null $timeout The timeout in seconds or null to disable
      * @param bool $display set to show child process output
      * @param Channeled|resource|mixed|null $channel IPC communication to be pass to the underlying process standard input.
+     * @param int|null $channelTask The task id to use for realtime **child/subprocess** interaction.
      *
      * @return mixed
      */
-    function add_process($command, $timeout = 300, bool $display = false, $channel = null)
+    function add_process($command, $timeout = 300, bool $display = false, $channel = null, $channelTask = null)
     {
-        return Kernel::addProcess($command, $timeout, $display, $channel);
+        return Kernel::addProcess($command, $timeout, $display, $channel, $channelTask);
     }
 
     /**

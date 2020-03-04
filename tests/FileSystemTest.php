@@ -14,6 +14,9 @@ class FileSystemTest extends TestCase
         \coroutine_clear();
         if (!defined('FIXTURE_PATH'))
             \define("FIXTURE_PATH", dirname(__FILE__) . "/libuv/fixtures/hello.data");
+        if (!defined('DIRECTORY_PATH'))
+            \define("DIRECTORY_PATH", dirname(__FILE__) . "/libuv/fixtures/example_directory");
+        @rmdir(DIRECTORY_PATH);
     }
 
     public function counterTask()
@@ -111,9 +114,14 @@ class FileSystemTest extends TestCase
         $this->assertTrue($bool);
         $this->assertGreaterThanOrEqual(15, $this->counterResult);
 
-        $bool = yield \file_touch("./tmpNew");
-        $this->assertFalse($bool);
+        $bool = yield \file_mkdir(DIRECTORY_PATH);
+        $this->assertTrue($bool);
         $this->assertGreaterThanOrEqual(16, $this->counterResult);
+
+        $bool = yield \file_rmdir(DIRECTORY_PATH);
+        $this->assertTrue($bool);
+        $this->assertGreaterThanOrEqual(17, $this->counterResult);
+
         yield \shutdown();
     }
 
@@ -146,9 +154,21 @@ class FileSystemTest extends TestCase
         $this->assertTrue($bool);
         $this->assertGreaterThanOrEqual(16, $this->counterResult);
 
+        $bool = yield \file_mkdir(DIRECTORY_PATH);
+        $this->assertTrue($bool);
+        $this->assertGreaterThanOrEqual(19, $this->counterResult);
+
+        $bool = yield \file_rmdir(DIRECTORY_PATH);
+        $this->assertTrue($bool);
+        $this->assertGreaterThanOrEqual(25, $this->counterResult);
+
         \file_operation(true);
         $bool = yield \file_touch("./tmpNew");
-        $this->assertFalse($bool);
+        $this->assertTrue($bool);
+        $result = yield FileSystem::utime("./tmpNew");
+        $this->assertTrue($result);
+        $bool = yield \file_unlink("./tmpNew");
+        $this->assertTrue($bool);
 
         yield \shutdown();
     }
