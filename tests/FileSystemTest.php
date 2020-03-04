@@ -184,7 +184,7 @@ class FileSystemTest extends TestCase
         $array = yield \file_scandir('.');
         $this->assertTrue(\is_array($array));
         $this->assertTrue(\count($array) > 1);
-        $this->assertGreaterThanOrEqual(3, $this->counterResult);
+        $this->assertGreaterThanOrEqual(2, $this->counterResult);
 
         yield \shutdown();
     }
