@@ -70,18 +70,17 @@ class ProcessTest extends TestCase
         $this->assertEquals($result, $childId);
         yield;
     }
-/*
+
     public function taskProcessDisplay()
     {
         $tid = yield \away($this->childTask());
-        $result = yield \add_process(function () {
+        $result = yield \spawn_await(function () {
             echo 'here!';
-        }, 300, true);
+        }, 10, true);
 
         $this->mainResult = $tid;
-        $this->assertNull($result);
         yield;
-    }*/
+    }
 
     public function taskProcessError()
     {
@@ -136,7 +135,7 @@ class ProcessTest extends TestCase
         $this->assertEquals($this->mainResult, $this->childId, (string) $parallel->status());
         $this->assertEquals($this->mainResult, $parallel->results()[0], (string) $parallel->status());
     }
-/*
+
     public function testProcessDisplay()
     {
         $this->mainResult = 0;
@@ -150,7 +149,7 @@ class ProcessTest extends TestCase
         $coroutine->createTask($this->taskProcessDisplay());
         $coroutine->run();
     }
-*/
+
     public function testProcessShutDownStopAll()
     {
         $this->mainResult = 0;

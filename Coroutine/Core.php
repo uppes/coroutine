@@ -509,7 +509,7 @@ if (!\function_exists('coroutine_run')) {
      */
     function file_size($path)
     {
-        return FileSystem::size($path);
+        return \file_stat($path, 'size');
     }
 
     /**
@@ -521,7 +521,7 @@ if (!\function_exists('coroutine_run')) {
      */
     function file_exist($path)
     {
-        $status = yield FileSystem::size($path);
+        $status = yield \file_size($path);
         return \is_int($status);
     }
 

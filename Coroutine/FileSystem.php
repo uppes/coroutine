@@ -513,6 +513,8 @@ final class FileSystem
     /**
      * Gives information about a file or symbolic link.
      *
+     * @codeCoverageIgnore
+     *
      * @param string $path
      */
     public static function lstat(string $path)
