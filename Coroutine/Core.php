@@ -361,6 +361,7 @@ if (!\function_exists('coroutine_run')) {
 
     /**
      * Sets access and modification time of file.
+     * - This function needs to be prefixed with `yield`
      *
      * @param mixed $path
      * @param mixed|null $time
@@ -375,6 +376,7 @@ if (!\function_exists('coroutine_run')) {
 
     /**
      * Renames a file or directory.
+     * - This function needs to be prefixed with `yield`
      *
      * @param string $from
      * @param string $to
@@ -388,6 +390,7 @@ if (!\function_exists('coroutine_run')) {
 
     /**
      * Deletes a file.
+     * - This function needs to be prefixed with `yield`
      *
      * @param string $path
      *
@@ -424,6 +427,7 @@ if (!\function_exists('coroutine_run')) {
 
     /**
      * Attempts to create the directory specified by pathname.
+     * - This function needs to be prefixed with `yield`
      *
      * @param string $path
      * @param integer $mode
@@ -438,6 +442,7 @@ if (!\function_exists('coroutine_run')) {
 
     /**
      * Removes directory.
+     * - This function needs to be prefixed with `yield`
      *
      * @param string $path
      *
@@ -465,15 +470,22 @@ if (!\function_exists('coroutine_run')) {
     }
 
     /**
-     * @codeCoverageIgnore
+     * List files and directories inside the specified path.
+     * - This function needs to be prefixed with `yield`
+     *
+     * @param string $path
+     * @param mixed $flagSortingOrder
+     *
+     * @return array|bool
      */
-    function file_scandir($path, $sortingOrder = null)
+    function file_scandir($path, $sortingOrder = 0)
     {
         return FileSystem::scandir($path, $sortingOrder);
     }
 
     /**
      * Gives information about a file.
+     * - This function needs to be prefixed with `yield`
      *
      * @param string $path
      * @param string $info
@@ -493,7 +505,7 @@ if (!\function_exists('coroutine_run')) {
      * 11	blksize	blocksize of filesystem IO
      * 12	blocks	number of 512-byte blocks allocated
      *````
-     * @return array
+     * @return array|bool
      */
     function file_stat($path, $info = null)
     {
@@ -502,10 +514,11 @@ if (!\function_exists('coroutine_run')) {
 
     /**
      * Return file size.
+     * - This function needs to be prefixed with `yield`
      *
      * @param string $path
      *
-     * @return int
+     * @return int|bool
      */
     function file_size($path)
     {
@@ -514,6 +527,7 @@ if (!\function_exists('coroutine_run')) {
 
     /**
      * Check if file exists.
+     * - This function needs to be prefixed with `yield`
      *
      * @param string $path
      *

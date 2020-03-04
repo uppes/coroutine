@@ -511,7 +511,7 @@ final class FileSystem
     }
 
     /**
-     * Gives information about a file or symbolic link.
+     * Gives information about a file symbolic link, returns same data as `stat()`
      *
      * @codeCoverageIgnore
      *
@@ -526,9 +526,14 @@ final class FileSystem
                     \uv_fs_lstat(
                         $coroutine->getUV(),
                         $path,
-                        function (int $result) use ($task, $coroutine) {
+                        function (int $status, $result) use ($task, $coroutine) {
                             $coroutine->fsRemove();
-                            $task->sendValue($result);
+                            if ($status <= 0) {
+                                $task->sendValue((bool) $status);
+                            } else {
+                                $task->sendValue($result);
+                            }
+
                             $coroutine->schedule($task);
                         }
                     );
@@ -570,7 +575,11 @@ final class FileSystem
                         $path,
                         function (bool $status, $result) use ($task, $coroutine, $info) {
                             $coroutine->fsRemove();
-                            $task->sendValue((isset($result[$info]) ? $result[$info] : $result));
+                            if ($status <= 0) {
+                                $task->sendValue((bool) $status);
+                            } else {
+                                $task->sendValue((isset($result[$info]) ? $result[$info] : $result));
+                            }
                             $coroutine->schedule($task);
                         }
                     );
@@ -651,13 +660,10 @@ final class FileSystem
     /**
      * List files and directories inside the specified path.
      *
-     * @codeCoverageIgnore
-     *
      * @param string $path
      * @param mixed $flagSortingOrder
-     * @param mixed $context
      */
-    public static function scandir(string $path, int $flagSortingOrder = null, $context = null)
+    public static function scandir(string $path, int $flagSortingOrder = 0)
     {
         if (FileSystem::useUvFs()) {
             return new Kernel(
@@ -666,12 +672,12 @@ final class FileSystem
                     \uv_fs_scandir(
                         $coroutine->getUV(),
                         $path,
-                        function ($result) use ($task, $coroutine) {
+                        $flagSortingOrder,
+                        function (int $status, $result) use ($task, $coroutine) {
                             $coroutine->fsRemove();
                             $task->sendValue($result);
                             $coroutine->schedule($task);
-                        },
-                        $flagSortingOrder
+                        }
                     );
                 }
             );

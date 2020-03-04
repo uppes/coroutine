@@ -177,4 +177,37 @@ class FileSystemTest extends TestCase
     {
         \coroutine_run($this->taskFileSystem());
     }
+
+    public function taskFileSystemScandir()
+    {
+        yield \away($this->counterTask());
+        $array = yield \file_scandir('.');
+        $this->assertTrue(\is_array($array));
+        $this->assertTrue(\count($array) > 1);
+        $this->assertGreaterThanOrEqual(3, $this->counterResult);
+
+        yield \shutdown();
+    }
+
+    public function testFileSystemScandir()
+    {
+        \coroutine_run($this->taskFileSystemScandir());
+    }
+
+    public function taskSystemScandir()
+    {
+        \file_operation();
+        yield \away($this->counterTask());
+        $array = yield \file_scandir('.');
+        $this->assertTrue(\is_array($array));
+        $this->assertTrue(\count($array) > 1);
+        $this->assertGreaterThanOrEqual(5, $this->counterResult);
+
+        yield \shutdown();
+    }
+
+    public function testSystemScandir()
+    {
+        \coroutine_run($this->taskSystemScandir());
+    }
 }
