@@ -108,7 +108,7 @@ class FileSystemTest extends TestCase
 
         $bool = yield \file_touch('./tmpNew');
         $this->assertTrue($bool);
-        $this->assertGreaterThanOrEqual(14, $this->counterResult);
+        $this->assertGreaterThanOrEqual(13, $this->counterResult);
 
         $bool = yield \file_unlink("./tmpNew");
         $this->assertTrue($bool);

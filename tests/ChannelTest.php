@@ -8,27 +8,47 @@ use PHPUnit\Framework\TestCase;
 
 class ChannelTest extends TestCase
 {
+    protected $counterResult = null;
+
 	protected function setUp(): void
     {
         \coroutine_clear();
     }
 
-    public function taskSender(Channel $channel)
+    public function counterTask()
     {
-        yield \sleep_for(2);
+        $counter = 0;
+        while (true) {
+            $counter++;
+            $this->counterResult = $counter;
+            yield;
+        }
+    }
+
+    public function taskSender(Channel $channel, int $tid)
+    {
         $this->assertTrue($channel instanceof Channel);
-        yield \sender($channel, 'true');
+        yield \sender($channel, 'true', $tid);
+    }
+
+    public function taskSenderAgain(Channel $channelAgain)
+    {
+        $message = yield \receiver($channelAgain);
+        $this->assertEquals('true', $message);
     }
 
     public function taskMake()
     {
+        yield \away($this->counterTask());
         $channel = yield \make();
-        $this->assertTrue($channel instanceof Channel);
-        yield \go($this->taskSender($channel));
-        $done = yield \receiver($channel);
-        $this->assertEquals('true', $done);
-        $false = yield \sender($channel, 'false', 1);
-        $this->assertEquals('false', $false);
+        $tid = yield \go($this->taskSenderAgain($channel));
+        yield \go($this->taskSender($channel, $tid));
+
+        $again = yield \sender($channel, 'again', 1);
+        $this->assertEquals('again', $again);
+        $this->assertEquals(5, $this->counterResult);
+
+        yield \shutdown();
     }
 
     public function testMake()
