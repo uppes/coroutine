@@ -134,7 +134,7 @@ final class Kernel
     }
 
     /**
-     * Set Channel by task id, similar to Google Go language
+     * Set Channel by caller's task, similar to Google Go language
      *
      * @param Channel $channel
      */
@@ -142,7 +142,7 @@ final class Kernel
     {
         return new Kernel(
             function (TaskInterface $task, CoroutineInterface $coroutine) use ($channel) {
-                $channel->receiver((int) $task->taskId());
+                $channel->receiver($task);
                 $coroutine->schedule($task);
             }
         );
@@ -150,9 +150,6 @@ final class Kernel
 
     /**
      * Wait to receive message, similar to Google Go language
-     *
-     * @param mixed $message
-     * @param int $taskId
      */
     public static function receive(Channel $channel)
     {
@@ -174,16 +171,19 @@ final class Kernel
     {
         return new Kernel(
             function (TaskInterface $task, CoroutineInterface $coroutine) use ($channel, $message, $taskId) {
+                $target = $channel->receiverTask();
+                $sender = $channel->senderTask();
+                $targetTask = $target instanceof TaskInterface
+                    ? $target
+                    : $sender;
                 $taskList = $coroutine->currentTask();
-                $newTask = $channel->senderTask();
-                if (isset($taskList[$taskId])) {
-                    $newTask = $taskList[$taskId];
-                } elseif (isset($taskList[$channel->receiverId()])) {
-                    $newTask = $taskList[$channel->receiverId()];
+                if (isset($taskList[$taskId]) && $taskId > 0) {
+                    $targetTask = $taskList[$taskId];
                 }
 
-                $newTask->sendValue($message);
-                $coroutine->schedule($newTask);
+                $targetTask->sendValue($message);
+                $coroutine->schedule($targetTask);
+                $coroutine->schedule($task);
             }
         );
     }

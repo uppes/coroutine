@@ -14,7 +14,7 @@ use Async\Coroutine\CoroutineInterface;
  */
 final class Channel
 {
-    protected $targetTaskId;
+    protected $targetTask;
     protected $buffer = null;
     protected $task = null;
     protected $coroutine = null;
@@ -35,14 +35,14 @@ final class Channel
         return new self($task, $coroutine);
     }
 
-    public function receiver(int $id)
+    public function receiver(TaskInterface $task)
     {
-        $this->targetTaskId = $id;
+        $this->targetTask = $task;
     }
 
-    public function receiverId(): int
+    public function receiverTask(): ?TaskInterface
     {
-        return $this->targetTaskId;
+        return $this->targetTask;
     }
 
     public function senderTask(): TaskInterface
@@ -50,9 +50,12 @@ final class Channel
         return $this->task;
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
     public function receive()
     {
         $received = yield;
-        yield Coroutine::value($received);
+        return yield Coroutine::value($received);
     }
 }

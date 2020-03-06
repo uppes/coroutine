@@ -15,6 +15,29 @@ class ChannelTest extends TestCase
         \coroutine_clear();
     }
 
+    public function taskSenderMain(Channel $channel)
+    {
+        yield \sleep_for(1);
+        $this->assertTrue($channel instanceof Channel);
+        yield \sender($channel, 'done');
+    }
+
+    public function taskMakeMain()
+    {
+        $channel = yield \make();
+        yield \go($this->taskSenderMain($channel));
+
+        $message = yield \receiver($channel);
+        $this->assertEquals('done', $message);
+
+        yield \shutdown();
+    }
+
+    public function testMakeMain()
+    {
+        \coroutine_run($this->taskMakeMain());
+    }
+
     public function counterTask()
     {
         $counter = 0;
@@ -29,6 +52,8 @@ class ChannelTest extends TestCase
     {
         $this->assertTrue($channel instanceof Channel);
         yield \sender($channel, 'true', $tid);
+        yield;
+        yield \sender($channel, 'try again');
     }
 
     public function taskSenderAgain(Channel $channelAgain)
@@ -44,9 +69,16 @@ class ChannelTest extends TestCase
         $tid = yield \go($this->taskSenderAgain($channel));
         yield \go($this->taskSender($channel, $tid));
 
+        $message = yield \receiver($channel);
+        $this->assertEquals('try again', $message);
+
         $again = yield \sender($channel, 'again', 1);
         $this->assertEquals('again', $again);
-        $this->assertEquals(5, $this->counterResult);
+        $this->assertEquals(8, $this->counterResult);
+
+        $message = yield \receiver($channel);
+        $this->assertNull($message);
+        $this->assertEquals(9, $this->counterResult);
 
         yield \shutdown();
     }
