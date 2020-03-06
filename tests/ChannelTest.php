@@ -2,7 +2,6 @@
 
 namespace Async\Tests;
 
-use Async\Coroutine\Kernel;
 use Async\Coroutine\Channel;
 use PHPUnit\Framework\TestCase;
 
@@ -52,7 +51,6 @@ class ChannelTest extends TestCase
     {
         $this->assertTrue($channel instanceof Channel);
         yield \sender($channel, 'true', $tid);
-        yield;
         yield \sender($channel, 'try again');
     }
 

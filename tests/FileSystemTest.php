@@ -3,6 +3,7 @@
 namespace Async\Tests;
 
 use Async\Coroutine\FileSystem;
+use Async\Coroutine\Exceptions\Panic;
 use PHPUnit\Framework\TestCase;
 
 class FileSystemTest extends TestCase
@@ -32,16 +33,16 @@ class FileSystemTest extends TestCase
     public function taskOpenRead()
     {
         yield \away($this->counterTask());
-        $fd = yield FileSystem::open(FIXTURE_PATH, 'r');
+        $fd = yield \file_open(FIXTURE_PATH, 'r');
         $this->assertEquals('resource', \is_type($fd));
 
-        $data = yield FileSystem::read($fd, 0, 32);
+        $data = yield \file_read($fd, 0, 32);
         $this->assertEquals('string', \is_type($data));
 
         $this->assertEquals('Hello', \rtrim($data));
         $this->assertGreaterThanOrEqual(3, $this->counterResult);
 
-        $bool = yield FileSystem::close($fd);
+        $bool = yield \file_close($fd);
         $this->assertTrue($bool);
         $this->assertGreaterThanOrEqual(4, $this->counterResult);
         yield \shutdown();
@@ -55,20 +56,20 @@ class FileSystemTest extends TestCase
     public function taskOpenReadOffsetFstat()
     {
         yield \away($this->counterTask());
-        $fd = yield FileSystem::open(FIXTURE_PATH, 'r');
+        $fd = yield \file_open(FIXTURE_PATH, 'r');
         $this->assertEquals('resource', \is_type($fd));
 
         $size = yield FileSystem::fstat($fd, 'size');
         $this->assertEquals('int', \is_type($size));
         $this->assertGreaterThanOrEqual(3, $this->counterResult);
 
-        $data = yield FileSystem::read($fd, 1, $size);
+        $data = yield \file_read($fd, 1, $size);
         $this->assertEquals('string', \is_type($data));
 
         $this->assertEquals('ello', \rtrim($data));
         $this->assertGreaterThanOrEqual(4, $this->counterResult);
 
-        $bool = yield FileSystem::close($fd);
+        $bool = yield \file_close($fd);
         $this->assertTrue($bool);
         $this->assertGreaterThanOrEqual(5, $this->counterResult);
         yield \shutdown();
@@ -82,10 +83,10 @@ class FileSystemTest extends TestCase
     public function taskWrite()
     {
         yield \away($this->counterTask());
-        $fd = yield FileSystem::open("./tmp", 'a', \UV::S_IRWXU | \UV::S_IRUSR);
+        $fd = yield \file_open("./tmp", 'a', \UV::S_IRWXU | \UV::S_IRUSR);
         $this->assertEquals('resource', \is_type($fd));
 
-        $data = yield FileSystem::write($fd, "hello", 0);
+        $data = yield \file_write($fd, "hello", 0);
         $this->assertEquals('int', \is_type($data));
 
         $this->assertEquals(5, $data);
@@ -95,7 +96,7 @@ class FileSystemTest extends TestCase
         $this->assertEquals('resource', \is_type($fd));
         $this->assertGreaterThanOrEqual(8, $this->counterResult);
 
-        $bool = yield FileSystem::close($fd);
+        $bool = yield \file_close($fd);
         $this->assertTrue($bool);
         $this->assertGreaterThanOrEqual(9, $this->counterResult);
 
@@ -209,5 +210,18 @@ class FileSystemTest extends TestCase
     public function testSystemScandir()
     {
         \coroutine_run($this->taskSystemScandir());
+    }
+
+    public function taskSystemError()
+    {
+        $this->expectException(Panic::class);
+        yield \spawn_system('/');
+
+        yield \shutdown();
+    }
+
+    public function testSystemError()
+    {
+        \coroutine_run($this->taskSystemError());
     }
 }

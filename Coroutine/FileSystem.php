@@ -66,7 +66,7 @@ final class FileSystem
         self::$useUV = false;
     }
 
-    public static function spawnStat($path, $info = null)
+    protected static function spawnStat($path, $info = null)
     {
         $result = yield \spawn_system('stat', $path);
 
@@ -591,16 +591,6 @@ final class FileSystem
     }
 
     /**
-     * Return file size.
-     *
-     * @param string $path
-     */
-    public static function size(string $path)
-    {
-        return self::stat($path, 'size');
-    }
-
-    /**
      * Gets information about a file using an open file pointer.
      *
      * @param resource $fd
@@ -846,7 +836,7 @@ final class FileSystem
                             $mode,
                             function ($stream) use ($task, $coroutine) {
                                 $coroutine->fsRemove();
-                                $task->sendValue($stream);
+                                $task->sendValue((\is_resource($stream) ? $stream : false));
                                 $coroutine->schedule($task);
                             }
                         );
@@ -856,7 +846,14 @@ final class FileSystem
         }
     }
 
-    public static function read($fd, int $offset, int $length)
+    /**
+     * Read file pointed to by the resource file descriptor
+     *
+     * @param resource $fd
+     * @param int $offset
+     * @param int $length
+     */
+    public static function read($fd, int $offset = 0, int $length = 8192)
     {
         if (FileSystem::useUvFs()) {
             return new Kernel(
@@ -868,21 +865,25 @@ final class FileSystem
                         $offset,
                         $length,
                         function ($fd, $status, $data) use ($task, $coroutine) {
-                            $coroutine->fsRemove();
                             // @codeCoverageIgnoreStart
                             if ($status <= 0) {
                                 if ($status < 0) {
-                                    $task->setException(new \Exception("read error"));
+                                    \uv_fs_close($coroutine->getUV(), $fd, function () use ($task, $coroutine) {
+                                        $coroutine->fsRemove();
+                                        $task->setException(new \Exception("read error"));
+                                        $coroutine->schedule($task);
+                                    });
+                                } else {
+                                    $coroutine->fsRemove();
+                                    $task->sendValue('');
+                                    $coroutine->schedule($task);
                                 }
-
-                                \uv_fs_close($coroutine->getUV(), $fd, function () {
-                                });
                                 // @codeCoverageIgnoreEnd
                             } else {
+                                $coroutine->fsRemove();
                                 $task->sendValue($data);
+                                $coroutine->schedule($task);
                             }
-
-                            $coroutine->schedule($task);
                         }
                     );
                 }
@@ -890,20 +891,27 @@ final class FileSystem
         }
     }
 
-    public static function write($fd, $buffer, $position = -1)
+    /**
+     * Write to file pointed to by the resource file descriptor
+     *
+     * @param resource $fd
+     * @param string $buffer
+     * @param int $offset
+     */
+    public static function write($fd, string $buffer, int $offset = -1)
     {
         if (FileSystem::useUvFs()) {
             return new Kernel(
-                function (TaskInterface $task, CoroutineInterface $coroutine) use ($fd, $buffer, $position) {
+                function (TaskInterface $task, CoroutineInterface $coroutine) use ($fd, $buffer, $offset) {
                     $coroutine->fsAdd();
                     \uv_fs_write(
                         $coroutine->getUV(),
                         $fd,
                         $buffer,
-                        $position,
+                        $offset,
                         function ($fd, int $result) use ($task, $coroutine) {
                             $coroutine->fsRemove();
-                            $task->sendValue($result);
+                            $task->sendValue((\is_resource($fd) ? $result : false));
                             $coroutine->schedule($task);
                         }
                     );
@@ -912,6 +920,11 @@ final class FileSystem
         }
     }
 
+    /**
+     * Close file pointed to by the resource file descriptor.
+     *
+     * @param resource $fd
+     */
     public static function close($fd)
     {
         if (FileSystem::useUvFs()) {

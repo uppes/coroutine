@@ -342,7 +342,7 @@ if (!\function_exists('coroutine_run')) {
      * @param mixed ...$parameters
      *
      * @return  mixed
-     * @throws Exception if not a callable.
+     * @throws Panic if not a callable.
      */
     function spawn_system(string $command, ...$parameters)
     {
@@ -350,9 +350,11 @@ if (!\function_exists('coroutine_run')) {
             \panic('Not a valid PHP callable command!');
         }
 
+        // @codeCoverageIgnoreStart
         $system = function () use ($command, $parameters) {
             return $command(...$parameters);
         };
+        // @codeCoverageIgnoreEnd
 
         return \awaitable_process(function () use ($system) {
             return Kernel::addProcess($system, 3);
@@ -513,6 +515,83 @@ if (!\function_exists('coroutine_run')) {
     }
 
     /**
+     * Open specified `$path` file with access `$flag`.
+     * - This function needs to be prefixed with `yield`
+     *
+     * @param string $path
+     * @param string $flag either 'r', 'r+', 'w', 'w+', 'a', 'a+', 'x', 'x+':
+     * - "`r`"	`read`: Open file for input operations. The file must exist.
+     * - "`w`"	`write`: Create an empty file for output operations.
+     * If a file with the same name already exists, its contents are discarded and the
+     * file is treated as a new empty file.
+     * - "`a`"	`append`: Open file for output at the end of a file.
+     * Output operations always write data at the end of the file, expanding it.
+     * Repositioning operations (fseek, fsetpos, rewind) are ignored.
+     * The file is created if it does not exist.
+     * - "`r+`" `read/update`: Open a file for update (both for input and output). The file must exist.
+     * - "`w+`" `write/update`: Create an empty file and open it for update (both for input and output).
+     * If a file with the same name already exists its contents are discarded and the file is
+     * treated as a new empty file.
+     * - "`a+`" `append/update`: Open a file for update (both for input and output) with all output
+     * operations writing data at the end of the file. Repositioning operations (fseek, fsetpos,
+     * rewind) affects the next input operations, but output operations move the position back
+     * to the end of file. The file is created if it does not exist.
+     * - "`x`" `Write only`: Creates a new file. Returns `FALSE` and an error if file already exists.
+     * - "`x+`" `Read/Write`: Creates a new file. Returns `FALSE` and an error if file already exists
+     * @param int $mode
+     *
+     * @return resource|bool
+     */
+    function file_open(string $path, string $flag, int $mode = 0)
+    {
+        return FileSystem::open($path, $flag, $mode);
+    }
+
+    /**
+     * Read file pointed to by the `resource` file descriptor.
+     * - This function needs to be prefixed with `yield`
+     *
+     * @param resource $fd
+     * @param int $offset
+     * @param int $length
+     *
+     * @return string
+     * @throws Exception
+     */
+    function file_read($fd, int $offset = 0, int $length = 8192)
+    {
+        return FileSystem::read($fd, $offset, $length);
+    }
+
+    /**
+     * Write to file pointed to by the `resource` file descriptor.
+     * - This function needs to be prefixed with `yield`
+     *
+     * @param resource $fd
+     * @param string $buffer
+     * @param int $offset
+     *
+     * @return int|bool
+     */
+    function file_write($fd, string $buffer, int $offset = -1)
+    {
+        return FileSystem::write($fd, $buffer, $offset);
+    }
+
+    /**
+     * Close file pointed to by the `resource` file descriptor.
+     * - This function needs to be prefixed with `yield`
+     *
+     * @param resource $fd
+     *
+     * @return bool
+     */
+    function file_close($fd)
+    {
+        return FileSystem::close($fd);
+    }
+
+    /**
      * Return file size.
      * - This function needs to be prefixed with `yield`
      *
@@ -645,7 +724,9 @@ if (!\function_exists('coroutine_run')) {
      */
     function sender(Channel $channel, $message = null, int $taskId = 0)
     {
-        return Kernel::sender($channel, $message, $taskId);
+        $noResult = yield Kernel::sender($channel, $message, $taskId);
+        yield;
+        return $noResult;
     }
 
     /**
