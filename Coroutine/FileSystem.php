@@ -955,4 +955,67 @@ final class FileSystem
             );
         }
     }
+
+    /**
+     * Reads entire file into a string.
+     *
+     * @codeCoverageIgnore
+     *
+     * @param string $filename
+     * @param int $offset
+     * @param int $max
+     *
+     * @return void
+     */
+    public static function get(string $filename, int $offset = 0, $max = null)
+    {
+        if (FileSystem::useUvFs()) {
+            $fd = yield self::open($filename, 'r');
+            if (\is_resource($fd)) {
+                if (empty($max)) {
+                    $max = yield self::fstat($fd, 'size');
+                }
+
+                $contents = yield self::read($fd, 0, $max);
+                yield self::close($fd);
+                return $contents;
+            }
+
+            return false;
+        }
+
+        return \spawn_system('file_get_contents', $filename, false, null, $offset, $max);
+    }
+
+    /**
+     * Write a string to a file.
+     *
+     * @codeCoverageIgnore
+     *
+     * @param string $filename
+     * @param mixed $contents
+     * @param int $flags
+     *
+     * @return void
+     */
+    public static function put(string $filename, $contents, $flags = 0)
+    {
+        if (FileSystem::useUvFs()) {
+            $fd = yield self::open($filename, 'w');
+            if (\is_resource($fd)) {
+                if (empty($max)) {
+                    $max = yield self::fstat($fd, 'size');
+                }
+
+                $written = yield self::write($fd, $contents);
+                yield self::fdatasync($fd);
+                yield self::close($fd);
+                return $written;
+            }
+
+            return false;
+        }
+
+        return \spawn_system('file_put_contents', $filename, $contents, $flags);
+    }
 }
