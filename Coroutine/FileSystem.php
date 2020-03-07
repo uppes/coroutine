@@ -1003,10 +1003,6 @@ final class FileSystem
         if (FileSystem::useUvFs()) {
             $fd = yield self::open($filename, 'w');
             if (\is_resource($fd)) {
-                if (empty($max)) {
-                    $max = yield self::fstat($fd, 'size');
-                }
-
                 $written = yield self::write($fd, $contents);
                 yield self::fdatasync($fd);
                 yield self::close($fd);
