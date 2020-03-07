@@ -59,7 +59,7 @@ class FileSystemTest extends TestCase
         $fd = yield \file_open(FIXTURE_PATH, 'r');
         $this->assertEquals('resource', \is_type($fd));
 
-        $size = yield FileSystem::fstat($fd, 'size');
+        $size = yield \file_fstat($fd, 'size');
         $this->assertEquals('int', \is_type($size));
         $this->assertGreaterThanOrEqual(3, $this->counterResult);
 
@@ -92,7 +92,7 @@ class FileSystemTest extends TestCase
         $this->assertEquals(5, $data);
         $this->assertGreaterThanOrEqual(3, $this->counterResult);
 
-        $fd = yield FileSystem::fdatasync($fd);
+        $fd = yield \file_fdatasync($fd);
         $this->assertEquals('resource', \is_type($fd));
         $this->assertGreaterThanOrEqual(8, $this->counterResult);
 

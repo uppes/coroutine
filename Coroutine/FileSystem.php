@@ -59,9 +59,9 @@ final class FileSystem
     }
 
     /**
-     * Turn off UV for file operations, use system `child/subprocess`.
+     * Turn off UV for file operations, will use system `child/subprocess`.
      */
-    public static function Off()
+    public static function off()
     {
         self::$useUV = false;
     }
@@ -200,7 +200,7 @@ final class FileSystem
                         $to,
                         function (int $result) use ($task, $coroutine) {
                             $coroutine->fsRemove();
-                            $task->sendValue($result);
+                            $task->sendValue((bool) $result);
                             $coroutine->schedule($task);
                         }
                     );
@@ -233,7 +233,7 @@ final class FileSystem
                         $flag,
                         function (int $result) use ($task, $coroutine) {
                             $coroutine->fsRemove();
-                            $task->sendValue($result);
+                            $task->sendValue((bool) $result);
                             $coroutine->schedule($task);
                         }
                     );
@@ -321,7 +321,7 @@ final class FileSystem
                         $mode,
                         function (int $result) use ($task, $coroutine) {
                             $coroutine->fsRemove();
-                            $task->sendValue($result);
+                            $task->sendValue((bool) $result);
                             $coroutine->schedule($task);
                         }
                     );
@@ -354,7 +354,7 @@ final class FileSystem
                         $gid,
                         function (int $result) use ($task, $coroutine) {
                             $coroutine->fsRemove();
-                            $task->sendValue($result);
+                            $task->sendValue((bool) $result);
                             $coroutine->schedule($task);
                         }
                     );
@@ -387,7 +387,7 @@ final class FileSystem
                         $gid,
                         function (int $result) use ($task, $coroutine) {
                             $coroutine->fsRemove();
-                            $task->sendValue($result);
+                            $task->sendValue((bool) $result);
                             $coroutine->schedule($task);
                         }
                     );
@@ -416,7 +416,7 @@ final class FileSystem
                         $mode,
                         function (int $result) use ($task, $coroutine) {
                             $coroutine->fsRemove();
-                            $task->sendValue($result);
+                            $task->sendValue((bool) $result);
                             $coroutine->schedule($task);
                         }
                     );
@@ -447,7 +447,7 @@ final class FileSystem
                         $offset,
                         function ($fd, int $result) use ($task, $coroutine) {
                             $coroutine->fsRemove();
-                            $task->sendValue($result);
+                            $task->sendValue((\is_resource($fd) ? $result : false));
                             $coroutine->schedule($task);
                         }
                     );
@@ -474,7 +474,7 @@ final class FileSystem
                         $fd,
                         function ($fd, int $result) use ($task, $coroutine) {
                             $coroutine->fsRemove();
-                            $task->sendValue($result);
+                            $task->sendValue((\is_resource($fd) ? $result : false));
                             $coroutine->schedule($task);
                         }
                     );
@@ -485,8 +485,6 @@ final class FileSystem
 
     /**
      * Synchronize a file's in-core state with storage device by file descriptor.
-     *
-     * @codeCoverageIgnore
      *
      * @param resource $fd
      */
@@ -501,7 +499,7 @@ final class FileSystem
                         $fd,
                         function ($fd) use ($task, $coroutine) {
                             $coroutine->fsRemove();
-                            $task->sendValue($fd);
+                            $task->sendValue((\is_resource($fd) ? $fd : false));
                             $coroutine->schedule($task);
                         }
                     );
@@ -528,12 +526,7 @@ final class FileSystem
                         $path,
                         function (int $status, $result) use ($task, $coroutine) {
                             $coroutine->fsRemove();
-                            if ($status <= 0) {
-                                $task->sendValue((bool) $status);
-                            } else {
-                                $task->sendValue($result);
-                            }
-
+                            $task->sendValue(($status <= 0 ? (bool) $status: $result));
                             $coroutine->schedule($task);
                         }
                     );
@@ -575,11 +568,14 @@ final class FileSystem
                         $path,
                         function (bool $status, $result) use ($task, $coroutine, $info) {
                             $coroutine->fsRemove();
-                            if ($status <= 0) {
-                                $task->sendValue((bool) $status);
-                            } else {
-                                $task->sendValue((isset($result[$info]) ? $result[$info] : $result));
-                            }
+                            $task->sendValue(
+                                ($status <= 0
+                                    ? (bool) $status
+                                    : (isset($result[$info])
+                                        ? $result[$info]
+                                        : $result))
+                            );
+
                             $coroutine->schedule($task);
                         }
                     );
@@ -594,6 +590,23 @@ final class FileSystem
      * Gets information about a file using an open file pointer.
      *
      * @param resource $fd
+     * @param string $info
+     * - Numeric    `$info` Description
+     *````
+     * 0    dev     device number
+     * 1	ino	inode number
+     * 2	mode	inode protection mode
+     * 3	nlink	number of links
+     * 4	uid	userid of owner
+     * 5	gid	groupid of owner
+     * 6	rdev	device type, if inode device
+     * 7	size	size in bytes
+     * 8	atime	time of last access (Unix timestamp)
+     * 9	mtime	time of last modification (Unix timestamp)
+     * 10	ctime	time of last inode change (Unix timestamp)
+     * 11	blksize	blocksize of filesystem IO **
+     * 12	blocks	number of 512-byte blocks allocated **
+     *````
      */
     public static function fstat($fd, ?string $info = null)
     {
@@ -606,7 +619,14 @@ final class FileSystem
                         $fd,
                         function ($fd, $result) use ($task, $coroutine, $info) {
                             $coroutine->fsRemove();
-                            $task->sendValue((isset($result[$info]) ? $result[$info] : $result));
+                            $task->sendValue(
+                                (!\is_resource($fd)
+                                    ? (bool) $fd
+                                    : (isset($result[$info])
+                                        ? $result[$info]
+                                        : $result))
+                            );
+
                             $coroutine->schedule($task);
                         }
                     );
@@ -627,24 +647,10 @@ final class FileSystem
     public static function readDir(string $path, int $flag = 0)
     {
         if (FileSystem::useUvFs()) {
-            return new Kernel(
-                function (TaskInterface $task, CoroutineInterface $coroutine) use ($path, $flag) {
-                    $coroutine->fsAdd();
-                    \uv_fs_readdir(
-                        $coroutine->getUV(),
-                        $path,
-                        $flag,
-                        function ($result) use ($task, $coroutine) {
-                            $coroutine->fsRemove();
-                            $task->sendValue($result);
-                            $coroutine->schedule($task);
-                        }
-                    );
-                }
-            );
+            return self::scandir($path, $flag);
         }
 
-        return \spawn_system('readlink', $path);
+        return \spawn_system('readdir', $path);
     }
 
     /**
@@ -665,7 +671,7 @@ final class FileSystem
                         $flagSortingOrder,
                         function (int $status, $result) use ($task, $coroutine) {
                             $coroutine->fsRemove();
-                            $task->sendValue($result);
+                            $task->sendValue(($status <= 0 ? (bool) $status : $result));
                             $coroutine->schedule($task);
                         }
                     );
@@ -729,7 +735,7 @@ final class FileSystem
                         $atime,
                         function ($fd, int $result) use ($task, $coroutine) {
                             $coroutine->fsRemove();
-                            $task->sendValue($result);
+                            $task->sendValue((\is_resource($fd) ? $result: (bool) $fd));
                             $coroutine->schedule($task);
                         }
                     );
@@ -756,7 +762,7 @@ final class FileSystem
                         $path,
                         function ($fd, int $result) use ($task, $coroutine) {
                             $coroutine->fsRemove();
-                            $task->sendValue($result);
+                            $task->sendValue((!\is_resource($fd) ? (bool) $fd : $result));
                             $coroutine->schedule($task);
                         }
                     );
@@ -789,7 +795,7 @@ final class FileSystem
                         $length,
                         function ($out_fd, $result) use ($task, $coroutine) {
                             $coroutine->fsRemove();
-                            $task->sendValue($result);
+                            $task->sendValue((!\is_resource($out_fd) ? (bool) $out_fd : $result));
                             $coroutine->schedule($task);
                         }
                     );
@@ -865,19 +871,14 @@ final class FileSystem
                         $offset,
                         $length,
                         function ($fd, $status, $data) use ($task, $coroutine) {
-                            // @codeCoverageIgnoreStart
-                            if ($status <= 0) {
-                                if ($status < 0) {
-                                    \uv_fs_close($coroutine->getUV(), $fd, function () use ($task, $coroutine) {
-                                        $coroutine->fsRemove();
-                                        $task->setException(new \Exception("read error"));
-                                        $coroutine->schedule($task);
-                                    });
-                                } else {
+                            $data = $status == 0 ? '' : $data;
+                            if ($status < 0) {
+                                // @codeCoverageIgnoreStart
+                                \uv_fs_close($coroutine->getUV(), $fd, function () use ($task, $coroutine) {
                                     $coroutine->fsRemove();
-                                    $task->sendValue('');
+                                    $task->setException(new \Exception("read error"));
                                     $coroutine->schedule($task);
-                                }
+                                });
                                 // @codeCoverageIgnoreEnd
                             } else {
                                 $coroutine->fsRemove();
@@ -910,9 +911,19 @@ final class FileSystem
                         $buffer,
                         $offset,
                         function ($fd, int $result) use ($task, $coroutine) {
-                            $coroutine->fsRemove();
-                            $task->sendValue((\is_resource($fd) ? $result : false));
-                            $coroutine->schedule($task);
+                            if ($result < 0) {
+                                // @codeCoverageIgnoreStart
+                                \uv_fs_close($coroutine->getUV(), $fd, function () use ($task, $coroutine) {
+                                    $coroutine->fsRemove();
+                                    $task->setException(new \Exception("write error"));
+                                    $coroutine->schedule($task);
+                                });
+                                // @codeCoverageIgnoreEnd
+                            } else {
+                                $coroutine->fsRemove();
+                                $task->sendValue($result);
+                                $coroutine->schedule($task);
+                            }
                         }
                     );
                 }

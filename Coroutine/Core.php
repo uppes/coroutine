@@ -515,6 +515,20 @@ if (!\function_exists('coroutine_run')) {
     }
 
     /**
+     * Gets information about a file using an open file pointer.
+     * - This function needs to be prefixed with `yield`
+     *
+     * @param resource $fd
+     * @param string $info
+     *
+     * @return array|bool
+     */
+    function file_fstat($fd, $info = null)
+    {
+        return FileSystem::fstat($fd, $info);
+    }
+
+    /**
      * Open specified `$path` file with access `$flag`.
      * - This function needs to be prefixed with `yield`
      *
@@ -589,6 +603,19 @@ if (!\function_exists('coroutine_run')) {
     function file_close($fd)
     {
         return FileSystem::close($fd);
+    }
+
+    /**
+     * Synchronize a file's in-core state with storage device by file descriptor.
+     * - This function needs to be prefixed with `yield`
+     *
+     * @param resource $fd
+     *
+     * @return resource|bool
+     */
+    function file_fdatasync($fd)
+    {
+        return FileSystem::fdatasync($fd);
     }
 
     /**
