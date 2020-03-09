@@ -224,4 +224,76 @@ class FileSystemTest extends TestCase
     {
         \coroutine_run($this->taskSystemError());
     }
+
+    public function taskFileGet()
+    {
+        $contents = yield \file_get('.' . \DS . 'list.txt');
+        $this->assertTrue(\is_type($contents, 'bool'));
+        $contents = yield \file_get(__DIR__ . \DS . 'list.txt');
+        $this->assertEquals('string', \is_type($contents));
+    }
+
+    public function testFileGet()
+    {
+        \coroutine_run($this->taskFileGet());
+    }
+
+
+    public function taskFileGetII()
+    {
+        $contents = yield \file_get("https://google.com/");
+        $this->assertEquals('string', \is_type($contents));
+        $this->assertGreaterThanOrEqual(500, \strlen($contents));
+    }
+
+    public function testFileGetII()
+    {
+        \coroutine_run($this->taskFileGetII());
+    }
+
+    public function getStatuses($websites)
+    {
+        $statuses = ['200' => 0, '400' => 0];
+        foreach ($websites as $website) {
+            $tasks[] = yield \away($this->getWebsiteStatus($website));
+        }
+
+        $taskStatus = yield \gather_wait($tasks, 2);
+        $this->assertEquals(2, \count($taskStatus));
+        \array_map(function ($status) use (&$statuses) {
+            if ($status == 200)
+                $statuses[$status]++;
+            elseif ($status == 400)
+                $statuses[$status]++;
+        }, $taskStatus);
+        return \json_encode($statuses);
+    }
+
+    public function getWebsiteStatus($url)
+    {
+        $fd = yield \file_uri($url);
+        $this->assertTrue(\is_resource($fd));
+        $status = \file_meta($fd, 'status');
+        $this->assertNotNull($status);
+        $this->assertEquals(200, $status);
+        $bool = yield \file_close($fd);
+        $this->assertTrue($bool);
+        return yield $status;
+    }
+
+    public function taskFileLines()
+    {
+        $websites = yield \file_file(__DIR__ . \DS . 'list.txt');
+        $this->assertCount(5, $websites);
+        if ($websites !== false) {
+            $data = yield from $this->getStatuses($websites);
+            $this->expectOutputString('{"200":2,"400":0}');
+            print $data;
+        }
+    }
+
+    public function testFileOpenLineUri()
+    {
+        \coroutine_run($this->taskFileLines());
+    }
 }

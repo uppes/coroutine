@@ -646,6 +646,115 @@ if (!\function_exists('coroutine_run')) {
     }
 
     /**
+     * Open url/uri.
+     * - This function needs to be prefixed with `yield`.
+     *
+     * @param string $url
+     *
+     * @return resource
+     */
+    function file_uri(string $url)
+    {
+        return FileSystem::open($url, 'r');
+    }
+
+    /**
+     * Get file contents from open file handle, reading by size chucks, with timeout
+     * - This function needs to be prefixed with `yield`.
+     *
+     * @codeCoverageIgnore
+     *
+     * @param resource $fd
+     * @param int $size
+     * @param float $timeout_seconds
+     * @return mixed
+     */
+    function file_contents($fd, int $size = -1, float $timeout_seconds = 0.5)
+    {
+        return FileSystem::contents($fd, $size, $timeout_seconds);
+    }
+
+    /**
+     * Reads entire file into a string.
+     * - This function needs to be prefixed with `yield`.
+     *
+     * @param string $filename
+     * @param int $offset
+     * @param int $max
+     *
+     * @return string|bool
+     */
+    function file_get(string $filename)
+    {
+        $fd = yield \file_open($filename, 'r');
+        if (\is_resource($fd)) {
+            if (\file_meta($fd, 'wrapper_type') === 'http') {
+                $max = -1;
+            } else {
+                $max = yield \file_stat($filename, 'size');
+            }
+
+            $contents = yield \file_read($fd, 0, (empty($max) ? 8192 * 2 : $max));
+            yield \file_close($fd);
+            return $contents;
+        }
+
+        return false;
+    }
+
+    /**
+     * Write a string to a file.
+     *
+     * @codeCoverageIgnore
+     *
+     * @param string $filename
+     * @param mixed $contents
+     * @param int $flags
+     *
+     * @return int|bool
+     */
+    function file_put(string $filename, $contents, $flags = 0)
+    {
+        $fd = yield \file_open($filename, 'w');
+        if (\is_resource($fd)) {
+            $written = yield \file_write($fd, $contents);
+            yield \file_fdatasync($fd);
+            yield \file_close($fd);
+            return $written;
+        }
+
+        return false;
+    }
+
+    /**
+     * Reads entire file into an array.
+     * - This function needs to be prefixed with `yield`.
+     *
+     * @param string $path
+     *
+     * @return array
+     */
+    function file_file($path)
+    {
+        return \spawn_system('file', $path, \FILE_IGNORE_NEW_LINES | \FILE_SKIP_EMPTY_LINES);
+    }
+
+    /**
+     * Retrieves header/meta data from streams/file pointers.
+     *
+     * @param resource $fd
+     * @param null|string $info
+     * - Can be: `timed_out`, `blocked`, `eof`, `unread_bytes`, `stream_type`, `wrapper_type`,
+     * `mode`, `seekable`, `uri`, `wrapper_data`
+     * - And `status` for HTTP Status Code from `wrapper_data`
+     * @return array|string|int|bool
+     */
+    function file_meta($fd, ?string $info = null)
+    {
+        return FileSystem::meta($fd, $info);
+    }
+
+    /**
      * Turn `on/off` UV for file operations.
      *
      * @param bool $useUV

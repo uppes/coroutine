@@ -22,15 +22,15 @@ final class FileSystem
      */
     protected static $fileFlags = array(
         'r' => \UV::O_RDONLY,
-        'w' => \UV::O_WRONLY | \UV::O_CREAT,
+        'w' => \UV::O_WRONLY | \UV::O_CREAT | \UV::O_TRUNC,
         'a' => \UV::O_WRONLY | \UV::O_APPEND | \UV::O_CREAT,
-        'r+' => \UV::O_RDWR,
-        'w+' => \UV::O_RDWR | \UV::O_CREAT,
-        'a+' => \UV::O_RDWR | \UV::O_CREAT | \UV::O_APPEND,
         'x' => \UV::O_WRONLY | \UV::O_CREAT | \UV::O_EXCL,
+        'c' => \UV::O_WRONLY | \UV::O_CREAT,
+        'r+' => \UV::O_RDWR,
+        'w+' => \UV::O_RDWR | \UV::O_CREAT | \UV::O_TRUNC,
+        'a+' => \UV::O_RDWR | \UV::O_CREAT | \UV::O_APPEND,
         'x+' => \UV::O_RDWR | \UV::O_CREAT | \UV::O_EXCL,
-        'c' => \UV::O_WRONLY | \UV::O_CREAT | \UV::O_TRUNC,
-        'c+' => \UV::O_RDWR | \UV::O_CREAT | \UV::O_TRUNC,
+        'c+' => \UV::O_RDWR | \UV::O_CREAT,
     );
 
     /**
@@ -83,7 +83,7 @@ final class FileSystem
      */
     public static function rename(string $from, string $to)
     {
-        if (FileSystem::useUvFs()) {
+        if (self::useUvFs()) {
             return new Kernel(
                 function (TaskInterface $task, CoroutineInterface $coroutine) use ($from, $to) {
                     $coroutine->fsAdd();
@@ -109,7 +109,7 @@ final class FileSystem
      */
     public static function touch($path, $time = null, $atime = null)
     {
-        if (FileSystem::useUvFs()) {
+        if (self::useUvFs()) {
             return new Kernel(
                 function (TaskInterface $task, CoroutineInterface $coroutine) use ($path, $time, $atime) {
                     $time = empty($time) ? \uv_now() : $time;
@@ -160,7 +160,7 @@ final class FileSystem
      */
     public static function unlink(string $path)
     {
-        if (FileSystem::useUvFs()) {
+        if (self::useUvFs()) {
             return new Kernel(
                 function (TaskInterface $task, CoroutineInterface $coroutine) use ($path) {
                     $coroutine->fsAdd();
@@ -190,7 +190,7 @@ final class FileSystem
      */
     public static function link(string $from, string $to)
     {
-        if (FileSystem::useUvFs()) {
+        if (self::useUvFs()) {
             return new Kernel(
                 function (TaskInterface $task, CoroutineInterface $coroutine) use ($from, $to) {
                     $coroutine->fsAdd();
@@ -222,7 +222,7 @@ final class FileSystem
      */
     public static function symlink(string $from, string $to, int $flag)
     {
-        if (FileSystem::useUvFs()) {
+        if (self::useUvFs()) {
             return new Kernel(
                 function (TaskInterface $task, CoroutineInterface $coroutine) use ($from, $to, $flag) {
                     $coroutine->fsAdd();
@@ -253,7 +253,7 @@ final class FileSystem
      */
     public static function mkdir(string $path, int $mode = 0777, $recursive = false)
     {
-        if (FileSystem::useUvFs()) {
+        if (self::useUvFs()) {
             return new Kernel(
                 function (TaskInterface $task, CoroutineInterface $coroutine) use ($path, $mode) {
                     $coroutine->fsAdd();
@@ -281,7 +281,7 @@ final class FileSystem
      */
     public static function rmdir(string $path)
     {
-        if (FileSystem::useUvFs()) {
+        if (self::useUvFs()) {
             return new Kernel(
                 function (TaskInterface $task, CoroutineInterface $coroutine) use ($path) {
                     $coroutine->fsAdd();
@@ -311,7 +311,7 @@ final class FileSystem
      */
     public static function chmod(string $filename, int $mode)
     {
-        if (FileSystem::useUvFs()) {
+        if (self::useUvFs()) {
             return new Kernel(
                 function (TaskInterface $task, CoroutineInterface $coroutine) use ($filename, $mode) {
                     $coroutine->fsAdd();
@@ -343,7 +343,7 @@ final class FileSystem
      */
     public static function chown(string $path, int $uid, int $gid)
     {
-        if (FileSystem::useUvFs()) {
+        if (self::useUvFs()) {
             return new Kernel(
                 function (TaskInterface $task, CoroutineInterface $coroutine) use ($path, $uid, $gid) {
                     $coroutine->fsAdd();
@@ -376,7 +376,7 @@ final class FileSystem
      */
     public static function fchown(string $fd, int $uid, int $gid)
     {
-        if (FileSystem::useUvFs()) {
+        if (self::useUvFs()) {
             return new Kernel(
                 function (TaskInterface $task, CoroutineInterface $coroutine) use ($fd, $uid, $gid) {
                     $coroutine->fsAdd();
@@ -406,7 +406,7 @@ final class FileSystem
      */
     public static function fchmod(string $fd, int $mode)
     {
-        if (FileSystem::useUvFs()) {
+        if (self::useUvFs()) {
             return new Kernel(
                 function (TaskInterface $task, CoroutineInterface $coroutine) use ($fd, $mode) {
                     $coroutine->fsAdd();
@@ -437,7 +437,7 @@ final class FileSystem
      */
     public static function ftruncate($fd, int $offset)
     {
-        if (FileSystem::useUvFs()) {
+        if (self::useUvFs()) {
             return new Kernel(
                 function (TaskInterface $task, CoroutineInterface $coroutine) use ($fd, $offset) {
                     $coroutine->fsAdd();
@@ -465,7 +465,7 @@ final class FileSystem
      */
     public static function fsync($fd)
     {
-        if (FileSystem::useUvFs()) {
+        if (self::useUvFs()) {
             return new Kernel(
                 function (TaskInterface $task, CoroutineInterface $coroutine) use ($fd) {
                     $coroutine->fsAdd();
@@ -490,7 +490,7 @@ final class FileSystem
      */
     public static function fdatasync($fd)
     {
-        if (FileSystem::useUvFs()) {
+        if (self::useUvFs() && (self::meta($fd, 'wrapper_type') !== 'http')) {
             return new Kernel(
                 function (TaskInterface $task, CoroutineInterface $coroutine) use ($fd) {
                     $coroutine->fsAdd();
@@ -517,7 +517,7 @@ final class FileSystem
      */
     public static function lstat(string $path)
     {
-        if (FileSystem::useUvFs()) {
+        if (self::useUvFs()) {
             return new Kernel(
                 function (TaskInterface $task, CoroutineInterface $coroutine) use ($path) {
                     $coroutine->fsAdd();
@@ -526,7 +526,7 @@ final class FileSystem
                         $path,
                         function (int $status, $result) use ($task, $coroutine) {
                             $coroutine->fsRemove();
-                            $task->sendValue(($status <= 0 ? (bool) $status: $result));
+                            $task->sendValue(($status <= 0 ? (bool) $status : $result));
                             $coroutine->schedule($task);
                         }
                     );
@@ -559,7 +559,7 @@ final class FileSystem
      */
     public static function stat(string $path, ?string $info = null)
     {
-        if (FileSystem::useUvFs()) {
+        if (self::useUvFs()) {
             return new Kernel(
                 function (TaskInterface $task, CoroutineInterface $coroutine) use ($path, $info) {
                     $coroutine->fsAdd();
@@ -610,7 +610,7 @@ final class FileSystem
      */
     public static function fstat($fd, ?string $info = null)
     {
-        if (FileSystem::useUvFs()) {
+        if (self::useUvFs()) {
             return new Kernel(
                 function (TaskInterface $task, CoroutineInterface $coroutine) use ($fd, $info) {
                     $coroutine->fsAdd();
@@ -646,7 +646,7 @@ final class FileSystem
      */
     public static function readDir(string $path, int $flag = 0)
     {
-        if (FileSystem::useUvFs()) {
+        if (self::useUvFs()) {
             return self::scandir($path, $flag);
         }
 
@@ -661,7 +661,7 @@ final class FileSystem
      */
     public static function scandir(string $path, int $flagSortingOrder = 0)
     {
-        if (FileSystem::useUvFs()) {
+        if (self::useUvFs()) {
             return new Kernel(
                 function (TaskInterface $task, CoroutineInterface $coroutine) use ($path, $flagSortingOrder) {
                     $coroutine->fsAdd();
@@ -691,7 +691,7 @@ final class FileSystem
      */
     public static function utime(string $path, int $utime = null, int $atime = null)
     {
-        if (FileSystem::useUvFs()) {
+        if (self::useUvFs()) {
             return new Kernel(
                 function (TaskInterface $task, CoroutineInterface $coroutine) use ($path, $utime, $atime) {
                     $coroutine->fsAdd();
@@ -724,7 +724,7 @@ final class FileSystem
      */
     public static function futime(string $fd, int $utime, int $atime)
     {
-        if (FileSystem::useUvFs()) {
+        if (self::useUvFs()) {
             return new Kernel(
                 function (TaskInterface $task, CoroutineInterface $coroutine) use ($fd, $utime, $atime) {
                     $coroutine->fsAdd();
@@ -735,7 +735,7 @@ final class FileSystem
                         $atime,
                         function ($fd, int $result) use ($task, $coroutine) {
                             $coroutine->fsRemove();
-                            $task->sendValue((\is_resource($fd) ? $result: (bool) $fd));
+                            $task->sendValue((\is_resource($fd) ? $result : (bool) $fd));
                             $coroutine->schedule($task);
                         }
                     );
@@ -753,7 +753,7 @@ final class FileSystem
      */
     public static function readlink(string $path)
     {
-        if (FileSystem::useUvFs()) {
+        if (self::useUvFs()) {
             return new Kernel(
                 function (TaskInterface $task, CoroutineInterface $coroutine) use ($path) {
                     $coroutine->fsAdd();
@@ -783,7 +783,7 @@ final class FileSystem
      */
     public static function sendfile($out_fd, $in_fd, int $offset, int $length)
     {
-        if (FileSystem::useUvFs()) {
+        if (self::useUvFs()) {
             return new Kernel(
                 function (TaskInterface $task, CoroutineInterface $coroutine) use ($out_fd, $in_fd, $offset, $length) {
                     $coroutine->fsAdd();
@@ -805,10 +805,24 @@ final class FileSystem
     }
 
     /**
+     * @codeCoverageIgnore
+     */
+    protected static function openFile(string $path, string $flag)
+    {
+        $resource = @\fopen($path, $flag . 'b');
+        if (\is_resource($resource)) {
+            \stream_set_blocking($resource, false);
+            return $resource;
+        }
+
+        return false;
+    }
+
+    /**
      * Open specified `$path` file with access `$flag`.
      *
      * @param string $path
-     * @param string $flag either 'r', 'r+', 'w', 'w+', 'a', 'a+', 'x', 'x+':
+     * @param string $flag either **`r`, `r+`, `w`, `w+`, `a`, `a+`, `x`, `x+`, `c`, `c+`**:
      * - "`r`"	`read`: Open file for input operations. The file must exist.
      * - "`w`"	`write`: Create an empty file for output operations.
      * If a file with the same name already exists, its contents are discarded and the
@@ -817,6 +831,10 @@ final class FileSystem
      * Output operations always write data at the end of the file, expanding it.
      * Repositioning operations (fseek, fsetpos, rewind) are ignored.
      * The file is created if it does not exist.
+     * - "`x`" `Write only`: Creates a new file. Returns `FALSE` and an error if file already exists.
+     * - "`c`" 	Open the file for writing only. If the file does not exist, it is created. If it exists,
+     * it is neither truncated (as opposed to "`w`"), nor the call to this function fails (as is the case
+     * with "`x`"). The file pointer is positioned on the beginning of the file.
      * - "`r+`" `read/update`: Open a file for update (both for input and output). The file must exist.
      * - "`w+`" `write/update`: Create an empty file and open it for update (both for input and output).
      * If a file with the same name already exists its contents are discarded and the file is
@@ -825,13 +843,13 @@ final class FileSystem
      * operations writing data at the end of the file. Repositioning operations (fseek, fsetpos,
      * rewind) affects the next input operations, but output operations move the position back
      * to the end of file. The file is created if it does not exist.
-     * - "`x`" `Write only`: Creates a new file. Returns `FALSE` and an error if file already exists.
-     * - "`x+`" `Read/Write`: Creates a new file. Returns `FALSE` and an error if file already exists
+     * - "`x+`" `Read/Write`: Creates a new file. Returns `FALSE` and an error if file already exists.
+     * - "`c+`" Open the file for reading and writing; otherwise it has the same behavior as "`c`".
      */
     public static function open(string $path, string $flag, int $mode = 0)
     {
         if (isset(self::$fileFlags[$flag])) {
-            if (FileSystem::useUvFs()) {
+            if (self::useUvFs() && (\strpos($path, '://') === false)) {
                 return new Kernel(
                     function (TaskInterface $task, CoroutineInterface $coroutine) use ($path, $flag, $mode) {
                         $coroutine->fsAdd();
@@ -849,7 +867,31 @@ final class FileSystem
                     }
                 );
             }
+
+            //return self::openFile($path, $flag);
+            return new Kernel(
+                function (TaskInterface $task, CoroutineInterface $coroutine) use ($path, $flag) {
+                    $resource = @\fopen($path, $flag . 'b');
+                    if (\is_resource($resource)) {
+                        \stream_set_blocking($resource, false);
+                    }
+
+                    $task->sendValue((\is_resource($resource) ? $resource : false));
+                    $coroutine->schedule($task);
+                }
+            );
         }
+
+        return false;
+    }
+
+    protected static function readFile($fd, $offset = null, $length = null)
+    {
+        yield;
+        yield Kernel::readWait($fd);
+        $contents = \stream_get_contents($fd, $length, $offset);
+
+        return $contents;
     }
 
     /**
@@ -861,7 +903,7 @@ final class FileSystem
      */
     public static function read($fd, int $offset = 0, int $length = 8192)
     {
-        if (FileSystem::useUvFs()) {
+        if (self::useUvFs() && (self::meta($fd, 'wrapper_type') !== 'http')) {
             return new Kernel(
                 function (TaskInterface $task, CoroutineInterface $coroutine) use ($fd, $offset, $length) {
                     $coroutine->fsAdd();
@@ -890,6 +932,27 @@ final class FileSystem
                 }
             );
         }
+
+        return self::readFile($fd, $offset, $length);
+    }
+
+    /**
+     * @codeCoverageIgnore
+     */
+    protected static function writeFile($fd, string $buffer)
+    {
+        yield;
+        $fwrite = 0;
+        for ($written = 0; $written < \strlen($buffer); $written += $fwrite) {
+            yield Kernel::writeWait($fd);
+            $fwrite = \fwrite($fd, \substr($buffer, $written));
+            // see https://www.php.net/manual/en/function.fwrite.php#96951
+            if (($fwrite === false) || ($fwrite == 0)) {
+                break;
+            }
+        }
+
+        return $written;
     }
 
     /**
@@ -901,7 +964,7 @@ final class FileSystem
      */
     public static function write($fd, string $buffer, int $offset = -1)
     {
-        if (FileSystem::useUvFs()) {
+        if (self::useUvFs() && (self::meta($fd, 'wrapper_type') !== 'http')) {
             return new Kernel(
                 function (TaskInterface $task, CoroutineInterface $coroutine) use ($fd, $buffer, $offset) {
                     $coroutine->fsAdd();
@@ -929,6 +992,14 @@ final class FileSystem
                 }
             );
         }
+
+        return self::writeFile($fd, $buffer);
+    }
+
+    protected static function closeFile($fd)
+    {
+        yield;
+        return \is_resource($fd) ? @\fclose($fd) : false;
     }
 
     /**
@@ -938,7 +1009,7 @@ final class FileSystem
      */
     public static function close($fd)
     {
-        if (FileSystem::useUvFs()) {
+        if (self::useUvFs() && (self::meta($fd, 'wrapper_type') !== 'http')) {
             return new Kernel(
                 function (TaskInterface $task, CoroutineInterface $coroutine) use ($fd) {
                     $coroutine->fsAdd();
@@ -954,64 +1025,77 @@ final class FileSystem
                 }
             );
         }
+
+        return self::closeFile($fd);
     }
 
     /**
-     * Reads entire file into a string.
+     * Retrieves header/meta data from streams/file pointers.
      *
-     * @codeCoverageIgnore
+     * @param resource $fd
+     * @param null|string $info
+     * - Can be: `timed_out`, `blocked`, `eof`, `unread_bytes`, `stream_type`, `wrapper_type`,
+     * `mode`, `seekable`, `uri`, `wrapper_data`
+     * - And `status` for HTTP Status Code from `wrapper_data`
      *
-     * @param string $filename
-     * @param int $offset
-     * @param int $max
-     *
-     * @return void
+     * @return array|string|int|bool
      */
-    public static function get(string $filename, int $offset = 0, $max = null)
+    public static function meta($fd, ?string $info = null)
     {
-        if (FileSystem::useUvFs()) {
-            $fd = yield self::open($filename, 'r');
-            if (\is_resource($fd)) {
-                if (empty($max)) {
-                    $max = yield self::fstat($fd, 'size');
+        $meta = [];
+        if (\is_resource($fd)) {
+            $meta = \stream_get_meta_data($fd);
+            if ($info == 'status' && isset($meta['wrapper_data'])) {
+                $http_statusCode = 400;
+                foreach ($meta['wrapper_data'] as $headerLine) {
+                    if (preg_match('/^HTTP\/(\d+\.\d+)\s+(\d+)\s*(.+)?$/', $headerLine, $result)) {
+                        $http_statusCode = $result[2];
+                    }
                 }
 
-                $contents = yield self::read($fd, 0, $max);
-                yield self::close($fd);
-                return $contents;
+                return (int) $http_statusCode;
             }
-
-            return false;
         }
 
-        return \spawn_system('file_get_contents', $filename, false, null, $offset, $max);
+        return isset($meta[$info]) ? $meta[$info] : $meta;
     }
 
     /**
-     * Write a string to a file.
+     * Reads remainder of a streams/file pointers by size into a string,
+     * will stop if timeout seconds lapse.
      *
      * @codeCoverageIgnore
      *
-     * @param string $filename
-     * @param mixed $contents
-     * @param int $flags
+     * @param resource $fd
+     * @param integer $size
+     * @param float $timeout_seconds
      *
-     * @return void
+     * @return string
      */
-    public static function put(string $filename, $contents, $flags = 0)
+    public static function contents($fd, int $size = 256, float $timeout_seconds = 0.5)
     {
-        if (FileSystem::useUvFs()) {
-            $fd = yield self::open($filename, 'w');
-            if (\is_resource($fd)) {
-                $written = yield self::write($fd, $contents);
-                yield self::fdatasync($fd);
-                yield self::close($fd);
-                return $written;
+        yield;
+        if (!\is_resource($fd))
+            return false;
+
+        $contents = '';
+        while (true) {
+            yield Kernel::readWait($fd, true);
+            $startTime = \microtime(true);
+            $new = \stream_get_contents($fd, $size);
+            $endTime = \microtime(true);
+            if (\is_string($new) && \strlen($new) >= 1) {
+                $contents .= $new;
             }
 
-            return false;
+            $time_used = $endTime - $startTime;
+            if (($time_used >= $timeout_seconds)
+                || !\is_string($new) || (\is_string($new) && \strlen($new) < 1)
+            ) {
+                break;
+            }
         }
 
-        return \spawn_system('file_put_contents', $filename, $contents, $flags);
+        yield Coroutine::value($contents);
     }
 }
