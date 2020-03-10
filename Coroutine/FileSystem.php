@@ -12,6 +12,7 @@ use Async\Coroutine\CoroutineInterface;
  * Executes a blocking system call asynchronously.
  *
  * - All file system operations functions as defined by `libuv` are run in a **thread pool**.
+ * - If `libuv` is not installed, or turned `off`, the file system operations are run in a **child/subprocess**.
  */
 final class FileSystem
 {
@@ -69,6 +70,16 @@ final class FileSystem
     protected static function spawnStat($path, $info = null)
     {
         $result = yield \spawn_system('stat', $path);
+
+        return empty($info) ? $result : $result[$info];
+    }
+
+    /**
+     * @codeCoverageIgnore
+     */
+    protected static function spawnLstat($path, $info = null)
+    {
+        $result = yield \spawn_system('lstat', $path);
 
         return empty($info) ? $result : $result[$info];
     }
@@ -214,13 +225,11 @@ final class FileSystem
     /**
      * Creates a symbolic link.
      *
-     * @codeCoverageIgnore
-     *
      * @param string $from
      * @param string $to
      * @param int $flag
      */
-    public static function symlink(string $from, string $to, int $flag)
+    public static function symlink(string $from, string $to, int $flag = 0)
     {
         if (self::useUvFs()) {
             return new Kernel(
@@ -242,6 +251,33 @@ final class FileSystem
         }
 
         return \spawn_system('symlink', $from, $to);
+    }
+
+    /**
+     * Read value of a symbolic link.
+     *
+     * @param string $path
+     */
+    public static function readlink(string $path)
+    {
+        if (self::useUvFs()) {
+            return new Kernel(
+                function (TaskInterface $task, CoroutineInterface $coroutine) use ($path) {
+                    $coroutine->fsAdd();
+                    \uv_fs_readlink(
+                        $coroutine->getUV(),
+                        $path,
+                        function (int $status, $result) use ($task, $coroutine) {
+                            $coroutine->fsRemove();
+                            $task->sendValue(($status <= 0 ? (bool) $status : $result));
+                            $coroutine->schedule($task);
+                        }
+                    );
+                }
+            );
+        }
+
+        return \spawn_system('readlink', $path);
     }
 
     /**
@@ -511,28 +547,52 @@ final class FileSystem
     /**
      * Gives information about a file symbolic link, returns same data as `stat()`
      *
-     * @codeCoverageIgnore
-     *
      * @param string $path
+     * @param string $info
+     * - Numeric    `$info` Description
+     *````
+     * 0    dev     device number
+     * 1	ino	inode number
+     * 2	mode	inode protection mode
+     * 3	nlink	number of links
+     * 4	uid	userid of owner
+     * 5	gid	groupid of owner
+     * 6	rdev	device type, if inode device
+     * 7	size	size in bytes
+     * 8	atime	time of last access (Unix timestamp)
+     * 9	mtime	time of last modification (Unix timestamp)
+     * 10	ctime	time of last inode change (Unix timestamp)
+     * 11	blksize	blocksize of filesystem IO **
+     * 12	blocks	number of 512-byte blocks allocated **
+     *````
      */
-    public static function lstat(string $path)
+    public static function lstat(string $path, ?string $info = null)
     {
         if (self::useUvFs()) {
             return new Kernel(
-                function (TaskInterface $task, CoroutineInterface $coroutine) use ($path) {
+                function (TaskInterface $task, CoroutineInterface $coroutine) use ($path, $info) {
                     $coroutine->fsAdd();
                     \uv_fs_lstat(
                         $coroutine->getUV(),
                         $path,
-                        function (int $status, $result) use ($task, $coroutine) {
+                        function (int $status, $result) use ($task, $coroutine, $info) {
                             $coroutine->fsRemove();
-                            $task->sendValue(($status <= 0 ? (bool) $status : $result));
+                            $task->sendValue(
+                                ($status <= 0
+                                    ? (bool) $status
+                                    : (isset($result[$info])
+                                        ? $result[$info]
+                                        : $result))
+                            );
+
                             $coroutine->schedule($task);
                         }
                     );
                 }
             );
         }
+
+        return self::spawnLstat($path, $info);
     }
 
     /**
@@ -745,33 +805,6 @@ final class FileSystem
     }
 
     /**
-     * Read value of a symbolic link.
-     *
-     * @codeCoverageIgnore
-     *
-     * @param string $path
-     */
-    public static function readlink(string $path)
-    {
-        if (self::useUvFs()) {
-            return new Kernel(
-                function (TaskInterface $task, CoroutineInterface $coroutine) use ($path) {
-                    $coroutine->fsAdd();
-                    \uv_fs_readlink(
-                        $coroutine->getUV(),
-                        $path,
-                        function ($fd, int $result) use ($task, $coroutine) {
-                            $coroutine->fsRemove();
-                            $task->sendValue((!\is_resource($fd) ? (bool) $fd : $result));
-                            $coroutine->schedule($task);
-                        }
-                    );
-                }
-            );
-        }
-    }
-
-    /**
      * Transfer data between file descriptors.
      *
      * @codeCoverageIgnore
@@ -802,20 +835,6 @@ final class FileSystem
                 }
             );
         }
-    }
-
-    /**
-     * @codeCoverageIgnore
-     */
-    protected static function openFile(string $path, string $flag)
-    {
-        $resource = @\fopen($path, $flag . 'b');
-        if (\is_resource($resource)) {
-            \stream_set_blocking($resource, false);
-            return $resource;
-        }
-
-        return false;
     }
 
     /**
@@ -868,7 +887,6 @@ final class FileSystem
                 );
             }
 
-            //return self::openFile($path, $flag);
             return new Kernel(
                 function (TaskInterface $task, CoroutineInterface $coroutine) use ($path, $flag) {
                     $resource = @\fopen($path, $flag . 'b');

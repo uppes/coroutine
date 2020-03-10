@@ -14,9 +14,11 @@ class FileSystemTest extends TestCase
     {
         \coroutine_clear();
         if (!defined('FIXTURE_PATH'))
-            \define("FIXTURE_PATH", dirname(__FILE__) . "/libuv/fixtures/hello.data");
+            \define("FIXTURE_PATH", dirname(__FILE__) . \DS ."libuv". \DS . "fixtures" . \DS . "hello.data");
+        if (!defined('FIXTURES'))
+            \define("FIXTURES", dirname(__FILE__) . \DS ."libuv". \DS . "fixtures" . \DS);
         if (!defined('DIRECTORY_PATH'))
-            \define("DIRECTORY_PATH", dirname(__FILE__) . "/libuv/fixtures/example_directory");
+            \define("DIRECTORY_PATH", dirname(__FILE__) . \DS ."libuv". \DS . "fixtures" . \DS . "example_directory");
         @rmdir(DIRECTORY_PATH);
     }
 
@@ -129,6 +131,50 @@ class FileSystemTest extends TestCase
     public function testWrite()
     {
         \coroutine_run($this->taskWrite());
+    }
+
+    public function taskFilePut()
+    {
+        $contents1 = "rename test";
+        $new = FIXTURES . "rename1.txt";
+
+        $count = yield \file_put($new, $contents1);
+        $this->assertEquals(11, $count);
+
+        $contents2 = yield \file_get($new);
+
+        $this->assertSame($contents1, $contents2);
+
+        yield \file_unlink($new);
+        yield \shutdown();
+    }
+
+    public function testFilePut()
+    {
+        \coroutine_run($this->taskFilePut());
+    }
+
+    public function taskFileLink()
+    {
+        $original = FIXTURES . "small.txt";
+        $link = FIXTURES . "symlink.txt";
+
+        $bool = yield \file_symlink($original, $link);
+        $this->assertTrue($bool);
+
+        $array = yield \file_lstat($link);
+        $this->assertIsArray($array);
+
+        $result = yield \file_readlink($link);
+        $this->assertSame($original, $result);
+
+        yield \file_unlink($link);
+        yield \shutdown();
+    }
+
+    public function testFileLink()
+    {
+        \coroutine_run($this->taskFileLink());
     }
 
     public function taskFileSystem()

@@ -412,7 +412,14 @@ if (!\function_exists('coroutine_run')) {
     }
 
     /**
-     * @codeCoverageIgnore
+     * Creates a symbolic link.
+     * - This function needs to be prefixed with `yield`
+     *
+     * @param string $from
+     * @param string $to
+     * @param int $flag
+     *
+     * @return bool
      */
     function file_symlink($from, $to, $flag = 0)
     {
@@ -420,7 +427,12 @@ if (!\function_exists('coroutine_run')) {
     }
 
     /**
-     * @codeCoverageIgnore
+     * Read value of a symbolic link.
+     * - This function needs to be prefixed with `yield`
+     *
+     * @param string $path
+     *
+     * @return string|bool
      */
     function file_readlink($path)
     {
@@ -512,6 +524,35 @@ if (!\function_exists('coroutine_run')) {
     function file_stat($path, $info = null)
     {
         return FileSystem::stat($path, $info);
+    }
+
+    /**
+     * Gives information about a file symbolic link, returns same data as `stat()`.
+     * - This function needs to be prefixed with `yield`
+     *
+     * @param string $path
+     * @param string $info
+     * - Numeric    `$info` Description
+     *````
+     * 0    dev     device number
+     * 1	ino	inode number
+     * 2	mode	inode protection mode
+     * 3	nlink	number of links
+     * 4	uid	userid of owner
+     * 5	gid	groupid of owner
+     * 6	rdev	device type, if inode device
+     * 7	size	size in bytes
+     * 8	atime	time of last access (Unix timestamp)
+     * 9	mtime	time of last modification (Unix timestamp)
+     * 10	ctime	time of last inode change (Unix timestamp)
+     * 11	blksize	blocksize of filesystem IO
+     * 12	blocks	number of 512-byte blocks allocated
+     *````
+     * @return array|bool
+     */
+    function file_lstat($path, $info = null)
+    {
+        return FileSystem::lstat($path, $info);
     }
 
     /**
@@ -647,7 +688,7 @@ if (!\function_exists('coroutine_run')) {
 
     /**
      * Open url/uri.
-     * - This function needs to be prefixed with `yield`.
+     * - This function needs to be prefixed with `yield`
      *
      * @param string $url
      *
@@ -660,7 +701,7 @@ if (!\function_exists('coroutine_run')) {
 
     /**
      * Get file contents from open file handle, reading by size chucks, with timeout
-     * - This function needs to be prefixed with `yield`.
+     * - This function needs to be prefixed with `yield`
      *
      * @codeCoverageIgnore
      *
@@ -676,7 +717,7 @@ if (!\function_exists('coroutine_run')) {
 
     /**
      * Reads entire file into a string.
-     * - This function needs to be prefixed with `yield`.
+     * - This function needs to be prefixed with `yield`
      *
      * @param string $filename
      * @param int $offset
@@ -704,16 +745,14 @@ if (!\function_exists('coroutine_run')) {
 
     /**
      * Write a string to a file.
-     *
-     * @codeCoverageIgnore
+     * - This function needs to be prefixed with `yield`
      *
      * @param string $filename
      * @param mixed $contents
-     * @param int $flags
      *
      * @return int|bool
      */
-    function file_put(string $filename, $contents, $flags = 0)
+    function file_put(string $filename, $contents)
     {
         $fd = yield \file_open($filename, 'w');
         if (\is_resource($fd)) {
@@ -728,7 +767,7 @@ if (!\function_exists('coroutine_run')) {
 
     /**
      * Reads entire file into an array.
-     * - This function needs to be prefixed with `yield`.
+     * - This function needs to be prefixed with `yield`
      *
      * @param string $path
      *
@@ -792,7 +831,7 @@ if (!\function_exists('coroutine_run')) {
     /**
      * Wrap the callable with `yield`, this insure the first attempt to execute will behave
      * like a generator function, will switch at least once without actually executing, return object instead.
-     * This function is used by `away()` not really called directly.
+     * - This function is used by `away()` and others, shouldn't really be called directly.
      *
      * @see https://docs.python.org/3.7/library/asyncio-task.html#awaitables
      *
@@ -809,7 +848,7 @@ if (!\function_exists('coroutine_run')) {
     /**
      * Wrap the a spawn `process` with `yield`, this insure the the execution
      * and return result is handled properly.
-     * This function is used by `spawn_await()` not really called directly.
+     * - This function is used by `spawn_await()` shouldn't really be called directly.
      *
      * @see https://docs.python.org/3.7/library/asyncio-task.html#awaitables
      *

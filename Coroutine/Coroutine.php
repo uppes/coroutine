@@ -305,25 +305,16 @@ final class Coroutine implements CoroutineInterface
         return $this->parallel;
     }
 
-    /**
-     * @codeCoverageIgnore
-     */
     public function fsCount(): int
     {
         return $this->uvFileSystem;
     }
 
-    /**
-     * @codeCoverageIgnore
-     */
     public function fsAdd(): void
     {
         $this->uvFileSystem++;
     }
 
-    /**
-     * @codeCoverageIgnore
-     */
     public function fsRemove(): void
     {
         $this->uvFileSystem--;
@@ -632,6 +623,7 @@ final class Coroutine implements CoroutineInterface
                 && empty($this->timers)
                 && $this->process->isEmpty()
                 && !$this->isSignaling()
+                && ($this->fsCount() == 0)
             ) {
                 break;
             } else {
@@ -652,7 +644,7 @@ final class Coroutine implements CoroutineInterface
                 if ($this->isUvActive()) {
                     \uv_run($this->uv, $streamWait ? \UV::RUN_ONCE : \UV::RUN_NOWAIT);
                 } else {
-                    if (($this->isUvSignal && $this->isSignaling()) || $this->fsCount() > 0) {
+                    if (($this->isUvSignal && $this->isSignaling()) || ($this->fsCount() > 0)) {
                         \uv_run($this->uv, \UV::RUN_NOWAIT);
                     }
 
