@@ -372,8 +372,7 @@ final class Coroutine implements CoroutineInterface
         bool $display = false,
         $channel = null,
         $channelTask = null
-    ): LauncherInterface
-    {
+    ): LauncherInterface {
         $launcher = $this->parallel->add($callable, $timeout, $channel, $channelTask);
         return $display ? $launcher->displayOn() : $launcher;
     }
@@ -790,12 +789,12 @@ final class Coroutine implements CoroutineInterface
     }
 
     /**
-	 * Setup Signal listener.
-	 */
-	public function initSignals()
-	{
+     * Setup Signal listener.
+     */
+    public function initSignals()
+    {
         $this->isUvSignal = \function_exists('uv_loop_new');
-		if (empty($this->signaler) && ($this->isPcntl() || $this->isUvActive() || $this->isUvSignal)) {
+        if (empty($this->signaler) && ($this->isPcntl() || $this->isUvActive() || $this->isUvSignal)) {
             $this->signaler = new Signaler($this);
 
             if ($this->isPcntl()) {

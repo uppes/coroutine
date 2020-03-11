@@ -14,11 +14,11 @@ class FileSystemTest extends TestCase
     {
         \coroutine_clear();
         if (!defined('FIXTURE_PATH'))
-            \define("FIXTURE_PATH", dirname(__FILE__) . \DS ."libuv". \DS . "fixtures" . \DS . "hello.data");
+            \define("FIXTURE_PATH", dirname(__FILE__) . \DS . "libuv" . \DS . "fixtures" . \DS . "hello.data");
         if (!defined('FIXTURES'))
-            \define("FIXTURES", dirname(__FILE__) . \DS ."libuv". \DS . "fixtures" . \DS);
+            \define("FIXTURES", dirname(__FILE__) . \DS . "libuv" . \DS . "fixtures" . \DS);
         if (!defined('DIRECTORY_PATH'))
-            \define("DIRECTORY_PATH", dirname(__FILE__) . \DS ."libuv". \DS . "fixtures" . \DS . "example_directory");
+            \define("DIRECTORY_PATH", dirname(__FILE__) . \DS . "libuv" . \DS . "fixtures" . \DS . "example_directory");
         @rmdir(DIRECTORY_PATH);
     }
 
@@ -85,10 +85,10 @@ class FileSystemTest extends TestCase
     public function taskWrite()
     {
         yield \away($this->counterTask());
-        $fd = yield \file_open("./tmp", 'a', \UV::S_IRWXU | \UV::S_IRUSR);
+        $fd = yield \file_open("./tmp", 'a');
         $this->assertEquals('resource', \is_type($fd));
 
-        $data = yield \file_write($fd, "hello", 0);
+        $data = yield \file_write($fd, "hello");
         $this->assertEquals('int', \is_type($data));
 
         $this->assertEquals(5, $data);
@@ -135,11 +135,11 @@ class FileSystemTest extends TestCase
 
     public function taskFilePut()
     {
-        $contents1 = "rename test";
-        $new = FIXTURES . "rename1.txt";
+        $contents1 = "put test";
+        $new = FIXTURES . "put.txt";
 
         $count = yield \file_put($new, $contents1);
-        $this->assertEquals(11, $count);
+        $this->assertEquals(8, $count);
 
         $contents2 = yield \file_get($new);
 

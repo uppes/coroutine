@@ -597,7 +597,7 @@ if (!\function_exists('coroutine_run')) {
      *
      * @return resource|bool
      */
-    function file_open(string $path, string $flag, int $mode = 0)
+    function file_open(string $path, string $flag, int $mode = \UV::S_IRWXU)
     {
         return FileSystem::open($path, $flag, $mode);
     }
@@ -732,7 +732,10 @@ if (!\function_exists('coroutine_run')) {
             if (\file_meta($fd, 'wrapper_type') === 'http') {
                 $max = -1;
             } else {
-                $max = yield \file_stat($filename, 'size');
+                if (\IS_LINUX)
+                    $max = yield \file_fstat($fd, 'size');
+                else
+                    $max = yield \file_stat($filename, 'size');
             }
 
             $contents = yield \file_read($fd, 0, (empty($max) ? 8192 * 2 : $max));

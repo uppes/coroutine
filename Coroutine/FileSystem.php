@@ -865,7 +865,7 @@ final class FileSystem
      * - "`x+`" `Read/Write`: Creates a new file. Returns `FALSE` and an error if file already exists.
      * - "`c+`" Open the file for reading and writing; otherwise it has the same behavior as "`c`".
      */
-    public static function open(string $path, string $flag, int $mode = 0)
+    public static function open(string $path, string $flag, int $mode = \UV::S_IRWXU)
     {
         if (isset(self::$fileFlags[$flag])) {
             if (self::useUvFs() && (\strpos($path, '://') === false)) {
@@ -954,15 +954,12 @@ final class FileSystem
         return self::readFile($fd, $offset, $length);
     }
 
-    /**
-     * @codeCoverageIgnore
-     */
     protected static function writeFile($fd, string $buffer)
     {
         yield;
         $fwrite = 0;
         for ($written = 0; $written < \strlen($buffer); $written += $fwrite) {
-            yield Kernel::writeWait($fd);
+            yield Kernel::writeWait($fd, true);
             $fwrite = \fwrite($fd, \substr($buffer, $written));
             // see https://www.php.net/manual/en/function.fwrite.php#96951
             if (($fwrite === false) || ($fwrite == 0)) {

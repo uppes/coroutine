@@ -1,7 +1,5 @@
 <?php
 
-use Async\Coroutine\UV;
-
 $socket = stream_socket_server("tcp://0.0.0.0:9999", $errno, $errstr);
 
 $poll = uv_poll_init(uv_default_loop(), $socket);
