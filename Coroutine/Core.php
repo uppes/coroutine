@@ -691,12 +691,13 @@ if (!\function_exists('coroutine_run')) {
      * - This function needs to be prefixed with `yield`
      *
      * @param string $url
+     * @param resource|array|null $context
      *
      * @return resource
      */
-    function file_uri(string $url)
+    function file_uri(string $url, $contexts = null)
     {
-        return FileSystem::open($url, 'r');
+        return FileSystem::open($url, 'r', 0, $contexts);
     }
 
     /**

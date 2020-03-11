@@ -34,6 +34,25 @@ final class FileSystem
         'c+' => \UV::O_RDWR | \UV::O_CREAT,
     );
 
+    protected static $fileOpenUriContext = [
+        'http' => [
+            'method' => 'GET',
+            'protocol_version' => '1.1',
+            'follow_location' => 1,
+            'request_fulluri' => false,
+            'max_redirects' => 10,
+            'ignore_errors' => true,
+            'timeout' => 1,
+            'user_agent' => 'Symplely Coroutine',
+            'headers' => [
+                'Accept' => '*/*'
+            ],
+        ],
+        'ssl' => [
+            'disable_compression' => true
+        ]
+    ];
+
     /**
      * Flag to control `UV` file operations.
      *
@@ -864,8 +883,10 @@ final class FileSystem
      * to the end of file. The file is created if it does not exist.
      * - "`x+`" `Read/Write`: Creates a new file. Returns `FALSE` and an error if file already exists.
      * - "`c+`" Open the file for reading and writing; otherwise it has the same behavior as "`c`".
+     * @param int $mode — this should be UV::S_IRWXU and some mode flag, `libuv` only.
+     * @param resource|array|null $contexts not for `libuv`.
      */
-    public static function open(string $path, string $flag, int $mode = \UV::S_IRWXU)
+    public static function open(string $path, string $flag, int $mode = \UV::S_IRWXU, $contexts = null)
     {
         if (isset(self::$fileFlags[$flag])) {
             if (self::useUvFs() && (\strpos($path, '://') === false)) {
@@ -888,8 +909,20 @@ final class FileSystem
             }
 
             return new Kernel(
-                function (TaskInterface $task, CoroutineInterface $coroutine) use ($path, $flag) {
-                    $resource = @\fopen($path, $flag . 'b');
+                function (TaskInterface $task, CoroutineInterface $coroutine) use ($path, $flag, $contexts) {
+                    $ctx = null;
+                    if (\strpos($path, '://') !== false || \is_array($contexts)) {
+                        $ctx = \stream_context_create(\array_merge(self::$fileOpenUriContext, (array) $contexts));
+                    } elseif (\is_resource($contexts)) {
+                        $ctx = $contexts;
+                    }
+
+                    if (\is_resource($ctx)) {
+                        $resource = @\fopen($path, $flag . 'b', false, $ctx);
+                    } else {
+                        $resource = @\fopen($path, $flag . 'b');
+                    }
+
                     if (\is_resource($resource)) {
                         \stream_set_blocking($resource, false);
                     }
@@ -1024,6 +1057,9 @@ final class FileSystem
      */
     public static function close($fd)
     {
+        if (!\is_resource($fd))
+            return false;
+
         if (self::useUvFs() && (self::meta($fd, 'wrapper_type') !== 'http')) {
             return new Kernel(
                 function (TaskInterface $task, CoroutineInterface $coroutine) use ($fd) {
@@ -1057,6 +1093,9 @@ final class FileSystem
      */
     public static function meta($fd, ?string $info = null)
     {
+        if (!\is_resource($fd) && $info == 'status')
+            return 400;
+
         $meta = [];
         if (\is_resource($fd)) {
             $meta = \stream_get_meta_data($fd);

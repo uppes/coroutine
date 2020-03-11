@@ -227,7 +227,9 @@ final class Kernel
             function (TaskInterface $task, CoroutineInterface $coroutine) use ($skipTask) {
                 $tasks = $coroutine->currentTask();
                 $coroutine->shutdown($skipTask);
-                $coroutine->schedule($tasks[$skipTask]);
+                if (isset($tasks[$skipTask])) {
+                    $coroutine->schedule($tasks[$skipTask]);
+                }
             }
         );
     }
