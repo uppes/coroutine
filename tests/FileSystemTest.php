@@ -115,7 +115,7 @@ class FileSystemTest extends TestCase
 
         $bool = yield \file_unlink("./tmpNew");
         $this->assertTrue($bool);
-        $this->assertGreaterThanOrEqual(15, $this->counterResult);
+        $this->assertGreaterThanOrEqual(14, $this->counterResult);
 
         $bool = yield \file_mkdir(DIRECTORY_PATH);
         $this->assertTrue($bool);
