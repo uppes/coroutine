@@ -987,6 +987,9 @@ final class FileSystem
         return self::readFile($fd, $offset, $length);
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
     protected static function writeFile($fd, string $buffer)
     {
         yield;
