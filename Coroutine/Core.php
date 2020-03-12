@@ -789,7 +789,9 @@ if (!\function_exists('coroutine_run')) {
      * @param null|string $info
      * - Can be: `timed_out`, `blocked`, `eof`, `unread_bytes`, `stream_type`, `wrapper_type`,
      * `mode`, `seekable`, `uri`, `wrapper_data`
-     * - And `status` for HTTP Status Code from `wrapper_data`
+     * - and `status` for **HTTP Status Code** from `wrapper_data`
+     * - and `size` for **HTTP Content Length** from `wrapper_data`
+     *
      * @return array|string|int|bool
      */
     function file_meta($fd, ?string $info = null)

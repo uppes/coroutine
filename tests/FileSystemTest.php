@@ -285,16 +285,22 @@ class FileSystemTest extends TestCase
     }
 
 
-    public function taskFileGetII()
+    public function taskFileGetSize()
     {
         $contents = yield \file_get("https://google.com/");
         $this->assertEquals('string', \is_type($contents));
         $this->assertGreaterThanOrEqual(500, \strlen($contents));
+        $fd = yield \file_uri("https://nytimes.com/");
+        $this->assertTrue(\is_resource($fd));
+        $size = \file_meta($fd, 'size');
+        $this->assertGreaterThanOrEqual(500, $size);
+        $bool = yield \file_close($fd);
+        $this->assertTrue($bool);
     }
 
-    public function testFileGetII()
+    public function testFileGetSize()
     {
-        \coroutine_run($this->taskFileGetII());
+        \coroutine_run($this->taskFileGetSize());
     }
 
     public function getStatuses($websites)
@@ -320,7 +326,6 @@ class FileSystemTest extends TestCase
         $fd = yield \file_uri($url);
         $this->assertTrue(\is_resource($fd));
         $status = \file_meta($fd, 'status');
-        $this->assertNotNull($status);
         $this->assertEquals(200, $status);
         $bool = yield \file_close($fd);
         $this->assertTrue($bool);

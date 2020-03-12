@@ -1090,28 +1090,39 @@ final class FileSystem
      * @param null|string $info
      * - Can be: `timed_out`, `blocked`, `eof`, `unread_bytes`, `stream_type`, `wrapper_type`,
      * `mode`, `seekable`, `uri`, `wrapper_data`
-     * - And `status` for HTTP Status Code from `wrapper_data`
+     * - and `status` for **HTTP Status Code** from `wrapper_data`
+     * - and `size` for **HTTP Content Length** from `wrapper_data`
      *
      * @return array|string|int|bool
      */
     public static function meta($fd, ?string $info = null)
     {
-        if (!\is_resource($fd) && $info == 'status')
-            return 400;
+        if (!\is_resource($fd) && ($info == 'status' || $info == 'size'))
+            return $info == 'status' ? 400 : 0;
+        elseif (!\is_resource($fd))
+            return false;
 
-        $meta = [];
-        if (\is_resource($fd)) {
-            $meta = \stream_get_meta_data($fd);
-            if ($info == 'status' && isset($meta['wrapper_data'])) {
-                $http_statusCode = 400;
-                foreach ($meta['wrapper_data'] as $headerLine) {
-                    if (preg_match('/^HTTP\/(\d+\.\d+)\s+(\d+)\s*(.+)?$/', $headerLine, $result)) {
-                        $http_statusCode = $result[2];
-                    }
+        $meta = \stream_get_meta_data($fd);
+        if ($info == 'status' && isset($meta['wrapper_data'])) {
+            $http_statusCode = 400;
+            foreach ($meta['wrapper_data'] as $headerLine) {
+                if (preg_match('/^HTTP\/(\d+\.\d+)\s+(\d+)\s*(.+)?$/', $headerLine, $result)) {
+                    $http_statusCode = (int) $result[2];
                 }
-
-                return (int) $http_statusCode;
             }
+
+            return $http_statusCode;
+        }
+
+        if ($info == 'size' && isset($meta['wrapper_data'])) {
+            $http_contentLength = 0;
+            foreach ($meta['wrapper_data'] as $headerLine) {
+                if (\preg_match('/Content-Length: (\d+)/', $headerLine, $result)) {
+                    $http_contentLength = (int) $result[1];
+                }
+            }
+
+            return $http_contentLength;
         }
 
         return isset($meta[$info]) ? $meta[$info] : $meta;
