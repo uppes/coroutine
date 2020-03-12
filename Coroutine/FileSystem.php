@@ -917,7 +917,7 @@ final class FileSystem
             return new Kernel(
                 function (TaskInterface $task, CoroutineInterface $coroutine) use ($path, $flag, $contexts) {
                     $ctx = null;
-                    if (\strpos($path, '://') !== false || \is_array($contexts)) {
+                    if (\strpos($path, '://') !== false) {
                         $ctx = !\is_resource($contexts)
                             ? \stream_context_create(\array_merge(self::$fileOpenUriContext, (array) $contexts))
                             : $contexts;
