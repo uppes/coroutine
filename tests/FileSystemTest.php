@@ -125,6 +125,9 @@ class FileSystemTest extends TestCase
         $this->assertTrue($bool);
         $this->assertGreaterThanOrEqual(17, $this->counterResult);
 
+        $fd = yield \file_open("tmp", 'bad');
+        $this->assertFalse($fd);
+
         yield \shutdown();
     }
 
@@ -296,6 +299,16 @@ class FileSystemTest extends TestCase
         $this->assertGreaterThanOrEqual(500, $size);
         $bool = yield \file_close($fd);
         $this->assertTrue($bool);
+        $fd = yield \file_uri("http://ltd.123/", \stream_context_create());
+        $this->assertFalse($fd);
+        $size = \file_meta($fd, 'size');
+        $this->assertEquals(0, $size);
+        $status = \file_meta($fd, 'status');
+        $this->assertEquals(400, $status);
+        $meta = \file_meta($fd);
+        $this->assertFalse($meta);
+        $bool = yield \file_close($fd);
+        $this->assertFalse($bool);
     }
 
     public function testFileGetSize()

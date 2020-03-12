@@ -6,6 +6,7 @@ namespace Async\Coroutine;
 
 use Async\Coroutine\Kernel;
 use Async\Coroutine\TaskInterface;
+use Async\Coroutine\Coroutine;
 use Async\Coroutine\CoroutineInterface;
 
 /**
@@ -101,6 +102,11 @@ final class FileSystem
         $result = yield \spawn_system('lstat', $path);
 
         return empty($info) ? $result : $result[$info];
+    }
+
+    protected static function value($value)
+    {
+        yield Coroutine::value($value);
     }
 
     /**
@@ -912,9 +918,9 @@ final class FileSystem
                 function (TaskInterface $task, CoroutineInterface $coroutine) use ($path, $flag, $contexts) {
                     $ctx = null;
                     if (\strpos($path, '://') !== false || \is_array($contexts)) {
-                        $ctx = \stream_context_create(\array_merge(self::$fileOpenUriContext, (array) $contexts));
-                    } elseif (\is_resource($contexts)) {
-                        $ctx = $contexts;
+                        $ctx = !\is_resource($contexts)
+                            ? \stream_context_create(\array_merge(self::$fileOpenUriContext, (array) $contexts))
+                            : $contexts;
                     }
 
                     if (\is_resource($ctx)) {
@@ -933,7 +939,7 @@ final class FileSystem
             );
         }
 
-        return false;
+        return self::value(false);
     }
 
     protected static function readFile($fd, $offset = null, $length = null)
@@ -1061,7 +1067,7 @@ final class FileSystem
     public static function close($fd)
     {
         if (!\is_resource($fd))
-            return false;
+            return self::value(false);
 
         if (self::useUvFs() && (self::meta($fd, 'wrapper_type') !== 'http')) {
             return new Kernel(
@@ -1144,7 +1150,7 @@ final class FileSystem
     {
         yield;
         if (!\is_resource($fd))
-            return false;
+            return self::value(false);
 
         $contents = '';
         while (true) {
@@ -1164,6 +1170,6 @@ final class FileSystem
             }
         }
 
-        yield Coroutine::value($contents);
+        return self::value($contents);
     }
 }
