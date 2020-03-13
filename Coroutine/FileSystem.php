@@ -104,11 +104,6 @@ final class FileSystem
         return empty($info) ? $result : $result[$info];
     }
 
-    protected static function value($value)
-    {
-        yield Coroutine::value($value);
-    }
-
     /**
      * Renames a file or directory.
      *
@@ -917,7 +912,7 @@ final class FileSystem
             return new Kernel(
                 function (TaskInterface $task, CoroutineInterface $coroutine) use ($path, $flag, $contexts) {
                     $ctx = null;
-                    if (\strpos($path, '://') !== false) {
+                    if (\strpos($path, '://') !== false && \strpos($path, 'php://') === false) {
                         $ctx = !\is_resource($contexts)
                             ? \stream_context_create(\array_merge(self::$fileOpenUriContext, (array) $contexts))
                             : $contexts;
@@ -939,7 +934,7 @@ final class FileSystem
             );
         }
 
-        return self::value(false);
+        return \result(false);
     }
 
     protected static function readFile($fd, $offset = null, $length = null)
@@ -1067,7 +1062,7 @@ final class FileSystem
     public static function close($fd)
     {
         if (!\is_resource($fd))
-            return self::value(false);
+            return \result(false);
 
         if (self::useUvFs() && (self::meta($fd, 'wrapper_type') !== 'http')) {
             return new Kernel(
@@ -1135,26 +1130,21 @@ final class FileSystem
     }
 
     /**
-     * Reads remainder of a streams/file pointers by size into a string,
+     * Reads remainder of a stream/file pointer by size into a string,
      * will stop if timeout seconds lapse.
-     *
-     * @codeCoverageIgnore
      *
      * @param resource $fd
      * @param integer $size
      * @param float $timeout_seconds
-     *
-     * @return string
      */
     public static function contents($fd, int $size = 256, float $timeout_seconds = 0.5)
     {
-        yield;
         if (!\is_resource($fd))
-            return self::value(false);
+            return yield \result(false);
 
         $contents = '';
         while (true) {
-            yield Kernel::readWait($fd, true);
+            yield Kernel::readWait($fd);
             $startTime = \microtime(true);
             $new = \stream_get_contents($fd, $size);
             $endTime = \microtime(true);
@@ -1170,6 +1160,6 @@ final class FileSystem
             }
         }
 
-        return self::value($contents);
+        yield Coroutine::value($contents);
     }
 }

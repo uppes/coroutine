@@ -208,20 +208,37 @@ if (!\function_exists('coroutine_run')) {
     }
 
     /**
-     * Wrap the value with `yield`, when placed within this insure that
-     * any *function/method* will be `awaitable` and the actual return
-     * value is picked up properly by `gather()`.
+     * Wrap the value with `yield`, when placed within code block, it insure that
+     * any *function/method* will be `awaitable` and the actual return value is properly picked up.
      *
      * use as: `return \value($value);`
      *
      * @param mixed $value
      *
-     * @return Generator<mixed,mixed>
+     * @return mixed
+     *
+     * @internal
      */
     function value($value)
     {
         yield;
         return yield $value;
+    }
+
+    /**
+     * Creates an object instance of the value which will signal, and insure the actual return value is properly picked up.
+     *
+     * use as: `return \result($value);`
+     *
+     * @param mixed $value
+     *
+     * @return mixed
+     *
+     * @internal
+     */
+    function result($value)
+    {
+        yield Coroutine::value($value);
     }
 
     /**
@@ -701,15 +718,14 @@ if (!\function_exists('coroutine_run')) {
     }
 
     /**
-     * Get file contents from open file handle, reading by size chucks, with timeout
-     * - This function needs to be prefixed with `yield`
-     *
-     * @codeCoverageIgnore
+     * Reads remainder of a stream/file pointer by size into a string,
+     * will stop if timeout seconds lapse.
      *
      * @param resource $fd
-     * @param int $size
+     * @param integer $size
      * @param float $timeout_seconds
-     * @return mixed
+     *
+     * @return string|bool
      */
     function file_contents($fd, int $size = -1, float $timeout_seconds = 0.5)
     {
@@ -845,6 +861,8 @@ if (!\function_exists('coroutine_run')) {
      * @param mixed $args
      *
      * @return \Generator
+     *
+     * @internal
      */
     function awaitable(callable $awaitableFunction, ...$args)
     {
@@ -862,6 +880,8 @@ if (!\function_exists('coroutine_run')) {
      * @param mixed $args
      *
      * @return \Generator
+     *
+     * @internal
      */
     function awaitable_process(callable $awaitableFunction, ...$args)
     {

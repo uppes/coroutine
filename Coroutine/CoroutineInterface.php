@@ -108,8 +108,7 @@ interface CoroutineInterface
     public function addTimeout($task, float $timeout);
 
     /**
-     * Creates an object instance of the value which will signal.
-     * `Coroutine::create` that it's a return value.
+     * Creates an object instance of the value which will signal to `Coroutine::create` that it's a return value.
      *
      *  - yield Coroutine::value("I'm a return value!");
      *
@@ -121,8 +120,7 @@ interface CoroutineInterface
     public static function value($value);
 
     /**
-     * Creates an object instance of the value which will signal.
-     * `Coroutine::create` that it's a return value.
+     * Creates an object instance of the value which will signal to `Coroutine::create` that it's a return value.
      *
      * @internal
      *

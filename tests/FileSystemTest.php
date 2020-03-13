@@ -180,6 +180,40 @@ class FileSystemTest extends TestCase
         \coroutine_run($this->taskFileLink());
     }
 
+    public function taskFileContents()
+    {
+        yield \away($this->counterTask());
+
+        $data = yield \file_contents(null);
+        $this->assertFalse($data);
+
+        $text = \str_repeat('abcde', 256);
+        $fd = yield \file_open('php://temp', 'w+');
+        $written = yield \file_write($fd, $text);
+        yield \file_fdatasync($fd);
+        $this->assertEquals(\strlen($text), $written);
+
+        $data = yield \file_contents($fd);
+        $this->assertEquals($text, $data);
+
+        $this->assertGreaterThanOrEqual(25, $this->counterResult);
+
+        $moreData = yield \file_contents($fd);
+        $this->assertEquals('', $moreData);
+
+        $this->assertGreaterThanOrEqual(27, $this->counterResult);
+
+        $bool = yield \file_close($fd);
+        $this->assertTrue($bool);
+
+        yield \shutdown();
+    }
+
+    public function testFileContents()
+    {
+        \coroutine_run($this->taskFileContents());
+    }
+
     public function taskFileSystem()
     {
         \file_operation();
