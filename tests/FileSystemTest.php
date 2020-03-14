@@ -115,15 +115,15 @@ class FileSystemTest extends TestCase
 
         $bool = yield \file_unlink("./tmpNew");
         $this->assertTrue($bool);
-        $this->assertGreaterThanOrEqual(14, $this->counterResult);
+        $this->assertGreaterThanOrEqual(13, $this->counterResult);
 
         $bool = yield \file_mkdir(DIRECTORY_PATH);
         $this->assertTrue($bool);
-        $this->assertGreaterThanOrEqual(15, $this->counterResult);
+        $this->assertGreaterThanOrEqual(14, $this->counterResult);
 
         $bool = yield \file_rmdir(DIRECTORY_PATH);
         $this->assertTrue($bool);
-        $this->assertGreaterThanOrEqual(16, $this->counterResult);
+        $this->assertGreaterThanOrEqual(15, $this->counterResult);
 
         $fd = yield \file_open("tmp", 'bad');
         $this->assertFalse($fd);
