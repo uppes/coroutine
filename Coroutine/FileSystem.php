@@ -825,16 +825,35 @@ final class FileSystem
     }
 
     /**
-     * Transfer data between file descriptors.
-     *
      * @codeCoverageIgnore
+     */
+    protected static function send($out_fd, $in_fd, int $offset = 0, int $length)
+    {
+        if (!\is_resource($out_fd) || !\is_resource($in_fd)) {
+            return yield \result(false);
+        }
+
+        $data = yield self::read($in_fd, $offset, $length);
+        $count = \strlen($data);
+        if ($count) {
+            $result = yield self::write($out_fd, $data);
+            if (false === $result) {
+                return yield \result(false);
+            }
+
+            yield Coroutine::value($count);
+        }
+    }
+
+    /**
+     * Transfer data between file descriptors.
      *
      * @param resource $out_fd
      * @param resource $in_fd
      * @param int $offset
      * @param int $length
      */
-    public static function sendfile($out_fd, $in_fd, int $offset, int $length)
+    public static function sendfile($out_fd, $in_fd, int $offset = 0, int $length = 8192)
     {
         if (self::useUvFs()) {
             return new Kernel(
@@ -855,6 +874,8 @@ final class FileSystem
                 }
             );
         }
+
+        return self::send($out_fd, $in_fd, $offset, $length);
     }
 
     /**

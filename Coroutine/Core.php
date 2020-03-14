@@ -587,6 +587,21 @@ if (!\function_exists('coroutine_run')) {
     }
 
     /**
+     * Transfer data between file descriptors.
+     *
+     * @param resource $out_fd
+     * @param resource $in_fd
+     * @param int $offset
+     * @param int $length
+     *
+     * @return int|bool
+     */
+    function file_sendfile($out_fd, $in_fd, int $offset = 0, int $length = 8192)
+    {
+        return FileSystem::sendfile($out_fd, $in_fd, $offset, $length);
+    }
+
+    /**
      * Open specified `$path` file with access `$flag`.
      * - This function needs to be prefixed with `yield`
      *
