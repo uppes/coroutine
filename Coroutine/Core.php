@@ -14,6 +14,7 @@ use Async\Coroutine\Exceptions\Panic;
 use Async\Coroutine\FileSystem;
 use Async\Processor\Channel as Channeled;
 use Async\Processor\ChannelInterface;
+use SebastianBergmann\CodeCoverage\Node\File;
 
 if (!\function_exists('coroutine_run')) {
     \define('MILLISECOND', 0.001);
@@ -598,7 +599,12 @@ if (!\function_exists('coroutine_run')) {
      */
     function file_sendfile($out_fd, $in_fd, int $offset = 0, int $length = 8192)
     {
-        return FileSystem::sendfile($out_fd, $in_fd, $offset, $length);
+        $written = yield FileSystem::sendfile($out_fd, $in_fd, $offset, $length);
+        if (FileSystem::useUvFs()) {
+            yield FileSystem::fdatasync($out_fd);
+        }
+
+        return $written;
     }
 
     /**

@@ -35,6 +35,9 @@ final class FileSystem
         'c+' => \UV::O_RDWR | \UV::O_CREAT,
     );
 
+    /**
+     * Set of key => value pairs to include as default options/headers with `open` **uri** calls.
+     */
     protected static $fileOpenUriContext = [
         'http' => [
             'method' => 'GET',
@@ -46,7 +49,11 @@ final class FileSystem
             'timeout' => 1,
             'user_agent' => 'Symplely Coroutine',
             'headers' => [
-                'Accept' => '*/*'
+                'Accept' => '*/*',
+                'Accept-Charset' => 'utf-8',
+                'Accept-Language' => 'en-US,en;q=0.9',
+                'X-Powered-By' => 'PHP/' . \PHP_VERSION,
+                'Connection' => 'close'
             ],
         ],
         'ssl' => [
@@ -66,7 +73,7 @@ final class FileSystem
      *
      * @return bool
      */
-    protected static function useUvFs(): bool
+    public static function useUvFs(): bool
     {
         return \function_exists('uv_default_loop') && self::$useUV;
     }
@@ -102,6 +109,13 @@ final class FileSystem
         $result = yield \spawn_system('lstat', $path);
 
         return empty($info) ? $result : $result[$info];
+    }
+
+    protected static function fdStat($fd, $info = null)
+    {
+        $result = \fstat($fd);
+
+        return yield \result((empty($info) ? $result : $result[$info]));
     }
 
     /**
@@ -713,6 +727,8 @@ final class FileSystem
                 }
             );
         }
+
+        return self::fdStat($fd, $info);
     }
 
     /**
@@ -824,9 +840,6 @@ final class FileSystem
         }
     }
 
-    /**
-     * @codeCoverageIgnore
-     */
     protected static function send($out_fd, $in_fd, int $offset = 0, int $length)
     {
         if (!\is_resource($out_fd) || !\is_resource($in_fd)) {
@@ -841,6 +854,7 @@ final class FileSystem
                 return yield \result(false);
             }
 
+            @\rewind($out_fd);
             yield Coroutine::value($count);
         }
     }

@@ -287,7 +287,6 @@ class FileSystemTest extends TestCase
         $written = yield \file_sendfile($outFd, $fd, 0, $size);
 
         $this->assertEquals($size, $written);
-        yield \file_fdatasync($outFd);
         $data = yield \file_contents($outFd);
         $this->assertEquals('Hello', \trim($data));
         $this->assertGreaterThanOrEqual(6, $this->counterResult);
@@ -300,6 +299,29 @@ class FileSystemTest extends TestCase
     public function testFileSystemSendfile()
     {
         \coroutine_run($this->taskFileSystemSendfile());
+    }
+
+    public function taskFileSendfile()
+    {
+        \file_operation();
+        yield \away($this->counterTask());
+        $fd = yield \file_open(FIXTURE_PATH, 'r');
+        $size = yield \file_fstat($fd, 'size');
+        $outFd = yield \file_open('php://temp', 'w+');
+        $written = yield \file_sendfile($outFd, $fd, 0, $size);
+        $this->assertEquals($size, $written);
+        $data = yield \file_contents($outFd);
+        $this->assertEquals('Hello', \trim($data));
+        $this->assertGreaterThanOrEqual(8, $this->counterResult);
+        yield \file_close($fd);
+        yield \file_close($outFd);
+
+        yield \shutdown();
+    }
+
+    public function testFileSendfile()
+    {
+        \coroutine_run($this->taskFileSendfile());
     }
 
     public function taskSystemScandir()
