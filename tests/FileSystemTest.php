@@ -370,13 +370,13 @@ class FileSystemTest extends TestCase
 
     public function taskFileGetSize()
     {
-        $contents = yield \file_get("https://google.com/");
+        $contents = yield \file_get("https://httpbin.org/get");
         $this->assertEquals('string', \is_type($contents));
-        $this->assertGreaterThanOrEqual(500, \strlen($contents));
-        $fd = yield \file_uri("https://nytimes.com/");
+        $this->assertGreaterThanOrEqual(230, \strlen($contents));
+        $fd = yield \file_uri("https://httpbin.org/get");
         $this->assertTrue(\is_resource($fd));
         $size = \file_meta($fd, 'size');
-        $this->assertGreaterThanOrEqual(500, $size);
+        $this->assertGreaterThanOrEqual(230, $size);
         $bool = yield \file_close($fd);
         $this->assertTrue($bool);
         $fd = yield \file_uri("http://ltd.123/", \stream_context_create());
