@@ -961,8 +961,6 @@ final class FileSystem
 
                     if (\is_resource($resource)) {
                         \stream_set_blocking($resource, false);
-                        \stream_set_read_buffer($resource, 0);
-                        \stream_set_write_buffer($resource, 0);
                     }
 
                     $task->sendValue((\is_resource($resource) ? $resource : false));
