@@ -196,12 +196,12 @@ class FileSystemTest extends TestCase
         $data = yield \file_contents($fd);
         $this->assertEquals($text, $data);
 
-        $this->assertGreaterThanOrEqual(10, $this->counterResult);
+        $this->assertGreaterThanOrEqual(9, $this->counterResult);
 
         $moreData = yield \file_contents($fd);
         $this->assertEquals('', $moreData);
 
-        $this->assertGreaterThanOrEqual(11, $this->counterResult);
+        $this->assertGreaterThanOrEqual(10, $this->counterResult);
 
         $bool = yield \file_close($fd);
         $this->assertTrue($bool);
