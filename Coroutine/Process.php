@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Async\Coroutine;
 
-use Async\Processor\LauncherInterface;
+use Async\Spawn\LauncherInterface;
 use Async\Coroutine\CoroutineInterface;
 
 /**

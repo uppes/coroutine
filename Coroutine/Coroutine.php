@@ -14,7 +14,7 @@ use Async\Coroutine\TaskInterface;
 use Async\Coroutine\ReturnValueCoroutine;
 use Async\Coroutine\PlainValueCoroutine;
 use Async\Coroutine\CoroutineInterface;
-use Async\Processor\LauncherInterface;
+use Async\Spawn\LauncherInterface;
 use Async\Coroutine\Exceptions\CancelledError;
 use Async\Coroutine\Exceptions\InvalidArgumentException;
 

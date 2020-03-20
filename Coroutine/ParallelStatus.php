@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Async\Coroutine;
 
 use Async\Coroutine\Parallel;
-use Async\Processor\Launcher;
-use Async\Processor\SerializableException;
+use Async\Spawn\Launcher;
+use Async\Spawn\SerializableException;
 
 final class ParallelStatus
 {

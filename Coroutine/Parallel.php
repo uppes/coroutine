@@ -9,8 +9,8 @@ use InvalidArgumentException;
 use Async\Coroutine\ParallelStatus;
 use Async\Coroutine\ParallelInterface;
 use Async\Coroutine\CoroutineInterface;
-use Async\Processor\Processor;
-use Async\Processor\LauncherInterface;
+use Async\Spawn\Spawn;
+use Async\Spawn\LauncherInterface;
 
 /**
  * @internal
@@ -87,7 +87,7 @@ final class Parallel implements ArrayAccess, ParallelInterface
         }
 
         if (!$process instanceof LauncherInterface) {
-            $process = Processor::create($process, $timeout, $channel);
+            $process = Spawn::create($process, $timeout, $channel, true);
         }
 
         $this->putInQueue($process);
@@ -163,7 +163,7 @@ final class Parallel implements ArrayAccess, ParallelInterface
     {
         $this->notify();
 
-        $this->results[] = yield from $process->yieldSuccess();
+        $this->results[] = yield from $process->triggerSuccess(true);
 
         $this->finished[$process->getPid()] = $process;
     }
@@ -172,7 +172,7 @@ final class Parallel implements ArrayAccess, ParallelInterface
     {
         $this->notify();
 
-        yield $process->yieldTimeout();
+        yield $process->triggerTimeout(true);
 
         $this->timeouts[$process->getPid()] = $process;
     }
@@ -181,7 +181,7 @@ final class Parallel implements ArrayAccess, ParallelInterface
     {
         $this->notify();
 
-        yield $process->yieldError();
+        yield $process->triggerError(true);
 
         $this->failed[$process->getPid()] = $process;
     }

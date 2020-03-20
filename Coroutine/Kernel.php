@@ -12,7 +12,7 @@ use Async\Coroutine\Exceptions\InvalidStateError;
 use Async\Coroutine\Exceptions\InvalidArgumentException;
 use Async\Coroutine\Exceptions\TimeoutError;
 use Async\Coroutine\Exceptions\CancelledError;
-use Async\Processor\Channel as Channeled;
+use Async\Spawn\Channel as Channeled;
 
 /**
  * The Kernel

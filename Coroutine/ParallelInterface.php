@@ -2,8 +2,8 @@
 
 namespace Async\Coroutine;
 
-use Async\Processor\Channel;
-use Async\Processor\LauncherInterface;
+use Async\Spawn\Channel;
+use Async\Spawn\LauncherInterface;
 
 interface ParallelInterface
 {

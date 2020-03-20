@@ -4,10 +4,10 @@ namespace Async\Coroutine;
 
 use Async\Coroutine\Process;
 use Async\Coroutine\TaskInterface;
-use Async\Processor\LauncherInterface;
+use Async\Spawn\LauncherInterface;
 use Async\Coroutine\ParallelInterface;
 use Async\Coroutine\Exceptions\RuntimeException;
-use Async\Processor\Channel as Channeled;
+use Async\Spawn\Channel as Channeled;
 
 interface CoroutineInterface
 {
