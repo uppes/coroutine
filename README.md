@@ -616,9 +616,11 @@ This ___`Coroutine`___ package differs, mainly because it just managing the flow
 
  **Christopher Pitt** [Co-operative PHP Multitasking](https://medium.com/async-php/co-operative-php-multitasking-ce4ef52858a0)
 
-**Parallel** class package here is a restructured/rewrite of [spatie/async](https://github.com/spatie/async), it mainly differs in that it offers true __Windows__ support. This class pulls in [symplely/processor](https://github.com/symplely/processor) as an dependency which includes, [symfony/process](https://github.com/symfony/process) class, which is going to be used for **subprocess** management/execution. It has better **Windows** support, with no issues running parallel PHP processes, not seeing any blocking issues. The **Processor** package also has [opis/closure](https://github.com/opis/closure) as an dependency, it's used to overcome **PHP** serialization limitations.
+**Parallel** class is a restructured/rewrite of [spatie/async](https://github.com/spatie/async). The **Parallel** class rely upon [symplely/spawn](https://github.com/symplely/spawn) as a dependency, used for **subprocess** management/execution, it uses **`uv_spawn`** of **libuv** for launching processes. The **Spawn** package has [opis/closure](https://github.com/opis/closure) as an dependency, used to overcome **PHP** serialization limitations, and [symfony/process](https://github.com/symfony/process) as a fallback to **`proc_open`** for launching processes, in case **libuv** the _PHP_-**UV** extension is not installed.
 
 ---
+[Build Your Own Async](https://youtu.be/Y4Gt3Xjd7G8) __video__
+
 [Concurrency in Go](https://youtu.be/LvgVSSpwND8) __video__
 
 [Curious Course on Coroutines and Concurrency](https://youtu.be/Z_OAlIhXziw) __video__

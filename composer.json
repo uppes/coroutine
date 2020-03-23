@@ -10,6 +10,10 @@
         "parallel",
         "process",
 		"generator",
+		"libuv",
+		"spawn",
+		"await",
+		"event loop",
         "async"
 	],
     "homepage": "https://github.com/symplely/coroutine",
@@ -27,7 +31,7 @@
     ],
     "require": {
         "php": ">7.2",
-        "symplely/spawn": "^1.0.0"
+        "symplely/spawn": "^1.0.1"
     },
     "autoload": {
         "files": [
