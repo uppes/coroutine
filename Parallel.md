@@ -3,27 +3,6 @@ Parallel
 
 An Asynchronous Parallel PHP process manager API.
 
-This library will use [PCNTL](http://php.net/manual/en/book.pcntl.php) extension if available. Otherwise, will use polling in an combination of `yield` and `stream_select` iterations.
-
-This works under Windows OS, which differs in it's fork of [spatie/async
-](https://github.com/spatie/async). In that it allows running of different processes in parallel on Windows without any additional software.
-
-> This package is an complete rewrite of `spatie/async`. The old package following there implementation, but with windows support can be found [here](https://github.com/techno-express/parallel).
-
-This package should be used when wanting non-blocking with an function normally blocking.
-
-Installation
--------
-
-You can install the package via composer:
-
-```bash
-composer require uppes/coroutine
-```
-
-Usage
-=====
-
 ```php
 include 'vendor/autoload.php';
 
@@ -48,7 +27,7 @@ $parallel->wait();
 Event hooks
 -------
 
-When creating asynchronous processes, you'll get an instance of `ProcessInterface` returned.
+When creating asynchronous processes, you'll get an instance of `ParallelInterface` returned.
 You can add the following event hooks on a process.
 
 ```php
@@ -83,7 +62,7 @@ $parallel
 
 If there's no error handler added, the error will be thrown in the parent process when calling `parallel_wait()` or `$parallel->wait()`.
 
-If the child process would unexpectedly stop without throwing an `Throwable`, the output written to `stderr` will be wrapped and thrown as `Async\Processor\ProcessorError` in the parent process.
+If the child process would unexpectedly stop without throwing an `Throwable`, the output written to `stderr` will be wrapped and thrown in the parent process.
 
 Parallel pool configuration
 ----
@@ -108,10 +87,7 @@ ___Behind the curtains___
 
 When using this package, you're probably wondering what's happening underneath the surface.
 
-We're using the `symfony/process` component to create and manage child processes in PHP.
-By creating child processes on the fly, we're able to execute PHP scripts in parallel.
-This parallelism can improve performance significantly when dealing with multiple __Synchronous I/O__ tasks,
-which don't really need to wait for each other.
+We're using `uv_spawn`, and `proc_open` as a fallback, to create and manage child processes in PHP. By creating child processes on the fly, we're able to execute PHP scripts in parallel. This parallelism can improve performance significantly when dealing with multiple __Synchronous I/O__ tasks, which don't really need to wait for each other.
 
 By giving these tasks a separate process to run on, the underlying operating system can take care of running them in parallel.
 
@@ -125,12 +101,7 @@ Sometimes you also have points in your code which have to wait until the result 
 This is why we have to wait at a certain point in time: for all processes on a parallel pool to finish,
 so we can be sure it's safe to continue without accidentally killing the child processes which aren't done yet.
 
-Waiting for all processes is done by using `yield` and `stream_select`, which will monitor until all processes are finished.
-
-Determining when a process is finished is done by using a listener on the `SIGCHLD` signal.
-This signal is emitted when a child process is finished by the OS kernel. As of PHP 7.1, there's much better support for listening and handling signals, making this approach more performance than eg. using process forks or sockets for communication. You can read more about it [here](https://wiki.php.net/rfc/async_signals).
-
-> On windows, an __process status check__ is performed on `yield` iterations.
+Waiting for all processes is done by using `yield`, `uv_run`, and `stream_select`, which will monitor until all processes are finished.
 
 When a process is finished, its success event is triggered, which you can hook into with the `->then()` function.
 Likewise, when a process fails or times out, the iterations will update that process' status and move on.
