@@ -148,7 +148,7 @@ if (!\function_exists('coroutine_run')) {
      *
      * @return int
      */
-    function spawn_task($command, $timeout = 60, bool $display = false, $channel = null, $channelTask = null)
+    function spawn_task($command, $timeout = 0, bool $display = false, $channel = null, $channelTask = null)
     {
         return Kernel::spawnTask($command, $timeout, $display, $channel, $channelTask);
     }
@@ -168,7 +168,7 @@ if (!\function_exists('coroutine_run')) {
      *
      * @return mixed
      */
-    function spawn_await($callable, $timeout = 60, bool $display = false, $channel = null, $channelTask = null)
+    function spawn_await($callable, $timeout = 0, bool $display = false, $channel = null, $channelTask = null)
     {
         return \awaitable_process(function () use ($callable, $timeout, $display, $channel, $channelTask) {
             return Kernel::addProcess($callable, $timeout, $display, $channel, $channelTask);
@@ -690,7 +690,7 @@ if (!\function_exists('coroutine_run')) {
      *
      * @return mixed
      */
-    function add_process($command, $timeout = 300, bool $display = false, $channel = null, $channelTask = null)
+    function add_process($command, $timeout = 0, bool $display = false, $channel = null, $channelTask = null)
     {
         return Kernel::addProcess($command, $timeout, $display, $channel, $channelTask);
     }
@@ -973,7 +973,7 @@ if (!\function_exists('coroutine_run')) {
      *
      * @return LauncherInterface
      */
-    function parallel($callable, int $timeout = 300): LauncherInterface
+    function parallel($callable, int $timeout = 0): LauncherInterface
     {
         $coroutine = \coroutine_instance();
 
@@ -1009,7 +1009,7 @@ if (!\function_exists('coroutine_run')) {
      *
      * @return LauncherInterface
      */
-    function parallel_add($somethingToRun, int $timeout = 300, $input = null): LauncherInterface
+    function parallel_add($somethingToRun, int $timeout = 0, $input = null): LauncherInterface
     {
         return Spawn::create($somethingToRun, $timeout, $input, true);
     }

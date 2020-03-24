@@ -368,7 +368,7 @@ final class Coroutine implements CoroutineInterface
 
     public function addProcess(
         $callable,
-        int $timeout = 60,
+        int $timeout = 0,
         bool $display = false,
         $channel = null,
         $channelTask = null

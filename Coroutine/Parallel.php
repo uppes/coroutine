@@ -80,7 +80,7 @@ final class Parallel implements ArrayAccess, ParallelInterface
         return $this->status;
     }
 
-    public function add($process, int $timeout = 300, $channel = null): LauncherInterface
+    public function add($process, int $timeout = 0, $channel = null): LauncherInterface
     {
         if (!is_callable($process) && !$process instanceof LauncherInterface) {
             throw new InvalidArgumentException('The process passed to Parallel::add should be callable.');
@@ -211,7 +211,7 @@ final class Parallel implements ArrayAccess, ParallelInterface
         return isset($this->parallel[$offset]) ? $this->parallel[$offset] : null;
     }
 
-    public function offsetSet($offset, $value, int $timeout = 300)
+    public function offsetSet($offset, $value, int $timeout = 0)
     {
         $this->add($value, $timeout);
     }

@@ -29,7 +29,7 @@ interface ParallelInterface
      *
      * @return LauncherInterface
      */
-    public function add($process, int $timeout = 300, $channel = null): LauncherInterface;
+    public function add($process, int $timeout = 0, $channel = null): LauncherInterface;
 
     public function retry(LauncherInterface $process = null): LauncherInterface;
 

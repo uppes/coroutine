@@ -314,7 +314,7 @@ final class Kernel
      */
     public static function addProcess(
         $callable,
-        $timeout = 300,
+        $timeout = 0,
         bool $display = false,
         $channel = null,
         $channelTask = null
@@ -372,7 +372,7 @@ final class Kernel
      */
     public static function spawnTask(
         $callable,
-        $timeout = 300,
+        $timeout = 0,
         bool $display = false,
         $channel = null,
         $channelTask = null
