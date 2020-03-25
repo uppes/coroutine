@@ -14,6 +14,7 @@ final class Process
 {
     private $processes = array();
     private $sleepTime = 15000;
+    private $signalCallback = null;
     private $timedOutCallback = null;
     private $finishCallback = null;
     private $failCallback = null;
@@ -24,10 +25,11 @@ final class Process
         ?CoroutineInterface $coroutine = null,
         $timedOutCallback = null,
         $finishCallback = null,
-        $failCallback = null
+        $failCallback = null,
+        $signalCallback = null
     ) {
         $this->coroutine = empty($coroutine) ? \coroutine_instance() : $coroutine;
-        $this->init($timedOutCallback,  $finishCallback,  $failCallback);
+        $this->init($timedOutCallback,  $finishCallback,  $failCallback, $signalCallback);
 
         if ($this->isPcntl())
             $this->registerProcess();
@@ -62,14 +64,18 @@ final class Process
     {
         if (!empty($this->processes)) {
             foreach ($this->processes as $process) {
-                if ($process->isTimedOut()) {
+               if ($process->isTimedOut()) {
                     $this->remove($process);
                     $this->coroutine->executeTask($this->timedOutCallback, $process);
+                    continue;
                 }
 
-                if (!$this->pcntl) {
+                if (!$this->pcntl || \function_exists('uv_spawn')) {
                     if ($process->isRunning()) {
                         continue;
+                    } elseif ($process->isSignaled()) {
+                        $this->remove($process);
+                        $this->coroutine->executeTask($this->signalCallback, $process);
                     } elseif ($process->isSuccessful()) {
                         $this->remove($process);
                         $this->coroutine->executeTask($this->finishCallback, $process);
@@ -92,11 +98,12 @@ final class Process
         return $this->sleepTime;
     }
 
-    public function init($timedOutCallback = null, $finishCallback = null, $failCallback = null)
+    public function init($timedOutCallback = null, $finishCallback = null, $failCallback = null, $signalCallback = null)
     {
         $this->timedOutCallback = $timedOutCallback;
         $this->finishCallback = $finishCallback;
         $this->failCallback = $failCallback;
+        $this->signalCallback = $signalCallback;
     }
 
     public function isEmpty(): bool
@@ -131,6 +138,12 @@ final class Process
                 $process = $this->processes[$pid] ?? null;
 
                 if (!$process) {
+                    continue;
+                }
+
+                if ($process instanceof LauncherInterface && $process->isSignaled()) {
+                    $this->remove($process);
+                    $this->coroutine->executeTask($this->signalCallback, $process);
                     continue;
                 }
 

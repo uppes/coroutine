@@ -36,12 +36,14 @@ final class ParallelStatus
         $finished = $this->parallelPool->getFinished();
         $failed = $this->parallelPool->getFailed();
         $timeouts = $this->parallelPool->getTimeouts();
+        $signaled = $this->parallelPool->getSignaled();
 
         return
             'queue: ' . \count($queue)
             . ' - finished: ' . \count($finished)
             . ' - failed: ' . \count($failed)
-            . ' - timeout: ' . \count($timeouts);
+            . ' - timeout: ' . \count($timeouts)
+            . ' - signaled: ' . \count($signaled);
     }
 
     protected function failedToString(): string

@@ -27,6 +27,7 @@ final class Parallel implements ArrayAccess, ParallelInterface
     private $finished = [];
     private $failed = [];
     private $timeouts = [];
+    private $signaled = [];
     private $parallel = [];
 
     public function __construct(CoroutineInterface $coroutine = null)
@@ -39,7 +40,8 @@ final class Parallel implements ArrayAccess, ParallelInterface
         $this->processor = $this->coroutine->getProcess(
             [$this, 'markAsTimedOut'],
             [$this, 'markAsFinished'],
-            [$this, 'markAsFailed']
+            [$this, 'markAsFailed'],
+            [$this, 'markAsSignaled']
         );
 
         $this->status = new ParallelStatus($this);
@@ -177,6 +179,15 @@ final class Parallel implements ArrayAccess, ParallelInterface
         $this->timeouts[$process->getPid()] = $process;
     }
 
+    public function markAsSignaled(LauncherInterface $process)
+    {
+        $this->notify();
+
+        yield $process->triggerSignal($process->getSignaled());
+
+        $this->signaled[$process->getPid()] = $process;
+    }
+
     public function markAsFailed(LauncherInterface $process)
     {
         $this->notify();
@@ -199,6 +210,11 @@ final class Parallel implements ArrayAccess, ParallelInterface
     public function getTimeouts(): array
     {
         return $this->timeouts;
+    }
+
+    public function getSignaled(): array
+    {
+        return $this->signaled;
     }
 
     public function offsetExists($offset)

@@ -317,11 +317,13 @@ final class Kernel
         $timeout = 0,
         bool $display = false,
         $channel = null,
-        $channelTask = null
+        $channelTask = null,
+        $signal = null,
+        $signalTask = null
     ) {
         return new Kernel(
             function (TaskInterface $task, CoroutineInterface $coroutine)
-            use ($callable, $timeout, $display, $channel, $channelTask) {
+            use ($callable, $timeout, $display, $channel, $channelTask, $signal, $signalTask) {
                 $task->parallelTask();
                 $task->setState('process');
                 $coroutine->addProcess($callable, $timeout, $display, $channel)
@@ -340,9 +342,24 @@ final class Kernel
                         $task->setException(new TimeoutError($timeout));
                         $coroutine->schedule($task);
                     })
-                    ->progress(function ($type, $data) use ($coroutine, $channel, $channelTask) {
-                        $taskList = $coroutine->currentTask();
+                    ->signal($signal, function ($signaled) use ($task, $signal, $coroutine, $signalTask) {
                         // @codeCoverageIgnoreStart
+                        $task->setState('signaled');
+                        $taskList = $coroutine->currentTask();
+                        if (isset($taskList[$signalTask]) && $taskList[$signalTask] instanceof TaskInterface) {
+                            $signaler = $taskList[$signalTask];
+                            $signaler->sendValue($signaled);
+                            $coroutine->schedule($signaler);
+                        } else {
+                            $task->setException(new \Exception(\sprintf('An unhandled signal received: %s', $signal)));
+                        }
+
+                        $coroutine->schedule($task);
+                        // @codeCoverageIgnoreEnd
+                    })
+                    ->progress(function ($type, $data) use ($coroutine, $channel, $channelTask) {
+                        // @codeCoverageIgnoreStart
+                        $taskList = $coroutine->currentTask();
                         if (isset($taskList[$channelTask]) && $taskList[$channelTask] instanceof TaskInterface) {
                             $ipcTask = $taskList[$channelTask];
                             $ipcTask->sendValue([$channel, $type, $data]);

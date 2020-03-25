@@ -40,6 +40,8 @@ interface ParallelInterface
      */
     public function getQueue(): array;
 
+    public function markAsSignaled(LauncherInterface $process);
+
     public function markAsFinished(LauncherInterface $process);
 
     public function markAsTimedOut(LauncherInterface $process);
@@ -51,4 +53,6 @@ interface ParallelInterface
     public function getFailed(): array;
 
     public function getTimeouts(): array;
+
+    public function getSignaled(): array;
 }
