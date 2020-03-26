@@ -31,7 +31,7 @@ final class Process
         $this->coroutine = empty($coroutine) ? \coroutine_instance() : $coroutine;
         $this->init($timedOutCallback,  $finishCallback,  $failCallback, $signalCallback);
 
-        if ($this->isPcntl())
+        if ($this->isPcntl() && !\function_exists('uv_spawn'))
             $this->registerProcess();
     }
 
@@ -144,11 +144,11 @@ final class Process
                     continue;
                 }
 
-                if ($process instanceof LauncherInterface && $process->isSignaled()) {
-                    $this->remove($process);
-                    $this->coroutine->executeTask($this->signalCallback, $process);
-                    continue;
-                }
+                //if ($process instanceof LauncherInterface && $process->isSignaled()) {
+                //    $this->remove($process);
+                //    $this->coroutine->executeTask($this->signalCallback, $process);
+                //    continue;
+                //}
 
                 if ($status['status'] === 0) {
                     $this->remove($process);
