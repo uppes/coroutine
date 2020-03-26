@@ -46,7 +46,7 @@ final class FileSystem
             'request_fulluri' => false,
             'max_redirects' => 10,
             'ignore_errors' => true,
-            'timeout' => 1,
+            'timeout' => 2,
             'user_agent' => 'Symplely Coroutine',
             'headers' => [
                 'Accept' => '*/*',
