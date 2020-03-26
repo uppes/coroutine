@@ -3,8 +3,6 @@
 namespace Async\Tests;
 
 use Async\Coroutine\Coroutine;
-use Async\Coroutine\Parallel;
-use Async\Tests\MyTask;
 use PHPUnit\Framework\TestCase;
 
 class ParallelStatusTest extends TestCase
@@ -20,7 +18,7 @@ class ParallelStatusTest extends TestCase
         $parallel = $coroutine->getParallel();
 
         $parallel->add(function () {
-            sleep(5);
+            usleep(5);
         });
 
         $this->assertStringContainsString('finished: 0', (string) $parallel->status());
@@ -57,7 +55,7 @@ class ParallelStatusTest extends TestCase
 
         foreach (range(1, 5) as $i) {
             $parallel->add(function () {
-                sleep(1000);
+                sleep(10);
             }, 1);
         }
 

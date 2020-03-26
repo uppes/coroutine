@@ -2,7 +2,7 @@
 
 namespace Async\Tests;
 
-use Async\Coroutine\Parallel;
+use Async\Coroutine\Coroutine;
 use PHPUnit\Framework\TestCase;
 
 class ErrorHandlingTest extends TestCase
@@ -14,7 +14,8 @@ class ErrorHandlingTest extends TestCase
 
     public function testIt_can_handle_exceptions_via_catch_callback()
     {
-        $parallel = new Parallel();
+        $coroutine = new Coroutine();
+        $parallel = $coroutine->getParallel();
 
         foreach (range(1, 5) as $i) {
             $parallel->add(function () {
@@ -34,7 +35,8 @@ class ErrorHandlingTest extends TestCase
         $this->expectException(\Exception::class);
         $this->expectExceptionMessageMatches('/test/');
 
-        $parallel = new Parallel();
+        $coroutine = new Coroutine();
+        $parallel = $coroutine->getParallel();
 
         $parallel->add(function () {
             throw new \Exception('test');
@@ -45,7 +47,8 @@ class ErrorHandlingTest extends TestCase
 
     public function testIt_keeps_the_original_trace()
     {
-        $parallel = new Parallel();
+        $coroutine = new Coroutine();
+        $parallel = $coroutine->getParallel();
 
         $parallel->add(function () {
             $myClass = new MyClass();

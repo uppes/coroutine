@@ -16,7 +16,6 @@ class ParallelTest extends TestCase
         \coroutine_clear();
     }
 
-
     public function testIt_can_create_and_return_results()
     {
         $coroutine = new Coroutine();
@@ -183,7 +182,7 @@ class ParallelTest extends TestCase
         $result = $parallel->wait();
 
         $this->assertCount(5, $result);
-        $this->assertEquals(10, array_sum($result));
+        $this->assertEquals(10, array_sum($result), (string) $parallel->status());
     }
 
     public function testIt_can_use_a_class_from_the_parent_process()
@@ -208,28 +207,6 @@ class ParallelTest extends TestCase
 
         $this->assertInstanceOf(MyClass::class, $result);
         $this->assertTrue($result->property);
-    }
-
-    public function testIt_works_with_global_helper_functions()
-    {
-        $coroutine = new Coroutine();
-        $parallel = $coroutine->getParallel();
-
-        $counter = 0;
-
-        foreach (range(1, 5) as $i) {
-            $parallel[] = $parallel->add(function () {
-                usleep(random_int(10, 1000));
-
-                return 2;
-            })->then(function (int $output) use (&$counter) {
-                $counter += $output;
-            });
-        }
-
-        $parallel->wait();
-
-        $this->assertEquals(10, $counter, (string) $parallel->status());
     }
 
     public function testIt_can_run_invokable_classes()

@@ -949,8 +949,13 @@ if (!\function_exists('coroutine_run')) {
     function coroutine_clear()
     {
         global $__coroutine__;
-        $__coroutine__ = null;
+        if ($__coroutine__ instanceof CoroutineInterface) {
+            $__coroutine__->shutdown(0);
+            $__coroutine__->close();
+        }
+
         unset($GLOBALS['__coroutine__']);
+        $__coroutine__ = null;
     }
 
     function coroutine_create(\Generator $routine = null, ?string $driver = null)

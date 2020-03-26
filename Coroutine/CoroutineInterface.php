@@ -41,6 +41,11 @@ interface CoroutineInterface
     public function shutdown(int $skipTask = 1);
 
     /**
+     * Reset all application data.
+     */
+    public function close();
+
+    /**
      * kill/remove an task using task id,
      * optionally pass custom cancel state for third party code integration.
      *

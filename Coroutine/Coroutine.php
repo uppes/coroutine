@@ -161,6 +161,35 @@ final class Coroutine implements CoroutineInterface
      */
     protected $isHighTimer;
 
+    public function __destruct()
+    {
+        $this->close();
+    }
+
+    public function close()
+    {
+        $this->maxTaskId = 0;
+        $this->taskMap = [];
+        $this->completedMap = [];
+        $this->taskQueue;
+        $this->timers = [];
+        $this->waitingForRead = [];
+        $this->waitingForWrite = [];
+        $this->uv = null;
+        $this->onEvent = null;
+        $this->onTimer = null;
+        $this->onSignal = null;
+        $this->isUvSignal = null;
+        $this->uvFileSystem = 0;
+        $this->useUv = false;
+        $this->events = [];
+        $this->signals = [];
+        $this->process = null;
+        $this->parallel = null;
+        $this->signaler = null;
+        $this->isHighTimer = null;
+    }
+
     /**
      * This scheduler will detect if the [`ext-uv` PECL extension](https://pecl.php.net/package/uv) is
      * installed, which provides an interface to `libuv` library. An native like event loop engine.
@@ -305,11 +334,6 @@ final class Coroutine implements CoroutineInterface
         \uv_poll_start($this->events[(int) $stream], $flags, $this->onEvent);
     }
 
-    public function getParallel(): ParallelInterface
-    {
-        return $this->parallel;
-    }
-
     public function fsCount(): int
     {
         return $this->uvFileSystem;
@@ -328,6 +352,22 @@ final class Coroutine implements CoroutineInterface
     /**
      * @codeCoverageIgnore
      */
+    public function uvOn()
+    {
+        $this->useUv = true;
+    }
+
+    /**
+     * @codeCoverageIgnore
+     */
+    public function uvOff()
+    {
+        $this->useUv = false;
+    }
+
+    /**
+     * @codeCoverageIgnore
+     */
     public function getUV(): ?\UVLoop
     {
         if ($this->uv instanceof \UVLoop)
@@ -341,20 +381,9 @@ final class Coroutine implements CoroutineInterface
         return null;
     }
 
-    /**
-     * @codeCoverageIgnore
-     */
-    public function uvOn()
+    public function getParallel(): ParallelInterface
     {
-        $this->useUv = true;
-    }
-
-    /**
-     * @codeCoverageIgnore
-     */
-    public function uvOff()
-    {
-        $this->useUv = false;
+        return $this->parallel;
     }
 
     public function getProcess(
@@ -392,7 +421,8 @@ final class Coroutine implements CoroutineInterface
 
     public function isPcntl(): bool
     {
-        return \extension_loaded('pcntl') && \function_exists('pcntl_async_signals')
+        return \extension_loaded('pcntl')
+            && \function_exists('pcntl_async_signals')
             && \function_exists('posix_kill');
     }
 
@@ -469,8 +499,8 @@ final class Coroutine implements CoroutineInterface
             }
         }
 
+        // @codeCoverageIgnoreStart
         if ($this->isUvActive()) {
-            // @codeCoverageIgnoreStart
             \uv_stop($this->uv);
             foreach ($this->timers as $timer) {
                 \uv_timer_stop($timer);
@@ -490,8 +520,8 @@ final class Coroutine implements CoroutineInterface
             $this->waitingForRead = [];
             $this->waitingForWrite = [];
             \uv_run($this->uv, \UV::RUN_NOWAIT);
-            // @codeCoverageIgnoreEnd
         }
+        // @codeCoverageIgnoreEnd
     }
 
     public function cancelTask(int $tid, $customState = null)
