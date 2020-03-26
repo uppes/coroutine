@@ -164,6 +164,8 @@ class CoroutineTest extends TestCase
             $this->assertStringContainsString($iteration, $this->task);
 
         $this->assertEquals(3, preg_match_all('/3 still alive!/', $this->task, $matches));
+
+        $coroutine->shutdown();
     }
 
     function testAddWriteStream()
@@ -177,6 +179,8 @@ class CoroutineTest extends TestCase
         $coroutine->run();
         rewind($h);
         $this->assertEquals('hello world', stream_get_contents($h));
+
+        $coroutine->shutdown();
     }
 
     function testAddReadStream()
@@ -192,6 +196,8 @@ class CoroutineTest extends TestCase
         });
         $coroutine->run();
         $this->assertEquals('hello world', $result);
+
+        $coroutine->shutdown();
     }
 
     function testTimeout()
@@ -203,6 +209,8 @@ class CoroutineTest extends TestCase
         }, 0.02);
         $coroutine->run();
         $this->assertEquals(1, $check);
+
+        $coroutine->shutdown();
     }
 
     function testTimeoutOrder()
@@ -220,5 +228,7 @@ class CoroutineTest extends TestCase
         }, 0.3);
         $coroutine->run();
         $this->assertEquals(['b', 'a', 'c'], $check);
+
+        $coroutine->shutdown();
     }
 }
