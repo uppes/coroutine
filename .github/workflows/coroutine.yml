@@ -1,5 +1,5 @@
 # GitHub Action for with extensions
-name: Coroutine 
+name: Coroutine
 on: [push, pull_request]
 jobs:
   build:
@@ -16,6 +16,7 @@ jobs:
         with:
           php-version: ${{ matrix.php-versions }}
           extensions: mbstring, simplexml, dom, xdebug
+          ini-values: extension=uv.so
       - name: Install libuv and PHP build tools
         run: |
           sudo apt update
