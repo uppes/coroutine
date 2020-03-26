@@ -20,7 +20,7 @@ class ErrorHandlingTest extends TestCase
         foreach (range(1, 5) as $i) {
             $parallel->add(function () {
                 throw new \Exception('test');
-            }, 1)->catch(function (\Exception $e) {
+            })->catch(function (\Exception $e) {
                 $this->assertRegExp('/test/', $e->getMessage());
             });
         }
@@ -42,7 +42,7 @@ class ErrorHandlingTest extends TestCase
 
         $parallel->add(function () {
             throw new \Exception('test');
-        }, 1);
+        });
 
         $parallel->wait();
 
