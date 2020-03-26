@@ -360,6 +360,8 @@ class FileSystemTest extends TestCase
         $this->assertTrue(\is_type($contents, 'bool'));
         $contents = yield \file_get(__DIR__ . \DS . 'list.txt');
         $this->assertEquals('string', \is_type($contents));
+
+        yield \shutdown();
     }
 
     public function testFileGet()
@@ -389,6 +391,8 @@ class FileSystemTest extends TestCase
         $this->assertFalse($meta);
         $bool = yield \file_close($fd);
         $this->assertFalse($bool);
+
+        yield \shutdown();
     }
 
     public function testFileGetSize()
@@ -417,7 +421,7 @@ class FileSystemTest extends TestCase
     public function getWebsiteStatus($url)
     {
         $fd = yield \file_uri($url);
-        $this->assertTrue(\is_resource($fd));
+        $this->assertTrue(\is_resource($fd), $url);
         $status = \file_meta($fd, 'status');
         $this->assertEquals(200, $status);
         $bool = yield \file_close($fd);
@@ -430,10 +434,12 @@ class FileSystemTest extends TestCase
         $websites = yield \file_file(__DIR__ . \DS . 'list.txt');
         $this->assertCount(5, $websites);
         if ($websites !== false) {
-            $data = yield from $this->getStatuses($websites);
             $this->expectOutputString('{"200":2,"400":0}');
+            $data = yield from $this->getStatuses($websites);
             print $data;
         }
+
+        yield \shutdown();
     }
 
     public function testFileOpenLineUri()

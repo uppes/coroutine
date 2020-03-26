@@ -219,7 +219,7 @@ if (!\function_exists('coroutine_run')) {
         // @codeCoverageIgnoreEnd
 
         return \awaitable_process(function () use ($system) {
-            return Kernel::addProcess($system, 3);
+            return Kernel::addProcess($system, 10);
         });
     }
 

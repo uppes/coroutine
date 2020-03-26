@@ -1,5 +1,5 @@
 http://google.com/
-http://blogspot.com/
+https://httpbin.org/get
 http://microsoft.com/
 http://dell.com/
 http://nytimes.com/
