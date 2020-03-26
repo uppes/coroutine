@@ -6,7 +6,7 @@ jobs:
     strategy:
       matrix:
         operating-system: [ubuntu-latest]
-        php-versions: '7.4'
+        php-versions: ['7.4']
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
