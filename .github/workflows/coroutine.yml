@@ -6,7 +6,7 @@ jobs:
     strategy:
       matrix:
         operating-system: [ubuntu-latest]
-        php-versions: ['7.2', '7.4']
+        php-versions: '7.4'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -18,13 +18,14 @@ jobs:
       - name: Setup PHP, with composer and extensions
         uses: shivammathur/setup-php@v2 #https://github.com/shivammathur/setup-php
         with:
-          php-version: ${{ matrix.php-versions }}
+          php-version: '7.4'
           extensions: mbstring, simplexml, dom, xdebug
       - name: Build and install PHP-UV extension
         run: |
           sudo pecl channel-update pecl.php.net
           sudo pecl install uv-beta
           sudo cp -f /usr/lib/php/20190902/uv.so /usr/lib/php/20170718/uv.so
+          sudo cp -f /usr/lib/php/20190902/uv.so /usr/lib/php/20190902/uv.so
       - name: Add uv.so to php.ini
         run: sudo echo "extension=uv.so" >> "$(php -r 'echo php_ini_loaded_file();')"
       - name: Install dependencies
