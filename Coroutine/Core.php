@@ -479,7 +479,7 @@ if (!\function_exists('coroutine_run')) {
      *
      * @return resource|bool
      */
-    function file_open(string $path, string $flag, int $mode = \UV::S_IRWXU)
+    function file_open(string $path, string $flag, int $mode = 00700)
     {
         return FileSystem::open($path, $flag, $mode);
     }
