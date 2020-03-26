@@ -174,7 +174,9 @@ interface CoroutineInterface
         int $timeout = 0,
         bool $display = false,
         $channel = null,
-        $channelTask = null
+        $channelTask = null,
+        int $signal = 0,
+        $signalTask = null
     ): LauncherInterface;
 
     /**
@@ -227,7 +229,8 @@ interface CoroutineInterface
     public function getProcess(
         ?callable $timedOutCallback = null,
         ?callable $finishCallback = null,
-        ?callable $failCallback = null
+        ?callable $failCallback = null,
+        ?callable $signalCallback  = null
     ): Process;
 
     /**

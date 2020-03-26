@@ -318,7 +318,7 @@ final class Kernel
         bool $display = false,
         $channel = null,
         $channelTask = null,
-        $signal = null,
+        int $signal = 0,
         $signalTask = null
     ) {
         return new Kernel(
@@ -326,7 +326,7 @@ final class Kernel
             use ($callable, $timeout, $display, $channel, $channelTask, $signal, $signalTask) {
                 $task->parallelTask();
                 $task->setState('process');
-                $coroutine->addProcess($callable, $timeout, $display, $channel)
+                $launcher = $coroutine->addProcess($callable, $timeout, $display, $channel)
                     ->then(function ($result) use ($task, $coroutine) {
                         $task->setState('completed');
                         $task->sendValue($result);
@@ -341,9 +341,11 @@ final class Kernel
                         $task->setState('cancelled');
                         $task->setException(new TimeoutError($timeout));
                         $coroutine->schedule($task);
-                    })
-                    ->signal($signal, function ($signaled) use ($task, $signal, $coroutine, $signalTask) {
-                        // @codeCoverageIgnoreStart
+                    });
+
+                // @codeCoverageIgnoreStart
+                if ($signal !== 0 && \is_int($signalTask)) {
+                    $launcher->signal($signal, function ($signaled) use ($task, $coroutine, $signal, $signalTask) {
                         $task->setState('signaled');
                         $taskList = $coroutine->currentTask();
                         if (isset($taskList[$signalTask]) && $taskList[$signalTask] instanceof TaskInterface) {
@@ -355,18 +357,22 @@ final class Kernel
                         }
 
                         $coroutine->schedule($task);
-                        // @codeCoverageIgnoreEnd
-                    })
-                    ->progress(function ($type, $data) use ($coroutine, $channel, $channelTask) {
-                        // @codeCoverageIgnoreStart
+                    });
+                }
+                // @codeCoverageIgnoreEnd
+
+                // @codeCoverageIgnoreStart
+                if ($channel !== null && \is_int($channelTask)) {
+                    $launcher->progress(function ($type, $data) use ($coroutine, $channel, $channelTask) {
                         $taskList = $coroutine->currentTask();
                         if (isset($taskList[$channelTask]) && $taskList[$channelTask] instanceof TaskInterface) {
                             $ipcTask = $taskList[$channelTask];
                             $ipcTask->sendValue([$channel, $type, $data]);
                             $coroutine->schedule($ipcTask);
                         }
-                        // @codeCoverageIgnoreEnd
                     });
+                }
+                // @codeCoverageIgnoreEnd
             }
         );
     }

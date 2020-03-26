@@ -2,20 +2,22 @@
 
 namespace Async\Tests;
 
+use Async\Coroutine\Coroutine;
 use Async\Coroutine\Parallel;
 use Async\Tests\MyTask;
 use PHPUnit\Framework\TestCase;
 
 class ParallelStatusTest extends TestCase
 {
-	protected function setUp(): void
+    protected function setUp(): void
     {
         \coroutine_clear();
     }
 
     public function testIt_can_show_a_textual_status()
     {
-        $parallel = new Parallel();
+        $coroutine = new Coroutine();
+        $parallel = $coroutine->getParallel();
 
         $parallel->add(function () {
             sleep(5);
@@ -30,7 +32,8 @@ class ParallelStatusTest extends TestCase
 
     public function testIt_can_show_a_textual_failed_status()
     {
-        $parallel = new Parallel();
+        $coroutine = new Coroutine();
+        $parallel = $coroutine->getParallel();
 
         foreach (range(1, 5) as $i) {
             $parallel->add(function () {
@@ -49,7 +52,8 @@ class ParallelStatusTest extends TestCase
 
     public function testIt_can_show_timeout_status()
     {
-        $parallel = new Parallel();
+        $coroutine = new Coroutine();
+        $parallel = $coroutine->getParallel();
 
         foreach (range(1, 5) as $i) {
             $parallel->add(function () {

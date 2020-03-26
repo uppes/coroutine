@@ -7,11 +7,6 @@ use Async\Spawn\LauncherInterface;
 
 interface ParallelInterface
 {
-    /**
-     * @return static
-     */
-    public static function create(): ParallelInterface;
-
     public function concurrency(int $concurrency): ParallelInterface;
 
     public function sleepTime(int $sleepTime);

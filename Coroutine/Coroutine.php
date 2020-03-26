@@ -377,9 +377,11 @@ final class Coroutine implements CoroutineInterface
         int $timeout = 0,
         bool $display = false,
         $channel = null,
-        $channelTask = null
+        $channelTask = null,
+        int $signal = 0,
+        $signalTask = null
     ): LauncherInterface {
-        $launcher = $this->parallel->add($callable, $timeout, $channel, $channelTask);
+        $launcher = $this->parallel->add($callable, $timeout, $channel, $channelTask, $signal, $signalTask);
         return $display ? $launcher->displayOn() : $launcher;
     }
 
@@ -649,7 +651,10 @@ final class Coroutine implements CoroutineInterface
                 if ($this->isUvActive()) {
                     \uv_run($this->uv, $streamWait ? \UV::RUN_ONCE : \UV::RUN_NOWAIT);
                 } else {
-                    if (($this->isUvSignal && $this->isSignaling()) || ($this->fsCount() > 0)) {
+                    if (($this->isUvSignal && $this->isSignaling())
+                        || ($this->fsCount() > 0)
+                        || !$this->process->isEmpty()
+                    ) {
                         \uv_run($this->uv, \UV::RUN_NOWAIT);
                     }
 

@@ -7,10 +7,7 @@ use Async\Coroutine\Kernel;
 use Async\Coroutine\Channel;
 use Async\Coroutine\Coroutine;
 use Async\Coroutine\CoroutineInterface;
-use Async\Coroutine\ParallelInterface;
-use Async\Spawn\Spawn;
 use Async\Spawn\Channel as Channeled;
-use Async\Spawn\LauncherInterface;
 use Async\Coroutine\Exceptions\Panic;
 use Async\Coroutine\FileSystem;
 
@@ -148,9 +145,16 @@ if (!\function_exists('coroutine_run')) {
      *
      * @return int
      */
-    function spawn_task($command, $timeout = 0, bool $display = false, $channel = null, $channelTask = null)
+    function spawn_task(
+        $command,
+        $timeout = 0,
+        bool $display = false,
+        $channel = null,
+        $channelTask = null,
+        int $signal = 0,
+        $signalTask = null)
     {
-        return Kernel::spawnTask($command, $timeout, $display, $channel, $channelTask);
+        return Kernel::spawnTask($command, $timeout, $display, $channel, $channelTask, $signal, $signalTask);
     }
 
     /**
@@ -168,10 +172,26 @@ if (!\function_exists('coroutine_run')) {
      *
      * @return mixed
      */
-    function spawn_await($callable, $timeout = 0, bool $display = false, $channel = null, $channelTask = null)
+    function spawn_await(
+        $callable,
+        $timeout = 0,
+        bool $display = false,
+        $channel = null,
+        $channelTask = null,
+        int $signal = 0,
+        $signalTask = null
+    )
     {
-        return \awaitable_process(function () use ($callable, $timeout, $display, $channel, $channelTask) {
-            return Kernel::addProcess($callable, $timeout, $display, $channel, $channelTask);
+        return \awaitable_process(function () use (
+            $callable,
+            $timeout,
+            $display,
+            $channel,
+            $channelTask,
+            $signal,
+            $signalTask
+        ) {
+            return Kernel::addProcess($callable, $timeout, $display, $channel, $channelTask, $signal, $signalTask);
         });
     }
 
@@ -963,68 +983,6 @@ if (!\function_exists('coroutine_run')) {
             $coroutine->run();
             return true;
         }
-    }
-
-    /**
-     * Add something/callable to `coroutine` process pool
-     *
-     * @param callable $callable
-     * @param int $timeout
-     *
-     * @return LauncherInterface
-     */
-    function parallel($callable, int $timeout = 0): LauncherInterface
-    {
-        $coroutine = \coroutine_instance();
-
-        if ($coroutine instanceof CoroutineInterface)
-            return $coroutine->addProcess($callable, $timeout);
-
-        return \coroutine_create()->addProcess($callable, $timeout);
-    }
-
-    /**
-     * Get/create process worker pool of an parallel instance.
-     *
-     * @return ParallelInterface
-     */
-    function parallel_pool(): ParallelInterface
-    {
-        $coroutine = \coroutine_instance();
-
-        if ($coroutine instanceof CoroutineInterface)
-            return $coroutine->getParallel();
-
-        return \coroutine_create()->getParallel();
-    }
-
-    /**
-     * Add something/callable to parallel instance process pool.
-     *
-     * @param callable $somethingToRun
-     * @param int $timeout
-     * @param mixed|null $input Set the input content as stream, resource, scalar, Traversable, or null for no input
-     * - The content will be passed to the underlying process standard input.
-     * - $input is not available when using libuv features.
-     *
-     * @return LauncherInterface
-     */
-    function parallel_add($somethingToRun, int $timeout = 0, $input = null): LauncherInterface
-    {
-        return Spawn::create($somethingToRun, $timeout, $input, true);
-    }
-
-    /**
-     * Execute process pool, wait for results. Will do other stuff come back later.
-     *
-     * @return array
-     */
-    function parallel_wait(): ?array
-    {
-        $pool = \parallel_pool();
-
-        if ($pool instanceof ParallelInterface)
-            return $pool->wait();
     }
 
     /**

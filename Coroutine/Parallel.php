@@ -21,7 +21,7 @@ final class Parallel implements ArrayAccess, ParallelInterface
     private $processor = null;
     private $status;
     private $process;
-    private $concurrency = 20;
+    private $concurrency = 100;
     private $queue = [];
     private $results = [];
     private $finished = [];
@@ -30,12 +30,9 @@ final class Parallel implements ArrayAccess, ParallelInterface
     private $signaled = [];
     private $parallel = [];
 
-    public function __construct(CoroutineInterface $coroutine = null)
+    public function __construct(CoroutineInterface $coroutine)
     {
-        $this->coroutine = empty($coroutine) ? \coroutine_instance() : $coroutine;
-        if (!$this->coroutine instanceof CoroutineInterface) {
-            $this->coroutine = \coroutine_create();
-        }
+        $this->coroutine = $coroutine;
 
         $this->processor = $this->coroutine->getProcess(
             [$this, 'markAsTimedOut'],
@@ -45,14 +42,6 @@ final class Parallel implements ArrayAccess, ParallelInterface
         );
 
         $this->status = new ParallelStatus($this);
-    }
-
-    /**
-     * @return static
-     */
-    public static function create(): ParallelInterface
-    {
-        return new static();
     }
 
     public function concurrency(int $concurrency): ParallelInterface

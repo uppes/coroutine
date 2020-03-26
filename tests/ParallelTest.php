@@ -3,7 +3,7 @@
 namespace Async\Tests;
 
 use InvalidArgumentException;
-use Async\Coroutine\Parallel;
+use Async\Coroutine\Coroutine;
 use Async\Tests\MyClass;
 use Async\Tests\InvokableClass;
 use Async\Tests\NonInvokableClass;
@@ -16,9 +16,11 @@ class ParallelTest extends TestCase
         \coroutine_clear();
     }
 
+
     public function testIt_can_create_and_return_results()
     {
-        $parallel = Parallel::create();
+        $coroutine = new Coroutine();
+        $parallel = $coroutine->getParallel();
 
         $counter = 0;
 
@@ -38,7 +40,8 @@ class ParallelTest extends TestCase
 
     public function testIt_can_retry()
     {
-        $parallel = Parallel::create();
+        $coroutine = new Coroutine();
+        $parallel = $coroutine->getParallel();
 
         $counter = 0;
 
@@ -71,7 +74,8 @@ class ParallelTest extends TestCase
 
     public function testIt_can_handle_success()
     {
-        $parallel = new Parallel();
+        $coroutine = new Coroutine();
+        $parallel = $coroutine->getParallel();
 
         $counter = 0;
 
@@ -90,7 +94,8 @@ class ParallelTest extends TestCase
 
     public function testIt_can_handle_timeout()
     {
-        $parallel = new Parallel();
+        $coroutine = new Coroutine();
+        $parallel = $coroutine->getParallel();
 
         $counter = 0;
 
@@ -109,7 +114,8 @@ class ParallelTest extends TestCase
 
     public function testIt_can_handle_a_maximum_of_concurrent_processes()
     {
-        $parallel = (new Parallel());
+        $coroutine = new Coroutine();
+        $parallel = $coroutine->getParallel();
 
         $parallel->concurrency(2);
 
@@ -117,7 +123,7 @@ class ParallelTest extends TestCase
 
         foreach (range(1, 3) as $i) {
             $parallel->add(function () {
-                sleep(1);
+                sleep(2);
             });
         }
 
@@ -133,21 +139,22 @@ class ParallelTest extends TestCase
 
     public function testIt_can_handle_sleep_array_access()
     {
-        $parallel = new Parallel();
+        $coroutine = new Coroutine();
+        $parallel = $coroutine->getParallel();
 
         $counter = 0;
 
         $parallel->sleepTime(10000);
 
         foreach (range(1, 5) as $i) {
-            $parallel[] = \parallel_add(function () {
+            $parallel[] = $parallel->add(function () {
                 usleep(random_int(100, 1000));
 
                 return 2;
             });
         }
 
-        \parallel_wait();
+        $parallel->wait();
 
         $this->assertTrue(isset($parallel[0]));
 
@@ -162,12 +169,13 @@ class ParallelTest extends TestCase
 
     public function testIt_returns_all_the_output_as_an_array()
     {
-        $parallel = new Parallel();
+        $coroutine = new Coroutine();
+        $parallel = $coroutine->getParallel();
 
         $result = null;
 
         foreach (range(1, 5) as $i) {
-            $parallel[] = \parallel_add(function () {
+            $parallel[] = $parallel->add(function () {
                 return 2;
             });
         }
@@ -180,12 +188,13 @@ class ParallelTest extends TestCase
 
     public function testIt_can_use_a_class_from_the_parent_process()
     {
-        $parallel = \parallel_pool();
+        $coroutine = new Coroutine();
+        $parallel = $coroutine->getParallel();
 
         /** @var MyClass $result */
         $result = null;
 
-        $parallel[] = \parallel_add(function () {
+        $parallel[] = $parallel->add(function () {
             $class = new MyClass();
 
             $class->property = true;
@@ -195,7 +204,7 @@ class ParallelTest extends TestCase
             $result = $class;
         });
 
-        \parallel_wait();
+        $parallel->wait();
 
         $this->assertInstanceOf(MyClass::class, $result);
         $this->assertTrue($result->property);
@@ -203,12 +212,13 @@ class ParallelTest extends TestCase
 
     public function testIt_works_with_global_helper_functions()
     {
-        $workers = \parallel_pool();
+        $coroutine = new Coroutine();
+        $parallel = $coroutine->getParallel();
 
         $counter = 0;
 
         foreach (range(1, 5) as $i) {
-            $workers[] = \parallel_add(function () {
+            $parallel[] = $parallel->add(function () {
                 usleep(random_int(10, 1000));
 
                 return 2;
@@ -217,27 +227,20 @@ class ParallelTest extends TestCase
             });
         }
 
-        \parallel_wait();
+        $parallel->wait();
 
-        $this->assertEquals(10, $counter, (string) $workers->status());
+        $this->assertEquals(10, $counter, (string) $parallel->status());
     }
 
     public function testIt_can_run_invokable_classes()
     {
-        $parallel = \parallel_pool();
+        $coroutine = new Coroutine();
+        $parallel = $coroutine->getParallel();
+
 
         $parallel->add(new InvokableClass());
 
-        $results = \parallel_wait();
-
-        $this->assertEquals(2, $results[0]);
-    }
-
-    public function testIt_can_run_invokable_again()
-    {
-        \parallel(new InvokableClass());
-
-        $results = \parallel_wait();
+        $results = $parallel->wait();
 
         $this->assertEquals(2, $results[0]);
     }
@@ -246,14 +249,17 @@ class ParallelTest extends TestCase
     {
         $this->expectException(\InvalidArgumentException::class);
 
-        $parallel = \parallel_pool();
+        $coroutine = new Coroutine();
+        $parallel = $coroutine->getParallel();
 
         $parallel->add(new NonInvokableClass());
+        $results = $coroutine->run();
     }
 
     public function testIt_can_check_for_asynchronous_support_speed()
     {
-        $parallel = new Parallel();
+        $coroutine = new Coroutine();
+        $parallel = $coroutine->getParallel();
 
         $stopwatch = \microtime(true);
 
@@ -267,15 +273,14 @@ class ParallelTest extends TestCase
 
         $stopwatchResult = \microtime(true) - $stopwatch;
 
-		if ('\\' !== \DIRECTORY_SEPARATOR) {
-			$expect = (float) 0.6;
+        if ('\\' !== \DIRECTORY_SEPARATOR) {
+            $expect = (float) 0.6;
             $this->assertTrue($parallel->isPcntl());
         } else {
             $expect = (float) 0.7;
             $this->assertFalse($parallel->isPcntl());
         }
 
-        $this->assertLessThan($expect, $stopwatchResult, "Execution time was {$stopwatchResult}, expected less than {$expect}.\n".(string) $parallel->status());
+        $this->assertLessThan($expect, $stopwatchResult, "Execution time was {$stopwatchResult}, expected less than {$expect}.\n" . (string) $parallel->status());
     }
-
 }
