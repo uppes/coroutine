@@ -937,19 +937,21 @@ final class Coroutine implements CoroutineInterface
 
         // @codeCoverageIgnoreStart
         yield Kernel::readWait(\STDIN);
-        $windows7 = \strpos(\php_uname('v'), 'Windows 7') !== false;
-        // kinda of workaround to allow non blocking under Windows 10, if no key is typed, will block after key press
-        if (!$blocking) {
-            while (true) {
-                $tell = \ftell(\STDIN);
-                if (\is_int($tell) || $windows7)
-                    break;
-                else
-                    yield;
+        if (\IS_WINDOWS) {
+            $windows7 = \strpos(\php_uname('v'), 'Windows 7') !== false;
+            // kinda of workaround to allow non blocking under Windows 10, if no key is typed, will block after key press
+            if (!$blocking) {
+                while (true) {
+                    $tell = \ftell(\STDIN);
+                    if (\is_int($tell) || $windows7)
+                        break;
+                    else
+                        yield;
+                }
             }
         }
 
-        return \trim(\stream_get_line(\STDIN, $size, \EOL));
+        return \stream_get_line(\STDIN, $size, \EOL);
         // @codeCoverageIgnoreEnd
     }
 
