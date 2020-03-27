@@ -286,6 +286,15 @@ yield \cancel_task($tid);
 yield \spawn_task($command, $timeout);
 
 /**
+ * Add and wait for result of an blocking `I/O` subprocess that runs in parallel.
+ * - This function needs to be prefixed with `yield`
+ *
+ * @see https://docs.python.org/3.7/library/asyncio-subprocess.html#subprocesses
+ * @see https://docs.python.org/3.7/library/asyncio-dev.html#running-blocking-code
+ */
+ yield \spawn_await($callable, $timeout, $display, $channel, $channelTask, $signal, $signalTask);
+
+/**
  * Wait for the callable/task to complete with a timeout.
  * Will continue other tasks until so.
  * - This function needs to be prefixed with `yield`
@@ -327,13 +336,24 @@ yield \input_wait($size);
 
 ```php
 /**
- * Add and wait for result of a blocking `subprocess` that runs in parallel.
+ * Add and wait for result of an blocking `I/O` subprocess that runs in parallel.
+ * This function turns the calling function internal __state/type__ used by `gather()`
+ * to **process/paralleled** which is handled differently.
  * - This function needs to be prefixed with `yield`
  *
  * @see https://docs.python.org/3.7/library/asyncio-subprocess.html#subprocesses
  * @see https://docs.python.org/3.7/library/asyncio-dev.html#running-blocking-code
  */
-yield \await_process($command, $timeout);
+yield \add_process($command, $timeout);
+```
+
+```php
+/**
+ * Executes a blocking system call asynchronously either natively thru `libuv`, `threaded`, or it's `uv_spawn`
+ * feature, or in a **child/subprocess** by `proc_open`, if `libuv` is not installed.
+ * - This function needs to be prefixed with `yield`
+ */
+yield \file_***Any File System Command***( ...$arguments);
 ```
 
 ```php
@@ -351,28 +371,6 @@ yield \await_process($command, $timeout);
  * @see https://docs.python.org/3.7/library/asyncio-task.html#asyncio.run
  */
 \coroutine_run($coroutine);
-```
-
-```php
-/**
- * Add something/callable to `coroutine` process pool
- */
-\parallel($callable, $timeout);
-
-/**
- * Get/create process worker pool of an parallel instance.
- */
-\parallel_pool();
-
-/**
- * Add something/callable to parallel instance process pool.
- */
-\parallel_add($somethingToRun, $timeout);
-
-/**
- * Execute process pool, wait for results. Will do other stuff come back later.
- */
-\parallel_wait();
 ```
 
 ## Installation

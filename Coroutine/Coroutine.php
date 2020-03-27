@@ -207,9 +207,7 @@ final class Coroutine implements CoroutineInterface
         if (\in_array($driver, ['auto', 'uv']) && \function_exists('uv_loop_new')) {
             $this->uv = \uv_loop_new();
 
-            Spawn::bypass();
-            Spawn::uvLoop($this->uv);
-            Spawn::yield();
+            Spawn::setup($this->uv);
 
             // @codeCoverageIgnoreStart
             $this->onEvent = function ($event, $status, $events, $stream) {
