@@ -251,10 +251,10 @@ class ParallelTest extends TestCase
         $stopwatchResult = \microtime(true) - $stopwatch;
 
         if (\IS_LINUX) {
-            $expect = (float) 0.6;
+            $expect = (float) 0.4;
             $this->assertTrue($parallel->isPcntl());
         } else {
-            $expect = (float) 0.75;
+            $expect = (float) 0.5;
             $this->assertFalse($parallel->isPcntl());
         }
 
