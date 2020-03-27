@@ -1,6 +1,6 @@
 # Coroutine
 
-[![Build status](https://ci.appveyor.com/api/projects/status/77foelnve2y1wgsb/branch/master?svg=true)](https://ci.appveyor.com/project/techno-express/coroutine-0fmbc/branch/master)![Coroutine](https://github.com/symplely/coroutine/workflows/Coroutine/badge.svg)[![codecov](https://codecov.io/gh/symplely/coroutine/branch/master/graph/badge.svg)](https://codecov.io/gh/symplely/coroutine)[![Codacy Badge](https://api.codacy.com/project/badge/Grade/44a6f32f03194872b7d4cd6a2411ff79)](https://www.codacy.com/app/techno-express/coroutine?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=symplely/coroutine&amp;utm_campaign=Badge_Grade)[![Maintainability](https://api.codeclimate.com/v1/badges/1bfc3497fde67b111a04/maintainability)](https://codeclimate.com/github/symplely/coroutine/maintainability)
+[![Coroutine](https://github.com/symplely/coroutine/workflows/Coroutine/badge.svg)](https://github.com/symplely/coroutine/actions)[![codecov](https://codecov.io/gh/symplely/coroutine/branch/master/graph/badge.svg)](https://codecov.io/gh/symplely/coroutine)[![Codacy Badge](https://api.codacy.com/project/badge/Grade/44a6f32f03194872b7d4cd6a2411ff79)](https://www.codacy.com/app/techno-express/coroutine?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=symplely/coroutine&amp;utm_campaign=Badge_Grade)[![Maintainability](https://api.codeclimate.com/v1/badges/1bfc3497fde67b111a04/maintainability)](https://codeclimate.com/github/symplely/coroutine/maintainability)
 
 > This version `1.5.x` onward will begin adding features of an PHP extension [UV](https://github.com/bwoebi/php-uv), of **Node.js** [libuv](https://github.com/libuv/libuv) library, see the online [book](https://nikhilm.github.io/uvbook/index.html) for a full tutorial overview.
 
@@ -414,7 +414,7 @@ Enable extension `php_sockets.dll` and `php_uv.dll` in php.ini
 
 ```powershell
 cd C:\Php
-Invoke-WebRequest "https://windows.php.net/downloads/pecl/releases/uv/0.2.4/php_uv-0.2.4-7.2-ts-vc15-x64.zip" -OutFile "php_uv-0.2.4.zip"
+Invoke-WebRequest "https://windows.php.net/downloads/pecl/releases/uv/0.2.4/php_uv-0.2.4-7.2-nts-vc15-x64.zip" -OutFile "php_uv-0.2.4.zip"
 #Invoke-WebRequest "https://windows.php.net/downloads/pecl/releases/uv/0.2.4/php_uv-0.2.4-7.3-nts-vc15-x64.zip" -OutFile "php_uv-0.2.4.zip"
 #Invoke-WebRequest "https://windows.php.net/downloads/pecl/releases/uv/0.2.4/php_uv-0.2.4-7.4-ts-vc15-x64.zip" -OutFile "php_uv-0.2.4.zip"
 7z x -y php_uv-0.2.4.zip libuv.dll php_uv.dll
@@ -424,6 +424,8 @@ del php_uv-0.2.4.zip
 echo extension=php_sockets.dll >> php.ini
 echo extension=php_uv.dll >> php.ini
 ```
+
+> Note: Seems there are issues with __PHP ZTS__ on both *Windows* and *Linux* when using `uv_spawn`.
 
 ## Usage
 
