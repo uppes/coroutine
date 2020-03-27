@@ -161,6 +161,11 @@ final class Coroutine implements CoroutineInterface
      */
     protected $isHighTimer;
 
+    public function __destruct()
+    {
+        $this->close();
+    }
+
     public function close()
     {
         $this->maxTaskId = 0;

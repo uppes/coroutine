@@ -28,8 +28,6 @@ class ErrorHandlingTest extends TestCase
         $parallel->wait();
 
         $this->assertCount(5, $parallel->getFailed(), (string) $parallel->status());
-
-        $coroutine->shutdown();
     }
 
     public function testIt_throws_the_exception_if_no_catch_callback()
@@ -45,8 +43,6 @@ class ErrorHandlingTest extends TestCase
         });
 
         $parallel->wait();
-
-        $coroutine->shutdown();
     }
 
     public function testIt_keeps_the_original_trace()
@@ -63,7 +59,5 @@ class ErrorHandlingTest extends TestCase
         }, 1);
 
         $parallel->wait();
-
-        $coroutine->shutdown();
     }
 }
