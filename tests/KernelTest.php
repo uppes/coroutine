@@ -76,8 +76,7 @@ class KernelTest extends TestCase
 
     public function taskGather()
     {
-        \async('factorizing', function ($name, $number)
-        {
+        \async('factorizing', function ($name, $number) {
             $f = 1;
             foreach (range(2, $number + 1) as $i) {
                 yield \sleep_for(1);
@@ -282,12 +281,13 @@ class KernelTest extends TestCase
         });
 
         $sigId = yield \spawn_signal(function () {
-            sleep(5);
+            sleep(2);
             return 'subprocess';
         }, \SIGKILL, $sigTask);
 
         yield \away(\spawn_kill($sigId));
         $output = yield \gather($sigId);
+        yield \shutdown();
     }
 
     public function testSpawnSignal()

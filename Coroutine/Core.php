@@ -154,8 +154,8 @@ if (!\function_exists('coroutine_run')) {
         $channel = null,
         $channelTask = null,
         int $signal = 0,
-        $signalTask = null)
-    {
+        $signalTask = null
+    ) {
         return Kernel::spawnTask($command, $timeout, $display, $channel, $channelTask, $signal, $signalTask);
     }
 
@@ -181,8 +181,8 @@ if (!\function_exists('coroutine_run')) {
         int $signal = 0,
         $signalTask = null,
         $timeout = 0,
-        bool $display = false)
-    {
+        bool $display = false
+    ) {
         return Kernel::spawnTask($command, $timeout, $display, null, null, $signal, $signalTask);
     }
 
@@ -195,6 +195,7 @@ if (!\function_exists('coroutine_run')) {
      */
     function spawn_kill(int $tid, int $signal = \SIGKILL)
     {
+        yield;
         return yield Kernel::spawnKill($tid, $signal);
     }
 
@@ -223,8 +224,7 @@ if (!\function_exists('coroutine_run')) {
         $channelTask = null,
         int $signal = 0,
         $signalTask = null
-    )
-    {
+    ) {
         return \awaitable_process(function () use (
             $callable,
             $timeout,
