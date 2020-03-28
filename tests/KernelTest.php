@@ -285,7 +285,10 @@ class KernelTest extends TestCase
             return 'subprocess';
         }, \SIGKILL, $sigTask);
 
-        yield \away(\spawn_kill($sigId));
+        yield \away(function () use ($sigId) {
+            return yield \spawn_kill($sigId);
+        });
+
         $output = yield \gather($sigId);
         yield \shutdown();
     }

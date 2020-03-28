@@ -159,6 +159,16 @@ if (!\function_exists('coroutine_run')) {
         return Kernel::spawnTask($command, $timeout, $display, $channel, $channelTask, $signal, $signalTask);
     }
 
+    /**
+     * Add a signal handler for the signal, that's continuously monitored.
+     * This function will return `int` immediately, use with `spawn_signal()` or `spawn_kill()`.
+     * - The `$handler` function will be executed, if subprocess is terminated with the `signal`.
+     * - This function needs to be prefixed with yield
+     *
+     * @param int $signal
+     * @param callable $handler
+     * @return int
+     */
     function signal_task(int $signal, callable $handler)
     {
         $signalTrap = function () use ($signal, $handler) {
@@ -176,6 +186,20 @@ if (!\function_exists('coroutine_run')) {
         return Kernel::away($signalTrap);
     }
 
+    /**
+     * Add/execute a blocking `I/O` subprocess task that runs in parallel.
+     * Will execute the `$signalTask` task id, if subprocess is terminated with the `$signal`.
+     *
+     * This function will return `int` immediately, use `gather()` to get the result.
+     * - This function needs to be prefixed with yield
+     *
+     * @param callable|shell $command
+     * @param int $signal
+     * @param int|null $signalTask
+     * @param int $timeout
+     * @param bool $display
+     * @return int
+     */
     function spawn_signal(
         $command,
         int $signal = 0,
@@ -190,12 +214,12 @@ if (!\function_exists('coroutine_run')) {
      * Stop/kill a `child/subprocess` spawn task with signal.
      * - This function needs to be prefixed with `yield`
      *
-     * @param int $tid The task id of the subprocess task.
-     * @param int $signal a signal constant.
+     * @param int $tid The task id of the subprocess task, a signal handler task.
+     * @param int $signal `Termination/kill` signal constant.
      */
     function spawn_kill(int $tid, int $signal = \SIGKILL)
     {
-        return yield Kernel::spawnKill($tid, $signal);
+        return Kernel::spawnKill($tid, $signal);
     }
 
     /**
