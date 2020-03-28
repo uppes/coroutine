@@ -275,6 +275,26 @@ class KernelTest extends TestCase
         \coroutine_run($this->taskSpawnTask());
     }
 
+    public function taskSpawnSignal()
+    {
+        $sigTask = yield \signal_task(\SIGKILL, function ($signal) {
+            $this->assertEquals(\SIGKILL, $signal);
+        });
+
+        $sigId = yield \spawn_signal(function () {
+            sleep(5);
+            return 'subprocess';
+        }, \SIGKILL, $sigTask);
+
+        yield \away(\spawn_kill($sigId));
+        $output = yield \gather($sigId);
+    }
+
+    public function testSpawnSignal()
+    {
+        \coroutine_run($this->taskSpawnSignal());
+    }
+
     public function childTask($break = false)
     {
         $counter = 0;

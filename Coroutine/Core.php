@@ -142,6 +142,8 @@ if (!\function_exists('coroutine_run')) {
      * @param bool $display set to show child process output
      * @param Channeled|resource|mixed|null $channel IPC communication to be pass to the underlying process standard input.
      * @param int|null $channelTask The task id to use for realtime **child/subprocess** interaction.
+     * @param int $signal
+     * @param int $signalTask The task to call when process is terminated with a signal.
      *
      * @return int
      */
@@ -157,6 +159,45 @@ if (!\function_exists('coroutine_run')) {
         return Kernel::spawnTask($command, $timeout, $display, $channel, $channelTask, $signal, $signalTask);
     }
 
+    function signal_task(int $signal, callable $handler)
+    {
+        $signalTrap = function () use ($signal, $handler) {
+            yield;
+            while (true) {
+                $trapSignal = yield;
+                if ($signal === $trapSignal) {
+                    return $handler($signal);
+                }
+
+                yield;
+            }
+        };
+
+        return Kernel::away($signalTrap);
+    }
+
+    function spawn_signal(
+        $command,
+        int $signal = 0,
+        $signalTask = null,
+        $timeout = 0,
+        bool $display = false)
+    {
+        return Kernel::spawnTask($command, $timeout, $display, null, null, $signal, $signalTask);
+    }
+
+    /**
+     * Stop/kill a `child/subprocess` spawn task with signal.
+     * - This function needs to be prefixed with `yield`
+     *
+     * @param int $tid The task id of the subprocess task.
+     * @param int $signal a signal constant.
+     */
+    function spawn_kill(int $tid, int $signal = \SIGKILL)
+    {
+        return yield Kernel::spawnKill($tid, $signal);
+    }
+
     /**
      * Add and wait for result of an blocking `I/O` subprocess that runs in parallel.
      * - This function needs to be prefixed with `yield`
@@ -169,6 +210,8 @@ if (!\function_exists('coroutine_run')) {
      * @param bool $display set to show child process output
      * @param Channeled|resource|mixed|null $channel IPC communication to be pass to the underlying process standard input.
      * @param int|null $channelTask The task id to use for realtime **child/subprocess** interaction.
+     * @param int $signal
+     * @param int $signalTask The task to call when process is terminated with a signal.
      *
      * @return mixed
      */
@@ -707,12 +750,21 @@ if (!\function_exists('coroutine_run')) {
      * @param bool $display set to show child process output
      * @param Channeled|resource|mixed|null $channel IPC communication to be pass to the underlying process standard input.
      * @param int|null $channelTask The task id to use for realtime **child/subprocess** interaction.
+     * @param int $signal
+     * @param int $signalTask The task to call when process is terminated with a signal.
      *
      * @return mixed
      */
-    function add_process($command, $timeout = 0, bool $display = false, $channel = null, $channelTask = null)
-    {
-        return Kernel::addProcess($command, $timeout, $display, $channel, $channelTask);
+    function add_process(
+        $command,
+        $timeout = 0,
+        bool $display = false,
+        $channel = null,
+        $channelTask = null,
+        int $signal = 0,
+        $signalTask = null
+    ) {
+        return Kernel::addProcess($command, $timeout, $display, $channel, $channelTask, $signal, $signalTask);
     }
 
     /**

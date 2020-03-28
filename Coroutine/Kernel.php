@@ -309,11 +309,13 @@ final class Kernel
      * @param bool $display set to show child process output
      * @param Channeled|resource|mixed|null $channel IPC communication to be pass to the underlying `process` standard input.
      * @param int|null $channelTask The task id to use for realtime **child/subprocess** interaction.
+     * @param int $signal
+     * @param int $signalTask The task to call when process is terminated with a signal.
      *
      * @return mixed
      */
     public static function addProcess(
-        $callable,
+        $command,
         $timeout = 0,
         bool $display = false,
         $channel = null,
@@ -323,10 +325,10 @@ final class Kernel
     ) {
         return new Kernel(
             function (TaskInterface $task, CoroutineInterface $coroutine)
-            use ($callable, $timeout, $display, $channel, $channelTask, $signal, $signalTask) {
+            use ($command, $timeout, $display, $channel, $channelTask, $signal, $signalTask) {
                 $task->parallelTask();
                 $task->setState('process');
-                $launcher = $coroutine->addProcess($callable, $timeout, $display, $channel)
+                $launcher = $coroutine->addProcess($command, $timeout, $display, $channel)
                     ->then(function ($result) use ($task, $coroutine) {
                         $task->setState('completed');
                         $task->sendValue($result);
@@ -343,7 +345,9 @@ final class Kernel
                         $coroutine->schedule($task);
                     });
 
-                // @codeCoverageIgnoreStart
+                $process = $launcher->getProcess();
+                $task->customData($process);
+
                 if ($signal !== 0 && \is_int($signalTask)) {
                     $launcher->signal($signal, function ($signaled) use ($task, $coroutine, $signal, $signalTask) {
                         $task->setState('signaled');
@@ -352,14 +356,13 @@ final class Kernel
                             $signaler = $taskList[$signalTask];
                             $signaler->sendValue($signaled);
                             $coroutine->schedule($signaler);
-                        } else {
+                        } else { // @codeCoverageIgnoreStart
                             $task->setException(new \Exception(\sprintf('An unhandled signal received: %s', $signal)));
-                        }
+                        } // @codeCoverageIgnoreEnd
 
                         $coroutine->schedule($task);
                     });
                 }
-                // @codeCoverageIgnoreEnd
 
                 // @codeCoverageIgnoreStart
                 if ($channel !== null && \is_int($channelTask)) {
@@ -390,6 +393,8 @@ final class Kernel
      * @param bool $display set to show child process output
      * @param Channeled|resource|mixed|null $channel IPC communication to be pass to the underlying `process` standard input.
      * @param int|null $channelTask The task id to use for realtime **child/subprocess** interaction.
+     * @param int $signal
+     * @param int $signalTask The task to call when process is terminated with a signal.
      *
      * @return int
      */
@@ -398,17 +403,59 @@ final class Kernel
         $timeout = 0,
         bool $display = false,
         $channel = null,
-        $channelTask = null
-    ) {
+        $channelTask = null,
+        int $signal = 0,
+        $signalTask = null
+    )
+    {
         return new Kernel(
             function (TaskInterface $task, CoroutineInterface $coroutine)
-            use ($callable, $timeout, $display, $channel, $channelTask) {
-                $command = \awaitAble(function () use ($callable, $timeout, $display, $channel, $channelTask) {
-                    $result = yield yield Kernel::addProcess($callable, $timeout, $display, $channel, $channelTask);
+            use ($callable, $timeout, $display, $channel, $channelTask, $signal, $signalTask) {
+                $command = \awaitAble(function ()
+                use ($callable, $timeout, $display, $channel, $channelTask, $signal, $signalTask) {
+                    $result = yield yield Kernel::addProcess(
+                        $callable,
+                        $timeout,
+                        $display,
+                        $channel,
+                        $channelTask,
+                        $signal,
+                        $signalTask
+                    );
+
                     return $result;
                 });
 
                 $task->sendValue($coroutine->createTask($command));
+                $coroutine->schedule($task);
+            }
+        );
+    }
+
+    /**
+     * Stop/kill a `child/subprocess` spawn task with signal.
+     * - This function needs to be prefixed with `yield`
+     *
+     * @param int $tid The task id of the subprocess task.
+     * @param int $signal a signal constant.
+     */
+    public static function spawnKill(int $tid, int $signal = \SIGKILL)
+    {
+        return new Kernel(
+            function (TaskInterface $task, CoroutineInterface $coroutine) use ($tid, $signal) {
+                $taskList = $coroutine->currentTask();
+                if (isset($taskList[$tid]) && $taskList[$tid] instanceof TaskInterface) {
+                    $spawnedTask = $taskList[$tid];
+                    $process = $spawnedTask->getCustomData();
+                    if ($process instanceof \UVProcess) {
+                        \uv_process_kill($process, $signal);
+                    } elseif ($process instanceof \Async\Spawn\Process) { // @codeCoverageIgnoreStart
+                        $process->stop(0, $signal);
+                    } else {
+                        $spawnedTask->customData($process);
+                    } // @codeCoverageIgnoreEnd
+                }
+
                 $coroutine->schedule($task);
             }
         );
