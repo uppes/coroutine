@@ -195,7 +195,6 @@ if (!\function_exists('coroutine_run')) {
      */
     function spawn_kill(int $tid, int $signal = \SIGKILL)
     {
-        yield;
         return yield Kernel::spawnKill($tid, $signal);
     }
 

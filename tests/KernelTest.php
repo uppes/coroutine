@@ -287,6 +287,7 @@ class KernelTest extends TestCase
 
         yield \away(\spawn_kill($sigId));
         $output = yield \gather($sigId);
+        yield \shutdown();
     }
 
     public function testSpawnSignal()
