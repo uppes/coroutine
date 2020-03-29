@@ -139,8 +139,10 @@ class KernelTest extends TestCase
             throw new CancelledError('closure cancelled!');
         });
 
+        echo __LINE__;
         $this->expectException(CancelledError::class);
         $one = yield \away('cancelledLabel');
+        echo __LINE__;
         yield \gather($one);
         yield \shutdown();
     }
@@ -296,7 +298,7 @@ class KernelTest extends TestCase
         $output = yield \gather_wait([$sigId], 0, false);
     }
 
-    public function testSpawnSignalDelay()
+    public function DoNoTestSpawnSignalDelay()
     {
         \coroutine_run($this->taskSpawnSignalDelay());
     }
