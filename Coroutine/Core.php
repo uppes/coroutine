@@ -501,7 +501,7 @@ if (!\function_exists('coroutine_run')) {
     function file_sendfile($out_fd, $in_fd, int $offset = 0, int $length = 8192)
     {
         $written = yield FileSystem::sendfile($out_fd, $in_fd, $offset, $length);
-        if (FileSystem::useUvFs()) {
+        if (FileSystem::isUv()) {
             yield FileSystem::fdatasync($out_fd);
         }
 

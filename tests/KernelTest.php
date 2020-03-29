@@ -139,7 +139,7 @@ class KernelTest extends TestCase
             throw new CancelledError('closure cancelled!');
         });
 
-        echo __LINE__;
+        // echo __LINE__;
         $this->expectException(CancelledError::class);
         $one = yield \away('cancelledLabel');
         yield \gather($one);
@@ -284,20 +284,21 @@ class KernelTest extends TestCase
         });
 
         $sigId = yield \spawn_signal(function () {
-            usleep(2000);
+            \usleep(10000);
             return 'subprocess';
         }, \SIGKILL, $sigTask);
 
-        yield \away(function () use ($sigId) {
-            yield;
-            yield;
-            return yield \spawn_kill($sigId);
-        });
+        $kill = yield \away(function () use ($sigId) {
+            yield \sleep_for(0.5);
+            $bool = yield \spawn_kill($sigId);
+            return $bool;
+        }, true);
 
-        $output = yield \gather_wait([$sigId], 0, false);
+        $output = yield \gather_wait([$sigId, $kill], 0, false);
+        //$this->assertEquals(['4' => null], ['5' => true], $output);
     }
 
-    public function DoNoTestSpawnSignalDelay()
+    public function testSpawnSignalDelay()
     {
         \coroutine_run($this->taskSpawnSignalDelay());
     }
