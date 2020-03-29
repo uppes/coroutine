@@ -164,6 +164,7 @@ final class Coroutine implements CoroutineInterface
     public function __destruct()
     {
         $this->close();
+        $this->taskQueue = null;
     }
 
     public function close()
@@ -171,7 +172,6 @@ final class Coroutine implements CoroutineInterface
         $this->maxTaskId = 0;
         $this->taskMap = [];
         $this->completedMap = [];
-        $this->taskQueue;
         $this->timers = [];
         $this->waitingForRead = [];
         $this->waitingForWrite = [];
@@ -488,11 +488,7 @@ final class Coroutine implements CoroutineInterface
 
         if (!empty($this->completedMap)) {
             foreach ($this->completedMap as $task) {
-                $task->clearResult();
-                $object = $task->getCustomData();
-                if (\is_object($object) && \method_exists($object, 'close'))
-                    $object->close();
-
+                $task->close();
                 $task->customState('shutdown');
             }
         }
@@ -512,14 +508,10 @@ final class Coroutine implements CoroutineInterface
                 \uv_close($event);
             }
 
-            $this->timers = [];
-            $this->signals = [];
-            $this->events = [];
-            $this->waitingForRead = [];
-            $this->waitingForWrite = [];
             \uv_run($this->uv, \UV::RUN_NOWAIT);
         }
-        // @codeCoverageIgnoreEnd
+
+        $this->close();
     }
 
     public function cancelTask(int $tid, $customState = null)
@@ -532,11 +524,7 @@ final class Coroutine implements CoroutineInterface
 
         foreach ($this->taskQueue as $i => $task) {
             if ($task->taskId() === $tid) {
-                $task->clearResult();
-                $object = $task->getCustomData();
-                if (\is_object($object) && \method_exists($object, 'close'))
-                    $object->close();
-
+                $task->close();
                 if (!empty($customState))
                     $task->customState($customState);
 
@@ -590,7 +578,6 @@ final class Coroutine implements CoroutineInterface
                 try {
                     $value($task, $this);
                 } catch (\Throwable $error) {
-                    $task->clearResult();
                     $task->setState(
                         ($error instanceof CancelledError ? 'cancelled' : 'erred')
                     );

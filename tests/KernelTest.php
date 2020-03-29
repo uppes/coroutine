@@ -276,6 +276,31 @@ class KernelTest extends TestCase
         \coroutine_run($this->taskSpawnTask());
     }
 
+    public function taskSpawnSignalDelay()
+    {
+        $sigTask = yield \signal_task(\SIGKILL, function ($signal) {
+            $this->assertEquals(\SIGKILL, $signal);
+        });
+
+        $sigId = yield \spawn_signal(function () {
+            usleep(2000);
+            return 'subprocess';
+        }, \SIGKILL, $sigTask);
+
+        yield \away(function () use ($sigId) {
+            yield;
+            yield;
+            return yield \spawn_kill($sigId);
+        });
+
+        $output = yield \gather_wait([$sigId], 0, false);
+    }
+
+    public function testSpawnSignalDelay()
+    {
+        \coroutine_run($this->taskSpawnSignalDelay());
+    }
+
     public function taskSpawnSignal()
     {
         $sigTask = yield \signal_task(\SIGKILL, function ($signal) {
@@ -288,12 +313,11 @@ class KernelTest extends TestCase
         }, \SIGKILL, $sigTask);
 
         yield \away(function () use ($sigId) {
-            yield;
             return yield \spawn_kill($sigId);
         });
 
-        $output = yield \gather_wait([$sigId], 0, false);
-        $this->assertEquals(null, $output[$sigId]);
+        $this->expectException(InvalidStateError::class);
+        yield \gather($sigId);
         yield \shutdown();
     }
 

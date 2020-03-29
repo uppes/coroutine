@@ -167,23 +167,12 @@ if (!\function_exists('coroutine_run')) {
      *
      * @param int $signal
      * @param callable $handler
+     *
      * @return int
      */
     function signal_task(int $signal, callable $handler)
     {
-        $signalTrap = function () use ($signal, $handler) {
-            yield;
-            while (true) {
-                $trapSignal = yield;
-                if ($signal === $trapSignal) {
-                    return $handler($signal);
-                }
-
-                yield;
-            }
-        };
-
-        return Kernel::away($signalTrap);
+        return Kernel::signalTask($signal, $handler);
     }
 
     /**
@@ -1027,12 +1016,10 @@ if (!\function_exists('coroutine_run')) {
     {
         global $__coroutine__;
         if ($__coroutine__ instanceof CoroutineInterface) {
-            $__coroutine__->shutdown(0);
-            $__coroutine__->close();
+            unset($GLOBALS['__coroutine__']);
+            $__coroutine__ = null;
         }
 
-        unset($GLOBALS['__coroutine__']);
-        $__coroutine__ = null;
     }
 
     function coroutine_create(\Generator $routine = null, ?string $driver = null)

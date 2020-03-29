@@ -107,6 +107,27 @@ final class Task implements TaskInterface
         $this->coroutine = Coroutine::create($coroutine);
     }
 
+    public function close()
+    {
+        $object = $this->customState;
+        if (\is_object($object) && \method_exists($object, 'close')) {
+            $object->close();
+        }
+
+        $this->taskId = null;
+        $this->daemon = null;
+        $this->cycles = 0;
+        $this->coroutine = null;
+        $this->state = 'closed';
+        $this->result = null;
+        $this->sendValue = null;
+        $this->beforeFirstYield = true;
+        $this->error = null;
+        $this->exception = null;
+        $this->customState = null;
+        $this->customData = null;
+    }
+
     public function cyclesAdd()
     {
         $this->cycles++;
@@ -221,16 +242,11 @@ final class Task implements TaskInterface
         return !$this->coroutine->valid();
     }
 
-    public function clearResult()
-    {
-        $this->result = null;
-    }
-
     public function result()
     {
         if ($this->isCompleted()) {
             $result = $this->result;
-            $this->result = null;
+            $this->close();
             return $result;
         } elseif ($this->isCancelled() || $this->isErred()) {
             $error = $this->exception();
@@ -242,8 +258,10 @@ final class Task implements TaskInterface
             $message = \str_replace('The operation has exceeded the given deadline: ', '', $message);
             $message = \str_replace('Coroutine task has erred: ', '', $message);
             $message = \str_replace('Invalid internal state called on: ', '', $message);
+            $this->close();
             return new $class($message, $code, $throwable);
         } else {
+            $this->close();
             throw new InvalidStateError();
         }
     }

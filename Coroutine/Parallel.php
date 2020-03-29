@@ -30,6 +30,11 @@ final class Parallel implements ArrayAccess, ParallelInterface
     private $signaled = [];
     private $parallel = [];
 
+    public function __destruct()
+    {
+        $this->close();
+    }
+
     public function __construct(CoroutineInterface $coroutine)
     {
         $this->coroutine = $coroutine;
@@ -42,6 +47,29 @@ final class Parallel implements ArrayAccess, ParallelInterface
         );
 
         $this->status = new ParallelStatus($this);
+    }
+
+    public function close()
+    {
+        if (!empty($this->parallel)) {
+            foreach ($this->parallel as $process) {
+                if ($process instanceof LauncherInterface)
+                    $process->close();
+            }
+        }
+
+        $this->coroutine = null;
+        $this->processor = null;
+        $this->status;
+        $this->process;
+        $this->concurrency = 100;
+        $this->queue = [];
+        $this->results = [];
+        $this->finished = [];
+        $this->failed = [];
+        $this->timeouts = [];
+        $this->signaled = [];
+        $this->parallel = [];
     }
 
     public function concurrency(int $concurrency): ParallelInterface

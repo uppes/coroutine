@@ -13,6 +13,7 @@ use Async\Coroutine\Exceptions\InvalidArgumentException;
 use Async\Coroutine\Exceptions\TimeoutError;
 use Async\Coroutine\Exceptions\CancelledError;
 use Async\Spawn\Channel as Channeled;
+use Async\Spawn\LauncherInterface;
 
 /**
  * The Kernel
@@ -345,8 +346,7 @@ final class Kernel
                         $coroutine->schedule($task);
                     });
 
-                $process = $launcher->getProcess();
-                $task->customData($process);
+                $task->customData($launcher);
 
                 if ($signal !== 0 && \is_int($signalTask)) {
                     $launcher->signal($signal, function ($signaled)
@@ -450,13 +450,16 @@ final class Kernel
                 $taskList = $coroutine->currentTask();
                 if (isset($taskList[$tid]) && $taskList[$tid] instanceof TaskInterface) {
                     $spawnedTask = $taskList[$tid];
-                    $process = $spawnedTask->getCustomData();
-                    if ($process instanceof \UVProcess) {
-                        \uv_process_kill($process, $signal);
-                    } elseif ($process instanceof \Async\Spawn\Process) {
-                        // @codeCoverageIgnoreStart
-                        $process->stop(0, $signal);
-                        // @codeCoverageIgnoreEnd
+                    $customData = $spawnedTask->getCustomData();
+                    if ($customData instanceof LauncherInterface) {
+                        $process = $customData->getProcess();
+                        if ($process instanceof \UVProcess) {
+                            \uv_process_kill($process, $signal);
+                        } elseif ($process instanceof \Async\Spawn\Process) {
+                            // @codeCoverageIgnoreStart
+                            $process->stop(0, $signal);
+                            // @codeCoverageIgnoreEnd
+                        }
                     }
                 }
 
@@ -464,6 +467,32 @@ final class Kernel
                 $coroutine->schedule($task);
             }
         );
+    }
+
+    /**
+     * Add a signal handler for the signal, that's continuously monitored.
+     * This function will return `int` immediately, use with `spawn_signal()`.
+     * - The `$handler` function will be executed, if subprocess is terminated with the `signal`.
+     * - This function needs to be prefixed with yield
+     *
+     * @param int $signal
+     * @param callable $handler
+     *
+     * @return int
+     */
+    public static function signalTask(int $signal, callable $handler)
+    {
+        return Kernel::away(function () use ($signal, $handler) {
+            yield;
+            while (true) {
+                $trapSignal = yield;
+                if ($signal === $trapSignal) {
+                    return $handler($signal);
+                }
+
+                yield;
+            }
+        });
     }
 
     /**

@@ -51,6 +51,7 @@ final class Process
     {
         $this->remove($process);
         $process->stop();
+        $process->close();
     }
 
     public function stopAll()
