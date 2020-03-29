@@ -142,7 +142,6 @@ class KernelTest extends TestCase
         echo __LINE__;
         $this->expectException(CancelledError::class);
         $one = yield \away('cancelledLabel');
-        echo __LINE__;
         yield \gather($one);
         yield \shutdown();
     }
