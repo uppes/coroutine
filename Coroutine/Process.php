@@ -22,14 +22,14 @@ final class Process
     private $coroutine = null;
 
     public function __construct(
-        ?CoroutineInterface $coroutine = null,
+        CoroutineInterface $coroutine,
         $timedOutCallback = null,
         $finishCallback = null,
         $failCallback = null,
         $signalCallback = null
     ) {
-        $this->coroutine = empty($coroutine) ? \coroutine_instance() : $coroutine;
-        $this->init($timedOutCallback,  $finishCallback,  $failCallback, $signalCallback);
+        $this->coroutine = $coroutine;
+        $this->init($timedOutCallback, $finishCallback, $failCallback, $signalCallback);
 
         // @codeCoverageIgnoreStart
         if ($this->isPcntl() && !\function_exists('uv_spawn'))

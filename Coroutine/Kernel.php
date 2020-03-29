@@ -349,8 +349,9 @@ final class Kernel
                 $task->customData($process);
 
                 if ($signal !== 0 && \is_int($signalTask)) {
-                    $launcher->signal($signal, function ($signaled) use ($task, $coroutine, $signal, $signalTask) {
-                        $task->setState('signaled');
+                    $launcher->signal($signal, function ($signaled)
+                    use ($task, $coroutine, $signal, $signalTask) {
+                        $task->setState('cancelled');
                         $taskList = $coroutine->currentTask();
                         if (isset($taskList[$signalTask]) && $taskList[$signalTask] instanceof TaskInterface) {
                             $signaler = $taskList[$signalTask];
@@ -366,7 +367,8 @@ final class Kernel
 
                 // @codeCoverageIgnoreStart
                 if ($channel !== null && \is_int($channelTask)) {
-                    $launcher->progress(function ($type, $data) use ($coroutine, $channel, $channelTask) {
+                    $launcher->progress(function ($type, $data)
+                    use ($coroutine, $channel, $channelTask) {
                         $taskList = $coroutine->currentTask();
                         if (isset($taskList[$channelTask]) && $taskList[$channelTask] instanceof TaskInterface) {
                             $ipcTask = $taskList[$channelTask];
@@ -433,11 +435,13 @@ final class Kernel
     }
 
     /**
-     * Stop/kill a `child/subprocess` spawn task with signal.
+     * Stop/kill a `child/subprocess` with `signal`, and also `cancel` the task.
      * - This function needs to be prefixed with `yield`
      *
-     * @param int $tid The task id of the subprocess task.
-     * @param int $signal a signal constant.
+     * @param int $tid The task id of the subprocess task, a signal handler task.
+     * @param int $signal `Termination/kill` signal constant.
+     *
+     * @return bool
      */
     public static function spawnKill(int $tid, int $signal = \SIGKILL)
     {
@@ -449,13 +453,14 @@ final class Kernel
                     $process = $spawnedTask->getCustomData();
                     if ($process instanceof \UVProcess) {
                         \uv_process_kill($process, $signal);
-                    } elseif ($process instanceof \Async\Spawn\Process) { // @codeCoverageIgnoreStart
+                    } elseif ($process instanceof \Async\Spawn\Process) {
+                        // @codeCoverageIgnoreStart
                         $process->stop(0, $signal);
-                    } else {
-                        $spawnedTask->customData($process);
-                    } // @codeCoverageIgnoreEnd
+                        // @codeCoverageIgnoreEnd
+                    }
                 }
 
+                $task->sendValue($coroutine->cancelTask($tid));
                 $coroutine->schedule($task);
             }
         );

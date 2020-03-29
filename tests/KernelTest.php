@@ -228,6 +228,7 @@ class KernelTest extends TestCase
         $t1 = \microtime(true);
         $this->assertEquals('done sleeping', $done);
         $this->assertGreaterThan(1, (float) ($t1 - $t0));
+        yield \shutdown();
     }
 
     public function taskWaitFor()
@@ -267,6 +268,7 @@ class KernelTest extends TestCase
         $this->assertTrue(\is_type($result, 'int'));
         $output = yield \gather($result);
         $this->assertEquals('subprocess', $output[$result]);
+        yield \shutdown();
     }
 
     public function testSpawnTask()
@@ -286,10 +288,12 @@ class KernelTest extends TestCase
         }, \SIGKILL, $sigTask);
 
         yield \away(function () use ($sigId) {
+            yield;
             return yield \spawn_kill($sigId);
         });
 
-        $output = yield \gather($sigId);
+        $output = yield \gather_wait([$sigId], 0, false);
+        $this->assertEquals(null, $output[$sigId]);
         yield \shutdown();
     }
 

@@ -161,7 +161,7 @@ if (!\function_exists('coroutine_run')) {
 
     /**
      * Add a signal handler for the signal, that's continuously monitored.
-     * This function will return `int` immediately, use with `spawn_signal()` or `spawn_kill()`.
+     * This function will return `int` immediately, use with `spawn_signal()`.
      * - The `$handler` function will be executed, if subprocess is terminated with the `signal`.
      * - This function needs to be prefixed with yield
      *
@@ -211,11 +211,13 @@ if (!\function_exists('coroutine_run')) {
     }
 
     /**
-     * Stop/kill a `child/subprocess` spawn task with signal.
+     * Stop/kill a `child/subprocess` with `signal`, and also `cancel` the task.
      * - This function needs to be prefixed with `yield`
      *
      * @param int $tid The task id of the subprocess task, a signal handler task.
      * @param int $signal `Termination/kill` signal constant.
+     *
+     * @return bool
      */
     function spawn_kill(int $tid, int $signal = \SIGKILL)
     {
