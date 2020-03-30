@@ -58,16 +58,16 @@ jobs:
         extensions: mbstring, simplexml, curl, dom, sockets, fileinfo, openssl, xdebug, uv-beta
         coverage: xdebug
       env:
-        PHPTS: nts # specify ts or nts
+        PHPTS: ts # specify ts or nts
     - name: Download and install PHP-UV
       shell: powershell
       run: |
         cd C:\tools\php
-        Invoke-WebRequest "https://windows.php.net/downloads/pecl/releases/uv/0.2.4/php_uv-0.2.4-7.3-nts-vc15-x64.zip" -OutFile "php_uv-0.2.4-7.3-nts-vc15-x64.zip"
-        7z x -y php_uv-0.2.4-7.3-nts-vc15-x64.zip libuv.dll php_uv.dll
+        Invoke-WebRequest "https://windows.php.net/downloads/pecl/releases/uv/0.2.4/php_uv-0.2.4-7.3-ts-vc15-x64.zip" -OutFile "php_uv-0.2.4-7.3-ts-vc15-x64.zip"
+        7z x -y php_uv-0.2.4-7.3-ts-vc15-x64.zip libuv.dll php_uv.dll
         copy php_uv.dll ext\php_uv.dll
         del php_uv.dll
-        del php_uv-0.2.4-7.3-nts-vc15-x64.zip
+        del php_uv-0.2.4-7.3-ts-vc15-x64.zip
     - name: Install dependencies
       run: composer install
     - name: Test with phpunit
