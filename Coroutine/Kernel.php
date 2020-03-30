@@ -453,7 +453,7 @@ final class Kernel
                     $customData = $spawnedTask->getCustomData();
                     if ($customData instanceof LauncherInterface) {
                         $process = $customData->getProcess();
-                        if ($process instanceof \UVProcess) {
+                        if ($process instanceof \UVProcess && \uv_is_active($process)) {
                             \uv_process_kill($process, $signal);
                         } elseif ($process instanceof \Async\Spawn\Process) {
                             // @codeCoverageIgnoreStart

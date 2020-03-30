@@ -163,7 +163,7 @@ final class Coroutine implements CoroutineInterface
 
     public function __destruct()
     {
-        $this->close();
+        $this->shutdown(0);
         $this->taskQueue = null;
     }
 
@@ -475,7 +475,9 @@ final class Coroutine implements CoroutineInterface
 
     public function shutdown(int $skipTask = 1)
     {
-        $this->process->stopAll();
+        if (!empty($this->process))
+            $this->process->stopAll();
+
         if (!empty($this->taskMap)) {
             $map = \array_reverse($this->taskMap, true);
             $keys = \array_keys($map);
