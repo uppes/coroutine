@@ -289,7 +289,7 @@ class KernelTest extends TestCase
         }, \SIGKILL, $sigTask);
 
         $kill = yield \away(function () use ($sigId) {
-            yield \sleep_for(0.5);
+            yield \sleep_for(0.1);
             $bool = yield \spawn_kill($sigId);
             return $bool;
         }, true);
@@ -323,7 +323,7 @@ class KernelTest extends TestCase
         yield \shutdown();
     }
 
-    public function DoNotTestSpawnSignal()
+    public function testSpawnSignal()
     {
         \coroutine_run($this->taskSpawnSignal());
     }
