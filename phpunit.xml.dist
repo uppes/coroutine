@@ -10,11 +10,6 @@
     stopOnFailure="false"
     colors="true">
 
-    <php>
-        <ini name="memory_limit" value="1G"/>
-        <ini name="error_reporting" value="-1"/>
-    </php>
-
     <testsuites>
         <testsuite name="Coroutine Test Suite">
             <directory suffix=".php">tests/</directory>
