@@ -35,7 +35,7 @@ jobs:
       - name: Install dependencies
         run: composer install
       - name: Test with phpunit
-        run: vendor/bin/phpunit --coverage-clover=build/logs/clover.xml
+        run: vendor/bin/phpunit #--coverage-clover=build/logs/clover.xml
       - name: Submit code coverage
         run: bash <(curl -s https://codecov.io/bash)
 
