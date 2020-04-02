@@ -408,8 +408,7 @@ final class Kernel
         $channelTask = null,
         int $signal = 0,
         $signalTask = null
-    )
-    {
+    ) {
         return new Kernel(
             function (TaskInterface $task, CoroutineInterface $coroutine)
             use ($callable, $timeout, $display, $channel, $channelTask, $signal, $signalTask) {
@@ -438,7 +437,7 @@ final class Kernel
      * Stop/kill a `child/subprocess` with `signal`, and also `cancel` the task.
      * - This function needs to be prefixed with `yield`
      *
-     * @param int $tid The task id of the subprocess task, a signal handler task.
+     * @param int $tid The task id of the subprocess task.
      * @param int $signal `Termination/kill` signal constant.
      *
      * @return bool
@@ -473,7 +472,7 @@ final class Kernel
      * Add a signal handler for the signal, that's continuously monitored.
      * This function will return `int` immediately, use with `spawn_signal()`.
      * - The `$handler` function will be executed, if subprocess is terminated with the `signal`.
-     * - This function needs to be prefixed with yield
+     * - This function needs to be prefixed with `yield`
      *
      * @param int $signal
      * @param callable $handler
@@ -488,6 +487,32 @@ final class Kernel
                 $trapSignal = yield;
                 if ($signal === $trapSignal) {
                     return $handler($signal);
+                }
+
+                yield;
+            }
+        });
+    }
+
+    /**
+     * Add a progress handler for the subprocess, that's continuously monitored.
+     * This function will return `int` immediately, use with `spawn_progress()`.
+     * - The `$handler` function will be executed every time the subprocess produces output,
+     * - This function needs to be prefixed with `yield`
+     *
+     * @param callable $handler
+     *
+     * @return int
+     */
+    public static function progressTask(callable $handler)
+    {
+        return Kernel::away(function () use ($handler) {
+            yield;
+            while (true) {
+                $received = yield;
+                if (\is_array($received) && (\count($received) == 2)) {
+                    [$type, $data] = $received;
+                    $handler($type, $data);
                 }
 
                 yield;

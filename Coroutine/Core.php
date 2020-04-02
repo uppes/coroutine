@@ -185,8 +185,9 @@ if (!\function_exists('coroutine_run')) {
      * @param callable|shell $command
      * @param int $signal
      * @param int|null $signalTask
-     * @param int $timeout
-     * @param bool $display
+     * @param int|float|null $timeout The timeout in seconds or null to disable
+     * @param bool $display set to show child process output
+     *
      * @return int
      */
     function spawn_signal(
@@ -203,7 +204,7 @@ if (!\function_exists('coroutine_run')) {
      * Stop/kill a `child/subprocess` with `signal`, and also `cancel` the task.
      * - This function needs to be prefixed with `yield`
      *
-     * @param int $tid The task id of the subprocess task, a signal handler task.
+     * @param int $tid The task id of the subprocess task.
      * @param int $signal `Termination/kill` signal constant.
      *
      * @return bool
@@ -211,6 +212,51 @@ if (!\function_exists('coroutine_run')) {
     function spawn_kill(int $tid, int $signal = \SIGKILL)
     {
         return Kernel::spawnKill($tid, $signal);
+    }
+
+    /**
+     * Add a progress handler for the subprocess, that's continuously monitored.
+     * This function will return `int` immediately, use with `spawn_progress()`.
+     * - The `$handler` function will be executed every time the subprocess produces output,
+     * - This function needs to be prefixed with `yield`
+     *
+     * @param callable $handler
+     *
+     * @return int
+     */
+    function progress_task(callable $handler)
+    {
+        return Kernel::progressTask($handler);
+    }
+
+    /**
+     * Add/execute a blocking `I/O` subprocess task that runs in parallel, but the subprocess can be controlled.
+     * The passed in `task id` can be use as a IPC handler for real time interaction.
+     *
+     * The `$channelTask` will receive **output type** either(`out` or `err`),
+     * and **the data/output** in real-time.
+     *
+     * Use: __Channel__ ->`send()` to write to the standard input of the process.
+     *
+     * This function will return `int` immediately, use `gather()` to get the result.
+     * - This function needs to be prefixed with yield
+     *
+     * @param mixed $command
+     * @param Channeled|resource|mixed|null $channel IPC communication to be pass to the underlying `process` standard input.
+     * @param int|null $channelTask The task id to use for realtime **child/subprocess** interaction.
+     * @param int|float|null $timeout The timeout in seconds or null to disable
+     * @param bool $display set to show child process output
+     *
+     * @return int
+     */
+    function spawn_progress(
+        $command,
+        $channel = null,
+        $channelTask = null,
+        $timeout = 0,
+        bool $display = false
+    ) {
+        return Kernel::spawnTask($command, $timeout, $display, $channel, $channelTask, 0, null);
     }
 
     /**
@@ -1019,7 +1065,6 @@ if (!\function_exists('coroutine_run')) {
             unset($GLOBALS['__coroutine__']);
             $__coroutine__ = null;
         }
-
     }
 
     function coroutine_create(\Generator $routine = null, ?string $driver = null)

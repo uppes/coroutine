@@ -269,7 +269,6 @@ class KernelTest extends TestCase
         $this->assertTrue(\is_type($result, 'int'));
         $output = yield \gather($result);
         $this->assertEquals('subprocess', $output[$result]);
-        yield \shutdown();
     }
 
     public function testSpawnTask()
@@ -284,18 +283,19 @@ class KernelTest extends TestCase
         });
 
         $sigId = yield \spawn_signal(function () {
-            \usleep(10000);
+            \usleep(5000);
             return 'subprocess';
         }, \SIGKILL, $sigTask);
 
         $kill = yield \away(function () use ($sigId) {
-            yield \sleep_for(0.1);
+            yield;
             $bool = yield \spawn_kill($sigId);
             return $bool;
         }, true);
 
-        $output = yield \gather_wait([$sigId, $kill], 0, false);
-        //$this->assertEquals(['4' => null], ['5' => true], $output);
+        $output = yield \gather($sigId);
+        //$output = yield \gather_wait([$sigId, $kill], 0, false);
+        //$this->assertEquals([null, true], [$output[$sigId], $output[$kill]]);
     }
 
     public function DoNotTestSpawnSignalDelay()
@@ -320,12 +320,33 @@ class KernelTest extends TestCase
 
         $this->expectException(InvalidStateError::class);
         yield \gather($sigId);
-        yield \shutdown();
     }
 
     public function testSpawnSignal()
     {
         \coroutine_run($this->taskSpawnSignal());
+    }
+
+    public function taskSpawnProgress()
+    {
+        echo __LINE__;
+        $realTimeTask = yield \progress_task(function ($type, $data) {
+            $this->assertNotNull($type);
+            $this->assertNotNull($data);
+        });
+
+        $realTime = yield \spawn_progress(function () {
+            echo 'hello ';
+            usleep(2000);
+            return 'world';
+        }, null, $realTimeTask, 1);
+
+        $notUsing = yield \gather($realTime);
+    }
+
+    public function DoNotTestSpawnProgressStillNeedWork()
+    {
+        \coroutine_run($this->taskSpawnProgress());
     }
 
     public function childTask($break = false)
