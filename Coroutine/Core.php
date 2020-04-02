@@ -738,15 +738,15 @@ if (!\function_exists('coroutine_run')) {
     }
 
     /**
-     * Turn `on/off` UV for file operations.
+     * Turn `on/off` **libuv** for file operations.
      *
      * @param bool $useUV
      * - `true` use **thread pool**.
-     * - `false` use `child/subprocess`.
+     * - `false` use **child/subprocess**.
      */
     function file_operation(bool $useUV = false)
     {
-        ($useUV === true) ? FileSystem::on() : FileSystem::off();
+        FileSystem::setup($useUV);
     }
 
     /**

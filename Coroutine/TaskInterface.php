@@ -23,6 +23,11 @@ interface TaskInterface
     public function parallelTask();
 
     /**
+     * Reset all `Task` data.
+     */
+    public function close();
+
+    /**
      * Store custom state of the task.
      */
     public function customState($state = null);

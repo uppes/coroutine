@@ -18,6 +18,11 @@ interface ParallelInterface
     public function status(): ParallelStatus;
 
     /**
+     * Reset all sub process data, and kill any running.
+     */
+    public function close();
+
+    /**
      * @param Launcher|callable $process
      * @param int|float|null $timeout The timeout in seconds or null to disable
      * @param Channel|resource|mixed|null $channel IPC communication to be pass to the underlying process standard input.

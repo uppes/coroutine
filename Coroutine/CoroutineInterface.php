@@ -30,9 +30,9 @@ interface CoroutineInterface
     public function schedule(TaskInterface $task);
 
     /**
-     * Performs a clean application exit and shutdown.
+     * Performs a clean application exit/shutdown, killing tasks/processes, and resetting all data.
      *
-     * Provide $skipTask incase called by an Signal Handler.
+     * Provide `$skipTask` incase called by an Signal Handler.
      *
      * @param int $skipTask - Defaults to the main parent task.
      * - The calling `$skipTask` task id will not get cancelled, the script execution will return to.
@@ -41,7 +41,7 @@ interface CoroutineInterface
     public function shutdown(int $skipTask = 1);
 
     /**
-     * Reset all application data.
+     * Reset all `Coroutine` data.
      */
     public function close();
 
@@ -214,14 +214,16 @@ interface CoroutineInterface
     public function getUV(): ?\UVLoop;
 
     /**
-     * Enable `libuv` feature usage, if installed.
+     * Is using `libuv` features turned on.
      */
-    public function uvOn();
+    public function isUv(): bool;
 
     /**
-     * Disable `libuv` feature usage, if installed.
+     * Setup to use `libuv` features, enable/disable.
+     *
+     * @param bool $useUvLoop
      */
-    public function uvOff();
+    public function setup(bool $useUvLoop = true);
 
     /**
      * The `Process` class manager instance for Blocking I/O.

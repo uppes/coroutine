@@ -121,7 +121,7 @@ final class Coroutine implements CoroutineInterface
     /**
      * Status to control general use of `libuv` features.
      *
-     * @var int
+     * @var bool
      */
     protected $useUv = false;
 
@@ -164,30 +164,36 @@ final class Coroutine implements CoroutineInterface
     public function __destruct()
     {
         $this->shutdown(0);
+        unset($this->taskQueue);
         $this->taskQueue = null;
     }
 
     public function close()
     {
-        $this->maxTaskId = 0;
-        $this->taskMap = [];
-        $this->completedMap = [];
-        $this->timers = [];
-        $this->waitingForRead = [];
-        $this->waitingForWrite = [];
+        if ($this->uv instanceof \UVLoop) {
+            @\uv_stop($this->uv);
+            @\uv_loop_delete($this->uv);
+        }
+
         $this->uv = null;
         $this->onEvent = null;
         $this->onTimer = null;
         $this->onSignal = null;
         $this->isUvSignal = null;
-        $this->uvFileSystem = 0;
-        $this->useUv = false;
-        $this->events = [];
-        $this->signals = [];
         $this->process = null;
         $this->parallel = null;
         $this->signaler = null;
         $this->isHighTimer = null;
+        $this->maxTaskId = 0;
+        $this->uvFileSystem = 0;
+        $this->useUv = false;
+        $this->taskMap = [];
+        $this->completedMap = [];
+        $this->timers = [];
+        $this->waitingForRead = [];
+        $this->waitingForWrite = [];
+        $this->events = [];
+        $this->signals = [];
     }
 
     /**
@@ -350,17 +356,11 @@ final class Coroutine implements CoroutineInterface
     /**
      * @codeCoverageIgnore
      */
-    public function uvOn()
+    public function setup(bool $useUvLoop = true)
     {
-        $this->useUv = true;
-    }
+        $this->useUv = $useUvLoop;
 
-    /**
-     * @codeCoverageIgnore
-     */
-    public function uvOff()
-    {
-        $this->useUv = false;
+        return $this;
     }
 
     /**
@@ -412,9 +412,17 @@ final class Coroutine implements CoroutineInterface
         return $display ? $launcher->displayOn() : $launcher;
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
+    public function isUv(): bool
+    {
+        return $this->useUv;
+    }
+
     public function isUvActive(): bool
     {
-        return !empty($this->uv) && \is_object($this->uv) && $this->useUv;
+        return ($this->uv instanceof \UVLoop) && $this->useUv;
     }
 
     public function isPcntl(): bool
@@ -498,20 +506,25 @@ final class Coroutine implements CoroutineInterface
         // @codeCoverageIgnoreStart
         if ($this->isUvActive()) {
             \uv_stop($this->uv);
+
             foreach ($this->timers as $timer) {
-                \uv_timer_stop($timer);
+                if ($timer instanceof \UVTimer && \uv_is_active($timer))
+                    \uv_timer_stop($timer);
             }
 
             foreach ($this->signals as $signal) {
-                \uv_signal_stop($signal);
+                if ($signal instanceof \UVSignal && \uv_is_active($signal))
+                    \uv_signal_stop($signal);
             }
 
             foreach ($this->events as $event) {
-                \uv_close($event);
+                if ($event instanceof \UV && \uv_is_active($event))
+                    \uv_close($event);
             }
 
-            \uv_run($this->uv, \UV::RUN_NOWAIT);
+            \uv_run($this->uv);
         }
+        // @codeCoverageIgnoreEnd
 
         $this->close();
     }

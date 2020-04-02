@@ -60,8 +60,8 @@ final class Parallel implements ArrayAccess, ParallelInterface
 
         $this->coroutine = null;
         $this->processor = null;
-        $this->status;
-        $this->process;
+        $this->status = null;
+        $this->process = null;
         $this->concurrency = 100;
         $this->queue = [];
         $this->results = [];

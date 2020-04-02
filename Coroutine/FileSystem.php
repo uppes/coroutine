@@ -69,7 +69,7 @@ final class FileSystem
     protected static $useUV = true;
 
     /**
-     * Check for UV and use for only file operations.
+     * Check for `libuv` and use for only file operations.
      *
      * @return bool
      */
@@ -79,19 +79,15 @@ final class FileSystem
     }
 
     /**
-     * Turn on UV for file operations, will use `libuv` **thread pool**.
+     * Setup how **Coroutine** handle file operations.
+     *
+     * @param bool $useUV
+     * - `true` on - will use `libuv` by **thread pool**.
+     * - `false` off - will use `uv_spawn` or PHP system `proc_open` by **child/subprocess**.
      */
-    public static function on()
+    public static function setup(bool $useUV = true)
     {
-        self::$useUV = true;
-    }
-
-    /**
-     * Turn off UV for file operations, will use system `child/subprocess`.
-     */
-    public static function off()
-    {
-        self::$useUV = false;
+        self::$useUV = $useUV;
     }
 
     protected static function spawnStat($path, $info = null)
