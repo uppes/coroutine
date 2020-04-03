@@ -10,12 +10,12 @@ class KernelSignalProgressTest extends TestCase
 {
     protected function setUp(): void
     {
-        $this->markTestSkipped('Progress an Signal subprocess tests skipped for now, causing code coverage submission issues.');
         \coroutine_clear();
     }
 
     public function taskSpawnProgress()
     {
+        $this->markTestSkipped('Progress subprocess tests skipped for now, not setup correctly.');
         echo __LINE__;
         $channel = new Channel;
         $realTimeTask = \progress_task(function ($type, $data) {
@@ -34,8 +34,9 @@ class KernelSignalProgressTest extends TestCase
         yield \shutdown();
     }
 
-    public function DoNotTestSpawnProgress()
+    public function testSpawnProgress()
     {
+        $this->markTestSkipped('Progress subprocess tests skipped for now, not setup correctly.');
         \coroutine_run($this->taskSpawnProgress());
     }
 
