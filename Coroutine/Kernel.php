@@ -12,6 +12,7 @@ use Async\Coroutine\Exceptions\InvalidStateError;
 use Async\Coroutine\Exceptions\InvalidArgumentException;
 use Async\Coroutine\Exceptions\TimeoutError;
 use Async\Coroutine\Exceptions\CancelledError;
+use Async\Spawn\Process;
 use Async\Spawn\Channel as Channeled;
 use Async\Spawn\LauncherInterface;
 
@@ -365,19 +366,24 @@ final class Kernel
                     });
                 }
 
-                // @codeCoverageIgnoreStart
-                if ($channel !== null && \is_int($channelTask)) {
+                if ($channel instanceof Channeled && \is_int($channelTask)) {
                     $launcher->progress(function ($type, $data)
-                    use ($coroutine, $channel, $channelTask) {
+                    use ($coroutine, $channelTask) {
                         $taskList = $coroutine->currentTask();
                         if (isset($taskList[$channelTask]) && $taskList[$channelTask] instanceof TaskInterface) {
                             $ipcTask = $taskList[$channelTask];
-                            $ipcTask->sendValue([$channel, $type, $data]);
+                            $ipcTask->sendValue([$type, $data]);
                             $coroutine->schedule($ipcTask);
                         }
                     });
+
+                    $process = $launcher->getProcess();
+                    if ($process instanceof \UVProcess) {
+                        $channel->setHandle($launcher);
+                    } elseif ($process instanceof Process) {
+                        $process->setInput($channel);
+                    }
                 }
-                // @codeCoverageIgnoreEnd
             }
         );
     }
@@ -482,14 +488,12 @@ final class Kernel
     public static function signalTask(int $signal, callable $handler)
     {
         return Kernel::away(function () use ($signal, $handler) {
-            yield;
             while (true) {
+                yield;
                 $trapSignal = yield;
                 if ($signal === $trapSignal) {
                     return $handler($signal);
                 }
-
-                yield;
             }
         });
     }

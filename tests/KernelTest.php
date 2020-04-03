@@ -269,84 +269,12 @@ class KernelTest extends TestCase
         $this->assertTrue(\is_type($result, 'int'));
         $output = yield \gather($result);
         $this->assertEquals('subprocess', $output[$result]);
+        yield \shutdown();
     }
 
     public function testSpawnTask()
     {
         \coroutine_run($this->taskSpawnTask());
-    }
-
-    public function taskSpawnSignalDelay()
-    {
-        $sigTask = yield \signal_task(\SIGKILL, function ($signal) {
-            $this->assertEquals(\SIGKILL, $signal);
-        });
-
-        $sigId = yield \spawn_signal(function () {
-            \usleep(5000);
-            return 'subprocess';
-        }, \SIGKILL, $sigTask);
-
-        $kill = yield \away(function () use ($sigId) {
-            yield;
-            $bool = yield \spawn_kill($sigId);
-            return $bool;
-        }, true);
-
-        $output = yield \gather($sigId);
-        //$output = yield \gather_wait([$sigId, $kill], 0, false);
-        //$this->assertEquals([null, true], [$output[$sigId], $output[$kill]]);
-    }
-
-    public function DoNotTestSpawnSignalDelay()
-    {
-        \coroutine_run($this->taskSpawnSignalDelay());
-    }
-
-    public function taskSpawnSignal()
-    {
-        $sigTask = yield \signal_task(\SIGKILL, function ($signal) {
-            $this->assertEquals(\SIGKILL, $signal);
-        });
-
-        $sigId = yield \spawn_signal(function () {
-            sleep(2);
-            return 'subprocess';
-        }, \SIGKILL, $sigTask);
-
-        yield \away(function () use ($sigId) {
-            return yield \spawn_kill($sigId);
-        });
-
-        $this->expectException(InvalidStateError::class);
-        yield \gather($sigId);
-    }
-
-    public function testSpawnSignal()
-    {
-        \coroutine_run($this->taskSpawnSignal());
-    }
-
-    public function taskSpawnProgress()
-    {
-        echo __LINE__;
-        $realTimeTask = yield \progress_task(function ($type, $data) {
-            $this->assertNotNull($type);
-            $this->assertNotNull($data);
-        });
-
-        $realTime = yield \spawn_progress(function () {
-            echo 'hello ';
-            usleep(2000);
-            return 'world';
-        }, null, $realTimeTask, 1);
-
-        $notUsing = yield \gather($realTime);
-    }
-
-    public function DoNotTestSpawnProgressStillNeedWork()
-    {
-        \coroutine_run($this->taskSpawnProgress());
     }
 
     public function childTask($break = false)
