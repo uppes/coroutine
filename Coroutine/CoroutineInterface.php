@@ -174,15 +174,7 @@ interface CoroutineInterface
      *
      * @return LauncherInterface
      */
-    public function addProcess(
-        $callable,
-        int $timeout = 0,
-        bool $display = false,
-        $channel = null,
-        $channelTask = null,
-        int $signal = 0,
-        $signalTask = null
-    ): LauncherInterface;
+    public function addProcess($callable, int $timeout = 0, bool $display = false, $channel = null): LauncherInterface;
 
     /**
      * The number of UV file system operations still pending, not finish.

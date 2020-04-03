@@ -399,16 +399,10 @@ final class Coroutine implements CoroutineInterface
         return $this->process;
     }
 
-    public function addProcess(
-        $callable,
-        int $timeout = 0,
-        bool $display = false,
-        $channel = null,
-        $channelTask = null,
-        int $signal = 0,
-        $signalTask = null
-    ): LauncherInterface {
-        $launcher = $this->parallel->add($callable, $timeout, $channel, $channelTask, $signal, $signalTask);
+    public function addProcess($callable, int $timeout = 0, bool $display = false, $channel = null): LauncherInterface
+    {
+        $launcher = $this->parallel->add($callable, $timeout, $channel);
+
         return $display ? $launcher->displayOn() : $launcher;
     }
 
@@ -681,10 +675,7 @@ final class Coroutine implements CoroutineInterface
                 if ($this->isUvActive()) {
                     \uv_run($this->uv, $streamWait ? \UV::RUN_ONCE : \UV::RUN_NOWAIT);
                 } else {
-                    if (($this->isUvSignal && $this->isSignaling())
-                        || ($this->fsCount() > 0)
-                        || !$this->process->isEmpty()
-                    ) {
+                    if ($this->uv instanceof \UVLoop) {
                         \uv_run($this->uv, \UV::RUN_NOWAIT);
                     }
 

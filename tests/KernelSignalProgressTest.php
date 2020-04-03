@@ -15,11 +15,8 @@ class KernelSignalProgressTest extends TestCase
 
     public function taskSpawnProgress()
     {
-        $this->markTestSkipped('Progress subprocess tests skipped for now, not setup correctly.');
-        echo __LINE__;
         $channel = new Channel;
-        $realTimeTask = \progress_task(function ($type, $data) {
-            echo __LINE__;
+        $realTimeTask = yield \progress_task(function ($type, $data) use ($channel) {
             $this->assertNotNull($type);
             $this->assertNotNull($data);
         });
@@ -28,7 +25,7 @@ class KernelSignalProgressTest extends TestCase
             echo 'hello ';
             usleep(500);
             return 'world';
-        }, $channel, yield $realTimeTask, 1);
+        }, $channel, $realTimeTask);
 
         $notUsing = yield \gather($realTime);
         yield \shutdown();
@@ -36,7 +33,7 @@ class KernelSignalProgressTest extends TestCase
 
     public function testSpawnProgress()
     {
-        $this->markTestSkipped('Progress subprocess tests skipped for now, not setup correctly.');
+        $this->markTestSkipped('Progress subprocess tests skipped for now, still not setup correctly.');
         \coroutine_run($this->taskSpawnProgress());
     }
 
@@ -58,13 +55,39 @@ class KernelSignalProgressTest extends TestCase
         }, true);
 
         $output = yield \gather($sigId);
-        //$output = yield \gather_wait([$sigId, $kill], 0, false);
-        //$this->assertEquals([null, true], [$output[$sigId], $output[$kill]]);
+        yield \shutdown();
     }
 
     public function testSpawnSignalDelay()
     {
         \coroutine_run($this->taskSpawnSignalDelay());
+    }
+
+    public function taskSpawnSignalResult()
+    {
+        $sigTask = yield \signal_task(\SIGKILL, function ($signal) {
+            $this->assertEquals(\SIGKILL, $signal);
+        });
+
+        $sigId = yield \spawn_signal(function () {
+            \usleep(5000);
+            return 'subprocess';
+        }, \SIGKILL, $sigTask);
+
+        $kill = yield \away(function () use ($sigId) {
+            yield;
+            $bool = yield \spawn_kill($sigId);
+            return $bool;
+        }, true);
+
+        $output = yield \gather_wait([$sigId, $kill], 0, false);
+        $this->assertEquals([null, true], [$output[$sigId], $output[$kill]]);
+        yield \shutdown();
+    }
+
+    public function testSpawnSignalResult()
+    {
+        \coroutine_run($this->taskSpawnSignalResult());
     }
 
     public function taskSpawnSignal()
@@ -84,6 +107,7 @@ class KernelSignalProgressTest extends TestCase
 
         $this->expectException(InvalidStateError::class);
         yield \gather($sigId);
+        yield \shutdown();
     }
 
     public function testSpawnSignal()

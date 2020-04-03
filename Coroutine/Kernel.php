@@ -331,17 +331,26 @@ final class Kernel
                 $task->parallelTask();
                 $task->setState('process');
                 $launcher = $coroutine->addProcess($command, $timeout, $display, $channel)
-                    ->then(function ($result) use ($task, $coroutine) {
+                    ->then(function ($result) use ($task, $coroutine, $channelTask) {
+                        //if (\is_int($channelTask))
+                          //  $coroutine->cancelTask($channelTask);
+
                         $task->setState('completed');
                         $task->sendValue($result);
                         $coroutine->schedule($task);
                     })
-                    ->catch(function (\Throwable $error) use ($task, $coroutine) {
+                    ->catch(function (\Throwable $error) use ($task, $coroutine, $channelTask) {
+                        //if (\is_int($channelTask))
+                            //$coroutine->cancelTask($channelTask);
+
                         $task->setState('erred');
                         $task->setException(new \RuntimeException($error->getMessage()));
                         $coroutine->schedule($task);
                     })
-                    ->timeout(function () use ($task, $coroutine, $timeout) {
+                    ->timeout(function () use ($task, $coroutine, $timeout, $channelTask) {
+                        //if (\is_int($channelTask))
+                          //  $coroutine->cancelTask($channelTask);
+
                         $task->setState('cancelled');
                         $task->setException(new TimeoutError($timeout));
                         $coroutine->schedule($task);
@@ -351,7 +360,10 @@ final class Kernel
 
                 if ($signal !== 0 && \is_int($signalTask)) {
                     $launcher->signal($signal, function ($signaled)
-                    use ($task, $coroutine, $signal, $signalTask) {
+                    use ($task, $coroutine, $signal, $signalTask, $channelTask) {
+                        //if (\is_int($channelTask))
+                          //  $coroutine->cancelTask($channelTask);
+
                         $task->setState('cancelled');
                         $taskList = $coroutine->currentTask();
                         if (isset($taskList[$signalTask]) && $taskList[$signalTask] instanceof TaskInterface) {
@@ -367,6 +379,7 @@ final class Kernel
                 }
 
                 if ($channel instanceof Channeled && \is_int($channelTask)) {
+                    $channel->setHandle($launcher);
                     $launcher->progress(function ($type, $data)
                     use ($coroutine, $channelTask) {
                         $taskList = $coroutine->currentTask();
@@ -376,13 +389,6 @@ final class Kernel
                             $coroutine->schedule($ipcTask);
                         }
                     });
-
-                    $process = $launcher->getProcess();
-                    if ($process instanceof \UVProcess) {
-                        $channel->setHandle($launcher);
-                    } elseif ($process instanceof Process) {
-                        $process->setInput($channel);
-                    }
                 }
             }
         );
@@ -460,8 +466,8 @@ final class Kernel
                         $process = $customData->getProcess();
                         if ($process instanceof \UVProcess && \uv_is_active($process)) {
                             \uv_process_kill($process, $signal);
-                        } elseif ($process instanceof \Async\Spawn\Process) {
                             // @codeCoverageIgnoreStart
+                        } elseif ($process instanceof \Async\Spawn\Process) {
                             $process->stop(0, $signal);
                             // @codeCoverageIgnoreEnd
                         }
@@ -511,15 +517,13 @@ final class Kernel
     public static function progressTask(callable $handler)
     {
         return Kernel::away(function () use ($handler) {
-            yield;
             while (true) {
+                yield;
                 $received = yield;
                 if (\is_array($received) && (\count($received) == 2)) {
                     [$type, $data] = $received;
                     $handler($type, $data);
                 }
-
-                yield;
             }
         });
     }
