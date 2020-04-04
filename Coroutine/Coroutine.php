@@ -176,14 +176,20 @@ final class Coroutine implements CoroutineInterface
             @\uv_loop_delete($this->uv);
         }
 
+        if ($this->parallel instanceof ParallelInterface) {
+            $this->parallel->close();
+        }
+
         $this->uv = null;
+        $this->parallel = null;
+        unset($this->process);
+        $this->process = null;
+        unset($this->signaler);
+        $this->signaler = null;
         $this->onEvent = null;
         $this->onTimer = null;
         $this->onSignal = null;
         $this->isUvSignal = null;
-        $this->process = null;
-        $this->parallel = null;
-        $this->signaler = null;
         $this->isHighTimer = null;
         $this->maxTaskId = 0;
         $this->uvFileSystem = 0;
