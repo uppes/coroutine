@@ -2,39 +2,14 @@
 
 namespace Async\Tests;
 
-use Async\Spawn\Channel;
 use Async\Coroutine\Exceptions\InvalidStateError;
 use PHPUnit\Framework\TestCase;
 
-class KernelSignalProgressTest extends TestCase
+class KernelSignalTest extends TestCase
 {
     protected function setUp(): void
     {
         \coroutine_clear();
-    }
-
-    public function taskSpawnProgress()
-    {
-        $channel = new Channel;
-        $realTimeTask = yield \progress_task(function ($type, $data) use ($channel) {
-            $this->assertNotNull($type);
-            $this->assertNotNull($data);
-        });
-
-        $realTime = yield \spawn_progress(function () {
-            echo 'hello ';
-            usleep(500);
-            return 'world';
-        }, $channel, $realTimeTask);
-
-        $notUsing = yield \gather($realTime);
-        yield \shutdown();
-    }
-
-    public function testSpawnProgress()
-    {
-        $this->markTestSkipped('Progress subprocess tests skipped for now, still not setup correctly.');
-        \coroutine_run($this->taskSpawnProgress());
     }
 
     public function taskSpawnSignalDelay()

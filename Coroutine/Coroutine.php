@@ -14,6 +14,7 @@ use Async\Coroutine\TaskInterface;
 use Async\Coroutine\ReturnValueCoroutine;
 use Async\Coroutine\PlainValueCoroutine;
 use Async\Coroutine\CoroutineInterface;
+use Async\Spawn\Channel;
 use Async\Spawn\Spawn;
 use Async\Spawn\LauncherInterface;
 use Async\Coroutine\Exceptions\CancelledError;
@@ -546,6 +547,25 @@ final class Coroutine implements CoroutineInterface
         return true;
     }
 
+    public function cancelProgress(TaskInterface $task)
+    {
+        $channel = $task->getCustomState();
+        if (\is_array($channel) && (\count($channel) == 2)) {
+            [$channel, $channelTask] = $channel;
+            if ($channel instanceof Channel && \is_int($channelTask) && isset($this->taskMap[$channelTask])) {
+                unset($this->taskMap[$channelTask]);
+                foreach ($this->taskQueue as $i => $task) {
+                    if ($task->taskId() === $channelTask) {
+                        $task->close();
+                        $task->setState('cancelled');
+                        unset($this->taskQueue[$i]);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
     public function currentTask(): ?array
     {
         if (!isset($this->taskMap)) {
@@ -587,6 +607,7 @@ final class Coroutine implements CoroutineInterface
                 try {
                     $value($task, $this);
                 } catch (\Throwable $error) {
+                    $this->cancelProgress($task);
                     $task->setState(
                         ($error instanceof CancelledError ? 'cancelled' : 'erred')
                     );
@@ -599,6 +620,7 @@ final class Coroutine implements CoroutineInterface
             }
 
             if ($task->isFinished()) {
+                $this->cancelProgress($task);
                 $task->setState('completed');
                 $id = $task->taskId();
                 $this->completedMap[$id] = $task;

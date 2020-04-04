@@ -109,7 +109,7 @@ final class Task implements TaskInterface
 
     public function close()
     {
-        $object = $this->customState;
+        $object = $this->customData;
         if (\is_object($object) && \method_exists($object, 'close')) {
             $object->close();
         }
@@ -133,7 +133,7 @@ final class Task implements TaskInterface
         $this->cycles++;
     }
 
-    public function taskId(): int
+    public function taskId(): ?int
     {
         return $this->taskId;
     }
@@ -239,7 +239,9 @@ final class Task implements TaskInterface
 
     public function isFinished(): bool
     {
-        return !$this->coroutine->valid();
+        return ($this->coroutine instanceof \Generator)
+            ? !$this->coroutine->valid()
+            : true;
     }
 
     public function result()
@@ -270,14 +272,23 @@ final class Task implements TaskInterface
     {
         if ($this->beforeFirstYield) {
             $this->beforeFirstYield = false;
-            return $this->coroutine->current();
+            return ($this->coroutine instanceof \Generator)
+                ? $this->coroutine->current()
+                : null;
+
         } elseif ($this->exception) {
-            $value = $this->coroutine->throw($this->exception);
+            $value = ($this->coroutine instanceof \Generator)
+                ? $this->coroutine->throw($this->exception)
+                : $this->exception;
+
             $this->error = $this->exception;
             $this->exception = null;
             return $value;
         } else {
-            $value = $this->coroutine->send($this->sendValue);
+            $value = ($this->coroutine instanceof \Generator)
+                ? $this->coroutine->send($this->sendValue)
+                : $this->sendValue;
+
             if (!empty($value)) {
                 $this->result = $value;
             }

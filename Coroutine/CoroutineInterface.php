@@ -46,6 +46,15 @@ interface CoroutineInterface
     public function close();
 
     /**
+     * kill/remove an subprocess progress `realtime` ipc handler task.
+     *
+     * @param TaskInterface $task
+     *
+     * @return void
+     */
+    public function cancelProgress(TaskInterface $task);
+
+    /**
      * kill/remove an task using task id,
      * optionally pass custom cancel state for third party code integration.
      *

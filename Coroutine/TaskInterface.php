@@ -8,7 +8,7 @@ namespace Async\Coroutine;
  */
 interface TaskInterface
 {
-    public function taskId();
+    public function taskId(): ?int;
 
     public function taskType(string $type);
 

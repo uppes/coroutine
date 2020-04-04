@@ -331,26 +331,17 @@ final class Kernel
                 $task->parallelTask();
                 $task->setState('process');
                 $launcher = $coroutine->addProcess($command, $timeout, $display, $channel)
-                    ->then(function ($result) use ($task, $coroutine, $channelTask) {
-                        //if (\is_int($channelTask))
-                          //  $coroutine->cancelTask($channelTask);
-
+                    ->then(function ($result) use ($task, $coroutine) {
                         $task->setState('completed');
                         $task->sendValue($result);
                         $coroutine->schedule($task);
                     })
-                    ->catch(function (\Throwable $error) use ($task, $coroutine, $channelTask) {
-                        //if (\is_int($channelTask))
-                            //$coroutine->cancelTask($channelTask);
-
+                    ->catch(function (\Throwable $error) use ($task, $coroutine) {
                         $task->setState('erred');
                         $task->setException(new \RuntimeException($error->getMessage()));
                         $coroutine->schedule($task);
                     })
-                    ->timeout(function () use ($task, $coroutine, $timeout, $channelTask) {
-                        //if (\is_int($channelTask))
-                          //  $coroutine->cancelTask($channelTask);
-
+                    ->timeout(function () use ($task, $coroutine, $timeout) {
                         $task->setState('cancelled');
                         $task->setException(new TimeoutError($timeout));
                         $coroutine->schedule($task);
@@ -360,10 +351,7 @@ final class Kernel
 
                 if ($signal !== 0 && \is_int($signalTask)) {
                     $launcher->signal($signal, function ($signaled)
-                    use ($task, $coroutine, $signal, $signalTask, $channelTask) {
-                        //if (\is_int($channelTask))
-                          //  $coroutine->cancelTask($channelTask);
-
+                    use ($task, $coroutine, $signal, $signalTask) {
                         $task->setState('cancelled');
                         $taskList = $coroutine->currentTask();
                         if (isset($taskList[$signalTask]) && $taskList[$signalTask] instanceof TaskInterface) {
@@ -375,11 +363,13 @@ final class Kernel
                         } // @codeCoverageIgnoreEnd
 
                         $coroutine->schedule($task);
+                        $coroutine->cancelProgress($task);
                     });
                 }
 
                 if ($channel instanceof Channeled && \is_int($channelTask)) {
                     $channel->setHandle($launcher);
+                    $task->customState([$channel, $channelTask]);
                     $launcher->progress(function ($type, $data)
                     use ($coroutine, $channelTask) {
                         $taskList = $coroutine->currentTask();
@@ -522,7 +512,7 @@ final class Kernel
                 $received = yield;
                 if (\is_array($received) && (\count($received) == 2)) {
                     [$type, $data] = $received;
-                    $handler($type, $data);
+                    yield $handler($type, $data);
                 }
             }
         });
