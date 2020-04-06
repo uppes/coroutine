@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Async\Coroutine;
 
+use Async\Spawn\Spawn;
+use Async\Spawn\LauncherInterface;
+use Async\Spawn\ChanneledInterface;
 use Async\Coroutine\Kernel;
 use Async\Coroutine\Task;
 use Async\Coroutine\Parallel;
@@ -14,9 +17,6 @@ use Async\Coroutine\TaskInterface;
 use Async\Coroutine\ReturnValueCoroutine;
 use Async\Coroutine\PlainValueCoroutine;
 use Async\Coroutine\CoroutineInterface;
-use Async\Spawn\Channel;
-use Async\Spawn\Spawn;
-use Async\Spawn\LauncherInterface;
 use Async\Coroutine\Exceptions\CancelledError;
 use Async\Coroutine\Exceptions\InvalidArgumentException;
 
@@ -220,7 +220,7 @@ final class Coroutine implements CoroutineInterface
         if (\in_array($driver, ['auto', 'uv']) && \function_exists('uv_loop_new')) {
             $this->uv = \uv_loop_new();
 
-            Spawn::setup($this->uv);
+            \spawn_setup($this->uv);
 
             // @codeCoverageIgnoreStart
             $this->onEvent = function ($event, $status, $events, $stream) {
@@ -558,7 +558,7 @@ final class Coroutine implements CoroutineInterface
         $channel = $task->getCustomState();
         if (\is_array($channel) && (\count($channel) == 2)) {
             [$channel, $channelTask] = $channel;
-            if ($channel instanceof Channel && \is_int($channelTask) && isset($this->taskMap[$channelTask])) {
+            if ($channel instanceof ChanneledInterface && \is_int($channelTask) && isset($this->taskMap[$channelTask])) {
                 unset($this->taskMap[$channelTask]);
                 foreach ($this->taskQueue as $i => $task) {
                     if ($task->taskId() === $channelTask) {

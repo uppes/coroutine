@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
+use Async\Spawn\Channeled;
 use Async\Coroutine\Defer;
 use Async\Coroutine\Kernel;
 use Async\Coroutine\Channel;
 use Async\Coroutine\Coroutine;
 use Async\Coroutine\CoroutineInterface;
-use Async\Spawn\Channel as Channeled;
 use Async\Coroutine\Exceptions\Panic;
 use Async\Coroutine\FileSystem;
 

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Async\Coroutine;
 
+use Async\Spawn\Channeled;
+use Async\Spawn\LauncherInterface;
 use Async\Coroutine\Channel;
 use Async\Coroutine\CoroutineInterface;
 use Async\Coroutine\TaskInterface;
@@ -12,9 +14,6 @@ use Async\Coroutine\Exceptions\InvalidStateError;
 use Async\Coroutine\Exceptions\InvalidArgumentException;
 use Async\Coroutine\Exceptions\TimeoutError;
 use Async\Coroutine\Exceptions\CancelledError;
-use Async\Spawn\Process;
-use Async\Spawn\Channel as Channeled;
-use Async\Spawn\LauncherInterface;
 
 /**
  * The Kernel

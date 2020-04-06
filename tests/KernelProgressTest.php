@@ -2,7 +2,8 @@
 
 namespace Async\Tests;
 
-use Async\Spawn\Channel;
+use Async\Spawn\Channeled;
+use Async\Spawn\ChanneledInterface;
 use PHPUnit\Framework\TestCase;
 
 class KernelProgressTest extends TestCase
@@ -14,8 +15,8 @@ class KernelProgressTest extends TestCase
 
     public function taskSpawnProgress()
     {
-        $channel = new Channel;
-        $realTimeTask = yield \progress_task(function ($type, $data) use ($channel) {
+        $channel = new Channeled;
+        $realTimeTask = yield \progress_task(function ($type, $data) {
             $this->assertNotNull($type);
             $this->assertNotNull($data);
         });
@@ -33,6 +34,30 @@ class KernelProgressTest extends TestCase
     public function testSpawnProgress()
     {
         \coroutine_run($this->taskSpawnProgress());
+    }
+
+    public function taskSpawnProgressResult()
+    {
+        $channel = new Channeled;
+        $realTimeTask = yield \progress_task(function ($type, $data) use ($channel) {
+            $this->assertNotNull($type);
+            $this->assertNotNull($data);
+        });
+
+        $realTime = yield \spawn_progress(function (ChanneledInterface $ipc) {
+            $ipc->write('hello ');
+
+            returning(2500);
+            return 'world';
+        }, $channel, $realTimeTask);
+
+        $result = yield \gather($realTime);
+        $this->assertEquals('world', $result[$realTime]);
+    }
+
+    public function testSpawnProgressResult()
+    {
+        \coroutine_run($this->taskSpawnProgressResult());
     }
 
 }

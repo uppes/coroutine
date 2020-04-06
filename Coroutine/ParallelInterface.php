@@ -2,7 +2,7 @@
 
 namespace Async\Coroutine;
 
-use Async\Spawn\Channel;
+use Async\Spawn\Channeled;
 use Async\Spawn\LauncherInterface;
 
 interface ParallelInterface
@@ -25,7 +25,7 @@ interface ParallelInterface
     /**
      * @param Launcher|callable $process
      * @param int|float|null $timeout The timeout in seconds or null to disable
-     * @param Channel|resource|mixed|null $channel IPC communication to be pass to the underlying process standard input.
+     * @param Channeled|resource|mixed|null $channel IPC communication to be pass to the underlying process standard input.
      *
      * @return LauncherInterface
      */
