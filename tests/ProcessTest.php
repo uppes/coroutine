@@ -161,7 +161,7 @@ class ProcessTest extends TestCase
         $coroutine->createTask($this->taskProcessStopAll());
         $coroutine->run();
 
-        $this->assertNull($this->mainResult);
+        $this->assertEquals(0, $this->mainResult);
         $this->assertNotEquals(0, $this->childId);
         $this->assertEquals(0, $this->counterResult);
     }

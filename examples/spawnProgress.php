@@ -5,13 +5,25 @@ include 'vendor/autoload.php';
 use Async\Spawn\Channeled;
 use Async\Spawn\ChanneledInterface;
 
+function repeat()
+{
+    $counter = 0;
+    while (true) {
+        $counter++;
+        \printf(".");
+        yield;
+    }
+}
+
 function main()
 {
     $ipc = new Channeled();
 
     echo "Let's play, ";
 
+    //yield \away(\repeat());
     $pTask = yield \progress_task(function ($type, $data) use ($ipc) {
+        echo $ipc->receive();
         if ('ping' === $data) {
             $ipc->send('pang' . \PHP_EOL);
         } elseif (!$ipc->isClosed()) {
@@ -26,7 +38,7 @@ function main()
             echo $channel->read();
             echo $channel->read();
 
-            returning();
+            \returning();
             return 'The game!';
         },
         $ipc,

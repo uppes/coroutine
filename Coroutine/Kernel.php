@@ -511,7 +511,7 @@ final class Kernel
                 $received = yield;
                 if (\is_array($received) && (\count($received) == 2)) {
                     [$type, $data] = $received;
-                    yield $handler($type, $data);
+                    yield yield $handler($type, $data);
                 }
             }
         });

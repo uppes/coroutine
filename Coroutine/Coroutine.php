@@ -172,7 +172,23 @@ final class Coroutine implements CoroutineInterface
     public function close()
     {
         if ($this->uv instanceof \UVLoop) {
+            foreach ($this->timers as $timer) {
+                if ($timer instanceof \UVTimer && \uv_is_active($timer))
+                    \uv_timer_stop($timer);
+            }
+
+            foreach ($this->signals as $signal) {
+                if ($signal instanceof \UVSignal && \uv_is_active($signal))
+                    \uv_signal_stop($signal);
+            }
+
+            foreach ($this->events as $event) {
+                if ($event instanceof \UV && \uv_is_active($event))
+                    \uv_close($event);
+            }
+
             @\uv_stop($this->uv);
+            @\uv_run($this->uv, \UV::RUN_NOWAIT);
             @\uv_loop_delete($this->uv);
         }
 
@@ -503,29 +519,6 @@ final class Coroutine implements CoroutineInterface
                 $task->customState('shutdown');
             }
         }
-
-        // @codeCoverageIgnoreStart
-        if ($this->isUvActive()) {
-            \uv_stop($this->uv);
-
-            foreach ($this->timers as $timer) {
-                if ($timer instanceof \UVTimer && \uv_is_active($timer))
-                    \uv_timer_stop($timer);
-            }
-
-            foreach ($this->signals as $signal) {
-                if ($signal instanceof \UVSignal && \uv_is_active($signal))
-                    \uv_signal_stop($signal);
-            }
-
-            foreach ($this->events as $event) {
-                if ($event instanceof \UV && \uv_is_active($event))
-                    \uv_close($event);
-            }
-
-            \uv_run($this->uv);
-        }
-        // @codeCoverageIgnoreEnd
 
         $this->close();
     }

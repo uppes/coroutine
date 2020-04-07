@@ -964,13 +964,17 @@ if (!\function_exists('coroutine_run')) {
 
     /**
      * Performs a clean application exit and shutdown.
-     *
      * - This function needs to be prefixed with `yield`
+     *
+     * Provide $skipTask incase called by an Signal Handler.
+     *
+     * @param int $skipTask - Defaults to the main parent task.
+     * - The calling `$skipTask` task id will not get cancelled, the script execution will return to.
+     * - Use `getTask()` to retrieve caller's task id.
      */
-    function shutdown()
+    function shutdown(int $skipTask = 1)
     {
-        return Kernel::shutdown();
-        \coroutine_clear();
+        return Kernel::shutdown($skipTask);
     }
 
     /**
