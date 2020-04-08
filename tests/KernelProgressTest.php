@@ -23,7 +23,7 @@ class KernelProgressTest extends TestCase
 
         $realTime = yield \spawn_progress(function () {
             echo 'hello ';
-            usleep(2000);
+            \returning(2500);
             return 'world';
         }, $channel, $realTimeTask);
 
@@ -59,5 +59,4 @@ class KernelProgressTest extends TestCase
     {
         \coroutine_run($this->taskSpawnProgressResult());
     }
-
 }

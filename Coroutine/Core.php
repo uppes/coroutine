@@ -12,7 +12,11 @@ use Async\Coroutine\Exceptions\Panic;
 use Async\Coroutine\FileSystem;
 
 if (!\function_exists('coroutine_run')) {
-    \define('MILLISECOND', 0.001);
+    /**
+     * Multiply with to convert to millisecond.
+     * @var float
+     */
+    \define('MS', 0.001);
     \define('EOL', \PHP_EOL);
 
     /**

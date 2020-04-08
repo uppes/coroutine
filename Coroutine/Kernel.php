@@ -487,6 +487,8 @@ final class Kernel
                 yield;
                 $trapSignal = yield;
                 if ($signal === $trapSignal) {
+                    //yield yield $handler($signal);
+                    //break;
                     return $handler($signal);
                 }
             }

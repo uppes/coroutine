@@ -7,7 +7,7 @@ include 'vendor/autoload.php';
 function f(int $n) {
     for ($i = 0; $i < 10; $i++) {
       print ($n. ":".$i.' ');
-      $amt = ($n + \mt_rand(500, 2000)) * \MILLISECOND;
+      $amt = ($n + \mt_rand(500, 2000)) * \MS;
       if ($i == 9)
         print("\n");
       yield \sleep_for($amt);
