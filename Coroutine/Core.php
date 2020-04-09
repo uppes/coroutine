@@ -205,7 +205,7 @@ if (!\function_exists('coroutine_run')) {
         $timeout = 0,
         bool $display = false
     ) {
-        return Kernel::spawnTask($command, $timeout, $display, null, null, $signal, $signalTask);
+        return Kernel::spawnTask($command, $timeout, $display, null, null, $signal, $signalTask, 'signaling');
     }
 
     /**

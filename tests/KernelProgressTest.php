@@ -19,7 +19,6 @@ class KernelProgressTest extends TestCase
         $realTimeTask = yield \progress_task(function ($type, $data) {
             $this->assertNotNull($type);
             $this->assertNotNull($data);
-            yield;
         });
 
         $realTime = yield \spawn_progress(function () {
@@ -34,7 +33,6 @@ class KernelProgressTest extends TestCase
 
     public function testSpawnProgress()
     {
-        $this->markTestSkipped('subprocess needs refactoring.');
         \coroutine_run($this->taskSpawnProgress());
     }
 
@@ -44,11 +42,12 @@ class KernelProgressTest extends TestCase
         $realTimeTask = yield \progress_task(function ($type, $data) use ($channel) {
             $this->assertNotNull($type);
             $this->assertNotNull($data);
-            yield;
         });
 
         $realTime = yield \spawn_progress(function (ChanneledInterface $ipc) {
             $ipc->write('hello ');
+
+            \returning(2500);
             return 'world';
         }, $channel, $realTimeTask);
 
@@ -58,7 +57,6 @@ class KernelProgressTest extends TestCase
 
     public function testSpawnProgressResult()
     {
-        $this->markTestSkipped('subprocess needs refactoring.');
         \coroutine_run($this->taskSpawnProgressResult());
     }
 }

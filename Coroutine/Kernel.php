@@ -14,6 +14,7 @@ use Async\Coroutine\Exceptions\InvalidStateError;
 use Async\Coroutine\Exceptions\InvalidArgumentException;
 use Async\Coroutine\Exceptions\TimeoutError;
 use Async\Coroutine\Exceptions\CancelledError;
+use Async\Spawn\ChanneledInterface;
 
 /**
  * The Kernel
@@ -322,13 +323,15 @@ final class Kernel
         $channel = null,
         $channelTask = null,
         int $signal = 0,
-        $signalTask = null
+        $signalTask = null,
+        $taskType = null
     ) {
         return new Kernel(
             function (TaskInterface $task, CoroutineInterface $coroutine)
-            use ($command, $timeout, $display, $channel, $channelTask, $signal, $signalTask) {
+            use ($command, $timeout, $display, $channel, $channelTask, $signal, $signalTask, $taskType) {
                 $task->parallelTask();
                 $task->setState('process');
+                $task->customState($taskType);
                 $launcher = $coroutine->addProcess($command, $timeout, $display, $channel)
                     ->then(function ($result) use ($task, $coroutine) {
                         $task->setState('completed');
@@ -409,13 +412,15 @@ final class Kernel
         $channel = null,
         $channelTask = null,
         int $signal = 0,
-        $signalTask = null
+        $signalTask = null,
+        $taskType = 'yielded'
+
     ) {
         return new Kernel(
             function (TaskInterface $task, CoroutineInterface $coroutine)
-            use ($callable, $timeout, $display, $channel, $channelTask, $signal, $signalTask) {
+            use ($callable, $timeout, $display, $channel, $channelTask, $signal, $signalTask, $taskType) {
                 $command = \awaitAble(function ()
-                use ($callable, $timeout, $display, $channel, $channelTask, $signal, $signalTask) {
+                use ($callable, $timeout, $display, $channel, $channelTask, $signal, $signalTask, $taskType) {
                     $result = yield yield Kernel::addProcess(
                         $callable,
                         $timeout,
@@ -423,7 +428,8 @@ final class Kernel
                         $channel,
                         $channelTask,
                         $signal,
-                        $signalTask
+                        $signalTask,
+                        $taskType
                     );
 
                     return $result;
@@ -515,7 +521,7 @@ final class Kernel
                 $received = yield;
                 if (\is_array($received) && (\count($received) == 2)) {
                     [$type, $data] = $received;
-                    yield $handler($type, $data);
+                    yield yield $handler($type, $data);
                 }
             }
         });
@@ -741,8 +747,14 @@ final class Kernel
 
                                 // Handle if parallel task process not running, force run.
                                 if ($tasks->isProcess()) {
-                                    $coroutine->execute('process');
+                                    $type = $tasks->getCustomState();
+                                    if (\is_string($type) && $type == 'signaling') {
+                                        $coroutine->execute('process');
+                                    } else {
+                                        $coroutine->execute();
+                                    }
                                 }
+
                             }
 
                             // Handle if any other task not running/pending, force run.

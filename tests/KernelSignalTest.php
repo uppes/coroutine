@@ -16,7 +16,6 @@ class KernelSignalTest extends TestCase
     {
         $sigTask = yield \signal_task(\SIGKILL, function ($signal) {
             $this->assertEquals(\SIGKILL, $signal);
-            yield;
         });
 
         $sigId = yield \spawn_signal(function () {

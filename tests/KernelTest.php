@@ -274,7 +274,6 @@ class KernelTest extends TestCase
 
     public function testSpawnTask()
     {
-        $this->markTestSkipped('subprocess needs refactoring.');
         \coroutine_run($this->taskSpawnTask());
     }
 
