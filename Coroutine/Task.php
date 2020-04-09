@@ -185,7 +185,7 @@ final class Task implements TaskInterface
         return $customData;
     }
 
-    public function exception(): \Exception
+    public function exception(): ?\Exception
     {
         $error = $this->error;
         $this->error = null;
@@ -227,6 +227,11 @@ final class Task implements TaskInterface
         return ($this->state == 'cancelled');
     }
 
+    public function isSignaled(): bool
+    {
+        return ($this->state == 'signaled');
+    }
+
     public function isCompleted(): bool
     {
         return ($this->state == 'completed');
@@ -250,7 +255,7 @@ final class Task implements TaskInterface
             $result = $this->result;
             $this->close();
             return $result;
-        } elseif ($this->isCancelled() || $this->isErred()) {
+        } elseif ($this->isCancelled() || $this->isErred() || $this->isSignaled()) {
             $error = $this->exception();
             $message = $error->getMessage();
             $code = $error->getCode();

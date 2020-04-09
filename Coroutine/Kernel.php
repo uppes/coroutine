@@ -351,17 +351,18 @@ final class Kernel
                 if ($signal !== 0 && \is_int($signalTask)) {
                     $launcher->signal($signal, function ($signaled)
                     use ($task, $coroutine, $signal, $signalTask) {
-                        $task->setState('cancelled');
+                        $task->setState('signaled');
                         $taskList = $coroutine->currentTask();
                         if (isset($taskList[$signalTask]) && $taskList[$signalTask] instanceof TaskInterface) {
+                            $task->setException(new CancelledError('with signal: ' . $signal));
                             $signaler = $taskList[$signalTask];
                             $signaler->sendValue($signaled);
                             $coroutine->schedule($signaler);
                         } else { // @codeCoverageIgnoreStart
                             $task->setException(new \Exception(\sprintf('An unhandled signal received: %s', $signal)));
+                            $coroutine->schedule($task);
                         } // @codeCoverageIgnoreEnd
 
-                        $coroutine->schedule($task);
                         $coroutine->cancelProgress($task);
                     });
                 }
@@ -473,7 +474,10 @@ final class Kernel
      * Add a signal handler for the signal, that's continuously monitored.
      * This function will return `int` immediately, use with `spawn_signal()`.
      * - The `$handler` function will be executed, if subprocess is terminated with the `signal`.
+     * - The `$handler` expect to receive the `$signal` number.
      * - This function needs to be prefixed with `yield`
+     *
+     * @see https://docs.python.org/3/library/signal.html#signal.signal
      *
      * @param int $signal
      * @param callable $handler
@@ -487,8 +491,6 @@ final class Kernel
                 yield;
                 $trapSignal = yield;
                 if ($signal === $trapSignal) {
-                    //yield yield $handler($signal);
-                    //break;
                     return $handler($signal);
                 }
             }
@@ -513,7 +515,7 @@ final class Kernel
                 $received = yield;
                 if (\is_array($received) && (\count($received) == 2)) {
                     [$type, $data] = $received;
-                    yield yield $handler($type, $data);
+                    yield $handler($type, $data);
                 }
             }
         });
@@ -648,17 +650,27 @@ final class Kernel
                 $gatherCompleteCount = 0;
                 $isResultsException = false;
 
-                foreach ($gatherIdList as $nan => $tid) {
-                    if (isset($taskList[$tid]) || isset($completeList[$tid]))
+                foreach ($gatherIdList as $index => $tid) {
+                    if (isset($taskList[$tid]) || isset($completeList[$tid])) {
                         continue;
-                    else
-                        throw new InvalidStateError('Task ' . $tid . ' does not exists.');
+                    } else {
+                        $isResultsException = new InvalidStateError('Task ' . $tid . ' does not exists.');
+                        if ($gatherShouldError) {
+                            $countComplete = 0;
+                            break;
+                        } else {
+                            $results[$tid] = $isResultsException;
+                            $isResultsException = false;
+                            unset($gatherIdList[$index]);
+                        }
+                    }
                 }
 
                 // Check and handle tasks already completed before entering/executing gather().
                 if ($countComplete > 0) {
                     foreach ($completeList as $id => $tasks) {
-                        if (isset($taskIdList[$id])) {
+                        // Handle if parallel task.
+                        if (isset($taskIdList[$id]) || $tasks->isParallel()) {
                             if (\is_callable($onPreComplete)) {
                                 $result = $onPreComplete($tasks);
                             } else {
@@ -729,10 +741,16 @@ final class Kernel
 
                                 // Handle if parallel task process not running, force run.
                                 if ($tasks->isProcess()) {
-                                    $coroutine->execute();
+                                    $coroutine->execute('process');
                                 }
-                                // Handle if task not running/pending, force run.
-                            } elseif ($tasks->isCustomState($isCustomSate) || $tasks->isPending() || $tasks->isRescheduled()) {
+                            }
+
+                            // Handle if any other task not running/pending, force run.
+                            if (
+                                $tasks->isCustomState($isCustomSate)
+                                || $tasks->isPending()
+                                || $tasks->isRescheduled()
+                            ) {
                                 if (\is_callable($onProcessing)) {
                                     $onProcessing($tasks, $coroutine);
                                 } else {
@@ -772,7 +790,7 @@ final class Kernel
                                         break;
                                 }
                                 // Handle if task erred or cancelled.
-                            } elseif ($tasks->isErred() || $tasks->isCancelled()) {
+                            } elseif ($tasks->isErred() || $tasks->isCancelled() || $tasks->isSignaled()) {
                                 if ($tasks->isErred() && \is_callable($onError)) {
                                     $isResultsException = $onError($tasks);
                                 } elseif ($tasks->isCancelled() && \is_callable($onCancel)) {

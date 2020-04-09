@@ -630,6 +630,9 @@ final class Coroutine implements CoroutineInterface
             }
 
             if ($isReturn) {
+                if ($isReturn === 'process')
+                    return $this->ioWaiting();
+
                 return;
             }
         }

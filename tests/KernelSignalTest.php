@@ -16,10 +16,11 @@ class KernelSignalTest extends TestCase
     {
         $sigTask = yield \signal_task(\SIGKILL, function ($signal) {
             $this->assertEquals(\SIGKILL, $signal);
+            yield;
         });
 
         $sigId = yield \spawn_signal(function () {
-            \usleep(5000);
+            \usleep(56000);
             return 'subprocess';
         }, \SIGKILL, $sigTask);
 
@@ -29,7 +30,7 @@ class KernelSignalTest extends TestCase
             return $bool;
         }, true);
 
-        $output = yield \gather($sigId);
+        yield \gather_wait([$sigId], 0, false);
         yield \shutdown();
     }
 
@@ -56,7 +57,8 @@ class KernelSignalTest extends TestCase
         }, true);
 
         $output = yield \gather_wait([$sigId, $kill], 0, false);
-        $this->assertEquals([null, true], [$output[$sigId], $output[$kill]]);
+        $this->assertInstanceOf(\Async\Coroutine\Exceptions\CancelledError::class, $output[$sigId]);
+        $this->assertEquals(true, $output[$kill]);
         yield \shutdown();
     }
 

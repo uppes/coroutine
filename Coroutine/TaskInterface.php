@@ -83,6 +83,13 @@ interface TaskInterface
     public function isCancelled(): bool;
 
     /**
+     * A flag that indicates whether or not the a `parallel/process` task received a kill signal.
+     *
+     * @return bool
+     */
+    public function isSignaled(): bool;
+
+    /**
      * A flag that indicates whether or not the task has run to completion.
      *
      * @return bool

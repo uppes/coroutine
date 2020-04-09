@@ -7,7 +7,7 @@ function repeat()
     $counter = 0;
     while (true) {
         $counter++;
-        if ($counter === 20000) {
+        if ($counter === 20) {
             $counter = 0;
             \printf(".");
         }
@@ -17,9 +17,9 @@ function repeat()
 
 function main()
 {
-    //yield \away(\repeat());
+    yield \away(\repeat());
     $signal = yield \signal_task(\SIGKILL, function ($signal) {
-        echo "the process has been terminated with 'SIGKILL - " . $signal . "' signal!" . \EOL . \EOL;
+        echo "the process has been terminated with 'SIGKILL - " . $signal . "' signal!" . \EOL;
         yield;
     });
 
@@ -37,8 +37,8 @@ function main()
     });
 
     $result = yield \gather_wait([$process, $kill], 0, false);
-    echo "The process task with id: " . $process . " returned:" . $result[$process] . \EOL;
-    echo "The kill task with id: " . $kill . " returned: " . $result[$kill] . \EOL;
+    echo \EOL . "The process task with id: " . $process . " returned exception of: " .  \get_class($result[$process]) . \EOL;
+    echo "The kill task with id: " . $kill . " returned bool: " .  $result[$kill] . \EOL;
     yield \shutdown();
 }
 

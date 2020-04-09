@@ -13,7 +13,9 @@ use Async\Coroutine\FileSystem;
 
 if (!\function_exists('coroutine_run')) {
     /**
-     * Multiply with to convert to millisecond.
+     * Multiply with to convert to seconds from a millisecond number.
+     * Use with `sleep_for()`.
+     *
      * @var float
      */
     \define('MS', 0.001);
@@ -185,6 +187,8 @@ if (!\function_exists('coroutine_run')) {
      *
      * This function will return `int` immediately, use `gather()` to get the result.
      * - This function needs to be prefixed with yield
+     *
+     * @see https://docs.python.org/3/library/signal.html#module-signal
      *
      * @param callable|shell $command
      * @param int $signal
