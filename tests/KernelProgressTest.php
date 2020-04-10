@@ -19,6 +19,7 @@ class KernelProgressTest extends TestCase
         $realTimeTask = yield \progress_task(function ($type, $data) {
             $this->assertNotNull($type);
             $this->assertNotNull($data);
+            yield;
         });
 
         $realTime = yield \spawn_progress(function () {
@@ -47,7 +48,7 @@ class KernelProgressTest extends TestCase
         $realTime = yield \spawn_progress(function (ChanneledInterface $ipc) {
             $ipc->write('hello ');
 
-            \returning(2500);
+            \returning(5500);
             return 'world';
         }, $channel, $realTimeTask);
 
