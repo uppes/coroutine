@@ -10,7 +10,11 @@ function repeat()
     $counter = 0;
     while (true) {
         $counter++;
-        \printf(".");
+        if ($counter == 200) {
+            $counter = 0;
+            \printf(".");
+        }
+
         yield;
     }
 }
@@ -21,7 +25,7 @@ function main()
 
     echo "Let's play, ";
 
-    //yield \away(\repeat());
+    yield \away(\repeat());
     $pTask = yield \progress_task(function ($type, $data) use ($ipc) {
         echo $ipc->receive();
         if ('ping' === $data) {
@@ -38,8 +42,7 @@ function main()
             echo $channel->read();
             echo $channel->read();
 
-            \returning();
-            return 'The game!';
+            return \return_in(100, 'The game!');
         },
         $ipc,
         $pTask

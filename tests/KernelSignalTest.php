@@ -30,7 +30,6 @@ class KernelSignalTest extends TestCase
         }, true);
 
         yield \gather_wait([$sigId], 0, false);
-        yield \shutdown();
     }
 
     public function testSpawnSignalDelay()

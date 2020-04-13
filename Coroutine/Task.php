@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Async\Coroutine;
 
+use Async\Spawn\LauncherInterface;
 use Async\Coroutine\Coroutine;
 use Async\Coroutine\TaskInterface;
 use Async\Coroutine\Exceptions\InvalidStateError;
@@ -180,21 +181,12 @@ final class Task implements TaskInterface
 
     public function getCustomData()
     {
-        $customData = $this->customData;
-        $this->customData = null;
-        return $customData;
+        return $this->customData;
     }
 
     public function exception(): ?\Exception
     {
-        $error = $this->error;
-        $this->error = null;
-        return $error;
-    }
-
-    public function parallelTask()
-    {
-        $this->taskType = 'paralleled';
+        return $this->error;
     }
 
     public function isCustomState($state): bool
@@ -253,8 +245,10 @@ final class Task implements TaskInterface
     {
         if ($this->isCompleted()) {
             $result = $this->result;
+            if ($this->customData instanceof LauncherInterface)
+                $data = $this->customData->getResult();
             $this->close();
-            return $result;
+            return isset($data) ? $data : $result;
         } elseif ($this->isCancelled() || $this->isErred() || $this->isSignaled()) {
             $error = $this->exception();
             $message = $error->getMessage();

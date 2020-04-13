@@ -20,8 +20,6 @@ interface TaskInterface
 
     public function run();
 
-    public function parallelTask();
-
     /**
      * Reset all `Task` data.
      */
@@ -53,6 +51,13 @@ interface TaskInterface
      * @return bool
      */
     public function isCustomState($state): bool;
+
+    /**
+     * A flag that indicates the task is parallel child process.
+     *
+     * @return bool
+     */
+    public function isParallel(): bool;
 
     /**
      * A flag that indicates whether or not the sub process task has started.

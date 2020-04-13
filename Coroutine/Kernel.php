@@ -329,7 +329,7 @@ final class Kernel
         return new Kernel(
             function (TaskInterface $task, CoroutineInterface $coroutine)
             use ($command, $timeout, $display, $channel, $channelTask, $signal, $signalTask, $taskType) {
-                $task->parallelTask();
+                $task->taskType('paralleled');
                 $task->setState('process');
                 $task->customState($taskType);
                 $launcher = $coroutine->addProcess($command, $timeout, $display, $channel)
@@ -354,6 +354,7 @@ final class Kernel
                 if ($signal !== 0 && \is_int($signalTask)) {
                     $launcher->signal($signal, function ($signaled)
                     use ($task, $coroutine, $signal, $signalTask) {
+                        $coroutine->cancelProgress($task);
                         $task->setState('signaled');
                         $taskList = $coroutine->currentTask();
                         if (isset($taskList[$signalTask]) && $taskList[$signalTask] instanceof TaskInterface) {
@@ -365,8 +366,6 @@ final class Kernel
                             $task->setException(new \Exception(\sprintf('An unhandled signal received: %s', $signal)));
                             $coroutine->schedule($task);
                         } // @codeCoverageIgnoreEnd
-
-                        $coroutine->cancelProgress($task);
                     });
                 }
 
@@ -459,14 +458,7 @@ final class Kernel
                     $spawnedTask = $taskList[$tid];
                     $customData = $spawnedTask->getCustomData();
                     if ($customData instanceof LauncherInterface) {
-                        $process = $customData->getProcess();
-                        if ($process instanceof \UVProcess && \uv_is_active($process)) {
-                            \uv_process_kill($process, $signal);
-                            // @codeCoverageIgnoreStart
-                        } elseif ($process instanceof \Async\Spawn\Process) {
-                            $process->stop(0, $signal);
-                            // @codeCoverageIgnoreEnd
-                        }
+                        $customData->stop($signal);
                     }
                 }
 
@@ -493,8 +485,8 @@ final class Kernel
     public static function signalTask(int $signal, callable $handler)
     {
         return Kernel::away(function () use ($signal, $handler) {
+            yield;
             while (true) {
-                yield;
                 $trapSignal = yield;
                 if ($signal === $trapSignal) {
                     return $handler($signal);
@@ -516,12 +508,13 @@ final class Kernel
     public static function progressTask(callable $handler)
     {
         return Kernel::away(function () use ($handler) {
+            yield;
             while (true) {
-                yield;
                 $received = yield;
                 if (\is_array($received) && (\count($received) == 2)) {
                     [$type, $data] = $received;
-                    yield yield $handler($type, $data);
+                    $received = null;
+                    yield $handler($type, $data);
                 }
             }
         });
@@ -675,8 +668,7 @@ final class Kernel
                 // Check and handle tasks already completed before entering/executing gather().
                 if ($countComplete > 0) {
                     foreach ($completeList as $id => $tasks) {
-                        // Handle if parallel task.
-                        if (isset($taskIdList[$id]) || $tasks->isParallel()) {
+                        if (isset($taskIdList[$id])) {
                             if (\is_callable($onPreComplete)) {
                                 $result = $onPreComplete($tasks);
                             } else {
@@ -723,38 +715,27 @@ final class Kernel
                     foreach ($taskIdList as $id) {
                         if (isset($taskList[$id])) {
                             $tasks = $taskList[$id];
-                            // Handle if parallel task.
+                            // Handle if parallel task, check already completed or has not started.
                             if ($tasks->isParallel()) {
                                 $completeList = $coroutine->completedTask();
                                 if (isset($completeList[$id])) {
                                     $tasks = $completeList[$id];
-                                    if (\is_callable($onPreComplete)) {
-                                        $result = $onPreComplete($tasks);
-                                    } else {
-                                        $result = $tasks->result();
-                                    }
-
-                                    $results[$id] = $result;
-                                    $count--;
-                                    unset($taskIdList[$id]);
-                                    self::updateList($coroutine, $id, $completeList);
-                                    if ($gatherSet) {
-                                        $subCount--;
-                                        if ($subCount == 0)
-                                            break;
-                                    }
+                                    $tasks->setState('completed');
+                                    $tasks->taskType('');
+                                    continue;
                                 }
 
-                                // Handle if parallel task process not running, force run.
+                                // Handle if process not running, force run.
                                 if ($tasks->isProcess()) {
                                     $type = $tasks->getCustomState();
                                     if (\is_string($type) && $type == 'signaling') {
-                                        $coroutine->execute('process');
+                                        $coroutine->execute('signaling');
+                                    } elseif (\is_string($type) && $type == 'yielded') {
+                                        $coroutine->execute(true);
                                     } else {
-                                        $coroutine->execute();
+                                        $coroutine->execute('channeling');
                                     }
                                 }
-
                             }
 
                             // Handle if any other task not running/pending, force run.
@@ -802,7 +783,11 @@ final class Kernel
                                         break;
                                 }
                                 // Handle if task erred or cancelled.
-                            } elseif ($tasks->isErred() || $tasks->isCancelled() || $tasks->isSignaled()) {
+                            } elseif (
+                                $tasks->isErred()
+                                || $tasks->isCancelled()
+                                || $tasks->isSignaled()
+                            ) {
                                 if ($tasks->isErred() && \is_callable($onError)) {
                                     $isResultsException = $onError($tasks);
                                 } elseif ($tasks->isCancelled() && \is_callable($onCancel)) {

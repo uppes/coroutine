@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Async\Coroutine;
 
-use Async\Spawn\Spawn;
 use Async\Spawn\LauncherInterface;
 use Async\Spawn\ChanneledInterface;
 use Async\Coroutine\Kernel;
@@ -630,8 +629,13 @@ final class Coroutine implements CoroutineInterface
             }
 
             if ($isReturn) {
-                if ($isReturn === 'process')
+                if ($isReturn === 'signaling') {
                     return $this->ioWaiting();
+                } elseif ($isReturn === 'channeling') {
+                    $this->ioWaiting();
+                    if (!$this->process->isEmpty())
+                        continue;
+                }
 
                 return;
             }
@@ -665,21 +669,27 @@ final class Coroutine implements CoroutineInterface
     }
 
     /**
-     * Check for I/O events, streams/sockets/fd activity and `yield`,
-     * will exit if nothing is pending.
+     * Check and return `true` for any pending I/O events, signals, subprocess,
+     * streams/sockets/fd activity, timers or tasks.
+     */
+    protected function hasCoroutines(): bool
+    {
+        return $this->taskQueue->isEmpty()
+            && empty($this->waitingForRead)
+            && empty($this->waitingForWrite)
+            && empty($this->timers)
+            && $this->process->isEmpty()
+            && !$this->isSignaling()
+            && ($this->fsCount() == 0);
+    }
+
+    /**
+     * Check for `Coroutines`, will exit if nothing is pending.
      */
     protected function ioWaiting()
     {
         while (true) {
-            if (
-                $this->taskQueue->isEmpty()
-                && empty($this->waitingForRead)
-                && empty($this->waitingForWrite)
-                && empty($this->timers)
-                && $this->process->isEmpty()
-                && !$this->isSignaling()
-                && ($this->fsCount() == 0)
-            ) {
+            if ($this->hasCoroutines()) {
                 break;
             } else {
                 $streamWait = null;
@@ -697,10 +707,11 @@ final class Coroutine implements CoroutineInterface
                     $streamWait = $this->process->sleepingTime();
 
                 if ($this->isUvActive()) {
-                    \uv_run($this->uv, $streamWait ? \UV::RUN_ONCE : \UV::RUN_NOWAIT);
+                    \uv_run($this->uv, ($streamWait ? \UV::RUN_ONCE : \UV::RUN_NOWAIT));
                 } else {
                     if ($this->uv instanceof \UVLoop) {
                         \uv_run($this->uv, \UV::RUN_NOWAIT);
+                        $streamWait = $this->hasCoroutines() ? $streamWait : null;
                     }
 
                     $this->ioSocketStream($streamWait);

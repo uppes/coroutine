@@ -26,8 +26,7 @@ function main()
     $process = yield \spawn_signal(function () {
         echo "Hello, ";
 
-        \returning(1550195);
-        return 'world.';
+        return \return_in(1550195, 'world.');
     }, \SIGKILL, $signal, 0, true);
 
     $kill = yield \away(function () use ($process) {
