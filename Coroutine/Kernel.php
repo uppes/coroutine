@@ -496,6 +496,24 @@ final class Kernel
     }
 
     /**
+     * @codeCoverageIgnore
+     */
+    public static function monitorTask(callable $handler)
+    {
+        return Kernel::away(function () use ($handler) {
+            yield;
+            while (true) {
+                $fileChanged = yield;
+                if (\is_array($fileChanged) && (\count($fileChanged) == 4)) {
+                    [$rsc, $name, $event, $status] = $fileChanged;
+                    $fileChanged = null;
+                    yield $handler($rsc, $name, $event, $status);
+                }
+            }
+        });
+    }
+
+    /**
      * Add a progress handler for the subprocess, that's continuously monitored.
      * This function will return `int` immediately, use with `spawn_progress()`.
      * - The `$handler` function will be executed every time the subprocess produces output,

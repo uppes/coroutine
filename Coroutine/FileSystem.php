@@ -806,6 +806,36 @@ final class FileSystem
     }
 
     /**
+     * @codeCoverageIgnore
+     */
+    public static function monitor(string $path, int $monitorTask)
+    {
+        if (self::isUv()) {
+            return new Kernel(
+                function (TaskInterface $task, CoroutineInterface $coroutine) use ($path, $monitorTask) {
+                    //$coroutine->fsAdd();
+                    $fsEvent = \uv_fs_event_init(
+                        $coroutine->getUV(),
+                        $path,
+                        function ($rsc, $name, $event, $status) use ($monitorTask, $coroutine) {
+                            //$coroutine->fsRemove();
+                            $changedTask = $coroutine->taskInstance($monitorTask);
+                            if ($changedTask instanceof TaskInterface) {
+                                $changedTask->sendValue([$rsc, $name, $event, $status]);
+                                $coroutine->schedule($changedTask);
+                            }
+                        },
+                        4
+                    );
+
+                    $task->sendValue($fsEvent);
+                    $coroutine->schedule($task);
+                }
+            );
+        }
+    }
+
+    /**
      * change file timestamps using file descriptor.
      *
      * @codeCoverageIgnore

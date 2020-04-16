@@ -582,6 +582,16 @@ final class Coroutine implements CoroutineInterface
         return $this->completedMap;
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
+    public function taskInstance(int $taskId): ?TaskInterface
+    {
+        $taskList = $this->currentTask();
+
+        return isset($taskList[$taskId]) ? $taskList[$taskId] : null;
+    }
+
     public function updateCompletedTask($taskMap = [])
     {
         $this->completedMap = $taskMap;

@@ -171,6 +171,17 @@ interface CoroutineInterface
     public function updateCompletedTask();
 
     /**
+     * Return the `Task` instance reference by `int` task id.
+     *
+     * @param int $taskId
+     *
+     * @internal
+     *
+     * @return null|TaskInterface
+     */
+    public function taskInstance(int $taskId): ?TaskInterface;
+
+    /**
      * Add callable for parallel processing, in an separate php process
      *
      * @see https://docs.python.org/3.8/library/asyncio-subprocess.html#creating-subprocesses
