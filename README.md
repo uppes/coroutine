@@ -2,9 +2,9 @@
 
 [![Coroutine](https://github.com/symplely/coroutine/workflows/Coroutine/badge.svg)](https://github.com/symplely/coroutine/actions)[![codecov](https://codecov.io/gh/symplely/coroutine/branch/master/graph/badge.svg)](https://codecov.io/gh/symplely/coroutine)[![Codacy Badge](https://api.codacy.com/project/badge/Grade/44a6f32f03194872b7d4cd6a2411ff79)](https://www.codacy.com/app/techno-express/coroutine?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=symplely/coroutine&amp;utm_campaign=Badge_Grade)[![Maintainability](https://api.codeclimate.com/v1/badges/1bfc3497fde67b111a04/maintainability)](https://codeclimate.com/github/symplely/coroutine/maintainability)
 
-> This version `1.5.x` onward will begin adding features of an PHP extension [UV](https://github.com/bwoebi/php-uv), of **Node.js** [libuv](https://github.com/libuv/libuv) library, see the online [book](https://nikhilm.github.io/uvbook/index.html) for a full tutorial overview.
+> For versions `1.5.x` onward, has features of an PHP extension [UV](https://github.com/bwoebi/php-uv), of **Node.js** [libuv](https://github.com/libuv/libuv) library, see the online [book](https://nikhilm.github.io/uvbook/index.html) for a full tutorial overview.
 
-> Currently all `libuv` [network](https://github.com/bwoebi/php-uv/issues) `socket/stream/udp/tcp` like features are broken on *Windows*, as such will not be implemented, that includes *Linux*, which do work as expected.
+> Currently all `libuv` [network](https://github.com/bwoebi/php-uv/issues) `socket/stream/udp/tcp` like features are broken on *Windows*, as such will not be implemented for *Windows*, will continue to use native `stream_select` instead.
 
 ## Table of Contents
 
@@ -47,6 +47,10 @@ With this package you will have a **PHP** version of `async/await`, by just usin
 There are a few helper functions available to tie everything together. Mainly, `away()` that's similar to Python's [create_task()](https://docs.python.org/3/library/asyncio-task.html#id4), that behaves like Google's [go()](https://golang.org/doc/effective_go.html#goroutines) keyword, which is included here as a alias function `go()`.
 
 By using, it immediately returns a number, that can be used with `gather()`, another Python like [function](https://docs.python.org/3/library/asyncio-task.html#asyncio.gather), which also behaves like Google's [WaitGroup](https://golang.org/pkg/sync/#WaitGroup). This will wait and return the result of a code distant/**detached** for running in the `background`.
+
+This package follows a new paradigm [Behavioral Programming](http://www.wisdom.weizmann.ac.il/~bprogram/) with the concept of [B-threads](https://medium.com/@lmatteis/b-threads-programming-in-a-way-that-allows-for-easier-changes-5d95b9fb6928), _functional generators_.
+
+The base overall usage of [Swoole Coroutine](https://www.swoole.co.uk/coroutine), and [FaceBook's Hhvm](https://docs.hhvm.com/hack/asynchronous-operations/introduction) **PHP** follows the same outline implementations as others and put forth here.
 
 -------
 

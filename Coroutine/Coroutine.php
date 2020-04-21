@@ -254,6 +254,7 @@ final class Coroutine implements CoroutineInterface
                     $this->updateScheduler('write', $stream);
                 }
             };
+            // @codeCoverageIgnoreEnd
 
             $this->onTimer = function ($timer) {
                 $taskTimer = $this->timers[(int) $timer];
@@ -262,7 +263,6 @@ final class Coroutine implements CoroutineInterface
                 unset($this->timers[(int) $timer]);
                 $this->executeTask($taskTimer[1], $timer);
             };
-            // @codeCoverageIgnoreEnd
         }
 
         $this->isHighTimer = \function_exists('hrtime');
@@ -360,9 +360,9 @@ final class Coroutine implements CoroutineInterface
         \uv_poll_start($this->events[(int) $stream], $flags, $this->onEvent);
     }
 
-    public function fsCount(): int
+    public function isFsEmpty(): bool
     {
-        return $this->uvFileSystem;
+        return ($this->uvFileSystem <= 0);
     }
 
     public function fsAdd(): void
@@ -375,30 +375,34 @@ final class Coroutine implements CoroutineInterface
         $this->uvFileSystem--;
     }
 
-    /**
-     * @codeCoverageIgnore
-     */
-    public function setup(bool $useUvLoop = true)
+    public function setup(bool $useUvLoop = true): CoroutineInterface
     {
         $this->useUv = $useUvLoop;
+
+        if ($this->uv instanceof \UVLoop) {
+            @\uv_stop($this->uv);
+            @\uv_loop_delete($this->uv);
+        }
+
+        $this->uv = ($this->useUv && \function_exists('uv_loop_new')) ? \uv_loop_new() : null;
+
+        \spawn_setup($this->uv, true, true, $this->useUv);
+        \file_operation($this->useUv);
 
         return $this;
     }
 
-    /**
-     * @codeCoverageIgnore
-     */
     public function getUV(): ?\UVLoop
     {
         if ($this->uv instanceof \UVLoop)
             return $this->uv;
-        elseif (\function_exists('uv_default_loop'))
-            return \uv_default_loop();
 
-        if ($this->useUv)
+        // @codeCoverageIgnoreStart
+        if ($this->useUv && !\function_exists('uv_default_loop'))
             throw new \RuntimeException('Calling method when "libuv" driver not loaded!');
 
         return null;
+        // @codeCoverageIgnoreStart
     }
 
     public function getParallel(): ParallelInterface
@@ -428,12 +432,9 @@ final class Coroutine implements CoroutineInterface
         return $display ? $launcher->displayOn() : $launcher;
     }
 
-    /**
-     * @codeCoverageIgnore
-     */
     public function isUv(): bool
     {
-        return $this->useUv;
+        return (\function_exists('uv_loop_new') && $this->uv instanceof \UVLoop);
     }
 
     public function isUvActive(): bool
@@ -532,6 +533,9 @@ final class Coroutine implements CoroutineInterface
 
         foreach ($this->taskQueue as $i => $task) {
             if ($task->taskId() === $tid) {
+                if ($task->getCustomData() instanceof \UVFsEvent)
+                    $this->fsRemove();
+
                 $task->close();
                 if (!empty($customState))
                     $task->customState($customState);
@@ -582,9 +586,6 @@ final class Coroutine implements CoroutineInterface
         return $this->completedMap;
     }
 
-    /**
-     * @codeCoverageIgnore
-     */
     public function taskInstance(int $taskId): ?TaskInterface
     {
         $taskList = $this->currentTask();
@@ -661,7 +662,7 @@ final class Coroutine implements CoroutineInterface
      */
     protected function runTimers()
     {
-        if ($this->isUvActive()) {
+        if ($this->isUv()) {
             return (\count($this->timers) > 0) ? 1 : false;
         }
 
@@ -690,7 +691,23 @@ final class Coroutine implements CoroutineInterface
             && empty($this->timers)
             && $this->process->isEmpty()
             && !$this->isSignaling()
-            && ($this->fsCount() == 0);
+            && $this->isFsEmpty();
+    }
+
+    protected function waitTime($previousTime)
+    {
+        $streamWait = null;
+        if (\is_numeric($previousTime))
+            // Wait until the next Timeout should trigger.
+            $streamWait = $previousTime * 1000000;
+        elseif (!$this->taskQueue->isEmpty())
+            // There's a pending 'createTask'. Don't wait.
+            $streamWait = 0;
+        elseif (!$this->process->isEmpty())
+            // There's a running 'process', wait some before rechecking.
+            $streamWait = $this->process->sleepingTime();
+
+        return $streamWait;
     }
 
     /**
@@ -702,26 +719,16 @@ final class Coroutine implements CoroutineInterface
             if ($this->hasCoroutines()) {
                 break;
             } else {
-                $streamWait = null;
                 $this->process->processing();
-
                 $nextTimeout = $this->runTimers();
-                if (\is_numeric($nextTimeout))
-                    // Wait until the next Timeout should trigger.
-                    $streamWait = $nextTimeout * 1000000;
-                elseif (!$this->taskQueue->isEmpty())
-                    // There's a pending 'createTask'. Don't wait.
-                    $streamWait = 0;
-                elseif (!$this->process->isEmpty())
-                    // There's a running 'process', wait some before rechecking.
-                    $streamWait = $this->process->sleepingTime();
+                $streamWait = $this->waitTime($nextTimeout);
 
                 if ($this->isUvActive()) {
                     \uv_run($this->uv, ($streamWait ? \UV::RUN_ONCE : \UV::RUN_NOWAIT));
                 } else {
-                    if ($this->uv instanceof \UVLoop) {
+                    if ($this->isUv()) {
                         \uv_run($this->uv, \UV::RUN_NOWAIT);
-                        $streamWait = $this->hasCoroutines() ? $streamWait : null;
+                        $streamWait = $this->hasCoroutines() ? $this->waitTime($nextTimeout) : null;
                     }
 
                     $this->ioSocketStream($streamWait);
@@ -894,16 +901,13 @@ final class Coroutine implements CoroutineInterface
         return $this->signaler;
     }
 
-    /**
-     * @codeCoverageIgnore
-     */
     protected function addTimer($interval, $callback)
     {
         $timer = \uv_timer_init($this->uv);
         $this->timers[(int) $timer] = [$interval, $callback];
         \uv_timer_start(
             $timer,
-            (($interval < 0) ? 0 : \floor($interval * 1000)),
+            $interval,
             0,
             $this->onTimer
         );
@@ -911,8 +915,8 @@ final class Coroutine implements CoroutineInterface
 
     public function addTimeout($task, float $timeout)
     {
-        if ($this->isUvActive()) {
-            return $this->addTimer($timeout, $task);
+        if ($this->isUv()) {
+            return $this->addTimer((int) \round($timeout * 1001), $task);
         }
 
         $triggerTime = $this->timestamp() + ($timeout);

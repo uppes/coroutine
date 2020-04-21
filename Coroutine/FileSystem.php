@@ -806,6 +806,15 @@ final class FileSystem
     }
 
     /**
+     * Monitor/watch the specified path for changes,
+     * switch to a `monitor_task()` by id to handle any changes.
+     * - This function needs to be prefixed with `yield`
+     *
+     * @param string $path
+     * @param integer $monitorTask
+     *
+     * @return bool
+     *
      * @codeCoverageIgnore
      */
     public static function monitor(string $path, int $monitorTask)
@@ -813,26 +822,35 @@ final class FileSystem
         if (self::isUv()) {
             return new Kernel(
                 function (TaskInterface $task, CoroutineInterface $coroutine) use ($path, $monitorTask) {
-                    //$coroutine->fsAdd();
-                    $fsEvent = \uv_fs_event_init(
-                        $coroutine->getUV(),
-                        $path,
-                        function ($rsc, $name, $event, $status) use ($monitorTask, $coroutine) {
-                            //$coroutine->fsRemove();
-                            $changedTask = $coroutine->taskInstance($monitorTask);
-                            if ($changedTask instanceof TaskInterface) {
-                                $changedTask->sendValue([$rsc, $name, $event, $status]);
-                                $coroutine->schedule($changedTask);
-                            }
-                        },
-                        4
-                    );
+                    $fsEvent = null;
+                    $changedTask = $coroutine->taskInstance($monitorTask);
+                    if ($changedTask instanceof TaskInterface) {
+                        $coroutine->fsAdd();
+                        $fsEvent = \uv_fs_event_init(
+                            $coroutine->getUV(),
+                            $path,
+                            function ($rsc, $name, $event, $status) use ($monitorTask, $coroutine) {
+                                $changedTask = $coroutine->taskInstance($monitorTask);
+                                if ($changedTask instanceof TaskInterface) {
+                                    $changedTask->sendValue([$rsc, $name, $event, $status]);
+                                    $coroutine->schedule($changedTask);
+                                }
+                            },
+                            4
+                        );
 
-                    $task->sendValue($fsEvent);
+                        $changedTask->customData($fsEvent);
+                        $changedTask->customState($path);
+                        $changedTask->taskType('monitored');
+                    }
+
+                    $task->sendValue($fsEvent instanceof \UVFsEvent);
                     $coroutine->schedule($task);
                 }
             );
         }
+
+        return \result(false);
     }
 
     /**

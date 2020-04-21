@@ -6,6 +6,7 @@ namespace Async\Coroutine;
 
 use Async\Spawn\LauncherInterface;
 use Async\Coroutine\Coroutine;
+use Async\Coroutine\Exceptions\CancelledError;
 use Async\Coroutine\TaskInterface;
 use Async\Coroutine\Exceptions\InvalidStateError;
 
@@ -20,6 +21,13 @@ use Async\Coroutine\Exceptions\InvalidStateError;
  */
 final class Task implements TaskInterface
 {
+    const ERROR_MESSAGES = [
+        'The operation has been cancelled, with: ',
+        'The operation has exceeded the given deadline: ',
+        'Coroutine task has erred: ',
+        'Invalid internal state called on: '
+    ];
+
     /**
      * The task’s id.
      *
@@ -76,26 +84,24 @@ final class Task implements TaskInterface
     protected $exception = null;
 
     /**
-     * Use to store custom state.
-     *
-     * This property is for third party code/library.
+     * Use to store custom state, in relation to custom data.
      *
      * @var mixed
      */
     protected $customState;
 
     /**
-     * Use to store custom data.
+     * Use to store custom data, mainly for `object`'s.
+     * The object will get it's `close` method executed if present, on data reset.
      *
-     * This property is for third party code/library.
-     *
-     * @var mixed
+     * @var object
      */
     protected $customData;
 
     /**
-     * A flag that indicates whether or not a task is an is parallel process.
-     * Task type either `paralleled`, `yielded`, or `awaited`.
+     * Task type indicator.
+     *
+     * Currently using types of either `paralleled`, `awaited`, or `monitored`.
      *
      * @var string
      */
@@ -111,10 +117,14 @@ final class Task implements TaskInterface
     public function close()
     {
         $object = $this->customData;
-        if (\is_object($object) && \method_exists($object, 'close')) {
-            $object->close();
+        if (\is_object($object)) {
+            if (\method_exists($object, 'close'))
+                $object->close();
+            elseif ($object instanceof \UV && \uv_is_active($object))
+                \uv_close($object);
         }
 
+        $this->taskType = '';
         $this->taskId = null;
         $this->daemon = null;
         $this->cycles = 0;
@@ -126,6 +136,7 @@ final class Task implements TaskInterface
         $this->error = null;
         $this->exception = null;
         $this->customState = null;
+        unset($this->customData);
         $this->customData = null;
     }
 
@@ -251,14 +262,14 @@ final class Task implements TaskInterface
             return isset($data) ? $data : $result;
         } elseif ($this->isCancelled() || $this->isErred() || $this->isSignaled()) {
             $error = $this->exception();
+            if (empty($error))
+                $error = new CancelledError("Internal 'libuv' operation stoppage, all Task data reset.");
+
             $message = $error->getMessage();
             $code = $error->getCode();
             $throwable = $error->getPrevious();
             $class = \get_class($error);
-            $message = \str_replace('The operation has been cancelled, with: ', '', $message);
-            $message = \str_replace('The operation has exceeded the given deadline: ', '', $message);
-            $message = \str_replace('Coroutine task has erred: ', '', $message);
-            $message = \str_replace('Invalid internal state called on: ', '', $message);
+            $message = \str_replace(self::ERROR_MESSAGES, '', $message);
             $this->close();
             return new $class($message, $code, $throwable);
         } else {

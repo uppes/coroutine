@@ -168,7 +168,6 @@ final class Kernel
      * @param mixed $message
      * @param int $taskId
      */
-
     public static function sender(Channel $channel, $message = null, int $taskId = 0)
     {
         return new Kernel(
@@ -178,9 +177,10 @@ final class Kernel
                 $targetTask = $target instanceof TaskInterface
                     ? $target
                     : $sender;
-                $taskList = $coroutine->currentTask();
-                if (isset($taskList[$taskId]) && $taskId > 0) {
-                    $targetTask = $taskList[$taskId];
+
+                $checkTask = $coroutine->taskInstance($taskId);
+                if ($checkTask instanceof TaskInterface && $taskId > 0) {
+                    $targetTask = $checkTask;
                 }
 
                 $targetTask->sendValue($message);
@@ -227,10 +227,10 @@ final class Kernel
     {
         return new Kernel(
             function (TaskInterface $task, CoroutineInterface $coroutine) use ($skipTask) {
-                $tasks = $coroutine->currentTask();
+                $returnTask = $coroutine->taskInstance($skipTask);
                 $coroutine->shutdown($skipTask);
-                if (isset($tasks[$skipTask])) {
-                    $coroutine->schedule($tasks[$skipTask]);
+                if ($returnTask instanceof TaskInterface) {
+                    $coroutine->schedule($returnTask);
                 }
             }
         );
@@ -356,10 +356,9 @@ final class Kernel
                     use ($task, $coroutine, $signal, $signalTask) {
                         $coroutine->cancelProgress($task);
                         $task->setState('signaled');
-                        $taskList = $coroutine->currentTask();
-                        if (isset($taskList[$signalTask]) && $taskList[$signalTask] instanceof TaskInterface) {
+                        $signaler = $coroutine->taskInstance($signalTask);
+                        if ($signaler instanceof TaskInterface) {
                             $task->setException(new CancelledError('with signal: ' . $signal));
-                            $signaler = $taskList[$signalTask];
                             $signaler->sendValue($signaled);
                             $coroutine->schedule($signaler);
                         } else { // @codeCoverageIgnoreStart
@@ -374,9 +373,8 @@ final class Kernel
                     $task->customState([$channel, $channelTask]);
                     $launcher->progress(function ($type, $data)
                     use ($coroutine, $channelTask) {
-                        $taskList = $coroutine->currentTask();
-                        if (isset($taskList[$channelTask]) && $taskList[$channelTask] instanceof TaskInterface) {
-                            $ipcTask = $taskList[$channelTask];
+                        $ipcTask = $coroutine->taskInstance($channelTask);
+                        if ($ipcTask instanceof TaskInterface) {
                             $ipcTask->sendValue([$type, $data]);
                             $coroutine->schedule($ipcTask);
                         }
@@ -453,9 +451,8 @@ final class Kernel
     {
         return new Kernel(
             function (TaskInterface $task, CoroutineInterface $coroutine) use ($tid, $signal) {
-                $taskList = $coroutine->currentTask();
-                if (isset($taskList[$tid]) && $taskList[$tid] instanceof TaskInterface) {
-                    $spawnedTask = $taskList[$tid];
+                $spawnedTask = $coroutine->taskInstance($tid);
+                if ($spawnedTask instanceof TaskInterface) {
                     $customData = $spawnedTask->getCustomData();
                     if ($customData instanceof LauncherInterface) {
                         $customData->stop($signal);
@@ -472,7 +469,7 @@ final class Kernel
      * Add a signal handler for the signal, that's continuously monitored.
      * This function will return `int` immediately, use with `spawn_signal()`.
      * - The `$handler` function will be executed, if subprocess is terminated with the `signal`.
-     * - The `$handler` expect to receive the `$signal` number.
+     * - Expect the `$handler` to receive `(int $signal)`.
      * - This function needs to be prefixed with `yield`
      *
      * @see https://docs.python.org/3/library/signal.html#signal.signal
@@ -496,6 +493,16 @@ final class Kernel
     }
 
     /**
+     * Add a file change event handler for the path being watched, that's continuously monitored.
+     * This function will return `int` immediately, use with `monitor()`, `monitor_file()`, `monitor_dir()`.
+     * - The `$handler` function will be executed every time theres activity with the path being watched.
+     * - Expect the `$handler` to receive `(UVFsEvent $handle, ?string $filename, int $events, int $status)`.
+     * - This function needs to be prefixed with `yield`
+     *
+     * @param callable $handler
+     *
+     * @return int
+     *
      * @codeCoverageIgnore
      */
     public static function monitorTask(callable $handler)
@@ -516,7 +523,8 @@ final class Kernel
     /**
      * Add a progress handler for the subprocess, that's continuously monitored.
      * This function will return `int` immediately, use with `spawn_progress()`.
-     * - The `$handler` function will be executed every time the subprocess produces output,
+     * - The `$handler` function will be executed every time the subprocess produces output.
+     * - Expect the `$handler` to receive `(string $type, $data)`, where `$type` is either `out` or `err`.
      * - This function needs to be prefixed with `yield`
      *
      * @param callable $handler
@@ -971,14 +979,14 @@ final class Kernel
                     if ($asyncLabel instanceof \Generator) {
                         $tid = $coroutine->createTask($asyncLabel);
                         if (!empty($args)) {
-                            $taskList = $coroutine->currentTask();
+                            $createdTask = $coroutine->taskInstance($tid);
                             if (($args[0] === 'true') || ($args[0] === true))
-                                $taskList[$tid]->customState(true);
+                                $createdTask->customState(true);
                             else
-                                $taskList[$tid]->customState($args[0]);
+                                $createdTask->customState($args[0]);
 
                             if (isset($args[1])) {
-                                $taskList[$tid]->customData($args[1]);
+                                $createdTask->customData($args[1]);
                             }
                         }
 

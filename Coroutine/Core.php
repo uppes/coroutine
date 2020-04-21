@@ -169,6 +169,7 @@ if (!\function_exists('coroutine_run')) {
      * Add a signal handler for the signal, that's continuously monitored.
      * This function will return `int` immediately, use with `spawn_signal()`.
      * - The `$handler` function will be executed, if subprocess is terminated with the `signal`.
+     * - Expect the `$handler` to receive `(int $signal)`.
      * - This function needs to be prefixed with yield
      *
      * @param int $signal
@@ -225,7 +226,8 @@ if (!\function_exists('coroutine_run')) {
     /**
      * Add a progress handler for the subprocess, that's continuously monitored.
      * This function will return `int` immediately, use with `spawn_progress()`.
-     * - The `$handler` function will be executed every time the subprocess produces output,
+     * - The `$handler` function will be executed every time the subprocess produces output.accordion
+     * - Expect the `$handler` to receive `(string $type, $data)`, where `$type` is either `out` or `err`.
      * - This function needs to be prefixed with `yield`
      *
      * @param callable $handler
@@ -265,6 +267,90 @@ if (!\function_exists('coroutine_run')) {
         bool $display = false
     ) {
         return Kernel::spawnTask($command, $timeout, $display, $channel, $channelTask, 0, null);
+    }
+
+    /**
+     * Add a file change event handler for the path being watched, that's continuously monitored.
+     * This function will return `int` immediately, use with `monitor()`, `monitor_file()`, `monitor_dir()`.
+     * - The `$handler` function will be executed every time theres activity with the path being watched.
+     * - Expect the `$handler` to receive `(UVFsEvent $handle, ?string $filename, int $events, int $status)`.
+     * - This function needs to be prefixed with `yield`
+     *
+     * @param callable $handler
+     *
+     * @return int
+     *
+     * @codeCoverageIgnore
+     */
+    function monitor_task(callable $handler)
+    {
+        return Kernel::monitorTask($handler);
+    }
+
+    /**
+     * Monitor/watch the specified path for changes,
+     * switching to `monitor_task()` by id to handle any changes.
+     * - This function needs to be prefixed with `yield`
+     *
+     * @param string $path
+     * @param integer $monitorTask
+     *
+     * @return bool
+     *
+     * @codeCoverageIgnore
+     */
+    function monitor(string $path, int $monitorTask)
+    {
+        return FileSystem::monitor($path, $monitorTask);
+    }
+
+    /**
+     * Monitor/watch the specified file for changes,
+     * switching to `monitor_task()` by id to handle any changes.
+     * - This function needs to be prefixed with `yield`
+     *
+     * `Note:` The `file` will be created if does not already exists.
+     *
+     * @param string $file
+     * @param integer $monitorTask
+     *
+     * @return bool
+     *
+     * @codeCoverageIgnore
+     */
+    function monitor_file(string $file, int $monitorTask)
+    {
+        $check = yield \file_exist($file);
+        if (!$check)
+            yield \file_touch($file);
+
+        return yield \monitor($file, $monitorTask);
+    }
+
+    /**
+     * Monitor/watch the specified directory for changes,
+     * switching to `monitor_task()` by id to handle any changes.
+     * - This function needs to be prefixed with `yield`
+     *
+     * `Note:` The `directory` will be created `recursively` if does not already exists.
+     *
+     * @param string $directory
+     * @param integer $monitorTask
+     *
+     * @return bool
+     *
+     * @codeCoverageIgnore
+     */
+    function monitor_dir(string $directory, int $monitorTask)
+    {
+        if (\IS_WINDOWS && (\strpos('/', $directory) !== false))
+            $directory = \str_replace('/', \DS, $directory);
+        elseif (\IS_LINUX && (\strpos('\\', $directory) !== false))
+            $directory = \str_replace('\\', \DS, $directory);
+
+        yield \spawn_system('mkdir', $directory, 0777, true);
+
+        return yield \monitor($directory, $monitorTask);
     }
 
     /**
@@ -325,9 +411,42 @@ if (!\function_exists('coroutine_run')) {
 
         // @codeCoverageIgnoreStart
         $system = function () use ($command, $parameters) {
-            return $command(...$parameters);
+            return @$command(...$parameters);
         };
         // @codeCoverageIgnoreEnd
+
+        return \awaitable_process(function () use ($system) {
+            return Kernel::addProcess($system);
+        });
+    }
+
+    /**
+     * Recursively delete files/folders asynchronously in a **child/subprocess**.
+     * - This function needs to be prefixed with `yield`
+     *
+     * @param string $directory
+     *
+     * @return bool
+     *
+     * @codeCoverageIgnore
+     */
+    function file_delete($dir)
+    {
+        $system = function ($dirFile) use ($dir, &$system) {
+            // Need to check for string type. All child/subprocess automatically
+            // have a Channel instance passed in on process execution.
+            $dir = \is_string($dirFile) ? $dirFile : $dir;
+            if (\is_dir($dir)) {
+                $files = @\glob($dir . '*', \GLOB_MARK);
+                foreach ($files as $file) {
+                    $system($file);
+                }
+
+                return @\rmdir($dir);
+            } elseif (\is_file($dir)) {
+                return @\unlink($dir);
+            }
+        };
 
         return \awaitable_process(function () use ($system) {
             return Kernel::addProcess($system);

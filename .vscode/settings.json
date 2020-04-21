@@ -38,6 +38,7 @@
         "SIGXCPU",
         "SIGXFSZ",
         "Swoole",
+        "UVFs",
         "WRONLY",
         "autoload",
         "curryied",

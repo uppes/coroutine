@@ -21,7 +21,7 @@ interface TaskInterface
     public function run();
 
     /**
-     * Reset all `Task` data.
+     * Reset all `Task` data, and call `close` on any related stored `object` classes.
      */
     public function close();
 
@@ -31,7 +31,7 @@ interface TaskInterface
     public function customState($state = null);
 
     /**
-     * Store custom data of the task.
+     * Store custom `object` data of the task.
      */
     public function customData($data = null);
 

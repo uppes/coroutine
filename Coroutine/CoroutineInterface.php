@@ -197,11 +197,11 @@ interface CoroutineInterface
     public function addProcess($callable, int $timeout = 0, bool $display = false, $channel = null): LauncherInterface;
 
     /**
-     * The number of UV file system operations still pending, not finish.
+     * There are no **UV** file system operations/events pending.
      *
-     * @return integer
+     * @return bool
      */
-    public function fsCount(): int;
+    public function isFsEmpty(): bool;
 
     /**
      * Add a UV file system operation to counter.
@@ -218,7 +218,7 @@ interface CoroutineInterface
     public function fsRemove(): void;
 
     /**
-     * Return the `Coroutine` class `libuv` loop handle, otherwise throw exception, if enabled.
+     * Return the `Coroutine` class `libuv` loop handle, otherwise throw exception, if enabled and no driver found.
      *
      * @return null|\UVLoop
      * @throws RuntimeException
@@ -226,16 +226,20 @@ interface CoroutineInterface
     public function getUV(): ?\UVLoop;
 
     /**
-     * Is using `libuv` features turned on.
+     * Is `libuv` features available.
      */
     public function isUv(): bool;
 
     /**
-     * Setup to use `libuv` features, enable/disable.
+     * Setup to use `libuv` features, reset/recreate **UV** handle, enable/disable.
+     * - This will `stop` and `delete` any current **UV** event loop instance.
+     * - This will also reset `symplely/spawn` setup with the same config.
      *
      * @param bool $useUvLoop
+     *
+     * @return CoroutineInterface
      */
-    public function setup(bool $useUvLoop = true);
+    public function setup(bool $useUvLoop = true): CoroutineInterface;
 
     /**
      * The `Process` class manager instance for Blocking I/O.
@@ -260,7 +264,7 @@ interface CoroutineInterface
     public function getParallel(): ParallelInterface;
 
     /**
-     * Check if **UV** event loop `libuv` engine is available for native asynchronous handling.
+     * Check if **UV** event loop `libuv` engine is available, and turned `on` for native asynchronous handling.
      *
      * @return bool
      */

@@ -231,4 +231,28 @@ class CoroutineTest extends TestCase
 
         $coroutine->shutdown();
     }
+
+    function testTimeoutOrderNative()
+	{
+        $coroutine = new Coroutine();
+        $coroutine->setup(false);
+
+        $check  = [];
+        $coroutine->addTimeout(function() use (&$check) {
+            $check[] = 'a';
+        }, 0.2);
+
+        $coroutine->addTimeout(function() use (&$check) {
+            $check[] = 'b';
+        }, 0.1);
+
+        $coroutine->addTimeout(function() use (&$check) {
+            $check[] = 'c';
+        }, 0.3);
+
+        $coroutine->run();
+        $this->assertEquals(['b', 'a', 'c'], $check);
+
+        $coroutine->shutdown();
+    }
 }
