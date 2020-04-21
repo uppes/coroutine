@@ -236,6 +236,7 @@ final class Coroutine implements CoroutineInterface
             $this->uv = \uv_loop_new();
 
             \spawn_setup($this->uv);
+            \file_operation(true);
 
             // @codeCoverageIgnoreStart
             $this->onEvent = function ($event, $status, $events, $stream) {
@@ -386,7 +387,8 @@ final class Coroutine implements CoroutineInterface
 
         $this->uv = ($useUvLoop && \function_exists('uv_loop_new')) ? \uv_loop_new() : null;
 
-        \spawn_setup($this->uv, true, true, $this->useUv);
+        \spawn_setup($this->uv, true, true, $useUvLoop);
+        \file_operation($useUvLoop);
 
         return $this;
     }
@@ -656,8 +658,6 @@ final class Coroutine implements CoroutineInterface
      * Runs all pending timers.
      *
      * @return int|void
-     *
-     * @codeCoverageIgnore
      */
     protected function runTimers()
     {
