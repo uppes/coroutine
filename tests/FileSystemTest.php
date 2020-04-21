@@ -63,17 +63,17 @@ class FileSystemTest extends TestCase
 
         $size = yield \file_fstat($fd, 'size');
         $this->assertEquals('int', \is_type($size));
-        $this->assertGreaterThanOrEqual(3, $this->counterResult);
+        $this->assertGreaterThanOrEqual(2, $this->counterResult);
 
         $data = yield \file_read($fd, 1, $size);
         $this->assertEquals('string', \is_type($data));
 
         $this->assertEquals('ello', \rtrim($data));
-        $this->assertGreaterThanOrEqual(4, $this->counterResult);
+        $this->assertGreaterThanOrEqual(3, $this->counterResult);
 
         $bool = yield \file_close($fd);
         $this->assertTrue($bool);
-        $this->assertGreaterThanOrEqual(5, $this->counterResult);
+        $this->assertGreaterThanOrEqual(4, $this->counterResult);
         yield \shutdown();
     }
 
@@ -85,7 +85,7 @@ class FileSystemTest extends TestCase
     public function taskWrite()
     {
         yield \away($this->counterTask());
-        $fd = yield \file_open("./tmp", 'a');
+        $fd = yield \file_open("./temp", 'a');
         $this->assertEquals('resource', \is_type($fd));
 
         $data = yield \file_write($fd, "hello");
@@ -102,11 +102,11 @@ class FileSystemTest extends TestCase
         $this->assertTrue($bool);
         $this->assertGreaterThanOrEqual(9, $this->counterResult);
 
-        $size = yield \file_size("./tmp");
+        $size = yield \file_size("./temp");
         $this->assertEquals('int', \is_type($size));
         $this->assertGreaterThanOrEqual(10, $this->counterResult);
 
-        $bool = yield \file_rename("./tmp", "./tmpNew");
+        $bool = yield \file_rename("./temp", "./tmpNew");
         $this->assertTrue($bool);
 
         $bool = yield \file_touch('./tmpNew');

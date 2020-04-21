@@ -384,10 +384,9 @@ final class Coroutine implements CoroutineInterface
             @\uv_loop_delete($this->uv);
         }
 
-        $this->uv = ($this->useUv && \function_exists('uv_loop_new')) ? \uv_loop_new() : null;
+        $this->uv = ($useUvLoop && \function_exists('uv_loop_new')) ? \uv_loop_new() : null;
 
         \spawn_setup($this->uv, true, true, $this->useUv);
-        \file_operation($this->useUv);
 
         return $this;
     }
@@ -402,7 +401,7 @@ final class Coroutine implements CoroutineInterface
             throw new \RuntimeException('Calling method when "libuv" driver not loaded!');
 
         return null;
-        // @codeCoverageIgnoreStart
+        // @codeCoverageIgnoreEnd
     }
 
     public function getParallel(): ParallelInterface
