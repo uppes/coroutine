@@ -808,14 +808,13 @@ final class FileSystem
     /**
      * Monitor/watch the specified path for changes,
      * switch to a `monitor_task()` by id to handle any changes.
+     * - The `monitor_task` will receive `(?string $filename, int $events, int $status)`.
      * - This function needs to be prefixed with `yield`
      *
      * @param string $path
      * @param integer $monitorTask
      *
      * @return bool
-     *
-     * @codeCoverageIgnore
      */
     public static function monitor(string $path, int $monitorTask)
     {
@@ -832,7 +831,7 @@ final class FileSystem
                             function ($rsc, $name, $event, $status) use ($monitorTask, $coroutine) {
                                 $changedTask = $coroutine->taskInstance($monitorTask);
                                 if ($changedTask instanceof TaskInterface) {
-                                    $changedTask->sendValue([$rsc, $name, $event, $status]);
+                                    $changedTask->sendValue([$name, $event, $status]);
                                     $coroutine->schedule($changedTask);
                                 }
                             },

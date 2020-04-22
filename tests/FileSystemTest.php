@@ -446,4 +446,77 @@ class FileSystemTest extends TestCase
     {
         \coroutine_run($this->taskFileLines());
     }
+
+    public function taskMonitor()
+    {
+        $watchTask = yield \monitor_task(function (?string $filename, int $events, int $status) {
+            if ($status == 0) {
+                //if ($events & \UV::RENAME)
+                //    $this->assertTrue(\is_type($filename, 'string'));
+                //if ($events & \UV::CHANGE)
+                //    $this->assertEmpty($filename);
+            } elseif ($status < 0) {
+                $tid = yield \get_task();
+                $handle = \coroutine_instance()->taskInstance($tid)->getCustomData();
+                $this->assertInstanceOf(\UVFsEvent::class, $handle);
+                yield \kill_task();
+            }
+        });
+
+        yield \monitor_dir('watching/temp', $watchTask);
+
+        yield \away(function () {
+            yield \sleep_for(0.2);
+            yield \file_put("watching/temp/new.txt", 'here');
+            yield \sleep_for(0.2);
+            yield \file_unlink("watching/temp/new.txt");
+            yield \sleep_for(0.2);
+            yield \file_delete('watching');
+        });
+
+        yield \gather_wait([$watchTask], 0, false);
+
+        yield \shutdown();
+    }
+
+    public function testMonitor()
+    {
+        \coroutine_run($this->taskMonitor());
+    }
+
+    public function taskMonitorDir()
+    {
+        $watchTask = yield \monitor_task(function (?string $filename, int $events, int $status) {
+            if ($status == 0) {
+                //if ($events & \UV::RENAME)
+                //    $this->assertTrue(\is_type($filename, 'string'));
+                //if ($events & \UV::CHANGE)
+                //    $this->assertEmpty($filename);
+            } elseif ($status < 0) {
+                yield \kill_task();
+            }
+        });
+        $this->assertTrue(\is_type($watchTask, 'int'));
+
+        $bool = yield \monitor_dir('watching/temp', $watchTask);
+        $this->assertTrue($bool);
+
+        yield \away(function () {
+            yield \sleep_for(0.2);
+            yield \file_put("watching/temp/new.txt", 'here');
+            yield \sleep_for(0.2);
+            $bool = yield \file_delete('watching');
+            $this->assertTrue($bool);
+        });
+
+        $result = yield \gather_wait([$watchTask], 0, false);
+        $this->assertNull($result[$watchTask]);
+
+        yield \shutdown();
+    }
+
+    public function testMonitorDir()
+    {
+        \coroutine_run($this->taskMonitorDir());
+    }
 }

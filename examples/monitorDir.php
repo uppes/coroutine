@@ -19,9 +19,9 @@ function repeat()
 function main()
 {
     yield \away(\repeat());
-    echo "Watching directory ";
+    echo "Watching directory";
 
-    $watchTask = yield \monitor_task(function (UVFsEvent $handle, ?string $filename, int $events, int $status) {
+    $watchTask = yield \monitor_task(function (?string $filename, int $events, int $status) {
         if ($status == 0) {
             echo \EOL . "Change detected in 'watch/temp': ";
             if ($events & \UV::RENAME)
@@ -31,15 +31,18 @@ function main()
 
             echo " filename: " . ($filename ? $filename : "") . \EOL;
         } elseif ($status < 0) {
-            \uv_close($handle);
-            yield \cancel_task(yield \get_task());
+            yield \kill_task();
         }
     });
 
     if (yield \monitor_dir('watch/temp', $watchTask))
-        echo "'watch/temp'";
+        echo " '". __DIR__ ."/watch/temp' ";
 
-    echo " for changes." . \EOL;
+    echo "for changes." . \EOL;
+
+    yield \sleep_for(0.2);
+    echo "To stop watching for changes, just 'delete' the directory!" . \EOL;
+
     yield \gather_wait([$watchTask], 0, false);
 
     yield \file_delete('watch');

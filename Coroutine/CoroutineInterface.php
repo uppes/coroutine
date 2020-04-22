@@ -233,7 +233,7 @@ interface CoroutineInterface
     /**
      * Setup to use `libuv` features, reset/recreate **UV** handle, enable/disable.
      * - This will `stop` and `delete` any current **UV** event loop instance.
-     * - This will also reset `FileSystem::setup` and **symplely/spawn** `spawn::setup`
+     * - This will also reset `FileSystem::setup` and **symplely/spawn** `Spawn::setup`
      * with the same config.
      *
      * @param bool $useUvLoop

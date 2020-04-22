@@ -263,7 +263,7 @@ final class Task implements TaskInterface
         } elseif ($this->isCancelled() || $this->isErred() || $this->isSignaled()) {
             $error = $this->exception();
             if (empty($error))
-                $error = new CancelledError("Internal 'libuv' operation stoppage, all Task data reset.");
+                $error = new CancelledError("Internal operation stoppage, all Task data reset.");
 
             $message = $error->getMessage();
             $code = $error->getCode();

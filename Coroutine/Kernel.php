@@ -496,14 +496,12 @@ final class Kernel
      * Add a file change event handler for the path being watched, that's continuously monitored.
      * This function will return `int` immediately, use with `monitor()`, `monitor_file()`, `monitor_dir()`.
      * - The `$handler` function will be executed every time theres activity with the path being watched.
-     * - Expect the `$handler` to receive `(UVFsEvent $handle, ?string $filename, int $events, int $status)`.
+     * - Expect the `$handler` to receive `(?string $filename, int $events, int $status)`.
      * - This function needs to be prefixed with `yield`
      *
      * @param callable $handler
      *
      * @return int
-     *
-     * @codeCoverageIgnore
      */
     public static function monitorTask(callable $handler)
     {
@@ -511,10 +509,10 @@ final class Kernel
             yield;
             while (true) {
                 $fileChanged = yield;
-                if (\is_array($fileChanged) && (\count($fileChanged) == 4)) {
-                    [$rsc, $name, $event, $status] = $fileChanged;
+                if (\is_array($fileChanged) && (\count($fileChanged) == 3)) {
+                    [$name, $event, $status] = $fileChanged;
                     $fileChanged = null;
-                    yield $handler($rsc, $name, $event, $status);
+                    yield $handler($name, $event, $status);
                 }
             }
         });

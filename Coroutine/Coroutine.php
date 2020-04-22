@@ -220,19 +220,18 @@ final class Coroutine implements CoroutineInterface
 
     /**
      * This scheduler will detect if the [`ext-uv` PECL extension](https://pecl.php.net/package/uv) is
-     * installed, which provides an interface to `libuv` library. An native like event loop engine.
-     *
-     * @param string|null $driver set event loop to use, override detection.
+     * installed, which provides an interface to `libuv` library. An native like **PHP** event loop engine.
+     * - To manually turn off `libuv` use: `->setup(false);`
      *
      * @see https://github.com/bwoebi/php-uv
      */
-    public function __construct(?string $driver = 'auto')
+    public function __construct()
     {
         global $__coroutine__;
         $__coroutine__ = $this;
         $this->initSignals();
 
-        if (\in_array($driver, ['auto', 'uv']) && \function_exists('uv_loop_new')) {
+        if (\function_exists('uv_loop_new')) {
             $this->uv = \uv_loop_new();
 
             \spawn_setup($this->uv);
@@ -422,7 +421,7 @@ final class Coroutine implements CoroutineInterface
             $this->process = null;
         }
 
-        $this->process = new Process($this, $timedOutCallback, $finishCallback, $failCallback, $signalCallback );
+        $this->process = new Process($this, $timedOutCallback, $finishCallback, $failCallback, $signalCallback);
         return $this->process;
     }
 

@@ -273,14 +273,12 @@ if (!\function_exists('coroutine_run')) {
      * Add a file change event handler for the path being watched, that's continuously monitored.
      * This function will return `int` immediately, use with `monitor()`, `monitor_file()`, `monitor_dir()`.
      * - The `$handler` function will be executed every time theres activity with the path being watched.
-     * - Expect the `$handler` to receive `(UVFsEvent $handle, ?string $filename, int $events, int $status)`.
+     * - Expect the `$handler` to receive `(?string $filename, int $events, int $status)`.
      * - This function needs to be prefixed with `yield`
      *
      * @param callable $handler
      *
      * @return int
-     *
-     * @codeCoverageIgnore
      */
     function monitor_task(callable $handler)
     {
@@ -290,14 +288,13 @@ if (!\function_exists('coroutine_run')) {
     /**
      * Monitor/watch the specified path for changes,
      * switching to `monitor_task()` by id to handle any changes.
+     * - The `monitor_task` will receive `(?string $filename, int $events, int $status)`.
      * - This function needs to be prefixed with `yield`
      *
      * @param string $path
      * @param integer $monitorTask
      *
      * @return bool
-     *
-     * @codeCoverageIgnore
      */
     function monitor(string $path, int $monitorTask)
     {
@@ -307,6 +304,7 @@ if (!\function_exists('coroutine_run')) {
     /**
      * Monitor/watch the specified file for changes,
      * switching to `monitor_task()` by id to handle any changes.
+     * - The `monitor_task` will receive `(?string $filename, int $events, int $status)`.
      * - This function needs to be prefixed with `yield`
      *
      * `Note:` The `file` will be created if does not already exists.
@@ -320,6 +318,7 @@ if (!\function_exists('coroutine_run')) {
      */
     function monitor_file(string $file, int $monitorTask)
     {
+        $file = \slash_switch($file);
         $check = yield \file_exist($file);
         if (!$check)
             yield \file_touch($file);
@@ -330,6 +329,7 @@ if (!\function_exists('coroutine_run')) {
     /**
      * Monitor/watch the specified directory for changes,
      * switching to `monitor_task()` by id to handle any changes.
+     * - The `monitor_task` will receive `(?string $filename, int $events, int $status)`.
      * - This function needs to be prefixed with `yield`
      *
      * `Note:` The `directory` will be created `recursively` if does not already exists.
@@ -338,19 +338,23 @@ if (!\function_exists('coroutine_run')) {
      * @param integer $monitorTask
      *
      * @return bool
-     *
-     * @codeCoverageIgnore
      */
     function monitor_dir(string $directory, int $monitorTask)
     {
-        if (\IS_WINDOWS && (\strpos('/', $directory) !== false))
-            $directory = \str_replace('/', \DS, $directory);
-        elseif (\IS_LINUX && (\strpos('\\', $directory) !== false))
-            $directory = \str_replace('\\', \DS, $directory);
-
+        $directory = \slash_switch($directory);
         yield \spawn_system('mkdir', $directory, 0777, true);
 
         return yield \monitor($directory, $monitorTask);
+    }
+
+    function slash_switch($path)
+    {
+        if (\IS_WINDOWS && (\strpos('/', $path) !== false))
+            $path = \str_replace('/', \DS, $path);
+        elseif (\IS_LINUX && (\strpos('\\', $path) !== false))
+            $path = \str_replace('\\', \DS, $path);
+
+        return $path;
     }
 
     /**
@@ -427,11 +431,10 @@ if (!\function_exists('coroutine_run')) {
      * @param string $directory
      *
      * @return bool
-     *
-     * @codeCoverageIgnore
      */
     function file_delete($dir)
     {
+        $dir = \slash_switch($dir);
         $system = function ($dirFile) use ($dir, &$system) {
             // Need to check for string type. All child/subprocess automatically
             // have a Channel instance passed in on process execution.
@@ -1090,6 +1093,18 @@ if (!\function_exists('coroutine_run')) {
     }
 
     /**
+     * kill/remove the current running task.
+     * Optionally pass custom `cancel` state for third party code integration.
+     *
+     * - This function needs to be prefixed with `yield`
+     */
+    function kill_task($customState = null)
+    {
+        $currentTask = yield Kernel::getTask();
+        return yield Kernel::cancelTask($currentTask, $customState);
+    }
+
+    /**
      * Performs a clean application exit and shutdown.
      * - This function needs to be prefixed with `yield`
      *
@@ -1153,7 +1168,8 @@ if (!\function_exists('coroutine_run')) {
 
     /**
      * Return the `string` of a variable type, or does a check, compared with string of the type.
-     * Types are: `callable`, `string`, `int`, `float`, `null`, `bool`, `array`, `object`, or `resource`
+     * Types are: `callable`, `string`, `int`, `float`, `null`, `bool`, `array`, `scalar`,
+     * `object`, or `resource`
      *
      * @return string|bool
      */
@@ -1166,6 +1182,7 @@ if (!\function_exists('coroutine_run')) {
             'is_float' => 'float',
             'is_null' => 'null',
             'is_bool' => 'bool',
+            'is_scalar' => 'scalar',
             'is_array' => 'array',
             'is_object' => 'object',
             'is_resource' => 'resource',
@@ -1198,11 +1215,11 @@ if (!\function_exists('coroutine_run')) {
         }
     }
 
-    function coroutine_create(\Generator $routine = null, ?string $driver = null)
+    function coroutine_create(\Generator $routine = null)
     {
         $coroutine = \coroutine_instance();
         if (!$coroutine instanceof CoroutineInterface)
-            $coroutine = new Coroutine($driver);
+            $coroutine = new Coroutine();
 
         if (!empty($routine))
             $coroutine->createTask($routine);
