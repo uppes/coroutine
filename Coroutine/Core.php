@@ -451,9 +451,13 @@ if (!\function_exists('coroutine_run')) {
             }
         };
 
-        return \awaitable_process(function () use ($system) {
-            return Kernel::addProcess($system);
+        yield \awaitable_process(function () use ($system) {
+            return yield Kernel::addProcess($system);
         });
+
+        $bool = yield \file_exist($dir);
+
+        return ($bool === false);
     }
 
     /**

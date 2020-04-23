@@ -476,11 +476,15 @@ class FileSystemTest extends TestCase
 
         yield \gather_wait([$watchTask], 0, false);
 
+        yield \file_delete('watching');
         yield \shutdown();
     }
 
     public function testMonitor()
     {
+        if (\IS_LINUX)
+            $this->markTestSkipped('For Windows.');
+
         \coroutine_run($this->taskMonitor());
     }
 
@@ -505,18 +509,78 @@ class FileSystemTest extends TestCase
             yield \sleep_for(0.2);
             yield \file_put("watching/temp/new.txt", 'here');
             yield \sleep_for(0.2);
-            $bool = yield \file_delete('watching');
-            $this->assertTrue($bool);
+            yield \file_delete('watching');
         });
 
         $result = yield \gather_wait([$watchTask], 0, false);
         $this->assertNull($result[$watchTask]);
 
+        yield \file_delete('watching');
         yield \shutdown();
     }
 
     public function testMonitorDir()
     {
+        if (\IS_LINUX)
+            $this->markTestSkipped('For Windows.');
+
         \coroutine_run($this->taskMonitorDir());
+    }
+
+    public function taskMonitorDirLinux()
+    {
+        $that = $this;
+        $watchTask = yield \monitor_task(function (?string $filename, int $events, int $status) use (&$that) {
+            if ($status == 0) {
+                if ($events & \UV::RENAME)
+                    $that->monitorData['RENAME'][] = [$filename, $events];
+                elseif ($events & \UV::CHANGE)
+                    $that->monitorData['CHANGE'][] =  [$filename, $events];
+            } elseif ($status < 0) {
+                yield \kill_task();
+            }
+        });
+        $this->assertTrue(\is_type($watchTask, 'int'));
+
+        $bool = yield \monitor_dir('watching/temp', $watchTask);
+        $this->assertTrue($bool);
+
+        yield \file_touch("watching/temp/new.txt");
+
+        $wait = yield \away(function () {
+            yield \file_touch("watching/temp/new.txt");
+        });
+
+        yield;
+        yield;
+        $this->assertEquals([
+            'CHANGE' =>
+            [
+                0 => [
+                    0 => 'new.txt',
+                    1 => 2
+                ]
+            ],
+            'RENAME' =>
+            [
+                0 => [
+                    0 => 'new.txt',
+                    1 => 1
+                ]
+            ],
+        ], $that->monitorData);
+
+        $bool = yield \file_delete('watching');
+        $this->assertTrue($bool);
+
+        yield \shutdown();
+    }
+
+    public function testMonitorLinux()
+    {
+        if (\IS_WINDOWS)
+            $this->markTestSkipped('For Linux.');
+
+        \coroutine_run($this->taskMonitorDirLinux());
     }
 }

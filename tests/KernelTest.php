@@ -346,6 +346,8 @@ class KernelTest extends TestCase
 
     public function taskInput()
     {
+        \coroutine_instance()->setup(\IS_WINDOWS);
+
         try {
             yield \wait_for($this->keyboard(), 0.1);
         } catch (\Throwable $e) {
