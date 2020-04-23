@@ -435,6 +435,8 @@ if (!\function_exists('coroutine_run')) {
     function file_delete($dir)
     {
         $dir = \slash_switch($dir);
+
+        // @codeCoverageIgnoreStart
         $system = function ($dirFile) use ($dir, &$system) {
             // Need to check for string type. All child/subprocess automatically
             // have a Channel instance passed in on process execution.
@@ -450,6 +452,7 @@ if (!\function_exists('coroutine_run')) {
                 return @\unlink($dir);
             }
         };
+        // @codeCoverageIgnoreEnd
 
         yield \awaitable_process(function () use ($system) {
             return yield Kernel::addProcess($system);
@@ -1331,6 +1334,7 @@ if (!\function_exists('coroutine_run')) {
         if (\method_exists('Closure', 'fromCallable')) {
             $reflection = new \ReflectionFunction(\Closure::fromCallable($function));
         } else {
+            // @codeCoverageIgnoreStart
             if (\is_string($function) && \strpos($function, '::', 1) !== false) {
                 $reflection = new \ReflectionMethod($function, null);
             } elseif (\is_array($function) && \count($function) === 2) {
@@ -1340,6 +1344,7 @@ if (!\function_exists('coroutine_run')) {
             } else {
                 $reflection = new \ReflectionFunction($function);
             }
+            // @codeCoverageIgnoreEnd
         }
         $count = $required ?
             $reflection->getNumberOfRequiredParameters() : $reflection->getNumberOfParameters();

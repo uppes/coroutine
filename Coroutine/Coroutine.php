@@ -616,7 +616,6 @@ final class Coroutine implements CoroutineInterface
                 try {
                     $value($task, $this);
                 } catch (\Throwable $error) {
-                    $this->cancelProgress($task);
                     $task->setState(
                         ($error instanceof CancelledError ? 'cancelled' : 'erred')
                     );
@@ -720,16 +719,9 @@ final class Coroutine implements CoroutineInterface
                 $this->process->processing();
                 $nextTimeout = $this->runTimers();
                 $streamWait = $this->waitTime($nextTimeout);
-
-                if ($this->isUvActive()) {
-                    \uv_run($this->uv, ($streamWait ? \UV::RUN_ONCE : \UV::RUN_NOWAIT));
-                } else {
-                    if ($this->isUv()) {
-                        \uv_run($this->uv, \UV::RUN_NOWAIT);
-                        $streamWait = $this->hasCoroutines() ? $this->waitTime($nextTimeout) : null;
-                    }
-
-                    $this->ioSocketStream($streamWait);
+                $this->ioSocketStream($streamWait);
+                if ($this->isUv()) {
+                    \uv_run($this->uv, ($this->waitTime($nextTimeout) ? \UV::RUN_ONCE : \UV::RUN_NOWAIT));
                 }
 
                 yield;

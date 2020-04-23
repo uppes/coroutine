@@ -334,16 +334,20 @@ final class Kernel
                 $task->customState($taskType);
                 $launcher = $coroutine->addProcess($command, $timeout, $display, $channel)
                     ->then(function ($result) use ($task, $coroutine) {
+                        $coroutine->cancelProgress($task);
                         $task->setState('completed');
                         $task->sendValue($result);
                         $coroutine->schedule($task);
+                        $coroutine->cancelProgress($task);
                     })
                     ->catch(function (\Throwable $error) use ($task, $coroutine) {
+                        $coroutine->cancelProgress($task);
                         $task->setState('erred');
                         $task->setException(new \RuntimeException($error->getMessage()));
                         $coroutine->schedule($task);
                     })
                     ->timeout(function () use ($task, $coroutine, $timeout) {
+                        $coroutine->cancelProgress($task);
                         $task->setState('cancelled');
                         $task->setException(new TimeoutError($timeout));
                         $coroutine->schedule($task);
