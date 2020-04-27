@@ -719,7 +719,7 @@ if (!\function_exists('coroutine_run')) {
      *
      * @return resource|bool
      */
-    function file_open(string $path, string $flag, int $mode = \UV::S_IRWXU)
+    function file_open(string $path, string $flag = 'r', int $mode = \UV::S_IRWXU)
     {
         return FileSystem::open($path, $flag, $mode);
     }
@@ -746,11 +746,11 @@ if (!\function_exists('coroutine_run')) {
      *
      * @param resource $fd
      * @param string $buffer
-     * @param int $offset
+     * @param int|bool $offset if not `UV` set to schedule immediately
      *
      * @return int|bool
      */
-    function file_write($fd, string $buffer, int $offset = -1)
+    function file_write($fd, string $buffer, $offset = -1)
     {
         return FileSystem::write($fd, $buffer, $offset);
     }

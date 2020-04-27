@@ -1071,12 +1071,12 @@ final class FileSystem
     /**
      * @codeCoverageIgnore
      */
-    protected static function writeFile($fd, string $buffer)
+    protected static function writeFile($fd, string $buffer, $immediately = false)
     {
         yield;
         $fwrite = 0;
         for ($written = 0; $written < \strlen($buffer); $written += $fwrite) {
-            yield Kernel::writeWait($fd, true);
+            yield Kernel::writeWait($fd, (\is_bool($immediately) ? $immediately : false));
             $fwrite = \fwrite($fd, \substr($buffer, $written));
             // see https://www.php.net/manual/en/function.fwrite.php#96951
             if (($fwrite === false) || ($fwrite == 0)) {
@@ -1092,9 +1092,9 @@ final class FileSystem
      *
      * @param resource $fd
      * @param string $buffer
-     * @param int $offset
+     * @param int|bool $offset if not `UV` set to schedule immediately
      */
-    public static function write($fd, string $buffer, int $offset = -1)
+    public static function write($fd, string $buffer, $offset = -1)
     {
         if (self::isUv() && (self::meta($fd, 'wrapper_type') !== 'http')) {
             return new Kernel(
@@ -1104,7 +1104,7 @@ final class FileSystem
                         $coroutine->getUV(),
                         $fd,
                         $buffer,
-                        $offset,
+                        (\is_int($offset) ? $offset : -1),
                         function ($fd, int $result) use ($task, $coroutine) {
                             if ($result < 0) {
                                 // @codeCoverageIgnoreStart
@@ -1125,7 +1125,7 @@ final class FileSystem
             );
         }
 
-        return self::writeFile($fd, $buffer);
+        return self::writeFile($fd, $buffer, $offset);
     }
 
     protected static function closeFile($fd)
