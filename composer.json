@@ -50,6 +50,9 @@
             "Async\\Tests\\": "tests/"
         }
     },
+    "suggest": {
+        "ext-uv": ">0.2.4"
+    },
     "scripts": {
         "test": "vendor/bin/phpunit --bootstrap vendor/autoload.php tests"
     }
