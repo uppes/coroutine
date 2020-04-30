@@ -265,7 +265,9 @@ interface CoroutineInterface
     public function getParallel(): ParallelInterface;
 
     /**
-     * Check if **UV** event loop `libuv` engine is available, and turned `on` for native asynchronous handling.
+     * Is `libuv` features available and the system is **Linux**.
+     *
+     * `Note:` Network related 'libuv` features are currently broken on **Windows**.
      *
      * @return bool
      */

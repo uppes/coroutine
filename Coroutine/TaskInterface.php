@@ -10,14 +10,50 @@ interface TaskInterface
 {
     public function taskId(): ?int;
 
+    /**
+     * Task type indicator, currently either `paralleled`, `awaited`,
+     * `networked`, or `monitored`.
+     *
+     * @param string $type
+     *
+     * @return void
+     *
+     * @internal
+     */
     public function taskType(string $type);
 
+    /**
+     * @param mixed $sendValue
+     *
+     * @return void
+     *
+     * @internal
+     */
     public function sendValue($sendValue);
 
+    /**
+     * @param string $status
+     *
+     * @return void
+     *
+     * @internal
+     */
     public function setState(string $status);
 
+    /**
+     * Return task current status state.
+     *
+     * @return string
+     *
+     * @internal
+     */
     public function getState(): string;
 
+    /**
+     * Start the execution of the callers code, passing any `value` or `exception` back in forth.
+     *
+     * @return mixed
+     */
     public function run();
 
     /**
@@ -58,6 +94,14 @@ interface TaskInterface
      * @return bool
      */
     public function isParallel(): bool;
+
+    /**
+     * A flag that indicates the task is socket/stream related and nothing will be stored.
+     * - All memory is freed, not in completed task list, and no results retained.
+     *
+     * @return bool
+     */
+    public function isNetwork(): bool;
 
     /**
      * A flag that indicates whether or not the sub process task has started.
@@ -122,7 +166,11 @@ interface TaskInterface
     /**
      * Mark the task as done and set an exception.
      *
-     * @param \Exception
+     * @param \Exception $exception
+     *
+     * @return void
+     *
+     * @internal
      */
     public function setException($exception);
 

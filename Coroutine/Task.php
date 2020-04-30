@@ -101,7 +101,7 @@ final class Task implements TaskInterface
     /**
      * Task type indicator.
      *
-     * Currently using types of either `paralleled`, `awaited`, or `monitored`.
+     * Currently using types of either `paralleled`, `awaited`, `networked`, or `monitored`.
      *
      * @var string
      */
@@ -210,6 +210,11 @@ final class Task implements TaskInterface
         return ($this->taskType == 'paralleled');
     }
 
+    public function isNetwork(): bool
+    {
+        return ($this->taskType == 'networked');
+    }
+
     public function isProcess(): bool
     {
         return ($this->state == 'process');
@@ -291,7 +296,9 @@ final class Task implements TaskInterface
                 ? $this->coroutine->throw($this->exception)
                 : $this->exception;
 
-            $this->error = $this->exception;
+            if (!$this->isNetwork())
+                $this->error = $this->exception;
+
             $this->exception = null;
             return $value;
         } else {
@@ -299,9 +306,8 @@ final class Task implements TaskInterface
                 ? $this->coroutine->send($this->sendValue)
                 : $this->sendValue;
 
-            if (!empty($value)) {
+            if (!empty($value) && !$this->isNetwork())
                 $this->result = $value;
-            }
 
             $this->sendValue = null;
             return $value;
