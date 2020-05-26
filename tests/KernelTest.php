@@ -228,7 +228,7 @@ class KernelTest extends TestCase
         $done = yield Kernel::sleepFor(1, 'done sleeping');
         $t1 = \microtime(true);
         $this->assertEquals('done sleeping', $done);
-        $this->assertGreaterThan(1, (float) ($t1 - $t0));
+        $this->assertGreaterThan(.9, (float) ($t1 - $t0));
         yield \shutdown();
     }
 

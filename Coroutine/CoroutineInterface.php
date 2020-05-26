@@ -179,7 +179,7 @@ interface CoroutineInterface
      *
      * @return null|TaskInterface
      */
-    public function taskInstance(int $taskId): ?TaskInterface;
+    public function taskInstance(int $taskId = 0): ?TaskInterface;
 
     /**
      * Add callable for parallel processing, in an separate php process
@@ -206,16 +206,37 @@ interface CoroutineInterface
     /**
      * Add a UV file system operation to counter.
      *
-     * @return integer
+     * @return void
      */
     public function fsAdd(): void;
 
     /**
      * Remove a UV file system operation from counter.
      *
-     * @return integer
+     * @return void
      */
     public function fsRemove(): void;
+
+    /**
+     * There are no **UV** network operations pending.
+     *
+     * @return bool
+     */
+    public function isIoEmpty(): bool;
+
+    /**
+     * Add a UV network operation to counter.
+     *
+     * @return void
+     */
+    public function ioAdd(): void;
+
+    /**
+     * Remove a UV network operation from counter.
+     *
+     * @return void
+     */
+    public function ioRemove(): void;
 
     /**
      * Return the `Coroutine` class `libuv` loop handle, otherwise throw exception, if enabled and no driver found.

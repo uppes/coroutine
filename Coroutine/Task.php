@@ -278,8 +278,13 @@ final class Task implements TaskInterface
             $this->close();
             return new $class($message, $code, $throwable);
         } else {
+            // @codeCoverageIgnoreStart
             $this->close();
-            throw new InvalidStateError();
+            if (!$this->isNetwork())
+                throw new InvalidStateError();
+
+            return null;
+            // @codeCoverageIgnoreEnd
         }
     }
 

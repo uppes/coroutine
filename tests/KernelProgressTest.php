@@ -23,7 +23,7 @@ class KernelProgressTest extends TestCase
 
         $realTime = yield \spawn_progress(function () {
             echo 'hello ';
-            return \return_in((\IS_LINUX ? 50 : 2500), 'world');
+            return \return_in((\IS_LINUX ? 50 : 3000), 'world');
         }, $channel, $realTimeTask);
 
         $notUsing = yield \gather($realTime);

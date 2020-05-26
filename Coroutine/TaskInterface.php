@@ -11,7 +11,7 @@ interface TaskInterface
     public function taskId(): ?int;
 
     /**
-     * Task type indicator, currently either `paralleled`, `awaited`,
+     * Set Task type, currently either `paralleled`, `awaited`,
      * `networked`, or `monitored`.
      *
      * @param string $type
@@ -50,7 +50,7 @@ interface TaskInterface
     public function getState(): string;
 
     /**
-     * Start the execution of the callers code, passing any `value` or `exception` back in forth.
+     * Start the execution of the callers code, passing any `value` or `exception` back and forth.
      *
      * @return mixed
      */
@@ -96,7 +96,7 @@ interface TaskInterface
     public function isParallel(): bool;
 
     /**
-     * A flag that indicates the task is socket/stream related and nothing will be stored.
+     * A flag that indicates the task is `socket/stream` related, aka `stateless` and nothing will be stored.
      * - All memory is freed, not in completed task list, and no results retained.
      *
      * @return bool

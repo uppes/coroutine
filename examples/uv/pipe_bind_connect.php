@@ -11,7 +11,7 @@ $ret = uv_pipe_bind($a,PIPE_PATH);
 uv_listen($a, 8192, function($stream) {
     $pipe = uv_pipe_init(uv_default_loop(),0);
     uv_accept($stream,$pipe);
-    uv_read_start($pipe,function($pipe, $buffer) use ($stream) {
+    uv_read_start($pipe,function($pipe, $nRead, $buffer) use ($stream) {
         echo $buffer;
         uv_read_stop($pipe);
         uv_close($stream, function(){
@@ -21,7 +21,7 @@ uv_listen($a, 8192, function($stream) {
 });
 
 $b = uv_pipe_init(uv_default_loop(), 0);
-uv_pipe_connect($b, PIPE_PATH, function($pipe, $status) {
+uv_pipe_connect($b, PIPE_PATH, function($status, $pipe) {
     uv_write($pipe, "Hello", function($stream, $status) {
         uv_close($stream);
     });

@@ -119,6 +119,14 @@ final class Coroutine implements CoroutineInterface
     protected $uvFileSystem = 0;
 
     /**
+     * Check/counter for `libuv` for all Network I/O features
+     *  **UVTcp**, **UVUdp**, **UVPipe**, etc...
+     *
+     * @var int
+     */
+    protected $uvNetwork = 0;
+
+    /**
      * Status to control general use of `libuv` features.
      *
      * @var bool
@@ -236,6 +244,7 @@ final class Coroutine implements CoroutineInterface
 
             \spawn_setup($this->uv);
             \file_operation(true);
+            \net_operation(true, true);
 
             $this->onEvent = function ($event, $status, $events, $stream) {
                 if ($status !== 0) {
@@ -355,7 +364,7 @@ final class Coroutine implements CoroutineInterface
 
     public function isFsEmpty(): bool
     {
-        return ($this->uvFileSystem <= 0);
+        return ($this->uvFileSystem == 0);
     }
 
     public function fsAdd(): void
@@ -366,6 +375,21 @@ final class Coroutine implements CoroutineInterface
     public function fsRemove(): void
     {
         $this->uvFileSystem--;
+    }
+
+    public function isIoEmpty(): bool
+    {
+        return ($this->uvNetwork == 0);
+    }
+
+    public function ioAdd(): void
+    {
+        $this->uvNetwork++;
+    }
+
+    public function ioRemove(): void
+    {
+        $this->uvNetwork--;
     }
 
     public function setup(bool $useUvLoop = true): CoroutineInterface
@@ -381,6 +405,7 @@ final class Coroutine implements CoroutineInterface
 
         \spawn_setup($this->uv, true, true, $useUvLoop);
         \file_operation($useUvLoop);
+        \net_operation($useUvLoop, true);
 
         return $this;
     }
@@ -579,7 +604,7 @@ final class Coroutine implements CoroutineInterface
         return $this->completedMap;
     }
 
-    public function taskInstance(int $taskId): ?TaskInterface
+    public function taskInstance(int $taskId = 0): ?TaskInterface
     {
         $taskList = $this->currentTask();
 
@@ -686,6 +711,7 @@ final class Coroutine implements CoroutineInterface
             && empty($this->timers)
             && $this->process->isEmpty()
             && !$this->isSignaling()
+            && $this->isIoEmpty()
             && $this->isFsEmpty();
     }
 
@@ -910,7 +936,7 @@ final class Coroutine implements CoroutineInterface
     public function addTimeout($task, float $timeout)
     {
         if ($this->isUv()) {
-            return $this->addTimer((int) \round($timeout * 1001), $task);
+            return $this->addTimer((int) \round($timeout * 1000), $task);
         }
 
         $triggerTime = $this->timestamp() + ($timeout);

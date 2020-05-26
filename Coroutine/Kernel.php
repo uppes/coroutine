@@ -106,6 +106,26 @@ final class Kernel
     }
 
     /**
+     * Set current context Task to stateless, aka `networked`, meaning not storing any return values or exceptions on completion.
+     * Not moved to completed task list.
+     * Will return the current context task ID.
+     *
+     * - This function needs to be prefixed with `yield`
+     *
+     * @return int
+     */
+    public static function statelessTask()
+    {
+        return new Kernel(
+            function (TaskInterface $task, CoroutineInterface $coroutine) {
+                $task->taskType('networked');
+                $task->sendValue($task->taskId());
+                $coroutine->schedule($task);
+            }
+        );
+    }
+
+    /**
      * Create an new task
      *
      * @return int task ID
@@ -666,7 +686,7 @@ final class Kernel
                 $gatherSet = ($gatherCount > 0);
                 if ($gatherSet) {
                     if ($count < $gatherCount) {
-                        throw new LengthException(\sprintf('The (%d) tasks, not enough to fulfill the `options(%d)` count!', $count, $gatherCount));
+                        throw new LengthException(\sprintf('The (%d) tasks, not enough to fulfill the `race: (%d)` count!', $count, $gatherCount));
                     }
                 }
 
@@ -679,6 +699,21 @@ final class Kernel
 
                 foreach ($gatherIdList as $index => $tid) {
                     if (isset($taskList[$tid]) || isset($completeList[$tid])) {
+                        // @codeCoverageIgnoreStart
+                        if (
+                            isset($taskList[$tid])
+                            && $taskList[$tid] instanceof TaskInterface
+                            && $taskList[$tid]->isNetwork()
+                        ) {
+                            $count--;
+                            $results[$tid] = null;
+                            $gatherCompleteCount++;
+                            unset($taskList[$tid]);
+                            unset($taskIdList[$tid]);
+                            unset($gatherIdList[$index]);
+                        }
+                        // @codeCoverageIgnoreEnd
+
                         continue;
                     } else {
                         $isResultsException = new InvalidStateError('Task ' . $tid . ' does not exists.');
