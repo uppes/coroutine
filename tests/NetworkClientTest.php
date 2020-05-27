@@ -7,7 +7,7 @@ use PHPUnit\Framework\TestCase;
 
 class NetworkClientTest extends TestCase
 {
-	protected function setUp(): void
+    protected function setUp(): void
     {
         \coroutine_clear();
     }
@@ -50,7 +50,7 @@ class NetworkClientTest extends TestCase
             $this->assertEquals('array', \is_type($request->getHeader('all')));
             $this->assertEquals('array', \is_type($request->getParameter('all')));
             $this->assertEquals('string', \is_type($request->getProtocol()));
-            $this->assertEquals('string', \is_type($request->getCode()));
+            $this->assertEquals('int', \is_type($request->getCode()));
             $this->assertEquals('string', \is_type($request->getMessage()));
             $this->assertEquals('string', \is_type($request->getUri()));
         }

@@ -328,11 +328,11 @@ class NetworkAssistant
     /**
      * Return the response status code.
      *
-     * @return string
+     * @return int
      */
     public function getCode()
     {
-        return $this->code;
+        return (int) $this->code;
     }
 
     /**
