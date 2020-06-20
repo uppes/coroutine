@@ -33,7 +33,7 @@ function client($hostname, $command) {
 
     #Connect to Server
     #Start SSL
-    $socket = yield \create_client("$hostname");
+    $socket = yield \net_client("$hostname");
 
     if (isset($argv[1]) && ($argv[1] == '--host')) {
         $headers = "GET $command HTTP/1.1\r\n";
@@ -51,15 +51,15 @@ function client($hostname, $command) {
         $http = $command;
 
     #Send a command
-    yield \client_write($socket, $http);
+    yield \net_write($socket, $http);
 
     #Receive response from server. Loop until the response is finished
-    $response = yield \client_read($socket);
+    $response = yield \net_read($socket);
 
     //\print_r(\client_meta($socket));
 
     #close connection
-    yield \client_Close($socket);
+    yield \net_close($socket);
 
     #echo our command response
     echo $response;

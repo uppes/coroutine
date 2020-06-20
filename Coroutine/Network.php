@@ -647,14 +647,16 @@ final class Network
      * Get the address of the connected handle.
      *
      * @param UVTcp|UVUdp|resource $handle
-     * @return void
+     * @return string|bool
      */
     public static function peer($handle)
     {
         if ($handle instanceof \UVTcp) {
-            return \uv_tcp_getpeername($handle)['address'];
+            $peer = \uv_tcp_getpeername($handle);
+            return $peer['address'] . ':' . $peer['port'];
         } elseif ($handle instanceof \UVUdp) {
-            return \uv_udp_getsockname($handle)['address'];
+            $peer = \uv_udp_getsockname($handle);
+            return $peer['address'] . ':' . $peer['port'];
         }
 
         if (!\is_resource($handle))

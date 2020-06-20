@@ -7,6 +7,8 @@
  */
 include 'vendor/autoload.php';
 
+use Async\Coroutine\NetworkAssistant;
+
 // Let's ensure we have optimal performance. Set this simple thing
 \date_default_timezone_set('America/New_York');
 
@@ -23,11 +25,11 @@ function server($port)
     global $i;
     echo "SERVER LISTENING ON: $port" . EOL . EOL;;
 
-    //$socket = \secure_server($port);
-    $socket = \create_server($port);
+    //$socket = \net_server($port, true);
+    $socket = yield \net_server($port);
     $i=1;
     while (true) {
-        $connectedSocket = yield \server_accept($socket);
+        $connectedSocket = yield \net_accept($socket);
         yield \away('handleClient', $connectedSocket);
     }
 }
@@ -51,9 +53,9 @@ function loadFile($template, $vars, $fd)
 function handleClient($socket)
 {
     global $i;
-    $data = yield \server_read($socket, 8192);
+    $data = yield \net_read($socket);
 
-    $ip = \remote_address($socket);
+    $ip = \net_peer($socket);
     print "New connection from " . $ip."\n";
 
     $output = "Received following request:\n\n$data";
@@ -66,7 +68,7 @@ function handleClient($socket)
 		#hi command
 		case 'hi';
             #write back to the client a response.
-            yield \server_write($socket, "Hello {$ip}. This is our $i command run!");
+            yield \net_write($socket, "Hello {$ip}. This is our $i command run!");
 			$i++;
 			print "hi command received \n";
             break;
@@ -105,7 +107,8 @@ function handleClient($socket)
 
             $input = '.'.$input;
 
-            $fd = yield \file_open($input, 'r');
+            $responser = new NetworkAssistant('response');
+            $fd = yield \file_open($input);
             if (\is_resource($fd)) {
                 print "Serving $input\n";
 
@@ -116,15 +119,15 @@ function handleClient($socket)
                     yield \file_close($fd);
                 }
 
-                $output = \server_response($socket, $contents, 200);
+                $output = \net_response($responser, $contents, 200);
             } else {
-                $output = \server_response($socket, "The file you requested does not exist. Sorry!", 404);
+                $output = \net_response($responser, "The file you requested does not exist. Sorry!", 404);
             }
 
-            yield \server_write($socket, $output);
+            yield \net_write($socket, $output);
     }
 
-    yield \server_close($socket);
+    yield \net_close($socket);
 }
 
 \coroutine_run(\server(5000));

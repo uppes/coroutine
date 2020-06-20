@@ -1123,7 +1123,7 @@ if (!\function_exists('coroutine_run')) {
      * Get the address of the connected handle.
      *
      * @param UVTcp|UVUdp|resource $handle
-     * @return void
+     * @return string|bool
      */
     function net_peer($handle)
     {
