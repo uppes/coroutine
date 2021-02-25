@@ -1020,7 +1020,7 @@ final class FileSystem
     protected static function readFile($fd, $offset = null, $length = null)
     {
         yield;
-        yield Kernel::readWait($fd);
+        yield Kernel::readWait($fd, true);
         $contents = \stream_get_contents($fd, $length, $offset);
 
         return $contents;
@@ -1076,7 +1076,7 @@ final class FileSystem
         yield;
         $fwrite = 0;
         for ($written = 0; $written < \strlen($buffer); $written += $fwrite) {
-            yield Kernel::writeWait($fd, (\is_bool($immediately) ? $immediately : false));
+            yield Kernel::writeWait($fd, $immediately);
             $fwrite = \fwrite($fd, \substr($buffer, $written));
             // see https://www.php.net/manual/en/function.fwrite.php#96951
             if (($fwrite === false) || ($fwrite == 0)) {

@@ -818,7 +818,12 @@ final class Kernel
                                             continue;
                                         }
 
-                                        $coroutine->execute(true);
+
+                                        if ($tasks->isPending()) {
+                                            $coroutine->execute();
+                                        } elseif ($tasks->isRescheduled()) {
+                                            $coroutine->execute($tasks->getCycles() > 1);
+                                        }
                                     } catch (\Throwable $error) {
                                         $tasks->setState(
                                             ($error instanceof CancelledError ? 'cancelled' : 'erred')
@@ -995,7 +1000,7 @@ final class Kernel
      * @see https://docs.python.org/3.7/library/asyncio-task.html#asyncio.create_task
      *
      * @param Generator|callable $asyncLabel
-     * @param mixed $args - if `generator`, $args can hold `customState`, and `customData`
+     * @param mixed ...$args - if **$asyncLabel** is `Generator`, $args can hold `customState`, and `customData`
      * - for third party code integration.
      *
      * @return int $task id

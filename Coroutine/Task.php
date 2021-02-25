@@ -140,9 +140,24 @@ final class Task implements TaskInterface
         $this->customData = null;
     }
 
+    /**
+     * Add to counter of the cycles the task has run.
+     *
+     * @return void
+     */
     public function cyclesAdd()
     {
         $this->cycles++;
+    }
+
+    /**
+     * Return the number of times the scheduled task has run.
+     *
+     * @return int
+     */
+    public function getCycles()
+    {
+        return $this->cycles;
     }
 
     public function taskId(): ?int
@@ -295,7 +310,6 @@ final class Task implements TaskInterface
             return ($this->coroutine instanceof \Generator)
                 ? $this->coroutine->current()
                 : null;
-
         } elseif ($this->exception) {
             $value = ($this->coroutine instanceof \Generator)
                 ? $this->coroutine->throw($this->exception)
