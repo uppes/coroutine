@@ -312,7 +312,7 @@ class FileSystemTest extends TestCase
         $this->assertEquals($size, $written);
         $data = yield \file_contents($outFd);
         $this->assertEquals('Hello', \trim($data));
-        $this->assertGreaterThanOrEqual(8, $this->counterResult);
+        $this->assertGreaterThanOrEqual(7, $this->counterResult);
         yield \file_close($fd);
         yield \file_close($outFd);
 

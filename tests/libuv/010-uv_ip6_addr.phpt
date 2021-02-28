@@ -4,5 +4,5 @@ Check for uv_ip6_addr
 <?php
 var_dump(uv_ip6_addr("::0",0));
 --EXPECTF--
-object(UVSockAddrIPv6)#7 (0) {
+object(UVSockAddrIPv6)#1 (0) {
 }

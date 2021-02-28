@@ -562,7 +562,8 @@ final class Kernel
                 if (\is_array($received) && (\count($received) == 2)) {
                     [$type, $data] = $received;
                     $received = null;
-                    yield $handler($type, $data);
+                    if (!\is_null($data))
+                        yield $handler($type, $data);
                 }
             }
         });
@@ -817,7 +818,6 @@ final class Kernel
                                             $tasks->run();
                                             continue;
                                         }
-
 
                                         if ($tasks->isPending()) {
                                             $coroutine->execute();

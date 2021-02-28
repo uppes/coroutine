@@ -1076,7 +1076,7 @@ final class FileSystem
         yield;
         $fwrite = 0;
         for ($written = 0; $written < \strlen($buffer); $written += $fwrite) {
-            yield Kernel::writeWait($fd, $immediately);
+            yield Kernel::writeWait($fd, (\is_bool($immediately) ? $immediately : false));
             $fwrite = \fwrite($fd, \substr($buffer, $written));
             // see https://www.php.net/manual/en/function.fwrite.php#96951
             if (($fwrite === false) || ($fwrite == 0)) {
@@ -1187,7 +1187,7 @@ final class FileSystem
         if ($info == 'status' && isset($meta['wrapper_data'])) {
             $http_statusCode = 400;
             foreach ($meta['wrapper_data'] as $headerLine) {
-                if (preg_match('/^HTTP\/(\d+\.\d+)\s+(\d+)\s*(.+)?$/', $headerLine, $result)) {
+                if (\preg_match('/^HTTP\/(\d+\.\d+)\s+(\d+)\s*(.+)?$/', $headerLine, $result)) {
                     $http_statusCode = (int) $result[2];
                 }
             }
