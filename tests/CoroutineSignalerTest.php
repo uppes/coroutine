@@ -60,10 +60,9 @@ class CoroutineSignalerTest extends TestCase
 
     private function assertRunFasterThan($maxInterval)
     {
-        $start = microtime(true);
+        \timer_for();
         $this->loop->run();
-        $end = microtime(true);
-        $interval = $end - $start;
+        $interval = \timer_for();
         $this->assertLessThan($maxInterval, $interval);
     }
 }

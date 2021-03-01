@@ -25,6 +25,49 @@ if (!\function_exists('coroutine_run')) {
     \define('CRLF', "\r\n");
 
     /**
+     * Returns a random float between two numbers.
+     *
+     * Works similar to Python's `random.uniform()`
+     * @see https://docs.python.org/3/library/random.html#random.uniform
+     *
+     * @param int $min
+     * @param int $max
+     * @return float
+     */
+    function random_uniform($min, $max)
+    {
+        return ($min + \lcg_value() * (\abs($max - $min)));
+    }
+
+    /**
+     * Return the value (in fractional seconds) of a performance counter, i.e. a clock with the highest
+     * available resolution to measure a short duration. Using either `hrtime` or system's `microtime`.
+     *
+     * @param string $tag
+     * - A reference point used to set, to get the difference between the results of consecutive calls.
+     * - Will be cleared/unset on the next consecutive call.
+     *
+     * @return float|void
+     *
+     * @see https://docs.python.org/3/library/time.html#time.perf_counter
+     * @see https://nodejs.org/docs/latest-v11.x/api/console.html#console_console_time_label
+     */
+    function timer_for(string $tag = 'perf_counter')
+    {
+        global $__timer__;
+        if (isset($__timer__[$tag])) {
+            $perf_counter = $__timer__[$tag];
+            $__timer__[$tag] = null;
+            unset($GLOBALS['__timer__'][$tag]);
+            return (float) ($__timer__['hrtime']
+                ? (\hrtime(true) / 1e+9) - $perf_counter
+                : \microtime(true) - $perf_counter);
+        }
+
+        $__timer__[$tag] = (float) ($__timer__['hrtime'] ? \hrtime(true) / 1e+9 : \microtime(true));
+    }
+
+    /**
      * Makes an resolvable function from label name that's callable with `away`
      * The passed in `function/callable/task` is wrapped to be `awaitAble`
      *
@@ -81,7 +124,8 @@ if (!\function_exists('coroutine_run')) {
      * - This function needs to be prefixed with `yield`
      *
      * @param Generator|callable $awaitableFunction
-     * @param mixed $args - if `generator`, $args can hold `customState`, and `customData`
+     * @param mixed ...$args - if **$awaitableFunction** is `Generator`, $args can hold `customState`, and `customData`
+     * - for third party code integration.
      *
      * @return int $task id
      */
@@ -1481,11 +1525,12 @@ if (!\function_exists('coroutine_run')) {
 
     function coroutine_clear()
     {
-        global $__coroutine__;
+        global $__coroutine__, $__timer__;
         if ($__coroutine__ instanceof CoroutineInterface) {
             $__coroutine__->setup(false);
-            unset($GLOBALS['__coroutine__']);
+            unset($GLOBALS['__coroutine__'], $GLOBALS['__timer__']);
             $__coroutine__ = null;
+            $__timer__ = null;
         }
     }
 

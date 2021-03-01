@@ -224,11 +224,11 @@ class KernelTest extends TestCase
 
     public function taskSleepFor()
     {
-        $t0 = \microtime(true);
-        $done = yield Kernel::sleepFor(1, 'done sleeping');
-        $t1 = \microtime(true);
+        \timer_for('true');
+        $done = yield Kernel::sleepFor(\random_uniform(1, 1), 'done sleeping');
+        $t1 = \timer_for('true');
         $this->assertEquals('done sleeping', $done);
-        $this->assertGreaterThan(.9, (float) ($t1 - $t0));
+        $this->assertGreaterThan(.9, $t1);
         yield \shutdown();
     }
 

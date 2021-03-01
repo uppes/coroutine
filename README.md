@@ -2,9 +2,9 @@
 
 [![Coroutine](https://github.com/symplely/coroutine/workflows/Coroutine/badge.svg)](https://github.com/symplely/coroutine/actions)[![codecov](https://codecov.io/gh/symplely/coroutine/branch/master/graph/badge.svg)](https://codecov.io/gh/symplely/coroutine)[![Codacy Badge](https://api.codacy.com/project/badge/Grade/44a6f32f03194872b7d4cd6a2411ff79)](https://www.codacy.com/app/techno-express/coroutine?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=symplely/coroutine&amp;utm_campaign=Badge_Grade)[![Maintainability](https://api.codeclimate.com/v1/badges/1bfc3497fde67b111a04/maintainability)](https://codeclimate.com/github/symplely/coroutine/maintainability)
 
-> For versions `1.5.x` onward, has features of an PHP extension [UV](https://github.com/bwoebi/php-uv), of **Node.js** [libuv](https://github.com/libuv/libuv) library, see the online [book](https://nikhilm.github.io/uvbook/index.html) for a full tutorial overview.
+> For versions `1.5.x` onward, has features of an PHP extension [UV](https://github.com/amphp/ext-uv), of **Node.js** [libuv](https://github.com/libuv/libuv) library, see the online [book](https://nikhilm.github.io/uvbook/index.html) for a full tutorial overview.
 
-> Currently all `libuv` [network](https://github.com/bwoebi/php-uv/issues) `socket/stream/udp/tcp` like features are broken on *Windows*, as such will not be implemented for *Windows*, will continue to use native `stream_select` instead.
+> Currently all `libuv` [network](https://github.com/amphp/ext-uv/issues) `socket/stream/udp/tcp` like features are broken on *Windows*, as such will not be implemented for *Windows*, will continue to use native `stream_select` instead.
 
 ## Table of Contents
 
@@ -51,6 +51,149 @@ By using, it immediately returns a number, that can be used with `gather()`, ano
 This package follows a new paradigm [Behavioral Programming](http://www.wisdom.weizmann.ac.il/~bprogram/) with the concept of [B-threads](https://medium.com/@lmatteis/b-threads-programming-in-a-way-that-allows-for-easier-changes-5d95b9fb6928), _functional generators_.
 
 The base overall usage of [Swoole Coroutine](https://www.swoole.co.uk/coroutine), and [FaceBook's Hhvm](https://docs.hhvm.com/hack/asynchronous-operations/introduction) **PHP** follows the same outline implementations as others and put forth here.
+
+To illustrate further take this comparison between **NodeJS** and **Python** from [Intro to Async Concurrency in Python vs. Node.js](https://medium.com/@interfacer/intro-to-async-concurrency-in-python-and-node-js-69315b1e3e36).
+
+```js
+// async_scrape.js (tested with node 11.3)
+const sleep = ts => new Promise(resolve => setTimeout(resolve, ts * 1000));
+
+async function fetchUrl(url) {
+    console.log(`~ executing fetchUrl(${url})`);
+    console.time(`fetchUrl(${url})`);
+    await sleep(1 + Math.random() * 4);
+    console.timeEnd(`fetchUrl(${url})`);
+    return `<em>fake</em> page html for ${url}`;
+}
+
+async function analyzeSentiment(html) {
+    console.log(`~ analyzeSentiment("${html}")`);
+    console.time(`analyzeSentiment("${html}")`);
+    await sleep(1 + Math.random() * 4);
+    const r = {
+        positive: Math.random()
+    }
+    console.timeEnd(`analyzeSentiment("${html}")`);
+    return r;
+}
+
+const urls = [
+    "https://www.ietf.org/rfc/rfc2616.txt",
+    "https://en.wikipedia.org/wiki/Asynchronous_I/O",
+]
+const extractedData = {}
+
+async function handleUrl(url) {
+    const html = await fetchUrl(url);
+    extractedData[url] = await analyzeSentiment(html);
+}
+
+async function main() {
+    console.time('elapsed');
+    await Promise.all(urls.map(handleUrl));
+    console.timeEnd('elapsed');
+}
+
+main()
+```
+
+```py
+# async_scrape.py (requires Python 3.7+)
+import asyncio, random, time
+
+async def fetch_url(url):
+    print(f"~ executing fetch_url({url})")
+    t = time.perf_counter()
+    await asyncio.sleep(random.randint(1, 5))
+    print(f"time of fetch_url({url}): {time.perf_counter() - t:.2f}s")
+    return f"<em>fake</em> page html for {url}"
+
+async def analyze_sentiment(html):
+    print(f"~ executing analyze_sentiment('{html}')")
+    t = time.perf_counter()
+    await asyncio.sleep(random.randint(1, 5))
+    r = {"positive": random.uniform(0, 1)}
+    print(f"time of analyze_sentiment('{html}'): {time.perf_counter() - t:.2f}s")
+    return r
+
+urls = [
+    "https://www.ietf.org/rfc/rfc2616.txt",
+    "https://en.wikipedia.org/wiki/Asynchronous_I/O",
+]
+extracted_data = {}
+
+async def handle_url(url):
+    html = await fetch_url(url)
+    extracted_data[url] = await analyze_sentiment(html)
+
+async def main():
+    t = time.perf_counter()
+    await asyncio.gather(*(handle_url(url) for url in urls))
+    print("> extracted data:", extracted_data)
+    print(f"time elapsed: {time.perf_counter() - t:.2f}s")
+
+asyncio.run(main())
+```
+
+**Using this package as setout, it's the same simplicity:**
+
+```php
+// This is in the examples folder as "async_scrape.php"
+include 'vendor/autoload.php';
+
+function fetch_url($url)
+{
+  print("~ executing fetch_url($url)" . \EOL);
+  \timer_for($url);
+  yield \sleep_for(\random_uniform(1, 5));
+  print("time of fetch_url($url): " . \timer_for($url) . 's' . \EOL);
+  return "<em>fake</em> page html for $url";
+};
+
+function analyze_sentiment($html)
+{
+  print("~ executing analyze_sentiment('$html')" . \EOL);
+  \timer_for($html . '.url');
+  yield \sleep_for(\random_uniform(1, 5));
+  $r = "positive: " . \random_uniform(0, 1);
+  print("time of analyze_sentiment('$html'): " . \timer_for($html . '.url') . 's' . \EOL);
+  return $r;
+};
+
+function handle_url($url)
+{
+  yield;
+  $extracted_data = [];
+  $html = yield fetch_url($url);
+  $extracted_data[$url] = yield analyze_sentiment($html);
+  return yield $extracted_data;
+};
+
+function main()
+{
+  $urls = [
+    "https://www.ietf.org/rfc/rfc2616.txt",
+    "https://en.wikipedia.org/wiki/Asynchronous_I/O"
+  ];
+  $urlID = [];
+
+  \timer_for();
+  foreach ($urls as $url)
+    $urlID[] = yield \away(handle_url($url));
+
+  $result_data = yield \gather($urlID);
+  foreach ($result_data as $id => $extracted_data) {
+    echo "> extracted data:";
+    \print_r($extracted_data);
+  }
+
+  print("time elapsed: " . \timer_for() . 's');
+}
+
+\coroutine_run(main());
+```
+
+Try recreating this with the other pure *PHP* async implementations, they would need an rewrite first to come close.
 
 -------
 

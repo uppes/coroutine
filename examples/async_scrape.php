@@ -41,9 +41,9 @@ async function handleUrl(url) {
 }
 
 async function main() {
-    console.time('ellapsed');
+    console.time('elapsed');
     await Promise.all(urls.map(handleUrl));
-    console.timeEnd('ellapsed');
+    console.timeEnd('elapsed');
 }
 
 main()
@@ -89,29 +89,23 @@ async def main():
 asyncio.run(main())
 ```
 */
-function random_float($min, $max)
-{
-  return ($min + lcg_value() * (abs($max - $min)));
-}
 
 function fetch_url($url)
 {
   print("~ executing fetch_url($url)" . \EOL);
-  $sleep = random_float(1, 5);
-  $t = \microtime(true);
-  yield \sleep_for($sleep);
-  print("time of fetch_url($url): " . (\microtime(true) - $t) . 's' . \EOL);
-  return "<em>fake</em> page html for $url" . \EOL;
+  \timer_for($url);
+  yield \sleep_for(\random_uniform(1, 5));
+  print("time of fetch_url($url): " . \timer_for($url) . 's' . \EOL);
+  return "<em>fake</em> page html for $url";
 };
 
 function analyze_sentiment($html)
 {
   print("~ executing analyze_sentiment('$html')" . \EOL);
-  $sleep = random_float(1, 5);
-  $t = \microtime(true);
-  yield \sleep_for($sleep);
-  $r = "positive: " . \random_float(0, 1);
-  print("time of analyze_sentiment('$html'): " . (\microtime(true) - $t) . 's' . \EOL);
+  \timer_for($html . '.url');
+  yield \sleep_for(\random_uniform(1, 5));
+  $r = "positive: " . \random_uniform(0, 1);
+  print("time of analyze_sentiment('$html'): " . \timer_for($html . '.url') . 's' . \EOL);
   return $r;
 };
 
@@ -132,17 +126,18 @@ function main()
   ];
 
   $urlID = [];
-  $t = \microtime(true);
+
+  \timer_for();
   foreach ($urls as $url)
     $urlID[] = yield \away(handle_url($url));
 
   $result_data = yield \gather($urlID);
   foreach ($result_data as $id => $extracted_data) {
     echo "> extracted data:";
-    print_r($extracted_data);
+    \print_r($extracted_data);
   }
 
-  print("time elapsed: " . ((\microtime(true) - $t)) . 's');
+  print("time elapsed: " . \timer_for() . 's');
 }
 
 \coroutine_run(main());

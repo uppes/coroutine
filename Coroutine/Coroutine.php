@@ -235,7 +235,7 @@ final class Coroutine implements CoroutineInterface
      */
     public function __construct()
     {
-        global $__coroutine__;
+        global $__coroutine__, $__timer__;
         $__coroutine__ = $this;
         $this->initSignals();
 
@@ -272,7 +272,7 @@ final class Coroutine implements CoroutineInterface
             };
         }
 
-        $this->isHighTimer = \function_exists('hrtime');
+        $this->isHighTimer = $__timer__['hrtime'] = \function_exists('hrtime');
         $this->parallel = new Parallel($this);
         $this->taskQueue = new \SplQueue();
     }
