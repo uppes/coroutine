@@ -197,7 +197,7 @@ Try recreating this with the other pure *PHP* async implementations, they would 
 
 -------
 
-A **Coroutine** here are specially crafted functions that are based on __generators__, with the use of `yield` and `yield from`. When used, they **control context**, meaning `capture/release` an application's execution flow.
+A [**Coroutine**](https://en.wikipedia.org/wiki/Coroutine) here are specially crafted functions that are based on __generators__, with the use of `yield` and `yield from`. When used, they **control context**, meaning `capture/release` an application's execution flow.
 
 When `yield` is placed within an block of code, it indicates to the calling function, that an object will be returned instead, the code is not immediately executed.
 
