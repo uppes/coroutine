@@ -1,5 +1,7 @@
 --TEST--
 Check for uv_cwd
+--SKIPIF--
+<?php if (!extension_loaded("uv")) print "skip"; ?>
 --FILE--
 <?php
 $cwd = uv_cwd();

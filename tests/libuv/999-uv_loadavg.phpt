@@ -1,5 +1,7 @@
 --TEST--
 Check for uv_loadavg
+--SKIPIF--
+<?php if (!extension_loaded("uv")) print "skip"; ?>
 --FILE--
 <?php
 $avg = uv_loadavg();

@@ -1,5 +1,7 @@
 --TEST--
 Check for fs_send_file
+--SKIPIF--
+<?php if (!extension_loaded("uv")) print "skip"; ?>
 --FILE--
 <?php
 define("FIXTURE_PATH", dirname(__FILE__) . "/fixtures/hello.data");

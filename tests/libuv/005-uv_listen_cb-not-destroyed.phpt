@@ -1,7 +1,7 @@
 --TEST--
 Check for uv_listen callback is not destroyed by gc
 --SKIPIF--
-<?php if ('\\' === \DIRECTORY_SEPARATOR) print "Skip, broken on Windows"; ?>
+<?php if ('\\' === \DIRECTORY_SEPARATOR || !extension_loaded("uv")) print "Skip, broken on Windows"; ?>
 --FILE--
 <?php
 class TcpServer

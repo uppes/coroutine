@@ -1,5 +1,7 @@
 --TEST--
 Check for pipe bind
+--SKIPIF--
+<?php if (!extension_loaded("uv")) print "skip"; ?>
 --FILE--
 <?php
 if (stripos(PHP_OS, "WIN") == 0) {

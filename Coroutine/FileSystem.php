@@ -87,7 +87,11 @@ final class FileSystem
      */
     public static function setup(bool $useUV = true)
     {
-        self::$useUV = $useUV;
+        try {
+            self::$useUV = $useUV;
+        } catch (\Throwable $e) {
+            self::$useUV = false;
+        }
     }
 
     protected static function spawnStat($path, $info = null)
@@ -883,7 +887,7 @@ final class FileSystem
         }
     }
 
-    protected static function send($out_fd, $in_fd, int $offset = 0, int $length)
+    protected static function send($out_fd, $in_fd, int $offset = 0, int $length = 8192)
     {
         if (!\is_resource($out_fd) || !\is_resource($in_fd)) {
             return yield \result(false);

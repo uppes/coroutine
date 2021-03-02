@@ -1,5 +1,7 @@
 --TEST--
 Check for uv_cpuinfo
+--SKIPIF--
+<?php if (!extension_loaded("uv")) print "skip"; ?>
 --FILE--
 <?php
 $cpuinfo = uv_cpu_info();

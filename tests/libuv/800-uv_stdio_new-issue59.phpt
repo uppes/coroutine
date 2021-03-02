@@ -1,5 +1,7 @@
 --TEST--
 Test uv_stdio_new doesn't cause segfault #56
+--SKIPIF--
+<?php if (!extension_loaded("uv")) print "skip"; ?>
 --FILE--
 <?php
 

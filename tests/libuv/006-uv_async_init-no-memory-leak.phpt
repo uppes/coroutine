@@ -1,5 +1,7 @@
 --TEST--
 Check uv_async has no memory leak
+--SKIPIF--
+<?php if (!extension_loaded("uv")) print "skip"; ?>
 --FILE--
 <?php
 $m = memory_get_usage();

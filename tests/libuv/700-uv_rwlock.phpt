@@ -1,5 +1,7 @@
 --TEST--
 Check for uv_rwlock
+--SKIPIF--
+<?php if (!extension_loaded("uv")) print "skip"; ?>
 --INI--
 track_errors=0
 --FILE--

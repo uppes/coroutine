@@ -1,5 +1,7 @@
 --TEST--
 Check for php-uv constants
+--SKIPIF--
+<?php if (!extension_loaded("uv")) print "skip"; ?>
 --FILE--
 <?php
 

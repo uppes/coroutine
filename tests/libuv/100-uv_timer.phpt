@@ -1,5 +1,7 @@
 --TEST--
 Check for uv_timer_init and uv_timer_start
+--SKIPIF--
+<?php if (!extension_loaded("uv")) print "skip"; ?>
 --FILE--
 <?php
 $loop = uv_default_loop();
@@ -9,7 +11,7 @@ $i = 0;
 uv_timer_start($timer, 10, 10, function($timer) use (&$i) {
     echo "count: {$i}" . PHP_EOL;
     $i++;
-    
+
     if ($i > 3) {
         uv_timer_stop($timer);
         uv_unref($timer);

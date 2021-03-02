@@ -1,5 +1,7 @@
 --TEST--
 Check for uv_uptime
+--SKIPIF--
+<?php if (!extension_loaded("uv")) print "skip"; ?>
 --FILE--
 <?php
 $uptime = uv_uptime();

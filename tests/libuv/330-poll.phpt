@@ -1,7 +1,7 @@
 --TEST--
 Check for poll read and close
 --SKIPIF--
-<?php if ('\\' === \DIRECTORY_SEPARATOR) print "Skip, broken on Windows"; ?>
+<?php if ('\\' === \DIRECTORY_SEPARATOR || !extension_loaded("uv")) print "Skip, broken on Windows"; ?>
 --FILE--
 <?php
 $socket = stream_socket_server("tcp://0.0.0.0:9999", $errno, $errstr);

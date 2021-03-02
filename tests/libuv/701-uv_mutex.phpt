@@ -1,5 +1,7 @@
 --TEST--
 Check for uv_rwlock
+--SKIPIF--
+<?php if (!extension_loaded("uv")) print "skip"; ?>
 --FILE--
 <?php
 $lock = uv_mutex_init();

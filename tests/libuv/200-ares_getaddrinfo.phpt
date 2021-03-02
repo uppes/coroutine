@@ -2,7 +2,7 @@
 Check for ares_getaddrinfo
 --SKIPIF--
 <?php
-if (getenv("SKIP_ONLINE_TESTS")) {
+if (getenv("SKIP_ONLINE_TESTS") || !extension_loaded("uv")) {
     die("skip test requiring internet connection\n");
 }
 ?>

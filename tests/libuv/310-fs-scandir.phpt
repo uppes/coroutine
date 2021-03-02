@@ -1,5 +1,7 @@
 --TEST--
 Basic scandir functionality
+--SKIPIF--
+<?php if (!extension_loaded("uv")) print "skip"; ?>
 --FILE--
 <?php
 

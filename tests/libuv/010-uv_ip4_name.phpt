@@ -1,5 +1,7 @@
 --TEST--
 Check for uv_ip4_name
+--SKIPIF--
+<?php if (!extension_loaded("uv")) print "skip"; ?>
 --FILE--
 <?php
 $ip = uv_ip4_addr("0.0.0.0",0);

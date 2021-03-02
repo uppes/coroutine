@@ -1,5 +1,7 @@
 --TEST--
 Bad uv_spawn must not segfault (issue #79)
+--SKIPIF--
+<?php if (!extension_loaded("uv")) print "skip"; ?>
 --FILE--
 <?php
 $rt = uv_spawn(

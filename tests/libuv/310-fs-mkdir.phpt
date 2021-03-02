@@ -1,5 +1,7 @@
 --TEST--
 Check for fs mkdir
+--SKIPIF--
+<?php if (!extension_loaded("uv")) print "skip"; ?>
 --FILE--
 <?php
 define("DIRECTORY_PATH", dirname(__FILE__) . "/fixtures/example_directory");

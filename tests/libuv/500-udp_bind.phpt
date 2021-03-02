@@ -1,7 +1,7 @@
 --TEST--
 Check for udp bind
 --SKIPIF--
-<?php if ('\\' === \DIRECTORY_SEPARATOR) print "Skip, broken on Windows"; ?>
+<?php if ('\\' === \DIRECTORY_SEPARATOR ||!extension_loaded("uv")) print "Skip, broken on Windows"; ?>
 --FILE--
 <?php
 $udp = uv_udp_init();

@@ -1,5 +1,7 @@
 --TEST--
 Check for uv_idle_init and uv_idle_start
+--SKIPIF--
+<?php if (!extension_loaded("uv")) print "skip"; ?>
 --FILE--
 <?php
 $loop = uv_default_loop();
@@ -11,7 +13,7 @@ uv_idle_start($idle, function($stat)
 
     echo "count: {$i}" . PHP_EOL;
     $i++;
-    
+
     if ($i > 3) {
         uv_idle_stop($idle);
     }

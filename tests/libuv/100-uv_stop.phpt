@@ -1,5 +1,7 @@
 --TEST--
 Test uv_stop ends loop execution
+--SKIPIF--
+<?php if (!extension_loaded("uv")) print "skip"; ?>
 --FILE--
 <?php
 $loop = uv_default_loop();

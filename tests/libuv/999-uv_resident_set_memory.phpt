@@ -1,5 +1,7 @@
 --TEST--
 Check for uv_resident_set_memory
+--SKIPIF--
+<?php if (!extension_loaded("uv")) print "skip"; ?>
 --FILE--
 <?php
 $resident_mem = uv_resident_set_memory();
