@@ -90,7 +90,6 @@ final class FileSystem
         try {
             self::$useUV = $useUV;
         } catch (\Throwable $e) {
-            self::$useUV = false;
         }
     }
 
