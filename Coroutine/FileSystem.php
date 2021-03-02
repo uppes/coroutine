@@ -968,7 +968,7 @@ final class FileSystem
      * @param int $mode — this should be UV::S_IRWXU and some mode flag, `libuv` only.
      * @param resource|array|null $contexts not for `libuv`.
      */
-    public static function open(string $path, string $flag, int $mode = \UV::S_IRWXU, $contexts = null)
+    public static function open(string $path, string $flag, int $mode = 00700, $contexts = null)
     {
         if (isset(self::$fileFlags[$flag])) {
             if (self::isUv() && (\strpos($path, '://') === false)) {
