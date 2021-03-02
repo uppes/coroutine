@@ -53,7 +53,7 @@ class DeferTest extends TestCase
         function variableReference()
         {
             $i = 0;
-            defer($e, 'printf', $i);
+            defer($e, 'printf', (string) $i);
             $i++;
         }
         variableReference();
@@ -62,7 +62,7 @@ class DeferTest extends TestCase
         function variableReferenceII()
         {
             for ($i = 0; $i < 4; $i++) {
-                defer($a, 'printf', $i);
+                defer($a, 'printf', (string) $i);
             }
         }
         variableReferenceII();
