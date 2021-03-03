@@ -97,7 +97,7 @@ final class FileSystem
     {
         $result = yield \spawn_system('stat', $path);
 
-        return (empty($info) || \is_null($info)) && !isset($result[$info]) ? $result : $result[$info];
+        return (empty($info) || $info === null) ? $result : $result[$info];
     }
 
     /**
