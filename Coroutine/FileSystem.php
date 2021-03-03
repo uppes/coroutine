@@ -23,16 +23,16 @@ final class FileSystem
      * @var array
      */
     protected static $fileFlags = array(
-        'r' => \UV::O_RDONLY,
-        'w' => \UV::O_WRONLY | \UV::O_CREAT | \UV::O_TRUNC,
-        'a' => \UV::O_WRONLY | \UV::O_APPEND | \UV::O_CREAT,
-        'x' => \UV::O_WRONLY | \UV::O_CREAT | \UV::O_EXCL,
-        'c' => \UV::O_WRONLY | \UV::O_CREAT,
-        'r+' => \UV::O_RDWR,
-        'w+' => \UV::O_RDWR | \UV::O_CREAT | \UV::O_TRUNC,
-        'a+' => \UV::O_RDWR | \UV::O_CREAT | \UV::O_APPEND,
-        'x+' => \UV::O_RDWR | \UV::O_CREAT | \UV::O_EXCL,
-        'c+' => \UV::O_RDWR | \UV::O_CREAT,
+        'r' => \O_RDONLY,
+        'w' => \O_WRONLY | \O_CREAT | \O_TRUNC,
+        'a' => \O_WRONLY | \O_APPEND | \O_CREAT,
+        'x' => \O_WRONLY | \O_CREAT | \O_EXCL,
+        'c' => \O_WRONLY | \O_CREAT,
+        'r+' => \O_RDWR,
+        'w+' => \O_RDWR | \O_CREAT | \O_TRUNC,
+        'a+' => \O_RDWR | \O_CREAT | \O_APPEND,
+        'x+' => \O_RDWR | \O_CREAT | \O_EXCL,
+        'c+' => \O_RDWR | \O_CREAT,
     );
 
     /**
@@ -75,7 +75,7 @@ final class FileSystem
      */
     public static function isUv(): bool
     {
-        return \function_exists('uv_default_loop') && self::$useUV;
+        return \IS_UV && self::$useUV;
     }
 
     /**
@@ -965,10 +965,10 @@ final class FileSystem
      * to the end of file. The file is created if it does not exist.
      * - "`x+`" `Read/Write`: Creates a new file. Returns `FALSE` and an error if file already exists.
      * - "`c+`" Open the file for reading and writing; otherwise it has the same behavior as "`c`".
-     * @param int $mode — this should be UV::S_IRWXU and some mode flag, `libuv` only.
+     * @param int $mode — this should be `S_IRWXU` and some mode flag, `libuv` only.
      * @param resource|array|null $contexts not for `libuv`.
      */
-    public static function open(string $path, string $flag, int $mode = 00700, $contexts = null)
+    public static function open(string $path, string $flag, int $mode = \S_IRWXU, $contexts = null)
     {
         if (isset(self::$fileFlags[$flag])) {
             if (self::isUv() && (\strpos($path, '://') === false)) {

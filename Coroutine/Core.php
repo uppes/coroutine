@@ -23,6 +23,74 @@ if (!\function_exists('coroutine_run')) {
     \define('MS', 0.001);
     \define('EOL', \PHP_EOL);
     \define('CRLF', "\r\n");
+    \define('IS_UV', \function_exists('uv_loop_new'));
+
+    /**
+     * Open the file for read-only access.
+     */
+    \define('O_RDONLY', \IS_UV ? \UV::O_RDONLY : 1);
+
+    /**
+     * Open the file for write-only access.
+     */
+    \define('O_WRONLY', \IS_UV ? \UV::O_WRONLY : 2);
+
+    /**
+     * Open the file for read-write access.
+     */
+    \define('O_RDWR', \IS_UV ? \UV::O_RDWR : 3);
+
+    /**
+     * The file is created if it does not already exist.
+     */
+    \define('O_CREAT', \IS_UV ? \UV::O_CREAT : 4);
+
+    /**
+     * If the O_CREAT flag is set and the file already exists,
+     * fail the open.
+     */
+    \define('O_EXCL', \IS_UV ? \UV::O_EXCL : 5);
+
+    /**
+     * If the file exists and is a regular file, and the file is
+     * opened successfully for write access, its length shall be truncated to zero.
+     */
+    \define('O_TRUNC', \IS_UV ? \UV::O_TRUNC : 6);
+
+    /**
+     * The file is opened in append mode. Before each write,
+     * the file offset is positioned at the end of the file.
+     */
+    \define('O_APPEND', \IS_UV ? \UV::O_APPEND : 7);
+
+    /**
+     * If the path identifies a terminal device, opening the path will not cause that
+     * terminal to become the controlling terminal for the process (if the process does
+     * not already have one).
+     *
+     * - Note O_NOCTTY is not supported on Windows.
+     */
+    \define('O_NOCTTY', \IS_UV && \IS_LINUX ? \UV::O_NOCTTY : 8);
+
+    /**
+     * read, write, execute/search by owner
+     */
+    \define('S_IRWXU', \IS_UV ? \UV::S_IRWXU : 00700);
+
+    /**
+     * read permission, owner
+     */
+    \define('S_IRUSR', \IS_UV ? \UV::S_IRUSR : 00400);
+
+    /**
+     * write permission, owner
+     */
+    \define('S_IWUSR', \IS_UV ? \UV::S_IWUSR : 00200);
+
+    /**
+     * read, write, execute/search by group
+     */
+    \define('S_IXUSR', \IS_UV ? \UV::S_IXUSR : 00100);
 
     /**
      * Returns a random float between two numbers.
@@ -766,7 +834,7 @@ if (!\function_exists('coroutine_run')) {
      *
      * @return resource|bool
      */
-    function file_open(string $path, string $flag = 'r', int $mode = 00700)
+    function file_open(string $path, string $flag = 'r', int $mode = \S_IRWXU)
     {
         return FileSystem::open($path, $flag, $mode);
     }

@@ -812,7 +812,7 @@ final class Network
         array $details = []
     ) {
         if (empty($ssl_path)) {
-            $ssl_path = \function_exists('uv_default_loop') ? \uv_cwd() : \getcwd();
+            $ssl_path = \IS_UV ? \uv_cwd() : \getcwd();
             $ssl_path = \preg_replace('/\\\/', \DS, $ssl_path) . \DS;
         } elseif (\strpos($ssl_path, \DS, -1) === false) {
             $ssl_path = $ssl_path . \DS;

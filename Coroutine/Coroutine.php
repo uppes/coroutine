@@ -239,7 +239,7 @@ final class Coroutine implements CoroutineInterface
         $__coroutine__ = $this;
         $this->initSignals();
 
-        if (\function_exists('uv_loop_new')) {
+        if (\IS_UV) {
             $this->uv = \uv_loop_new();
 
             \spawn_setup($this->uv);
@@ -401,7 +401,7 @@ final class Coroutine implements CoroutineInterface
             @\uv_loop_delete($this->uv);
         }
 
-        $this->uv = ($useUvLoop && \function_exists('uv_loop_new')) ? \uv_loop_new() : null;
+        $this->uv = ($useUvLoop && \IS_UV) ? \uv_loop_new() : null;
 
         \spawn_setup($this->uv, true, true, $useUvLoop);
         \file_operation($useUvLoop);
@@ -416,7 +416,7 @@ final class Coroutine implements CoroutineInterface
             return $this->uv;
 
         // @codeCoverageIgnoreStart
-        if ($this->useUv && !\function_exists('uv_default_loop'))
+        if ($this->useUv && !\IS_UV)
             throw new \RuntimeException('Calling method when "libuv" driver not loaded!');
 
         return null;
@@ -452,7 +452,7 @@ final class Coroutine implements CoroutineInterface
 
     public function isUv(): bool
     {
-        return (\function_exists('uv_loop_new') && $this->uv instanceof \UVLoop);
+        return (\IS_UV && $this->uv instanceof \UVLoop);
     }
 
     public function isUvActive(): bool
@@ -897,7 +897,7 @@ final class Coroutine implements CoroutineInterface
      */
     public function initSignals()
     {
-        $this->isUvSignal = \function_exists('uv_loop_new');
+        $this->isUvSignal = \IS_UV;
         if (empty($this->signaler) && ($this->isPcntl() || $this->isUvActive() || $this->isUvSignal)) {
             $this->signaler = new Signaler($this);
 
