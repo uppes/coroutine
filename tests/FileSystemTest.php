@@ -101,6 +101,9 @@ class FileSystemTest extends TestCase
         } else {
             yield;
             yield;
+            yield;
+            yield;
+            yield;
         }
 
         $bool = yield \file_close($fd);
