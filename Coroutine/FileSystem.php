@@ -93,11 +93,11 @@ final class FileSystem
         }
     }
 
-    protected static function spawnStat($path, $info = null)
+    protected static function spawnStat($path, string $info = null)
     {
         $result = yield \spawn_system('stat', $path);
 
-        return empty($info) ? $result : $result[$info];
+        return (empty($info) || \is_null($info)) && !isset($result[$info]) ? $result : $result[$info];
     }
 
     /**

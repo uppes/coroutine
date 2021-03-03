@@ -738,7 +738,7 @@ if (!\function_exists('coroutine_run')) {
      *````
      * @return array|bool
      */
-    function file_stat($path, $info = null)
+    function file_stat($path, string $info = null)
     {
         return FileSystem::stat($path, $info);
     }
