@@ -10,7 +10,7 @@ class NetworkAssistantTest extends TestCase
     public function testResponse()
     {
         $parser = new NetworkAssistant('response');
-        $response = "HTTP/1.1 200 OK" . CRLF .
+        $response = "HTTP/1.1 200 OK" . \CRLF .
             "Date: " . \gmdate('D, d M Y H:i:s T') . CRLF .
             "Content-Type: text/html; charset=utf-8" . CRLF .
             "Content-Length: 5" . CRLF .

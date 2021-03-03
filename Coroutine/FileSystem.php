@@ -97,7 +97,17 @@ final class FileSystem
     {
         $result = yield \spawn_system('stat', $path);
 
-        return (empty($info) || $info === null) ? $result : $result[$info];
+        try {
+            if ((float)phpversion() >= 8.0) {
+                print_r('-> ' . $result);
+                print_r('--> ' . $info);
+            }
+
+            $result = empty($info) ?: $result[$info];
+        } catch (\Throwable $e) {
+        }
+
+        return $result;
     }
 
     /**
