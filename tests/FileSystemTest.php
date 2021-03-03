@@ -94,9 +94,14 @@ class FileSystemTest extends TestCase
         $this->assertEquals(5, $data);
         $this->assertGreaterThanOrEqual(3, $this->counterResult);
 
-        $fd = yield \file_fdatasync($fd);
-        $this->assertEquals('resource', \is_type($fd));
-        $this->assertGreaterThanOrEqual(8, $this->counterResult);
+        if (\IS_UV) {
+            $fd = yield \file_fdatasync($fd);
+            $this->assertEquals('resource', \is_type($fd));
+            $this->assertGreaterThanOrEqual(8, $this->counterResult);
+        } else {
+            yield;
+            yield;
+        }
 
         $bool = yield \file_close($fd);
         $this->assertTrue($bool);
