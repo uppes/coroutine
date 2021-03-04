@@ -25,7 +25,7 @@ jobs:
       - name: Install dependencies
         run: composer install
       - name: Test with phpunit
-        run: vendor/bin/phpunit -d zend.enable_gc=0 --coverage-clover=coverage/phpunit/clover.xml
+        run: vendor/bin/phpunit -d zend.enable_gc=0 --coverage-clover=coverage.xml
       - name: Submit code coverage
         if: ${{ success() }} || ${{ failure() }}
         uses: codecov/codecov-action@v1

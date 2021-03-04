@@ -1,22 +1,22 @@
 {
     "name": "symplely/coroutine",
     "description": "Cooperative multitasking using generators. The basics of coroutines, async and await!",
-	"keywords": [
-		"cooperative",
-		"multitasking",
-		"coroutine",
-		"task",
-		"yield",
+    "keywords": [
+        "cooperative",
+        "multitasking",
+        "coroutine",
+        "task",
+        "yield",
         "parallel",
         "process",
-		"generator",
-		"libuv",
-		"spawn",
-		"await",
-		"event-loop",
-		"event-driven",
+        "generator",
+        "libuv",
+        "spawn",
+        "await",
+        "event-loop",
+        "event-driven",
         "async"
-	],
+    ],
     "homepage": "https://github.com/symplely/coroutine",
     "type": "library",
     "license": "MIT",
@@ -32,15 +32,15 @@
     ],
     "require": {
         "php": ">7.1",
-        "symplely/spawn": "^1.1.8"
+        "symplely/spawn": "^1.1.9"
     },
     "autoload": {
         "files": [
             "Coroutine/Core.php"
         ],
         "psr-4": {
-			"Async\\Coroutine\\": "Coroutine/"
-		}
+            "Async\\Coroutine\\": "Coroutine/"
+        }
     },
     "require-dev": {
         "phpunit/phpunit": "^6 | ^7 | ^8"
