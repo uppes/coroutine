@@ -7,7 +7,7 @@
     convertNoticesToExceptions="true"
     convertWarningsToExceptions="true"
     processIsolation="false"
-    stopOnFailure="true"
+    stopOnFailure="false"
     colors="true">
 
     <testsuites>
