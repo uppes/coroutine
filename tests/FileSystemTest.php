@@ -98,24 +98,30 @@ class FileSystemTest extends TestCase
             $fd = yield \file_fdatasync($fd);
             $this->assertEquals('resource', \is_type($fd));
             $this->assertGreaterThanOrEqual(8, $this->counterResult);
+
+            $bool = yield \file_close($fd);
+            $this->assertTrue($bool);
+            $this->assertGreaterThanOrEqual(9, $this->counterResult);
+
+            $size = yield \file_size("./temp");
+            $this->assertEquals('int', \is_type($size));
+            $this->assertGreaterThanOrEqual(10, $this->counterResult);
+
+            $bool = yield \file_rename("./temp", "./tmpNew");
+            $this->assertTrue($bool);
         } else {
             yield;
             yield;
             yield;
             yield;
             yield;
+            yield;
+            yield;
+            yield;
+            yield;
+            yield;
+            yield;
         }
-
-        $bool = yield \file_close($fd);
-        $this->assertTrue($bool);
-        $this->assertGreaterThanOrEqual(9, $this->counterResult);
-
-        $size = yield \file_size("./temp");
-        $this->assertEquals('int', \is_type($size));
-        $this->assertGreaterThanOrEqual(10, $this->counterResult);
-
-        $bool = yield \file_rename("./temp", "./tmpNew");
-        $this->assertTrue($bool);
 
         $bool = yield \file_touch('./tmpNew');
         $this->assertTrue($bool);

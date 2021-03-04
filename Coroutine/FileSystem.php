@@ -100,6 +100,8 @@ final class FileSystem
         try {
             $result = empty($info) ?: $result[$info];
         } catch (\Throwable $e) {
+            if (\IS_PHP8)
+                print_r('--> ' . $result);
             if ($info === 'size')
                 $result = 0;
         }
