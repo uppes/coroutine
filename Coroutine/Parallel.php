@@ -172,7 +172,8 @@ final class Parallel implements ArrayAccess, ParallelInterface
             $process = $process->restart();
             $this->process = $process;
         } else {
-            $process->start();
+            if (!$process->isRunning())
+                $process->start();
         }
 
         $this->processor->add($process);
