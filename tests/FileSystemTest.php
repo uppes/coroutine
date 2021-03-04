@@ -109,6 +109,14 @@ class FileSystemTest extends TestCase
 
             $bool = yield \file_rename("./temp", "./tmpNew");
             $this->assertTrue($bool);
+
+            $bool = yield \file_touch('./tmpNew');
+            $this->assertTrue($bool);
+            $this->assertGreaterThanOrEqual(12, $this->counterResult);
+
+            $bool = yield \file_unlink("./tmpNew");
+            $this->assertTrue($bool);
+            $this->assertGreaterThanOrEqual(13, $this->counterResult);
         } else {
             yield;
             yield;
@@ -123,13 +131,6 @@ class FileSystemTest extends TestCase
             yield;
         }
 
-        $bool = yield \file_touch('./tmpNew');
-        $this->assertTrue($bool);
-        $this->assertGreaterThanOrEqual(12, $this->counterResult);
-
-        $bool = yield \file_unlink("./tmpNew");
-        $this->assertTrue($bool);
-        $this->assertGreaterThanOrEqual(13, $this->counterResult);
 
         $bool = yield \file_mkdir(DIRECTORY_PATH);
         $this->assertTrue($bool);
