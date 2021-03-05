@@ -534,9 +534,18 @@ if (!\function_exists('coroutine_run')) {
         };
         // @codeCoverageIgnoreEnd
 
-        return \awaitable_process(function () use ($system) {
+        $return = yield \awaitable_process(function () use ($system) {
             return Kernel::addProcess($system);
         });
+
+        // @codeCoverageIgnoreStart
+        if (\is_base64($return)) {
+            $check = \deserializer($return);
+            $return = $check === false ? $return : $check;
+        }
+        // @codeCoverageIgnoreEnd
+
+        return $return;
     }
 
     /**

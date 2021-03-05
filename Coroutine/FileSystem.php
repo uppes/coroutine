@@ -100,8 +100,6 @@ final class FileSystem
         try {
             $result = empty($info) ?: $result[$info];
         } catch (\Throwable $e) {
-            if (\IS_PHP8)
-                print_r('--> ' . $result);
             if ($info === 'size')
                 $result = 0;
         }
@@ -584,6 +582,8 @@ final class FileSystem
                 }
             );
         }
+
+        return \result(\fflush($fd));
     }
 
     /**
@@ -815,6 +815,10 @@ final class FileSystem
                 }
             );
         }
+
+        $utime = empty($utime) ? \time() : $utime;
+        $atime = empty($atime) ? \time() : $atime;
+        return \spawn_system('touch', $path, $utime, $atime);
     }
 
     /**
@@ -893,6 +897,8 @@ final class FileSystem
                 }
             );
         }
+
+        return \result(false);
     }
 
     protected static function send($out_fd, $in_fd, int $offset = 0, int $length = 8192)
