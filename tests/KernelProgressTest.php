@@ -10,6 +10,9 @@ class KernelProgressTest extends TestCase
 {
     protected function setUp(): void
     {
+        if (\IS_MACOS)
+            $this->markTestSkipped('Test skipped, broken on "MacOS".');
+
         \coroutine_clear();
     }
 

@@ -24,6 +24,7 @@ if (!\function_exists('coroutine_run')) {
     \define('EOL', \PHP_EOL);
     \define('CRLF', "\r\n");
     \define('IS_UV', \function_exists('uv_loop_new'));
+    \define('IS_MACOS', (\PHP_OS === 'Darwin'));
 
     /**
      * Open the file for read-only access.
