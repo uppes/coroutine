@@ -534,18 +534,17 @@ if (!\function_exists('coroutine_run')) {
         };
         // @codeCoverageIgnoreEnd
 
-        $return = yield \awaitable_process(function () use ($system) {
+        return \awaitable_process(function () use ($system) {
             return Kernel::addProcess($system);
         });
-
         // @codeCoverageIgnoreStart
-        if (\is_base64($return)) {
-            $check = \deserializer($return);
-            $return = $check === false ? $return : $check;
-        }
+        //if (\is_base64($return)) {
+        //    $check = \deserializer($return);
+        //    $return = $check === false ? $return : $check;
+        //}
         // @codeCoverageIgnoreEnd
 
-        return $return;
+        //return $return;
     }
 
     /**
