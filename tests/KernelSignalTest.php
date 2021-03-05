@@ -34,9 +34,6 @@ class KernelSignalTest extends TestCase
 
     public function testSpawnSignalDelay()
     {
-        if (!\function_exists('uv_loop_new'))
-            $this->markTestSkipped('Test skipped "uv_loop_new" missing.');
-
         \coroutine_run($this->taskSpawnSignalDelay());
     }
 
@@ -65,9 +62,6 @@ class KernelSignalTest extends TestCase
 
     public function testSpawnSignalResult()
     {
-        if (!\function_exists('uv_loop_new'))
-            $this->markTestSkipped('Test skipped "uv_loop_new" missing.');
-
         \coroutine_run($this->taskSpawnSignalResult());
     }
 
@@ -93,9 +87,6 @@ class KernelSignalTest extends TestCase
 
     public function testSpawnSignal()
     {
-        if (!\function_exists('uv_loop_new'))
-            $this->markTestSkipped('Test skipped "uv_loop_new" missing.');
-
         \coroutine_run($this->taskSpawnSignal());
     }
 }
