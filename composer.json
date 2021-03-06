@@ -32,7 +32,7 @@
     ],
     "require": {
         "php": ">7.1",
-        "symplely/spawn": "^1.1.11"
+        "symplely/spawn": "^2.0.0"
     },
     "autoload": {
         "files": [
