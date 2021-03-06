@@ -419,7 +419,7 @@ final class Network
                 $mask = \STREAM_CLIENT_CONNECT;
             }
 
-            $client = \stream_socket_client(
+            $client = @\stream_socket_client(
                 $uri,
                 $errNo,
                 $errStr,
@@ -428,16 +428,18 @@ final class Network
                 $ctx
             );
 
-            \stream_set_blocking($client, false);
+            if (\is_resource($client)) {
+                \stream_set_blocking($client, false);
 
-            if (($port == 443) || $isSSL) {
-                while (true) {
-                    yield Kernel::writeWait($client);
-                    $enabled = @\stream_socket_enable_crypto($client, true, \STREAM_CRYPTO_METHOD_SSLv23_CLIENT | \STREAM_CRYPTO_METHOD_TLS_CLIENT);
-                    if ($enabled === false)
-                        throw new \RuntimeException(\sprintf('Failed to enable socket encryption: %s', \error_get_last()['message'] ?? ''));
-                    if ($enabled === true)
-                        break;
+                if (($port == 443) || $isSSL) {
+                    while (true) {
+                        yield Kernel::writeWait($client);
+                        $enabled = @\stream_socket_enable_crypto($client, true, \STREAM_CRYPTO_METHOD_SSLv23_CLIENT | \STREAM_CRYPTO_METHOD_TLS_CLIENT);
+                        if ($enabled === false)
+                            throw new \RuntimeException(\sprintf('Failed to enable socket encryption: %s', \error_get_last()['message'] ?? ''));
+                        if ($enabled === true)
+                            break;
+                    }
                 }
             }
         }
