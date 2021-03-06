@@ -271,12 +271,31 @@ The [Lua](https://www.lua.org/pil/9.4.html) language has similar functionality.
 
 ## Functions
 
-Only the functions located here and in the `Core.php` file should be used. Direct access to object class libraries is discouraged, the names might change, or altogether drop if not listed here. Library package [development](#Development) is the exception.
+Only the functions located here and in the `Core.php` file should be used. Direct access to object class libraries is discouraged, the names might change, or altogether drop if not listed here. Third party library package [development](#Development) is the exception.
 
 ```php
-const MILLISECOND = 0.001;
-const EOL = PHP_EOL;
-const DS = DIRECTORY_SEPARATOR;
+/**
+ * Returns a random float between two numbers.
+ *
+ * Works similar to Python's `random.uniform()`
+ * @see https://docs.python.org/3/library/random.html#random.uniform
+ */
+\random_uniform($min, $max);
+
+/**
+ * Return the value (in fractional seconds) of a performance counter.
+ * Using either `hrtime` or system's `microtime`.
+ *
+ * The $tag is:
+ * - A reference point used to set, to get the difference between the results of consecutive calls.
+ * - Will be cleared/unset on the next consecutive call.
+ *
+ * returns float|void
+ *
+ * @see https://docs.python.org/3/library/time.html#time.perf_counter
+ * @see https://nodejs.org/docs/latest-v11.x/api/console.html#console_console_time_label
+ */
+\timer_for(string $tag = 'perf_counter');
 
 /**
  * Makes an resolvable function from label name that's callable with `away`
