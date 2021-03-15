@@ -36,7 +36,9 @@
     },
     "autoload": {
         "files": [
-            "Coroutine/Core.php"
+            "Coroutine/Core.php",
+            "Coroutine/File.php",
+            "Coroutine/Net.php"
         ],
         "psr-4": {
             "Async\\Coroutine\\": "Coroutine/"
