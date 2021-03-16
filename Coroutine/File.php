@@ -2,7 +2,10 @@
 
 declare(strict_types=1);
 
-//@todo add namespace Async\FS;
+//@todo add namespace Async\File;
+
+//@todo add use function Async\Worker\awaitable_process;
+//@todo add use function Async\Worker\spawn_system;
 
 use Async\Coroutine\Kernel;
 use Async\Coroutine\FileSystem;
@@ -81,7 +84,7 @@ if (!\function_exists('file_operation')) {
     function monitor_dir(string $directory, int $monitorTask)
     {
         $directory = \slash_switch($directory);
-        yield \spawn_system('mkdir', $directory, 0777, true);
+        yield spawn_system('mkdir', $directory, 0777, true);
 
         return yield \monitor($directory, $monitorTask);
     }
@@ -126,7 +129,7 @@ if (!\function_exists('file_operation')) {
         };
         // @codeCoverageIgnoreEnd
 
-        yield \awaitable_process(function () use ($system) {
+        yield awaitable_process(function () use ($system) {
             return yield Kernel::addProcess($system);
         });
 
@@ -572,7 +575,7 @@ if (!\function_exists('file_operation')) {
      */
     function file_file($path)
     {
-        return \spawn_system('file', $path, \FILE_IGNORE_NEW_LINES | \FILE_SKIP_EMPTY_LINES);
+        return spawn_system('file', $path, \FILE_IGNORE_NEW_LINES | \FILE_SKIP_EMPTY_LINES);
     }
 
     /**

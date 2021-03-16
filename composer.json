@@ -38,7 +38,8 @@
         "files": [
             "Coroutine/Core.php",
             "Coroutine/File.php",
-            "Coroutine/Net.php"
+            "Coroutine/Net.php",
+            "Coroutine/Worker.php"
         ],
         "psr-4": {
             "Async\\Coroutine\\": "Coroutine/"
