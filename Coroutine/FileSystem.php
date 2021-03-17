@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Async\Coroutine;
 
+use function Async\Worker\spawn_system;
+
 use Async\Coroutine\Kernel;
 use Async\Coroutine\TaskInterface;
 use Async\Coroutine\Coroutine;
@@ -95,7 +97,7 @@ final class FileSystem
 
     protected static function spawnStat($path, string $info = null)
     {
-        $result = yield \spawn_system('stat', $path);
+        $result = yield spawn_system('stat', $path);
 
         try {
             $result = empty($info) ?: $result[$info];
@@ -112,7 +114,7 @@ final class FileSystem
      */
     protected static function spawnLstat($path, $info = null)
     {
-        $result = yield \spawn_system('lstat', $path);
+        $result = yield spawn_system('lstat', $path);
 
         return empty($info) ? $result : $result[$info];
     }
@@ -152,7 +154,7 @@ final class FileSystem
             );
         }
 
-        return \spawn_system('rename', $from, $to);
+        return spawn_system('rename', $from, $to);
     }
 
     /**
@@ -201,7 +203,7 @@ final class FileSystem
             );
         }
 
-        return \spawn_system('touch', $path, $time, $atime);
+        return spawn_system('touch', $path, $time, $atime);
     }
 
     /**
@@ -228,7 +230,7 @@ final class FileSystem
             );
         }
 
-        return \spawn_system('unlink', $path);
+        return spawn_system('unlink', $path);
     }
 
     /**
@@ -259,7 +261,7 @@ final class FileSystem
             );
         }
 
-        return \spawn_system('link', $from, $to);
+        return spawn_system('link', $from, $to);
     }
 
     /**
@@ -290,7 +292,7 @@ final class FileSystem
             );
         }
 
-        return \spawn_system('symlink', $from, $to);
+        return spawn_system('symlink', $from, $to);
     }
 
     /**
@@ -317,7 +319,7 @@ final class FileSystem
             );
         }
 
-        return \spawn_system('readlink', $path);
+        return spawn_system('readlink', $path);
     }
 
     /**
@@ -347,7 +349,7 @@ final class FileSystem
             );
         }
 
-        return \spawn_system('mkdir', $path, $mode, $recursive);
+        return spawn_system('mkdir', $path, $mode, $recursive);
     }
 
     /**
@@ -374,7 +376,7 @@ final class FileSystem
             );
         }
 
-        return \spawn_system('rmdir', $path);
+        return spawn_system('rmdir', $path);
     }
 
     /**
@@ -405,7 +407,7 @@ final class FileSystem
             );
         }
 
-        return \spawn_system('chmod', $filename, $mode);
+        return spawn_system('chmod', $filename, $mode);
     }
 
     /**
@@ -438,7 +440,7 @@ final class FileSystem
             );
         }
 
-        return \spawn_system('chown', $path, $uid);
+        return spawn_system('chown', $path, $uid);
     }
 
     /**
@@ -754,7 +756,7 @@ final class FileSystem
             return self::scandir($path, $flag);
         }
 
-        return \spawn_system('readdir', $path);
+        return spawn_system('readdir', $path);
     }
 
     /**
@@ -783,7 +785,7 @@ final class FileSystem
             );
         }
 
-        return \spawn_system('scandir', $path, $flagSortingOrder);
+        return spawn_system('scandir', $path, $flagSortingOrder);
     }
 
     /**
@@ -818,7 +820,7 @@ final class FileSystem
 
         $utime = empty($utime) ? \time() : $utime;
         $atime = empty($atime) ? \time() : $atime;
-        return \spawn_system('touch', $path, $utime, $atime);
+        return spawn_system('touch', $path, $utime, $atime);
     }
 
     /**

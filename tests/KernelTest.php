@@ -2,6 +2,8 @@
 
 namespace Async\Tests;
 
+use function Async\Worker\spawn_task;
+
 use Async\Coroutine\Kernel;
 use Async\Coroutine\TaskInterface;
 use Async\Coroutine\CoroutineInterface;
@@ -261,7 +263,7 @@ class KernelTest extends TestCase
 
     public function taskSpawnTask()
     {
-        $result = yield \spawn_task(function () {
+        $result = yield spawn_task(function () {
             usleep(1000);
             return 'subprocess';
         });

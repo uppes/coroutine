@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This also an simpler version of
  * "HOWTO: PHP TCP Server/Client with SSL Encryption using Streams"
@@ -7,10 +8,17 @@
  */
 include 'vendor/autoload.php';
 
-use Async\Coroutine\NetworkAssistant;
-
-// Let's ensure we have optimal performance. Set this simple thing
-\date_default_timezone_set('America/New_York');
+use function Async\Path\{file_open, file_contents, file_close};
+use function Async\Stream\{
+    messenger_for,
+    net_accept,
+    net_read,
+    net_write,
+    net_close,
+    net_peer,
+    net_server,
+    net_response
+};
 
 \error_reporting(-1);
 \ini_set("display_errors", 1);
@@ -26,17 +34,17 @@ function server($port)
     echo "SERVER LISTENING ON: $port" . EOL . EOL;;
 
     //$socket = \net_server($port, true);
-    $socket = yield \net_server($port);
-    $i=1;
+    $socket = yield net_server($port);
+    $i = 1;
     while (true) {
-        $connectedSocket = yield \net_accept($socket);
+        $connectedSocket = yield net_accept($socket);
         yield \away('handleClient', $connectedSocket);
     }
 }
 
 function loadFile($template, $vars, $fd)
 {
-    yield \file_close($fd);
+    yield file_close($fd);
 
     \extract($vars, \EXTR_OVERWRITE);
     $output = '';
@@ -53,24 +61,24 @@ function loadFile($template, $vars, $fd)
 function handleClient($socket)
 {
     global $i;
-    $data = yield \net_read($socket);
+    $data = yield net_read($socket);
 
-    $ip = \net_peer($socket);
-    print "New connection from " . $ip."\n";
+    $ip = net_peer($socket);
+    print "New connection from " . $ip . "\n";
 
     $output = "Received following request:\n\n$data";
 
-	switch($data) {
-		#exit command will cause this script to quit out
+    switch ($data) {
+            #exit command will cause this script to quit out
         case 'exit';
             print "exit command received \n";
-			exit(0);
-		#hi command
-		case 'hi';
+            exit(0);
+            #hi command
+        case 'hi';
             #write back to the client a response.
-            yield \net_write($socket, "Hello {$ip}. This is our $i command run!");
-			$i++;
-			print "hi command received \n";
+            yield net_write($socket, "Hello {$ip}. This is our $i command run!");
+            $i++;
+            print "hi command received \n";
             break;
         default:
             $input = \explode(" ", $data);
@@ -105,29 +113,29 @@ function handleClient($socket)
                 $input = "/test.php";
             }
 
-            $input = '.'.$input;
+            $input = '.' . $input;
 
-            $responser = new NetworkAssistant('response');
-            $fd = yield \file_open($input);
+            $responser = messenger_for('response');
+            $fd = yield file_open($input);
             if (\is_resource($fd)) {
                 print "Serving $input\n";
 
                 if (\strstr($input, '.php')) {
                     $contents = yield \loadFile($input, [], $fd);
                 } else {
-                    $contents = yield \file_contents($fd);
-                    yield \file_close($fd);
+                    $contents = yield file_contents($fd);
+                    yield file_close($fd);
                 }
 
-                $output = \net_response($responser, $contents, 200);
+                $output = net_response($responser, $contents, 200);
             } else {
-                $output = \net_response($responser, "The file you requested does not exist. Sorry!", 404);
+                $output = net_response($responser, "The file you requested does not exist. Sorry!", 404);
             }
 
-            yield \net_write($socket, $output);
+            yield net_write($socket, $output);
     }
 
-    yield \net_close($socket);
+    yield net_close($socket);
 }
 
 \coroutine_run(\server(5000));

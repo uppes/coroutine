@@ -2,6 +2,8 @@
 
 namespace Async\Tests;
 
+use function Async\Stream\{dns_address, dns_name, dns_record};
+
 use PHPUnit\Framework\TestCase;
 
 class NetworkTest extends TestCase
@@ -27,12 +29,12 @@ class NetworkTest extends TestCase
     {
         yield \away($this->counterTask());
 
-        $ipString = yield \dns_address('yahoo.com');
+        $ipString = yield dns_address('yahoo.com');
         $this->assertTrue(\is_string($ipString));
         $ipInt = \ip2long($ipString);
         $this->assertTrue(\is_int($ipInt));
         $this->assertGreaterThanOrEqual(3, $this->counterResult);
-        $name = yield \dns_name($ipString);
+        $name = yield dns_name($ipString);
         $this->assertTrue(\is_string($ipString));
         $this->assertTrue(\strpos($name, 'yahoo.com') !== false);
         $this->assertGreaterThanOrEqual(6, $this->counterResult);
@@ -49,10 +51,10 @@ class NetworkTest extends TestCase
     {
         yield \away($this->counterTask());
 
-        $name = yield \dns_name('127.0.-.x');
+        $name = yield dns_name('127.0.-.x');
         $this->assertFalse($name);
         $this->assertGreaterThanOrEqual(1, $this->counterResult);
-        $ipString = yield \dns_address('--yahoo.com');
+        $ipString = yield dns_address('--yahoo.com');
         $this->assertFalse($ipString);
         $this->assertGreaterThanOrEqual(1, $this->counterResult);
 
@@ -68,12 +70,12 @@ class NetworkTest extends TestCase
     {
         yield \away($this->counterTask());
 
-        $records = yield \dns_record('yahoo.com');
+        $records = yield dns_record('yahoo.com');
         $this->assertTrue(\is_array($records));
         $this->assertGreaterThanOrEqual(4, $this->counterResult);
         $this->assertEquals('yahoo.com', $records[0]['host']);
         $this->assertEquals('A', $records[5]['type']);
-        $ipString = yield \dns_record('--yahoo.com');
+        $ipString = yield dns_record('--yahoo.com');
         $this->assertFalse($ipString);
         $this->assertGreaterThanOrEqual(5, $this->counterResult);
 

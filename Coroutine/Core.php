@@ -418,9 +418,10 @@ if (!\function_exists('coroutine_run')) {
         if ($__coroutine__ instanceof CoroutineInterface) {
             $__coroutine__->setup(false);
             unset($GLOBALS['__coroutine__'], $GLOBALS['__timer__']);
-            $__coroutine__ = null;
-            $__timer__ = null;
         }
+
+        $__coroutine__ = null;
+        $__timer__ = null;
     }
 
     function coroutine_create(\Generator $routine = null)
@@ -443,11 +444,10 @@ if (!\function_exists('coroutine_run')) {
      * @see https://docs.python.org/3.8/library/asyncio-task.html#asyncio.run
      *
      * @param Generator $routine
-     * @param string $driver event loop driver to use, either `auto`, `uv`, or `stream_select`
      */
-    function coroutine_run(\Generator $routine = null, ?string $driver = 'auto')
+    function coroutine_run(\Generator $routine = null)
     {
-        $coroutine = \coroutine_create($routine, $driver);
+        $coroutine = \coroutine_create($routine);
 
         if ($coroutine instanceof CoroutineInterface) {
             $coroutine->run();

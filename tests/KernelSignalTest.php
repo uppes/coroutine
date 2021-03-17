@@ -2,6 +2,8 @@
 
 namespace Async\Tests;
 
+use function Async\Worker\{signal_task, spawn_kill, spawn_signal};
+
 use Async\Coroutine\Exceptions\InvalidStateError;
 use PHPUnit\Framework\TestCase;
 
@@ -17,18 +19,18 @@ class KernelSignalTest extends TestCase
 
     public function taskSpawnSignalDelay()
     {
-        $sigTask = yield \signal_task(\SIGKILL, function ($signal) {
+        $sigTask = yield signal_task(\SIGKILL, function ($signal) {
             $this->assertEquals(\SIGKILL, $signal);
         });
 
-        $sigId = yield \spawn_signal(function () {
+        $sigId = yield spawn_signal(function () {
             \usleep(56000);
             return 'subprocess';
         }, \SIGKILL, $sigTask);
 
         $kill = yield \away(function () use ($sigId) {
             yield;
-            $bool = yield \spawn_kill($sigId);
+            $bool = yield spawn_kill($sigId);
             return $bool;
         }, true);
 
@@ -42,18 +44,18 @@ class KernelSignalTest extends TestCase
 
     public function taskSpawnSignalResult()
     {
-        $sigTask = yield \signal_task(\SIGKILL, function ($signal) {
+        $sigTask = yield signal_task(\SIGKILL, function ($signal) {
             $this->assertEquals(\SIGKILL, $signal);
         });
 
-        $sigId = yield \spawn_signal(function () {
+        $sigId = yield spawn_signal(function () {
             \usleep(5000);
             return 'subprocess';
         }, \SIGKILL, $sigTask);
 
         $kill = yield \away(function () use ($sigId) {
             yield;
-            $bool = yield \spawn_kill($sigId);
+            $bool = yield spawn_kill($sigId);
             return $bool;
         }, true);
 
@@ -70,17 +72,17 @@ class KernelSignalTest extends TestCase
 
     public function taskSpawnSignal()
     {
-        $sigTask = yield \signal_task(\SIGKILL, function ($signal) {
+        $sigTask = yield signal_task(\SIGKILL, function ($signal) {
             $this->assertEquals(\SIGKILL, $signal);
         });
 
-        $sigId = yield \spawn_signal(function () {
+        $sigId = yield spawn_signal(function () {
             sleep(2);
             return 'subprocess';
         }, \SIGKILL, $sigTask, 1);
 
         yield \away(function () use ($sigId) {
-            return yield \spawn_kill($sigId);
+            return yield spawn_kill($sigId);
         });
 
         $this->expectException(InvalidStateError::class);

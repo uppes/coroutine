@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Async\Coroutine;
 
+use function Async\Path\file_exist;
+use function Async\Stream\dns_address;
+use function Async\Worker\{awaitable_process, spawn_system};
+
 use Async\Coroutine\Kernel;
 use Async\Coroutine\TaskInterface;
 use Async\Coroutine\Coroutine;
@@ -113,7 +117,7 @@ final class Network
             );
         }
 
-        return \spawn_system('gethostbyname', $hostname);
+        return spawn_system('gethostbyname', $hostname);
     }
 
     /**
@@ -130,7 +134,7 @@ final class Network
             return \result(false);
         }
 
-        return \spawn_system('gethostbyaddr', $ipAddress);
+        return spawn_system('gethostbyaddr', $ipAddress);
     }
 
     /**
@@ -161,7 +165,7 @@ final class Network
             return \result(false);
         }
 
-        return \spawn_system('dns_get_record', $hostname, $options);
+        return spawn_system('dns_get_record', $hostname, $options);
     }
 
     /**
@@ -406,7 +410,7 @@ final class Network
 
         if (self::isUv() && !$isSSL) {
             $isPipe = ($parts['scheme'] == 'file') || ($parts['scheme'] == 'unix');
-            $address = $isPipe ? $parts['host'] : yield \dns_address($parts['host']);
+            $address = $isPipe ? $parts['host'] : yield dns_address($parts['host']);
             $client = yield self::connect($parts['scheme'], $address, $port, $contextOrData);
         } else {
             $ctx = \stream_context_create($contextOrData);
@@ -480,7 +484,7 @@ final class Network
 
         if (self::isUv() && !self::$isSecure) {
             $isPipe = ($parts['scheme'] == 'file') || ($parts['scheme'] == 'unix');
-            $address = $isPipe ? $parts['host'] : yield \dns_address($parts['host']);
+            $address = $isPipe ? $parts['host'] : yield dns_address($parts['host']);
             $server = self::bind($parts['scheme'], $address, $parts['port']);
         } else {
             if (empty($context))
@@ -827,7 +831,7 @@ final class Network
         self::$caPath = $ssl_path;
         self::$isSecure = true;
 
-        $isSignedReady = yield \file_exist($ssl_path . $privatekeyFile);
+        $isSignedReady = yield file_exist($ssl_path . $privatekeyFile);
         if (!$isSignedReady) {
             // @codeCoverageIgnoreStart
             $make = function () use ($ssl_path, $details, $signingFile, $privatekeyFile, $certificateFile, $hostname) {
@@ -856,7 +860,7 @@ final class Network
             };
             // @codeCoverageIgnoreEnd
 
-            yield \awaitable_process(function () use ($make) {
+            yield awaitable_process(function () use ($make) {
                 return yield Kernel::addProcess($make);
             });
         }
@@ -900,7 +904,7 @@ final class Network
         // a single port has been given => assume localhost
         if ((string) (int) $uri === (string) $uri) {
             $hostname = \gethostname();
-            $ip = yield \dns_address($hostname, false);
+            $ip = yield dns_address($hostname, false);
             // @codeCoverageIgnoreStart
             if (!\is_int(\ip2long($ip)))
                 throw new \Exception('Could not attain hostname IP!');

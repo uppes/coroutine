@@ -5,6 +5,8 @@
  */
 include 'vendor/autoload.php';
 
+use function Async\Worker\add_process;
+
 // A variable to store our fetched results
 $results = [];
 // We can first define tasks and then run them
@@ -27,7 +29,7 @@ function enqueue($index, $task)
 {
     echo 'started ' . $index . \EOL;
     // return to caller, let other tasks start, otherwise block after
-    $result = yield \add_process(function () use ($task) {
+    $result = yield add_process(function () use ($task) {
         return \file_get_contents($task);
     });
 

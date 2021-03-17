@@ -2,7 +2,8 @@
 
 include 'vendor/autoload.php';
 
-use Async\Coroutine\FileSystem;
+use function Async\Path\{file_close, file_fdatasync, file_open, file_write};
+use function Async\Worker\spawn_await;
 
 function repeat()
 {
@@ -22,13 +23,13 @@ function main()
 
     yield \away(\repeat());
 
-    $fd = yield FileSystem::open("./tmp", 'a', \UV::S_IRWXU | \UV::S_IRUSR);
-    yield FileSystem::write($fd, "hello", 0);
-    yield FileSystem::fdatasync($fd);
-    yield FileSystem::close($fd);
+    $fd = yield file_open("./tmp", 'a', \UV::S_IRWXU | \UV::S_IRUSR);
+    yield file_write($fd, "hello", 0);
+    yield file_fdatasync($fd);
+    yield file_close($fd);
 
     echo "\nThe task returned:\n";
-    $result = yield \spawn_await(function () use ($command, $parameters) {
+    $result = yield spawn_await(function () use ($command, $parameters) {
         return $command($parameters);
     });
     \var_dump($result);

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-//@todo add namespace Async\Net;
+namespace Async\Stream;
 
 use Async\Coroutine\Network;
 use Async\Coroutine\NetworkAssistant;
@@ -84,7 +84,7 @@ if (!\function_exists('net_operation')) {
         array $details = []
     ) {
         if (((string) (int) $handle === (string) $handle) || \is_string($handle)) {
-            $handle = yield \net_server($handle, $isSecure, $options, $ssl_path, $name, $details);
+            $handle = yield net_server($handle, $isSecure, $options, $ssl_path, $name, $details);
         }
 
         return yield Network::listen($handle, $handlerTask, $backlog);
@@ -243,6 +243,20 @@ if (!\function_exists('net_operation')) {
         ) {
             return $object->response($body, $status, $type, ...$extra);
         }
+    }
+
+    /**
+     * Returns and `NetworkAssistant` instance. A simple generic class for handling/constructing **client/server**
+     * messages, following the https://tools.ietf.org/html/rfc2616.html specs.
+     * - For use with `net_response()` and `net_request()`.
+     *
+     * @param string $action either `response` or `request`
+     * @param string $hostname for `Host:` header request, this will be ignored on `path/url` setting
+     * @param string $protocol version for `HTTP/` header
+     */
+    function messenger_for(string $action, string $hostname = '', float $protocol = 1.1)
+    {
+        return new NetworkAssistant($action, $hostname, $protocol);
     }
 
     /**

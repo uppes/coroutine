@@ -3,6 +3,9 @@
 /**
  * @see https://github.com/amphp/parallel/blob/master/examples/worker-pool.php
  */
+
+use function Async\Worker\spawn_task;
+
 include 'vendor/autoload.php';
 
 // A variable to store our fetched results
@@ -31,7 +34,7 @@ function main()
     $coroutinesId = [];
     foreach ($tasks as $index => $parameters) {
         echo 'started ' . $index . ' ' . $parameters . \EOL;
-        $coroutinesId[] = yield \spawn_task(function () use ($parameters) {
+        $coroutinesId[] = yield spawn_task(function () use ($parameters) {
             return \file_get_contents($parameters);
         });
     }
@@ -41,7 +44,7 @@ function main()
         yield \wait_for(\repeat(), 1);
     } catch (\Async\Coroutine\Exceptions\TimeoutError $e) {
         $results = yield \gather($coroutinesId);
-        foreach($results as $tid => $result) {
+        foreach ($results as $tid => $result) {
             \printf("\nRead from task %d: %d bytes\n", $tid, \strlen($result));
         }
     }

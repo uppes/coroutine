@@ -1,4 +1,5 @@
 <?php
+
 /**
  * This also an simpler version of
  * "HOWTO: PHP TCP Server/Client with SSL Encryption using Streams"
@@ -8,6 +9,14 @@
 
 include 'vendor/autoload.php';
 
+use function Async\Stream\{
+    net_client,
+    net_read,
+    net_write,
+    net_close
+};
+
+//@todo add use function Async\Worker\spawn_system;
 // Let's ensure we have optimal performance. Set this simple thing
 date_default_timezone_set('America/New_York');
 
@@ -15,7 +24,7 @@ error_reporting(-1);
 ini_set("display_errors", 1);
 $hostname = \gethostname();
 $ip = \gethostbyname($hostname); //Set the TCP IP Address to connect too
-$port="5000"; //Set the TCP PORT to connect too
+$port = "5000"; //Set the TCP PORT to connect too
 //Command to run
 if (isset($argc) && isset($argv[1])) {
     if ($argv[1] == '--host') {
@@ -23,17 +32,18 @@ if (isset($argc) && isset($argv[1])) {
         $command = isset($argv[3]) ? $argv[3] : '/';
     } else {
         $hostname = $ip;
-        $command=$argv[1];
+        $command = $argv[1];
     }
 } else
-    $command="hi";
+    $command = "hi";
 
-function client($hostname, $command) {
+function client($hostname, $command)
+{
     global $argv;
 
     #Connect to Server
     #Start SSL
-    $socket = yield \net_client("$hostname");
+    $socket = yield net_client("$hostname");
 
     if (isset($argv[1]) && ($argv[1] == '--host')) {
         $headers = "GET $command HTTP/1.1\r\n";
@@ -51,15 +61,15 @@ function client($hostname, $command) {
         $http = $command;
 
     #Send a command
-    yield \net_write($socket, $http);
+    yield net_write($socket, $http);
 
     #Receive response from server. Loop until the response is finished
-    $response = yield \net_read($socket);
+    $response = yield net_read($socket);
 
     //\print_r(\client_meta($socket));
 
     #close connection
-    yield \net_close($socket);
+    yield net_close($socket);
 
     #echo our command response
     echo $response;

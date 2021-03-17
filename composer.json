@@ -37,8 +37,8 @@
     "autoload": {
         "files": [
             "Coroutine/Core.php",
-            "Coroutine/File.php",
-            "Coroutine/Net.php",
+            "Coroutine/Path.php",
+            "Coroutine/Stream.php",
             "Coroutine/Worker.php"
         ],
         "psr-4": {

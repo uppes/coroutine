@@ -2,6 +2,38 @@
 
 namespace Async\Tests;
 
+use function Async\Path\{
+    file_open,
+    file_read,
+    file_fdatasync,
+    file_contents,
+    file_close,
+    file_write,
+    file_delete,
+    file_unlink,
+    file_exist,
+    file_size,
+    file_touch,
+    file_put,
+    file_readlink,
+    file_fstat,
+    file_rmdir,
+    file_rename,
+    file_symlink,
+    file_mkdir,
+    file_get,
+    file_operation,
+    file_scandir,
+    file_sendfile,
+    file_lstat,
+    file_uri,
+    file_meta,
+    file_file,
+    monitor_dir,
+    monitor_task
+};
+use function Async\Worker\spawn_system;
+
 use Async\Coroutine\FileSystem;
 use Async\Coroutine\Exceptions\Panic;
 use PHPUnit\Framework\TestCase;
@@ -35,16 +67,16 @@ class FileSystemTest extends TestCase
     public function taskOpenRead()
     {
         yield \away($this->counterTask());
-        $fd = yield \file_open(FIXTURE_PATH, 'r');
+        $fd = yield file_open(FIXTURE_PATH, 'r');
         $this->assertEquals('resource', \is_type($fd));
 
-        $data = yield \file_read($fd, 0, 32);
+        $data = yield file_read($fd, 0, 32);
         $this->assertEquals('string', \is_type($data));
 
         $this->assertEquals('Hello', \rtrim($data));
         $this->assertGreaterThanOrEqual(3, $this->counterResult);
 
-        $bool = yield \file_close($fd);
+        $bool = yield file_close($fd);
         $this->assertTrue($bool);
         $this->assertGreaterThanOrEqual(4, $this->counterResult);
         yield \shutdown();
@@ -58,20 +90,20 @@ class FileSystemTest extends TestCase
     public function taskOpenReadOffsetFstat()
     {
         yield \away($this->counterTask());
-        $fd = yield \file_open(FIXTURE_PATH, 'r');
+        $fd = yield file_open(FIXTURE_PATH, 'r');
         $this->assertEquals('resource', \is_type($fd));
 
-        $size = yield \file_fstat($fd, 'size');
+        $size = yield file_fstat($fd, 'size');
         $this->assertEquals('int', \is_type($size));
         $this->assertGreaterThanOrEqual(2, $this->counterResult);
 
-        $data = yield \file_read($fd, 1, $size);
+        $data = yield file_read($fd, 1, $size);
         $this->assertEquals('string', \is_type($data));
 
         $this->assertEquals('ello', \rtrim($data));
         $this->assertGreaterThanOrEqual(3, $this->counterResult);
 
-        $bool = yield \file_close($fd);
+        $bool = yield file_close($fd);
         $this->assertTrue($bool);
         $this->assertGreaterThanOrEqual(4, $this->counterResult);
         yield \shutdown();
@@ -85,49 +117,49 @@ class FileSystemTest extends TestCase
     public function taskWrite()
     {
         yield \away($this->counterTask());
-        $fd = yield \file_open("./temp", 'a');
+        $fd = yield file_open("./temp", 'a');
         $this->assertEquals('resource', \is_type($fd));
 
-        $data = yield \file_write($fd, "hello");
+        $data = yield file_write($fd, "hello");
         $this->assertEquals('int', \is_type($data));
 
         $this->assertEquals(5, $data);
         $this->assertGreaterThanOrEqual(3, $this->counterResult);
 
         if (\IS_UV) {
-            $fd = yield \file_fdatasync($fd);
+            $fd = yield file_fdatasync($fd);
             $this->assertEquals('resource', \is_type($fd));
             $this->assertGreaterThanOrEqual(8, $this->counterResult);
 
-            $bool = yield \file_close($fd);
+            $bool = yield file_close($fd);
             $this->assertTrue($bool);
             $this->assertGreaterThanOrEqual(9, $this->counterResult);
 
-            $size = yield \file_size("./temp");
+            $size = yield file_size("./temp");
             $this->assertEquals('int', \is_type($size));
             $this->assertGreaterThanOrEqual(10, $this->counterResult);
 
-            $bool = yield \file_rename("./temp", "./tmpNew");
+            $bool = yield file_rename("./temp", "./tmpNew");
             $this->assertTrue($bool);
 
-            $bool = yield \file_touch('./tmpNew');
+            $bool = yield file_touch('./tmpNew');
             $this->assertTrue($bool);
             $this->assertGreaterThanOrEqual(12, $this->counterResult);
 
-            $bool = yield \file_unlink("./tmpNew");
+            $bool = yield file_unlink("./tmpNew");
             $this->assertTrue($bool);
             $this->assertGreaterThanOrEqual(13, $this->counterResult);
 
-            $bool = yield \file_mkdir(DIRECTORY_PATH);
+            $bool = yield file_mkdir(DIRECTORY_PATH);
             $this->assertTrue($bool);
             $this->assertGreaterThanOrEqual(14, $this->counterResult);
 
-            $bool = yield \file_rmdir(DIRECTORY_PATH);
+            $bool = yield file_rmdir(DIRECTORY_PATH);
             $this->assertTrue($bool);
             $this->assertGreaterThanOrEqual(15, $this->counterResult);
         }
 
-        $fd = yield \file_open("tmp", 'bad');
+        $fd = yield file_open("tmp", 'bad');
         $this->assertFalse($fd);
 
         yield \shutdown();
@@ -143,14 +175,14 @@ class FileSystemTest extends TestCase
         $contents1 = "put test";
         $new = FIXTURES . "put.txt";
 
-        $count = yield \file_put($new, $contents1);
+        $count = yield file_put($new, $contents1);
         $this->assertEquals(8, $count);
 
-        $contents2 = yield \file_get($new);
+        $contents2 = yield file_get($new);
 
         $this->assertSame($contents1, $contents2);
 
-        yield \file_unlink($new);
+        yield file_unlink($new);
         yield \shutdown();
     }
 
@@ -164,16 +196,16 @@ class FileSystemTest extends TestCase
         $original = FIXTURES . "link.txt";
         $link = FIXTURES . "symlink.txt";
 
-        $bool = yield \file_symlink($original, $link);
+        $bool = yield file_symlink($original, $link);
         $this->assertTrue($bool);
 
-        $array = yield \file_lstat($link);
+        $array = yield file_lstat($link);
         $this->assertIsArray($array);
 
-        $result = yield \file_readlink($link);
+        $result = yield file_readlink($link);
         $this->assertSame($original, $result);
 
-        yield \file_unlink($link);
+        yield file_unlink($link);
         yield \shutdown();
     }
 
@@ -189,27 +221,27 @@ class FileSystemTest extends TestCase
     {
         yield \away($this->counterTask());
 
-        $data = yield \file_contents(null);
+        $data = yield file_contents(null);
         $this->assertFalse($data);
 
         $text = \str_repeat('abcde', 256);
-        $fd = yield \file_open('php://temp', 'w+');
-        $written = yield \file_write($fd, $text);
-        yield \file_fdatasync($fd);
+        $fd = yield file_open('php://temp', 'w+');
+        $written = yield file_write($fd, $text);
+        yield file_fdatasync($fd);
         $this->assertEquals(\strlen($text), $written);
 
-        $data = yield \file_contents($fd);
+        $data = yield file_contents($fd);
         if (!\IS_PHP8)
             $this->assertEquals($text, $data);
 
         $this->assertGreaterThanOrEqual(\IS_PHP8 ? 5 : 8, $this->counterResult);
 
-        $moreData = yield \file_contents($fd);
+        $moreData = yield file_contents($fd);
         $this->assertEquals('', $moreData);
 
         $this->assertGreaterThanOrEqual(\IS_PHP8 ? 6 : 9, $this->counterResult);
 
-        $bool = yield \file_close($fd);
+        $bool = yield file_close($fd);
         $this->assertTrue($bool);
 
         yield \shutdown();
@@ -222,42 +254,42 @@ class FileSystemTest extends TestCase
 
     public function taskFileSystem()
     {
-        \file_operation();
+        file_operation();
         yield \away($this->counterTask());
-        $bool = yield \file_touch('./tmpTouch');
+        $bool = yield file_touch('./tmpTouch');
         $this->assertTrue($bool);
         $this->assertGreaterThanOrEqual(5, $this->counterResult);
 
-        $size = yield \file_size("./tmpTouch");
+        $size = yield file_size("./tmpTouch");
         $this->assertEquals(0, $size);
         $this->assertGreaterThanOrEqual(7, $this->counterResult);
 
-        $bool = yield \file_exist("./tmpTouch");
+        $bool = yield file_exist("./tmpTouch");
         $this->assertTrue($bool);
         $this->assertGreaterThanOrEqual(10, $this->counterResult);
 
-        $bool = yield \file_rename("./tmpTouch", "./tmpRename");
+        $bool = yield file_rename("./tmpTouch", "./tmpRename");
         $this->assertTrue($bool);
         $this->assertGreaterThanOrEqual(13, $this->counterResult);
 
-        $bool = yield \file_unlink("./tmpRename");
+        $bool = yield file_unlink("./tmpRename");
         $this->assertTrue($bool);
         $this->assertGreaterThanOrEqual(16, $this->counterResult);
 
-        $bool = yield \file_mkdir(DIRECTORY_PATH);
+        $bool = yield file_mkdir(DIRECTORY_PATH);
         $this->assertTrue($bool);
         $this->assertGreaterThanOrEqual(19, $this->counterResult);
 
-        $bool = yield \file_rmdir(DIRECTORY_PATH);
+        $bool = yield file_rmdir(DIRECTORY_PATH);
         $this->assertTrue($bool);
         $this->assertGreaterThanOrEqual(25, $this->counterResult);
 
-        \file_operation(true);
-        $bool = yield \file_touch("./tmpNew");
+        file_operation(true);
+        $bool = yield file_touch("./tmpNew");
         $this->assertTrue($bool);
         $result = yield FileSystem::utime("./tmpNew");
         $this->assertTrue($result);
-        $bool = yield \file_unlink("./tmpNew");
+        $bool = yield file_unlink("./tmpNew");
         $this->assertTrue($bool);
 
         yield \shutdown();
@@ -271,7 +303,7 @@ class FileSystemTest extends TestCase
     public function taskFileSystemScandir()
     {
         yield \away($this->counterTask());
-        $array = yield \file_scandir('.');
+        $array = yield file_scandir('.');
         $this->assertTrue(\is_array($array));
         $this->assertTrue(\count($array) > 1);
         $this->assertGreaterThanOrEqual(2, $this->counterResult);
@@ -287,17 +319,17 @@ class FileSystemTest extends TestCase
     public function taskFileSystemSendfile()
     {
         yield \away($this->counterTask());
-        $fd = yield \file_open(FIXTURE_PATH, 'r');
-        $size = yield \file_fstat($fd, 'size');
-        $outFd = yield \file_open('php://temp', 'w+');
-        $written = yield \file_sendfile($outFd, $fd, 0, $size);
+        $fd = yield file_open(FIXTURE_PATH, 'r');
+        $size = yield file_fstat($fd, 'size');
+        $outFd = yield file_open('php://temp', 'w+');
+        $written = yield file_sendfile($outFd, $fd, 0, $size);
 
         $this->assertEquals($size, $written);
-        $data = yield \file_contents($outFd);
+        $data = yield file_contents($outFd);
         $this->assertEquals('Hello', \trim($data));
         $this->assertGreaterThanOrEqual(6, $this->counterResult);
-        yield \file_close($fd);
-        yield \file_close($outFd);
+        yield file_close($fd);
+        yield file_close($outFd);
 
         yield \shutdown();
     }
@@ -309,18 +341,18 @@ class FileSystemTest extends TestCase
 
     public function taskFileSendfile()
     {
-        \file_operation();
+        file_operation();
         yield \away($this->counterTask());
-        $fd = yield \file_open(FIXTURE_PATH, 'r');
-        $size = yield \file_fstat($fd, 'size');
-        $outFd = yield \file_open('php://temp', 'w+');
-        $written = yield \file_sendfile($outFd, $fd, 0, $size);
+        $fd = yield file_open(FIXTURE_PATH, 'r');
+        $size = yield file_fstat($fd, 'size');
+        $outFd = yield file_open('php://temp', 'w+');
+        $written = yield file_sendfile($outFd, $fd, 0, $size);
         $this->assertEquals($size, $written);
-        $data = yield \file_contents($outFd);
+        $data = yield file_contents($outFd);
         $this->assertEquals('Hello', \trim($data));
         $this->assertGreaterThanOrEqual(7, $this->counterResult);
-        yield \file_close($fd);
-        yield \file_close($outFd);
+        yield file_close($fd);
+        yield file_close($outFd);
 
         yield \shutdown();
     }
@@ -332,9 +364,9 @@ class FileSystemTest extends TestCase
 
     public function taskSystemScandir()
     {
-        \file_operation();
+        file_operation();
         yield \away($this->counterTask());
-        $array = yield \file_scandir('.');
+        $array = yield file_scandir('.');
         $this->assertTrue(\is_array($array));
         $this->assertTrue(\count($array) > 1);
         $this->assertGreaterThanOrEqual(5, $this->counterResult);
@@ -350,7 +382,7 @@ class FileSystemTest extends TestCase
     public function taskSystemError()
     {
         $this->expectException(Panic::class);
-        yield \spawn_system('/');
+        yield spawn_system('/');
 
         yield \shutdown();
     }
@@ -362,9 +394,9 @@ class FileSystemTest extends TestCase
 
     public function taskFileGet()
     {
-        $contents = yield \file_get('.' . \DS . 'list.txt');
+        $contents = yield file_get('.' . \DS . 'list.txt');
         $this->assertTrue(\is_type($contents, 'bool'));
-        $contents = yield \file_get(__DIR__ . \DS . 'list.txt');
+        $contents = yield file_get(__DIR__ . \DS . 'list.txt');
         $this->assertEquals('string', \is_type($contents));
 
         yield \shutdown();
@@ -378,24 +410,24 @@ class FileSystemTest extends TestCase
 
     public function taskFileGetSize()
     {
-        $contents = yield \file_get("https://httpbin.org/get");
+        $contents = yield file_get("https://httpbin.org/get");
         $this->assertEquals('string', \is_type($contents));
         $this->assertGreaterThanOrEqual(230, \strlen($contents));
-        $fd = yield \file_uri("https://httpbin.org/get");
+        $fd = yield file_uri("https://httpbin.org/get");
         $this->assertTrue(\is_resource($fd));
-        $size = \file_meta($fd, 'size');
+        $size = file_meta($fd, 'size');
         $this->assertGreaterThanOrEqual(230, $size);
-        $bool = yield \file_close($fd);
+        $bool = yield file_close($fd);
         $this->assertTrue($bool);
-        $fd = yield \file_uri("http://ltd.123/", \stream_context_create());
+        $fd = yield file_uri("http://ltd.123/", \stream_context_create());
         $this->assertFalse($fd);
-        $size = \file_meta($fd, 'size');
+        $size = file_meta($fd, 'size');
         $this->assertEquals(0, $size);
-        $status = \file_meta($fd, 'status');
+        $status = file_meta($fd, 'status');
         $this->assertEquals(400, $status);
-        $meta = \file_meta($fd);
+        $meta = file_meta($fd);
         $this->assertFalse($meta);
-        $bool = yield \file_close($fd);
+        $bool = yield file_close($fd);
         $this->assertFalse($bool);
 
         yield \shutdown();
@@ -426,18 +458,18 @@ class FileSystemTest extends TestCase
 
     public function getWebsiteStatus($url)
     {
-        $fd = yield \file_uri($url);
+        $fd = yield file_uri($url);
         $this->assertTrue(\is_resource($fd), $url);
-        $status = \file_meta($fd, 'status');
+        $status = file_meta($fd, 'status');
         $this->assertEquals(200, $status);
-        $bool = yield \file_close($fd);
+        $bool = yield file_close($fd);
         $this->assertTrue($bool);
         return yield $status;
     }
 
     public function taskFileLines()
     {
-        $websites = yield \file_file(__DIR__ . \DS . 'list.txt');
+        $websites = yield file_file(__DIR__ . \DS . 'list.txt');
         $this->assertCount(5, $websites);
         if ($websites !== false) {
             $this->expectOutputString('{"200":2,"400":0}');
@@ -455,7 +487,7 @@ class FileSystemTest extends TestCase
 
     public function taskMonitor()
     {
-        $watchTask = yield \monitor_task(function (?string $filename, int $events, int $status) {
+        $watchTask = yield monitor_task(function (?string $filename, int $events, int $status) {
             if ($status == 0) {
                 //if ($events & \UV::RENAME)
                 //    $this->assertTrue(\is_type($filename, 'string'));
@@ -469,20 +501,20 @@ class FileSystemTest extends TestCase
             }
         });
 
-        yield \monitor_dir('watching/temp', $watchTask);
+        yield monitor_dir('watching/temp', $watchTask);
 
         yield \away(function () {
             yield \sleep_for(0.2);
-            yield \file_put("watching/temp/new.txt", 'here');
+            yield file_put("watching/temp/new.txt", 'here');
             yield \sleep_for(0.2);
-            yield \file_unlink("watching/temp/new.txt");
+            yield file_unlink("watching/temp/new.txt");
             yield \sleep_for(0.2);
-            yield \file_delete('watching');
+            yield file_delete('watching');
         });
 
         yield \gather_wait([$watchTask], 0, false);
 
-        yield \file_delete('watching');
+        yield file_delete('watching');
         yield \shutdown();
     }
 
@@ -499,7 +531,7 @@ class FileSystemTest extends TestCase
 
     public function taskMonitorDir()
     {
-        $watchTask = yield \monitor_task(function (?string $filename, int $events, int $status) {
+        $watchTask = yield monitor_task(function (?string $filename, int $events, int $status) {
             if ($status == 0) {
                 //if ($events & \UV::RENAME)
                 //    $this->assertTrue(\is_type($filename, 'string'));
@@ -511,20 +543,20 @@ class FileSystemTest extends TestCase
         });
         $this->assertTrue(\is_type($watchTask, 'int'));
 
-        $bool = yield \monitor_dir('watching/temp', $watchTask);
+        $bool = yield monitor_dir('watching/temp', $watchTask);
         $this->assertTrue($bool);
 
         yield \away(function () {
             yield \sleep_for(0.2);
-            yield \file_put("watching/temp/new.txt", 'here');
+            yield file_put("watching/temp/new.txt", 'here');
             yield \sleep_for(0.2);
-            yield \file_delete('watching');
+            yield file_delete('watching');
         });
 
         $result = yield \gather_wait([$watchTask], 0, false);
         $this->assertNull($result[$watchTask]);
 
-        yield \file_delete('watching');
+        yield file_delete('watching');
         yield \shutdown();
     }
 
@@ -542,7 +574,7 @@ class FileSystemTest extends TestCase
     public function taskMonitorDirLinux()
     {
         $that = $this;
-        $watchTask = yield \monitor_task(function (?string $filename, int $events, int $status) use (&$that) {
+        $watchTask = yield monitor_task(function (?string $filename, int $events, int $status) use (&$that) {
             if ($status == 0) {
                 if ($events & \UV::RENAME)
                     $that->monitorData['RENAME'][] = [$filename, $events];
@@ -554,13 +586,13 @@ class FileSystemTest extends TestCase
         });
         $this->assertTrue(\is_type($watchTask, 'int'));
 
-        $bool = yield \monitor_dir('watching/temp', $watchTask);
+        $bool = yield monitor_dir('watching/temp', $watchTask);
         $this->assertTrue($bool);
 
-        yield \file_touch("watching/temp/new.txt");
+        yield file_touch("watching/temp/new.txt");
 
         $wait = yield \away(function () {
-            yield \file_touch("watching/temp/new.txt");
+            yield file_touch("watching/temp/new.txt");
         });
 
         yield;
@@ -582,7 +614,7 @@ class FileSystemTest extends TestCase
             ],
         ], $that->monitorData);
 
-        $bool = yield \file_delete('watching');
+        $bool = yield file_delete('watching');
         $this->assertTrue($bool);
 
         yield \shutdown();

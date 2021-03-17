@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-//@todo add namespace Async\Worker;
+namespace Async\Worker;
 
 use Async\Spawn\Channeled;
 use Async\Coroutine\Kernel;

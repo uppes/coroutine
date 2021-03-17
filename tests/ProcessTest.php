@@ -2,6 +2,8 @@
 
 namespace Async\Tests;
 
+use function Async\Worker\{add_process, spawn_await};
+
 use Async\Coroutine\Coroutine;
 use PHPUnit\Framework\TestCase;
 
@@ -12,7 +14,7 @@ class ProcessTest extends TestCase
     protected $errorResult;
     protected $childId;
 
-	protected function setUp(): void
+    protected function setUp(): void
     {
         \coroutine_clear();
     }
@@ -42,11 +44,11 @@ class ProcessTest extends TestCase
         });
 
         yield \away($this->childTask());
-        yield \away(function() {
+        yield \away(function () {
             yield yield shutdown(yield \get_task());
         });
 
-        $result = yield \add_process(function () {
+        $result = yield add_process(function () {
             usleep(3000);
             return 3;
         });
@@ -59,7 +61,7 @@ class ProcessTest extends TestCase
     public function taskProcess()
     {
         $childId = yield \away($this->childTask());
-        $result = yield \add_process(function () {
+        $result = yield add_process(function () {
             usleep(1000);
             return 3;
         });
@@ -74,7 +76,7 @@ class ProcessTest extends TestCase
     public function taskProcessDisplay()
     {
         $tid = yield \away($this->childTask());
-        $result = yield \spawn_await(function () {
+        $result = yield spawn_await(function () {
             echo 'here!';
         }, 10, true);
 
@@ -87,7 +89,7 @@ class ProcessTest extends TestCase
         $childId = yield \away([$this, 'childTask']);
         $result = null;
         try {
-            $result = yield \add_process(function () {
+            $result = yield add_process(function () {
                 usleep(1000);
                 throw new \Exception('3');
             });
@@ -105,7 +107,7 @@ class ProcessTest extends TestCase
     {
         $childId = yield away($this->childTask());
         try {
-            yield \add_process(function () {
+            yield add_process(function () {
                 \sleep(1.5);
             }, 1);
         } catch (\Async\Coroutine\Exceptions\TimeoutError $error) {
@@ -182,7 +184,7 @@ class ProcessTest extends TestCase
         $this->assertNotEquals(0, $this->mainResult);
         $this->assertNotEquals(0, $this->childId);
         $this->assertGreaterThan(15, $this->counterResult);
-        $this->assertTrue ($this->errorResult instanceof \RuntimeException);
+        $this->assertTrue($this->errorResult instanceof \RuntimeException);
         $this->assertEquals($this->mainResult, $this->childId, (string) $parallel->status());
     }
 
@@ -202,8 +204,7 @@ class ProcessTest extends TestCase
         $this->assertNotEquals(0, $this->mainResult);
         $this->assertNotEquals(0, $this->childId);
         $this->assertGreaterThan(30, $this->counterResult);
-        $this->assertTrue ($this->errorResult instanceof \Async\Coroutine\Exceptions\TimeoutError, (string) $parallel->status());
+        $this->assertTrue($this->errorResult instanceof \Async\Coroutine\Exceptions\TimeoutError, (string) $parallel->status());
         $this->assertEquals($this->mainResult, $this->childId, (string) $parallel->status());
     }
-
 }

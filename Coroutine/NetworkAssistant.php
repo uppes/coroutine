@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Async\Coroutine;
 
 /**
- * A simple generic factory class for handling/constructing **client/server**
+ * A simple generic class for handling/constructing **client/server**
  * messages, following the https://tools.ietf.org/html/rfc2616.html specs.
  *
  * This class works similar to `PSR-7`, not fully representing, usage is
@@ -13,8 +13,8 @@ namespace Async\Coroutine;
  */
 class NetworkAssistant
 {
-    const AGENT = 'Symplely Client';
-    const SERVER = 'Symplely Server';
+    const AGENT = 'PHP Client';
+    const SERVER = 'PHP Server';
 
     /**
      * Valid HTTP status codes and reasons.
@@ -542,7 +542,7 @@ class NetworkAssistant
             $path .= isset($url_array['fragment']) ? '#' . $url_array['fragment'] : '';
         }
 
-        $headers = \trim(\strtoupper($method)) . " $path HTTP/". (string) $this->version . \CRLF;
+        $headers = \trim(\strtoupper($method)) . " $path HTTP/" . (string) $this->version . \CRLF;
         $headers .= "Host: " . \trim($hostname) . \CRLF;
         $headers .= "Accept: */*" . \CRLF;
         if (!empty($data)) {

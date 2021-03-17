@@ -2,19 +2,20 @@
 
 namespace Async\Tests;
 
-use Async\Coroutine\NetworkAssistant;
+use function Async\Stream\{messenger_for, net_request};
+
 use PHPUnit\Framework\TestCase;
 
 class NetworkAssistantTest extends TestCase
 {
     public function testResponse()
     {
-        $parser = new NetworkAssistant('response');
+        $parser = messenger_for('response');
         $response = "HTTP/1.1 200 OK" . \CRLF .
             "Date: " . \gmdate('D, d M Y H:i:s T') . CRLF .
             "Content-Type: text/html; charset=utf-8" . CRLF .
             "Content-Length: 5" . CRLF .
-            "Server: Symplely Server" . CRLF .
+            "Server: PHP Server" . CRLF .
             "X-Power: PHP" . CRLF .  CRLF .
             "hello";
 
@@ -62,7 +63,7 @@ RAW;
 
     public function testRequest()
     {
-        $parser = new NetworkAssistant('request');
+        $parser = messenger_for('request');
         $request = "GET /index.html HTTP/1.1" . CRLF .
             "Host: url.com" . CRLF .
             "Accept: */*" . CRLF .
@@ -70,7 +71,7 @@ RAW;
             "User-Agent: Symplely Client" . CRLF .
             "Connection: close" . CRLF .  CRLF;
 
-        $this->assertEquals($request, \net_request($parser, 'get', 'http://url.com/index.html', null, null, ['x-power' => 'PHP']));
+        $this->assertEquals($request, net_request($parser, 'get', 'http://url.com/index.html', null, null, ['x-power' => 'PHP']));
         $this->assertEquals('http://url.com/index.html', $parser->getUri());
 
         $raw = <<<RAW

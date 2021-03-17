@@ -5,9 +5,12 @@
  */
 include 'vendor/autoload.php';
 
+use function Async\Path\file_get;
+
+//@todo add use function Async\Worker\spawn_system;
 function requestHandler(string $uri)
 {
-    return yield [$uri, yield \file_get($uri)];
+    return yield [$uri, yield file_get($uri)];
 };
 
 function main()

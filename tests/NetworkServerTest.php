@@ -2,6 +2,21 @@
 
 namespace Async\Tests;
 
+use function Async\Stream\{
+    listener_task,
+    net_accept,
+    net_client,
+    net_close,
+    net_listen,
+    net_operation,
+    net_peer,
+    net_read,
+    net_response,
+    net_server,
+    net_stop,
+    net_write
+};
+
 use Async\Coroutine\NetworkAssistant;
 use PHPUnit\Framework\TestCase;
 
@@ -18,11 +33,11 @@ class NetworkServerTest extends TestCase
     public function taskSecureServer($port)
     {
         if (\IS_LINUX) {
-            \net_operation();
+            net_operation();
             $this->expectOutputRegex('/[Listening to ' . $port . 'for connections]/');
         }
 
-        $resourceInstance = yield \net_server($port, true);
+        $resourceInstance = yield net_server($port, true);
         $this->assertTrue(\is_resource($resourceInstance));
 
         // Will connection to this server in .005 seconds.
@@ -33,10 +48,10 @@ class NetworkServerTest extends TestCase
         }
 
         // Will pause current task and wait for connection, all others tasks will continue to run
-        $connected = yield \net_accept($resourceInstance);
+        $connected = yield net_accept($resourceInstance);
         $this->assertTrue(\is_resource($connected));
 
-        yield \net_close($resourceInstance);
+        yield net_close($resourceInstance);
         yield \shutdown();
     }
 
@@ -44,37 +59,34 @@ class NetworkServerTest extends TestCase
     {
         yield \sleep_for(.005);
         #Connect to Server
-        $clientInstance = yield \net_client($port);
-        yield \net_close($clientInstance);
+        $clientInstance = yield net_client($port);
+        yield net_close($clientInstance);
     }
 
     public function taskListen($resourceInstance)
     {
         $this->assertTrue((\IS_WINDOWS ? \is_resource($resourceInstance) : $resourceInstance instanceof \UV));
-        yield \net_stop($this->taskId);
+        yield net_stop($this->taskId);
     }
 
     public function taskServerListen($port)
     {
-        $lid = yield \listener_task([$this, 'taskListen']);
+        $lid = yield listener_task([$this, 'taskListen']);
         $this->taskId = $lid;
         $this->expectOutputRegex('/[Listening to ' . $port . 'for connections]/');
         // Will connection to this server in .005 seconds.
         $dit = yield \away($this->taskFakeSecureClientCommand($port));
-        yield \net_listen($port, $lid);
+        yield net_listen($port, $lid);
         yield \shutdown();
     }
 
     public function taskServer($port)
     {
-        // Let's ensure we have optimal performance. Set this simple thing
-        \date_default_timezone_set('America/New_York');
-
         \error_reporting(-1);
         \ini_set("display_errors", 1);
 
         $this->expectOutputRegex('/[Listening to ' . $port . 'for connections]/');
-        $serverInstance = yield \net_server($port);
+        $serverInstance = yield net_server($port);
 
         $this->assertTrue((\IS_WINDOWS ? \is_resource($serverInstance) : $serverInstance instanceof \UV));
 
@@ -87,13 +99,13 @@ class NetworkServerTest extends TestCase
             }
 
             // Will pause current task and wait for connection, all others tasks will continue to run
-            $connectedServer = yield \net_accept($serverInstance);
+            $connectedServer = yield net_accept($serverInstance);
             $this->assertTrue((\IS_WINDOWS ? \is_resource($connectedServer) : $connectedServer instanceof \UV));
             // Once an connection is made, will create new task and continue execution there, will not block
             yield \away($this->taskHandleClient($connectedServer));
         }
 
-        yield \net_close($serverInstance);
+        yield net_close($serverInstance);
         yield \shutdown();
     }
 
@@ -101,13 +113,13 @@ class NetworkServerTest extends TestCase
     {
         yield \sleep_for(.005);
         #Connect to Server
-        $clientInstance = yield \net_client($port);
+        $clientInstance = yield net_client($port);
         #Send a command
-        yield \net_write($clientInstance, 'hi');
+        yield net_write($clientInstance, 'hi');
         #Receive response from server. Loop until the response is finished
-        $response = yield \net_read($clientInstance);
+        $response = yield net_read($clientInstance);
         $this->assertEquals('Hello, This is our command run!', $response);
-        yield \net_close($clientInstance);
+        yield net_close($clientInstance);
         // make an new client connection to this server.
         yield \away($this->taskFakeClientDefault($port));
     }
@@ -115,14 +127,14 @@ class NetworkServerTest extends TestCase
     public function taskFakeClientDefault($port)
     {
         #Connect to Server
-        $clientInstance = yield \net_client($port);
+        $clientInstance = yield net_client($port);
         #Send a command
-        yield \net_write($clientInstance, 'help');
+        yield net_write($clientInstance, 'help');
         #Receive response from server. Loop until the response is finished
-        $response = yield \net_read($clientInstance);
+        $response = yield net_read($clientInstance);
         $this->assertEquals('string', \is_type($response));
         $this->assertRegExp('/[The file you requested does not exist. Sorry!]/', $response);
-        yield \net_close($clientInstance);
+        yield net_close($clientInstance);
         // make an new client connection to this server.
         yield \away($this->taskFakeClientExit($port));
     }
@@ -131,19 +143,19 @@ class NetworkServerTest extends TestCase
     {
         $this->loopController = false;
         #Connect to Server
-        $clientInstance = yield \net_client($port);
+        $clientInstance = yield net_client($port);
         #Send a command
-        yield \net_write($clientInstance, 'exit');
-        yield \net_close($clientInstance);
+        yield net_write($clientInstance, 'exit');
+        yield net_close($clientInstance);
     }
 
     public function taskHandleClient($server)
     {
         yield \stateless_task();
-        $data = yield \net_read($server);
+        $data = yield net_read($server);
         $this->assertEquals('string', \is_type($data));
 
-        $ip = \net_peer($server);
+        $ip = net_peer($server);
         $this->assertEquals('string', \is_type($ip));
 
         switch ($data) {
@@ -155,20 +167,20 @@ class NetworkServerTest extends TestCase
                 #hi command
             case 'hi';
                 #write back to the client a response.
-                $written = yield \net_write($server, 'Hello, This is our command run!');
+                $written = yield net_write($server, 'Hello, This is our command run!');
                 $this->assertEquals('int', \is_type($written));
                 print "hi command received \n";
                 break;
             default:
                 $responser = new NetworkAssistant('response');
-                $output = \net_response($responser, 'The file you requested does not exist. Sorry!', 404);
+                $output = net_response($responser, 'The file you requested does not exist. Sorry!', 404);
                 $this->assertEquals('string', \is_type($output));
-                yield \net_write($server, $output);
+                yield net_write($server, $output);
         }
 
-        yield \net_close($server);
-        $this->assertFalse(yield \net_write($server, 'null'));
-        $this->assertFalse(yield \net_read($server));
+        yield net_close($server);
+        $this->assertFalse(yield net_write($server, 'null'));
+        $this->assertFalse(yield net_read($server));
     }
 
     public function testServer()

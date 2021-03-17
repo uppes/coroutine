@@ -2,6 +2,8 @@
 
 include 'vendor/autoload.php';
 
+use function Async\Worker\{signal_task, spawn_signal, spawn_kill};
+
 function repeat()
 {
     $counter = 0;
@@ -18,12 +20,12 @@ function repeat()
 function main()
 {
     yield \away(\repeat());
-    $signal = yield \signal_task(\SIGKILL, function ($signal) {
+    $signal = yield signal_task(\SIGKILL, function ($signal) {
         echo "the process has been terminated with 'SIGKILL - " . $signal . "' signal!" . \EOL;
         yield;
     });
 
-    $process = yield \spawn_signal(function () {
+    $process = yield spawn_signal(function () {
         echo "Hello, ";
 
         return \return_in(1550195, 'world.');
@@ -31,7 +33,7 @@ function main()
 
     $kill = yield \away(function () use ($process) {
         yield \sleep_for(0.90);
-        $bool = yield \spawn_kill($process);
+        $bool = yield spawn_kill($process);
         return $bool;
     });
 

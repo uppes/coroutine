@@ -5,6 +5,9 @@ include 'vendor/autoload.php';
 use Async\Spawn\Channeled;
 use Async\Spawn\ChanneledInterface;
 
+use function Async\Worker\progress_task;
+use function Async\Worker\spawn_progress;
+
 function repeat()
 {
     $counter = 0;
@@ -26,7 +29,7 @@ function main()
     echo "Let's play, ";
 
     yield \away(\repeat());
-    $pTask = yield \progress_task(function ($type, $data) use ($ipc) {
+    $pTask = yield progress_task(function ($type, $data) use ($ipc) {
         echo $ipc->receive();
         if ('ping' === $data) {
             $ipc->send('pang' . \PHP_EOL);
@@ -36,7 +39,7 @@ function main()
         }
     });
 
-    $process = yield \spawn_progress(
+    $process = yield spawn_progress(
         function (ChanneledInterface $channel) {
             $channel->write('ping');
             echo $channel->read();

@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Async\Coroutine;
 
+use function Async\Path\file_operation;
+use function Async\Stream\net_operation;
+
 use Async\Spawn\LauncherInterface;
 use Async\Spawn\ChanneledInterface;
 use Async\Coroutine\Kernel;
@@ -243,8 +246,8 @@ final class Coroutine implements CoroutineInterface
             $this->uv = \uv_loop_new();
 
             \spawn_setup($this->uv);
-            \file_operation(true);
-            \net_operation(true, true);
+            file_operation(true);
+            net_operation(true, true);
 
             $this->onEvent = function ($event, $status, $events, $stream) {
                 if ($status !== 0) {
@@ -404,8 +407,8 @@ final class Coroutine implements CoroutineInterface
         $this->uv = ($useUvLoop && \IS_UV) ? \uv_loop_new() : null;
 
         \spawn_setup($this->uv, true, true, $useUvLoop);
-        \file_operation($useUvLoop);
-        \net_operation($useUvLoop, true);
+        file_operation($useUvLoop);
+        net_operation($useUvLoop, true);
 
         return $this;
     }

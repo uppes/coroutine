@@ -2,10 +2,9 @@
 
 declare(strict_types=1);
 
-//@todo add namespace Async\File;
+namespace Async\Path;
 
-//@todo add use function Async\Worker\awaitable_process;
-//@todo add use function Async\Worker\spawn_system;
+use function Async\Worker\{awaitable_process, spawn_system};
 
 use Async\Coroutine\Kernel;
 use Async\Coroutine\FileSystem;
@@ -60,12 +59,12 @@ if (!\function_exists('file_operation')) {
      */
     function monitor_file(string $file, int $monitorTask)
     {
-        $file = \slash_switch($file);
-        $check = yield \file_exist($file);
+        $file = slash_switch($file);
+        $check = yield file_exist($file);
         if (!$check)
-            yield \file_touch($file);
+            yield file_touch($file);
 
-        return yield \monitor($file, $monitorTask);
+        return yield monitor($file, $monitorTask);
     }
 
     /**
@@ -83,10 +82,10 @@ if (!\function_exists('file_operation')) {
      */
     function monitor_dir(string $directory, int $monitorTask)
     {
-        $directory = \slash_switch($directory);
+        $directory = slash_switch($directory);
         yield spawn_system('mkdir', $directory, 0777, true);
 
-        return yield \monitor($directory, $monitorTask);
+        return yield monitor($directory, $monitorTask);
     }
 
     function slash_switch($path)
@@ -109,7 +108,7 @@ if (!\function_exists('file_operation')) {
      */
     function file_delete($dir)
     {
-        $dir = \slash_switch($dir);
+        $dir = slash_switch($dir);
 
         // @codeCoverageIgnoreStart
         $system = function ($dirFile) use ($dir, &$system) {
@@ -133,7 +132,7 @@ if (!\function_exists('file_operation')) {
             return yield Kernel::addProcess($system);
         });
 
-        $bool = yield \file_exist($dir);
+        $bool = yield file_exist($dir);
 
         return ($bool === false);
     }
@@ -466,7 +465,7 @@ if (!\function_exists('file_operation')) {
      */
     function file_size($path)
     {
-        return \file_stat($path, 'size');
+        return file_stat($path, 'size');
     }
 
     /**
@@ -479,7 +478,7 @@ if (!\function_exists('file_operation')) {
      */
     function file_exist($path)
     {
-        $status = yield \file_size($path);
+        $status = yield file_size($path);
         return \is_int($status);
     }
 
@@ -524,19 +523,19 @@ if (!\function_exists('file_operation')) {
      */
     function file_get(string $filename)
     {
-        $fd = yield \file_open($filename, 'r');
+        $fd = yield file_open($filename, 'r');
         if (\is_resource($fd)) {
-            if (\file_meta($fd, 'wrapper_type') === 'http') {
+            if (file_meta($fd, 'wrapper_type') === 'http') {
                 $max = -1;
             } else {
                 if (\IS_LINUX)
-                    $max = yield \file_fstat($fd, 'size');
+                    $max = yield file_fstat($fd, 'size');
                 else
-                    $max = yield \file_stat($filename, 'size');
+                    $max = yield file_stat($filename, 'size');
             }
 
-            $contents = yield \file_read($fd, 0, (empty($max) ? 8192 * 2 : $max));
-            yield \file_close($fd);
+            $contents = yield file_read($fd, 0, (empty($max) ? 8192 * 2 : $max));
+            yield file_close($fd);
             return $contents;
         }
 
@@ -554,11 +553,11 @@ if (!\function_exists('file_operation')) {
      */
     function file_put(string $filename, $contents)
     {
-        $fd = yield \file_open($filename, 'w');
+        $fd = yield file_open($filename, 'w');
         if (\is_resource($fd)) {
-            $written = yield \file_write($fd, $contents);
-            yield \file_fdatasync($fd);
-            yield \file_close($fd);
+            $written = yield file_write($fd, $contents);
+            yield file_fdatasync($fd);
+            yield file_close($fd);
             return $written;
         }
 

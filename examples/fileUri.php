@@ -1,6 +1,8 @@
 <?php
 include 'vendor/autoload.php';
 
+use function Async\Path\{file_uri, file_meta, file_file, file_close};
+
 /**
  * Converted example of https://github.com/jimmysong/asyncio-examples from:
  * @see https://youtu.be/qfY2cqjJMdw
@@ -27,9 +29,9 @@ function get_statuses($websites)
 function get_website_status($url)
 {
     $id = yield \get_task();
-    $fd = yield \file_uri($url);
-    $status = \file_meta($fd, 'status');
-    yield \file_close($fd);
+    $fd = yield file_uri($url);
+    $status = file_meta($fd, 'status');
+    yield file_close($fd);
     //[$meta, $status, $retry] = yield \head_uri($url);
     print "task: $id, url: $url code: $status" . EOL;
     return yield $status;
@@ -52,13 +54,13 @@ function lapse()
 function main()
 {
     yield \away(\lapse());
-    $websites = yield \file_file(__DIR__ . \DS . 'list_many.txt');
+    $websites = yield file_file(__DIR__ . \DS . 'list_many.txt');
     if ($websites !== false) {
-        $t0 = \microtime(true);
+        \timer_for();
         $data = yield get_statuses($websites);
-        $t1 = \microtime(true);
+        $t1 = \timer_for();
         print $data . EOL;
-        print("getting website statuses took " . (float) ($t1 - $t0) . " seconds");
+        print("getting website statuses took " . $t1 . " seconds");
     }
 }
 
