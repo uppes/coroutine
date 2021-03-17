@@ -68,7 +68,7 @@ RAW;
             "Host: url.com" . CRLF .
             "Accept: */*" . CRLF .
             "X-Power: PHP" . CRLF .
-            "User-Agent: Symplely Client" . CRLF .
+            "User-Agent: PHP Client" . CRLF .
             "Connection: close" . CRLF .  CRLF;
 
         $this->assertEquals($request, net_request($parser, 'get', 'http://url.com/index.html', null, null, ['x-power' => 'PHP']));
