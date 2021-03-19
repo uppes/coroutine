@@ -142,8 +142,10 @@ final class Parallel implements ArrayAccess, ParallelInterface
     {
         while (true) {
             $this->coroutine->run();
-            if ($this->processor->isEmpty())
+            if ($this->processor->isEmpty()) {
+                $this->coroutine->ioStop();
                 break;
+            }
         }
 
         return $this->results;

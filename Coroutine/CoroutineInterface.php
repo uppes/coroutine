@@ -65,12 +65,22 @@ interface CoroutineInterface
     public function cancelTask(int $tid, $customState = null);
 
     /**
-     * Process/walk the task queue and execute the tasks.
-     * If a task is finished it's dropped, otherwise rescheduled at the end of the queue.
+     * Start the main supervisor task.
+     * Process/walk the task `queue` and execute the tasks.
+     * If a task is finished it's dropped, otherwise rescheduled at the end of the `queue`.
+     * - The `task` that's finish with any `result`, is moved into an `completed` task list.
      *
      * @see https://docs.python.org/3.7/library/asyncio-task.html#running-an-asyncio-program
      */
     public function run();
+
+    /**
+     * Set main supervisor task running state to `false`.
+     * This allows the supervisor task to be recreated.
+     *
+     * @return void
+     */
+    public function ioStop();
 
     /**
      * Adds a read `event/socket/stream/file` descriptor to start

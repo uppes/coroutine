@@ -30,6 +30,13 @@ use Async\Coroutine\Exceptions\InvalidArgumentException;
 final class Coroutine implements CoroutineInterface
 {
     /**
+     * checker for main supervisor task running state
+     *
+     * @var boolean
+     */
+    protected $ioStarted = false;
+
+    /**
      * a task's unique id number
      *
      * @var int
@@ -227,6 +234,7 @@ final class Coroutine implements CoroutineInterface
         $this->waitingForWrite = [];
         $this->events = [];
         $this->signals = [];
+        $this->ioStarted = false;
     }
 
     /**
@@ -619,9 +627,19 @@ final class Coroutine implements CoroutineInterface
         $this->completedMap = $taskMap;
     }
 
+    public function ioStop()
+    {
+        $this->ioStarted = false;
+    }
+
     public function run()
     {
-        $this->createTask($this->ioWaiting());
+        // Check/skip if main supervisor task already running
+        if (!$this->ioStarted) {
+            $this->ioStarted = true;
+            $this->createTask($this->ioWaiting());
+        }
+
         return $this->execute();
     }
 
@@ -736,6 +754,7 @@ final class Coroutine implements CoroutineInterface
 
     /**
      * Check for `Coroutines`, will exit if nothing is pending.
+     * This is the main `i/o events` supervisor, the `task` driver for `libuv` or `stream_select`.
      */
     protected function ioWaiting()
     {
