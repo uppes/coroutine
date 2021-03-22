@@ -3,6 +3,12 @@ name: Coroutine
 
 on: [push, pull_request]
 
+on:
+  push:
+    branches: [ 1.x ]
+  pull_request:
+    branches: [ 1.x ]
+
 jobs:
   linux:
     name: Linux CI
