@@ -181,7 +181,7 @@ if (!\function_exists('net_operation')) {
     }
 
     /**
-     * Get the address of the connected handle.
+     * Get the address of the remote connected handle.
      *
      * @param UVTcp|UVUdp|resource $handle
      * @return string|bool
@@ -189,6 +189,17 @@ if (!\function_exists('net_operation')) {
     function net_peer($handle)
     {
         return Network::peer($handle);
+    }
+
+    /**
+     * Get the address of the local handle.
+     *
+     * @param UVTcp|resource $handle
+     * @return string|bool
+     */
+    function net_local($handle)
+    {
+        return Network::local($handle);
     }
 
     /**

@@ -9,7 +9,7 @@ use function Async\Stream\{
     net_close,
     net_listen,
     net_operation,
-    net_peer,
+    net_local,
     net_read,
     net_response,
     net_server,
@@ -39,6 +39,9 @@ class NetworkServerTest extends TestCase
 
         $resourceInstance = yield net_server($port, true);
         $this->assertTrue(\is_resource($resourceInstance));
+
+        $ip = net_local($resourceInstance);
+        $this->assertEquals('string', \is_type($ip));
 
         // Will connection to this server in .005 seconds.
         yield \away($this->taskFakeSecureClientCommand($port));
@@ -154,9 +157,6 @@ class NetworkServerTest extends TestCase
         yield \stateless_task();
         $data = yield net_read($server);
         $this->assertEquals('string', \is_type($data));
-
-        $ip = net_peer($server);
-        $this->assertEquals('string', \is_type($ip));
 
         switch ($data) {
                 #exit command will cause this script to quit out

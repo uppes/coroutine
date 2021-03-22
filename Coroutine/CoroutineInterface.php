@@ -8,6 +8,7 @@ use Async\Coroutine\Process;
 use Async\Coroutine\TaskInterface;
 use Async\Coroutine\ParallelInterface;
 use Async\Coroutine\Exceptions\RuntimeException;
+use FiberInterface;
 
 interface CoroutineInterface
 {
@@ -28,6 +29,16 @@ interface CoroutineInterface
      * @param TaskInterface $task
      */
     public function schedule(TaskInterface $task);
+
+    /**
+     *
+     *
+     * @param FiberInterface $fiber
+     * @return int
+     */
+    public function addFiber(FiberInterface $fiber);
+
+    public function scheduleFiber(FiberInterface $fiber);
 
     /**
      * Performs a clean application exit/shutdown, killing tasks/processes, and resetting all data.

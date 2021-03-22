@@ -650,7 +650,7 @@ final class Network
     }
 
     /**
-     * Get the address of the connected handle.
+     * Get the address of the remote connected handle.
      *
      * @param UVTcp|UVUdp|resource $handle
      * @return string|bool
@@ -669,6 +669,28 @@ final class Network
             return false;
 
         return \stream_socket_get_name($handle, true);
+    }
+
+    /**
+     * Get the address of the local handle.
+     *
+     * @param UVTcp|resource $handle
+     * @return string|bool
+     */
+    public static function local($handle)
+    {
+        if ($handle instanceof \UVTcp) {
+            $local = \uv_tcp_getsockname($handle);
+            return $local['address'] . ':' . $local['port'];
+        } elseif ($handle instanceof \UVUdp) {
+            $peer = \uv_udp_getsockname($handle);
+            return $peer['address'] . ':' . $peer['port'];
+        }
+
+        if (!\is_resource($handle))
+            return false;
+
+        return \stream_socket_get_name($handle, false);
     }
 
     public static function connect(string $scheme, string $address, int $port, $data = null)

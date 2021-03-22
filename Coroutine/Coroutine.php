@@ -21,6 +21,7 @@ use Async\Coroutine\PlainValueCoroutine;
 use Async\Coroutine\CoroutineInterface;
 use Async\Coroutine\Exceptions\CancelledError;
 use Async\Coroutine\Exceptions\InvalidArgumentException;
+use FiberInterface;
 
 /**
  * The Scheduler
@@ -492,6 +493,21 @@ final class Coroutine implements CoroutineInterface
         $this->taskQueue->enqueue($task);
     }
 
+    public function addFiber(FiberInterface $fiber)
+    {
+        $tid = ++$this->maxTaskId;
+        $this->taskMap[$tid] = $fiber;
+        return $tid;
+    }
+
+    /**
+     * @codeCoverageIgnore
+     */
+    public function scheduleFiber(FiberInterface $fiber)
+    {
+        $this->taskQueue->enqueue($fiber);
+    }
+
     /**
      * A `stream/socket/fd` or `event` is free, ready or has data.
      * Retrieve `Task`, remove and update scheduler for it's execution.
@@ -760,6 +776,7 @@ final class Coroutine implements CoroutineInterface
     {
         while (true) {
             if ($this->hasCoroutines()) {
+                $this->ioStop();
                 break;
             } else {
                 $this->process->processing();
