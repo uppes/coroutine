@@ -131,6 +131,9 @@ final class Fiber implements FiberInterface
                 ? $this->coroutine->send($this->sendValue)
                 : $this->sendValue;
 
+            if (!empty($value))
+                $this->result = $value;
+
             $this->sendValue = null;
             return $value;
         }
@@ -144,6 +147,11 @@ final class Fiber implements FiberInterface
     public function setException($exception)
     {
         $this->error = $this->exception = $exception;
+    }
+
+    public function sendValue($sendValue)
+    {
+        $this->sendValue = $sendValue;
     }
 
     public function resume($value = null)
