@@ -15,6 +15,7 @@ use Async\Coroutine\Exceptions\InvalidArgumentException;
 use Async\Coroutine\Exceptions\TimeoutError;
 use Async\Coroutine\Exceptions\CancelledError;
 use Async\Spawn\ChanneledInterface;
+use Async\Coroutine\FiberInterface;
 
 /**
  * The Kernel
@@ -1041,5 +1042,51 @@ final class Kernel
                 }
             );
         }
+    }
+
+    /**
+     * @codeCoverageIgnore
+     */
+    public static function suspendFiber($data)
+    {
+        return new Kernel(
+            function (FiberInterface $fiber, CoroutineInterface $coroutine) use ($data) {
+                $fiber->setState('suspended');
+                $taskFiber = $fiber->getTaskFiber();
+                $taskFiber->sendValue($data);
+                $isFiber = $taskFiber instanceof FiberInterface;
+                $isFiber ? $coroutine->scheduleFiber($taskFiber) : $coroutine->schedule($taskFiber);
+            }
+        );
+    }
+
+    /**
+     * @codeCoverageIgnore
+     */
+    public static function startFiber(FiberInterface $fiber)
+    {
+        return new Kernel(
+            function ($taskFiber, CoroutineInterface $coroutine) use ($fiber) {
+                $fiber->setTaskFiber($taskFiber);
+                $coroutine->scheduleFiber($fiber);
+            }
+        );
+    }
+
+    /**
+     * @codeCoverageIgnore
+     */
+    public static function resumeFiber(FiberInterface $fiber, $data)
+    {
+        return new Kernel(
+            function ($taskFiber, CoroutineInterface $coroutine) use ($fiber, $data) {
+                $fiber->setState('rescheduled');
+                $taskFiber = $fiber->getTaskFiber();
+                $fiber->setTaskFiber($taskFiber);
+                $taskFiber->sendValue($data);
+                $isFiber = $taskFiber instanceof FiberInterface;
+                $isFiber ? $coroutine->scheduleFiber($taskFiber) : $coroutine->schedule($taskFiber);
+            }
+        );
     }
 }

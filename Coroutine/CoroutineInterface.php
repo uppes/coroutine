@@ -8,7 +8,7 @@ use Async\Coroutine\Process;
 use Async\Coroutine\TaskInterface;
 use Async\Coroutine\ParallelInterface;
 use Async\Coroutine\Exceptions\RuntimeException;
-use FiberInterface;
+use Async\Coroutine\FiberInterface;
 
 interface CoroutineInterface
 {
@@ -31,13 +31,19 @@ interface CoroutineInterface
     public function schedule(TaskInterface $task);
 
     /**
-     *
+     * Add a fiber instance (using the next free task id).
+     * The fiber added has been wrapped into a coroutine for the `tasks map` list and schedules its execution.
      *
      * @param FiberInterface $fiber
-     * @return int
+     * @return int fiber task id
      */
     public function addFiber(FiberInterface $fiber);
 
+    /**
+     * Add an fiber instance into the running task queue.
+     *
+     * @param FiberInterface $fiber
+     */
     public function scheduleFiber(FiberInterface $fiber);
 
     /**
@@ -101,7 +107,7 @@ interface CoroutineInterface
      * @see https://docs.python.org/3.7/library/asyncio-eventloop.html#asyncio.loop.add_reader
      *
      * @param resource $stream
-     * @param Task|\Generator|Callable $task
+     * @param Fiber|Task|\Generator|Callable $task
      */
     public function addReader($stream, $task): CoroutineInterface;
 
@@ -113,7 +119,7 @@ interface CoroutineInterface
      * @see https://docs.python.org/3.7/library/asyncio-eventloop.html#asyncio.loop.add_writer
      *
      * @param resource $stream
-     * @param Task|\Generator|Callable $task
+     * @param Fiber|Task|\Generator|Callable $task
      */
     public function addWriter($stream, $task): CoroutineInterface;
 

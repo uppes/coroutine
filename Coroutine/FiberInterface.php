@@ -1,5 +1,9 @@
 <?php
 
+namespace Async\Coroutine;
+
+use Throwable;
+
 interface FiberInterface
 {
     /**
@@ -89,4 +93,55 @@ interface FiberInterface
      * @throws Throwable Exception provided to {@see Fiber::throw()}.
      */
     public static function suspend($value = null);
+
+    /**
+     * @return int|null
+     *
+     * @internal
+     */
+    public function fiberId(): ?int;
+
+    /**
+     * @param mixed $sendValue
+     *
+     * @return void
+     *
+     * @internal
+     */
+    public function sendValue($sendValue);
+
+    /**
+     * @param string $status
+     *
+     * @return void
+     *
+     * @internal
+     */
+    public function setState(string $status);
+
+    /**
+     * @param TaskInterface|FiberInterface|null $taskFiber
+     * @return void
+     *
+     * @internal
+     */
+    public function setTaskFiber($taskFiber);
+
+    /**
+     * @return TaskInterface|FiberInterface|null
+     *
+     * @internal
+     */
+    public function getTaskFiber();
+
+    /**
+     * Mark the fiber as done and set an exception.
+     *
+     * @param \Exception $exception
+     *
+     * @return void
+     *
+     * @internal
+     */
+    public function setException($exception);
 }

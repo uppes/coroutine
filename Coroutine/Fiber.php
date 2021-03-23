@@ -1,14 +1,33 @@
 <?php
 
+namespace Async\Coroutine;
+
 use Async\Coroutine\Coroutine;
+use Async\Coroutine\FiberInterface;
+use Throwable;
 
 /**
+ * This `Fiber` has same behavior as `Task` class, with exception in that it's directly usable/callable by the user.
+ *
+ * It has been added to address and simulate the new **unneeded** `RFC` https://wiki.php.net/rfc/fibers.
+ *
  * @codeCoverageIgnore
  */
 final class Fiber implements FiberInterface
 {
-    protected $incomingTask;
-    protected $outgoingTask;
+    /**
+     * @var TaskInterface|FiberInterface|null
+     */
+    protected $fiberTask;
+
+    /**
+     * The number of scheduling cycles the fiber has completed.
+     * This might be useful if you’re trying to figure out if a fiber is running or not.
+     * Or if you’re trying to monitor a fiber’s progress.
+     *
+     * @var int
+     */
+    protected $cycles = 0;
 
     /**
      * The fiber id.
@@ -51,7 +70,7 @@ final class Fiber implements FiberInterface
     protected $scheduler;
 
     /**
-     * The name of the fiber’s current state.
+     * The name of the fiber’s current `status` state.
      *
      * @var string
      */
@@ -108,8 +127,7 @@ final class Fiber implements FiberInterface
     {
         $fiberTask = awaitable($this->callback, ...$args);
         $this->coroutine = Coroutine::create($fiberTask);
-        $this->scheduler->scheduleFiber($this);
-        $this->scheduler->run();
+        return yield Kernel::startFiber($this);
     }
 
     public function run()
@@ -144,6 +162,16 @@ final class Fiber implements FiberInterface
         $this->state = $status;
     }
 
+    public function setTaskFiber($taskFiber)
+    {
+        $this->taskFiber = $taskFiber;
+    }
+
+    public function getTaskFiber()
+    {
+        return $this->taskFiber;
+    }
+
     public function setException($exception)
     {
         $this->error = $this->exception = $exception;
@@ -154,8 +182,34 @@ final class Fiber implements FiberInterface
         $this->sendValue = $sendValue;
     }
 
+    /**
+     * Add to counter of the cycles the task has run.
+     *
+     * @return void
+     */
+    public function cyclesAdd()
+    {
+        $this->cycles++;
+    }
+
+    /**
+     * Return the number of times the scheduled task has run.
+     *
+     * @return int
+     */
+    public function getCycles()
+    {
+        return $this->cycles;
+    }
+
+    public function fiberId(): ?int
+    {
+        return $this->fiberId;
+    }
+
     public function resume($value = null)
     {
+        return yield Kernel::resumeFiber($this, $value);
     }
 
     public function throw(Throwable $exception)
@@ -169,22 +223,39 @@ final class Fiber implements FiberInterface
 
     public function isSuspended(): bool
     {
-        return ($this->state == 'suspended');
+        return ($this->state === 'suspended');
     }
 
     public function isRunning(): bool
     {
-        return ($this->state == 'running');
+        return ($this->state === 'running');
     }
 
     public function isTerminated(): bool
     {
-        return ($this->state == 'completed');
+        return ($this->state === 'completed');
     }
 
     public function isErred(): bool
     {
-        return ($this->state == 'erred');
+        return ($this->state === 'erred');
+    }
+
+    public function isCompleted(): bool
+    {
+        return $this->isTerminated();
+    }
+
+    public function isRescheduled(): bool
+    {
+        return ($this->state === 'rescheduled');
+    }
+
+    public function isFinished(): bool
+    {
+        return ($this->coroutine instanceof \Generator)
+            ? !$this->coroutine->valid()
+            : true;
     }
 
     public function getReturn()
@@ -218,5 +289,6 @@ final class Fiber implements FiberInterface
 
     public static function suspend($value = null)
     {
+        return yield Kernel::suspendFiber($value);
     }
 }

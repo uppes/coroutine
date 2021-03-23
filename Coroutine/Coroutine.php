@@ -21,7 +21,7 @@ use Async\Coroutine\PlainValueCoroutine;
 use Async\Coroutine\CoroutineInterface;
 use Async\Coroutine\Exceptions\CancelledError;
 use Async\Coroutine\Exceptions\InvalidArgumentException;
-use FiberInterface;
+use Async\Coroutine\FiberInterface;
 
 /**
  * The Scheduler
@@ -493,6 +493,9 @@ final class Coroutine implements CoroutineInterface
         $this->taskQueue->enqueue($task);
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
     public function addFiber(FiberInterface $fiber)
     {
         $tid = ++$this->maxTaskId;
@@ -538,6 +541,8 @@ final class Coroutine implements CoroutineInterface
     {
         if ($task instanceof TaskInterface) {
             $this->schedule($task);
+        } elseif ($task instanceof FiberInterface) {
+            $this->scheduleFiber($task);
         } elseif ($task($parameters) instanceof \Generator) {
             $this->createTask($task($parameters));
         }
@@ -663,9 +668,21 @@ final class Coroutine implements CoroutineInterface
     {
         while (!$this->taskQueue->isEmpty()) {
             $task = $this->taskQueue->dequeue();
-            $task->setState('running');
-            $task->cyclesAdd();
-            $value = $task->run();
+            $isFiberSuspended = false;
+            $isFiber = $task instanceof FiberInterface;
+            if ($isFiber) {
+                $isFiberSuspended = $task->isSuspended();
+            }
+
+            // Skip and reschedule, if `fiber` in suspend state
+            if ($isFiberSuspended) {
+                $this->scheduleFiber($task);
+                continue;
+            } else {
+                $task->setState('running');
+                $task->cyclesAdd();
+                $value = $task->run();
+            }
 
             if ($value instanceof Kernel) {
                 try {
@@ -676,16 +693,18 @@ final class Coroutine implements CoroutineInterface
                     );
 
                     $task->setException($error);
-                    $this->schedule($task);
+                    $isFiber ? $this->scheduleFiber($task) : $this->schedule($task);
                 }
 
                 continue;
             }
 
             if ($task->isFinished()) {
-                $this->cancelProgress($task);
-                $id = $task->taskId();
-                if ($task->isNetwork()) {
+                if (!$isFiber)
+                    $this->cancelProgress($task);
+
+                $id = $isFiber ? $task->fiberId() : $task->taskId();
+                if (!$isFiber && $task->isNetwork()) {
                     $task->close();
                 } else {
                     $task->setState('completed');
@@ -695,7 +714,7 @@ final class Coroutine implements CoroutineInterface
                 unset($this->taskMap[$id]);
             } else {
                 $task->setState('rescheduled');
-                $this->schedule($task);
+                $isFiber ? $this->scheduleFiber($task) : $this->schedule($task);
             }
 
             if ($isReturn) {
