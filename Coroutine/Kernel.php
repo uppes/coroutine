@@ -1052,10 +1052,11 @@ final class Kernel
         return new Kernel(
             function (FiberInterface $fiber, CoroutineInterface $coroutine) use ($data) {
                 $fiber->setState('suspended');
-                $taskFiber = $fiber->getTaskFiber();
-                $taskFiber->sendValue($data);
-                $isFiber = $taskFiber instanceof FiberInterface;
-                $isFiber ? $coroutine->scheduleFiber($taskFiber) : $coroutine->schedule($taskFiber);
+                $suspendTo = $fiber->getTaskFiber();
+                $suspendTo->sendValue($data);
+                $coroutine->isFiber($suspendTo)
+                    ? $coroutine->scheduleFiber($suspendTo)
+                    : $coroutine->schedule($suspendTo);
             }
         );
     }
@@ -1066,8 +1067,8 @@ final class Kernel
     public static function startFiber(FiberInterface $fiber)
     {
         return new Kernel(
-            function ($taskFiber, CoroutineInterface $coroutine) use ($fiber) {
-                $fiber->setTaskFiber($taskFiber);
+            function ($caller, CoroutineInterface $coroutine) use ($fiber) {
+                $fiber->setTaskFiber($caller);
                 $coroutine->scheduleFiber($fiber);
             }
         );
@@ -1079,13 +1080,26 @@ final class Kernel
     public static function resumeFiber(FiberInterface $fiber, $data)
     {
         return new Kernel(
-            function ($taskFiber, CoroutineInterface $coroutine) use ($fiber, $data) {
+            function ($caller, CoroutineInterface $coroutine) use ($fiber, $data) {
                 $fiber->setState('rescheduled');
-                $taskFiber = $fiber->getTaskFiber();
-                $fiber->setTaskFiber($taskFiber);
-                $taskFiber->sendValue($data);
-                $isFiber = $taskFiber instanceof FiberInterface;
-                $isFiber ? $coroutine->scheduleFiber($taskFiber) : $coroutine->schedule($taskFiber);
+                $fiber->setTaskFiber($caller);
+                $fiber->sendValue($data);
+                $coroutine->scheduleFiber($fiber);
+            }
+        );
+    }
+
+    /**
+     * @codeCoverageIgnore
+     */
+    public static function throwFiber(FiberInterface $fiber, $exception)
+    {
+        return new Kernel(
+            function ($caller, CoroutineInterface $coroutine) use ($fiber, $exception) {
+                $fiber->setState('erred');
+                $fiber->setTaskFiber($caller);
+                $fiber->setException($exception);
+                $coroutine->scheduleFiber($fiber);
             }
         );
     }

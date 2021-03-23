@@ -18,7 +18,8 @@ final class Fiber implements FiberInterface
     /**
      * @var TaskInterface|FiberInterface|null
      */
-    protected $fiberTask;
+    protected $taskFiber;
+    protected $taskType = 'fiber';
 
     /**
      * The number of scheduling cycles the fiber has completed.
@@ -92,7 +93,7 @@ final class Fiber implements FiberInterface
     protected $fiberStarted = false;
 
     /**
-     * Exception raised by a task, if any.
+     * Exception raised by a fiber, if any.
      *
      * @var object
      */
@@ -130,6 +131,26 @@ final class Fiber implements FiberInterface
         return yield Kernel::startFiber($this);
     }
 
+    public static function suspend($value = null)
+    {
+        return yield Kernel::suspendFiber($value);
+    }
+
+    public function resume($value = null)
+    {
+        return yield Kernel::resumeFiber($this, $value);
+    }
+
+    public function throw(Throwable $exception)
+    {
+        return yield Kernel::throwFiber($this, $exception);
+    }
+
+    public static function this(): ?self
+    {
+        return self::$fiber;
+    }
+
     public function run()
     {
         if (!$this->fiberStarted) {
@@ -141,6 +162,8 @@ final class Fiber implements FiberInterface
             $value = ($this->coroutine instanceof \Generator)
                 ? $this->coroutine->throw($this->exception)
                 : $this->exception;
+
+            $this->error = $this->exception;
 
             $this->exception = null;
             return $value;
@@ -155,6 +178,26 @@ final class Fiber implements FiberInterface
             $this->sendValue = null;
             return $value;
         }
+    }
+
+    public function close()
+    {
+        self::$fiber = null;
+        $this->callback = null;
+        $this->fiberId = null;
+        $this->cycles = 0;
+        $this->coroutine = null;
+        $this->state = 'closed';
+        $this->result = null;
+        $this->sendValue = null;
+        $this->fiberStarted = false;
+        $this->error = null;
+        $this->exception = null;
+        $this->scheduler = null;
+        $this->taskFiber = null;
+        $this->currentFile = null;
+        $this->currentLine = null;
+        $this->trace = null;
     }
 
     public function setState(string $status)
@@ -207,15 +250,6 @@ final class Fiber implements FiberInterface
         return $this->fiberId;
     }
 
-    public function resume($value = null)
-    {
-        return yield Kernel::resumeFiber($this, $value);
-    }
-
-    public function throw(Throwable $exception)
-    {
-    }
-
     public function isStarted(): bool
     {
         return $this->fiberStarted;
@@ -251,6 +285,16 @@ final class Fiber implements FiberInterface
         return ($this->state === 'rescheduled');
     }
 
+    public function isPending(): bool
+    {
+        return ($this->state === 'pending');
+    }
+
+    public function isNetwork(): bool
+    {
+        return ($this->taskType == 'networked');
+    }
+
     public function isFinished(): bool
     {
         return ($this->coroutine instanceof \Generator)
@@ -258,15 +302,19 @@ final class Fiber implements FiberInterface
             : true;
     }
 
+    public function result()
+    {
+        return $this->getReturn();
+    }
+
     public function getReturn()
     {
         if ($this->isTerminated()) {
             $result = $this->result;
-            $this->result = null;
+            $this->close();
             return !empty($result) ? $result : null;
         } elseif ($this->isRunning() || $this->isSuspended() || $this->isErred()) {
             $error = $this->error;
-            $this->error = null;
             if (empty($error))
                 $error = new FiberError("Internal operation stoppage, all data reset.");
 
@@ -274,21 +322,13 @@ final class Fiber implements FiberInterface
             $code = $error->getCode();
             $throwable = $error->getPrevious();
             $class = \get_class($error);
+            $this->close();
             return new $class($message, $code, $throwable);
         } else {
             // @codeCoverageIgnoreStart
+            $this->close();
             throw new FiberExit('Invalid internal state called');
             // @codeCoverageIgnoreEnd
         }
-    }
-
-    public static function this(): ?self
-    {
-        return self::$fiber;
-    }
-
-    public static function suspend($value = null)
-    {
-        return yield Kernel::suspendFiber($value);
     }
 }

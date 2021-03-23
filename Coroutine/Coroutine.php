@@ -511,6 +511,11 @@ final class Coroutine implements CoroutineInterface
         $this->taskQueue->enqueue($fiber);
     }
 
+    public function isFiber($fiber)
+    {
+        return $fiber instanceof FiberInterface;
+    }
+
     /**
      * A `stream/socket/fd` or `event` is free, ready or has data.
      * Retrieve `Task`, remove and update scheduler for it's execution.
@@ -566,7 +571,8 @@ final class Coroutine implements CoroutineInterface
         if (!empty($this->completedMap)) {
             foreach ($this->completedMap as $task) {
                 $task->close();
-                $task->customState('shutdown');
+                if (!$task instanceof FiberInterface)
+                    $task->customState('shutdown');
             }
         }
 
@@ -582,7 +588,12 @@ final class Coroutine implements CoroutineInterface
         unset($this->taskMap[$tid]);
 
         foreach ($this->taskQueue as $i => $task) {
-            if ($task->taskId() === $tid) {
+            if ($this->isFiber($task) && ($task->fiberId() === $tid)) {
+                $task->close();
+                $task->setState('cancelled');
+                unset($this->taskQueue[$i]);
+                break;
+            } elseif ($task->taskId() === $tid) {
                 if ($task->getCustomData() instanceof \UVFsEvent)
                     $this->fsRemove();
 
@@ -607,7 +618,7 @@ final class Coroutine implements CoroutineInterface
             if ($channel instanceof ChanneledInterface && \is_int($channelTask) && isset($this->taskMap[$channelTask])) {
                 unset($this->taskMap[$channelTask]);
                 foreach ($this->taskQueue as $i => $task) {
-                    if ($task->taskId() === $channelTask) {
+                    if (!$this->isFiber($task) && ($task->taskId() === $channelTask)) {
                         $task->close();
                         $task->setState('cancelled');
                         unset($this->taskQueue[$i]);
@@ -669,7 +680,7 @@ final class Coroutine implements CoroutineInterface
         while (!$this->taskQueue->isEmpty()) {
             $task = $this->taskQueue->dequeue();
             $isFiberSuspended = false;
-            $isFiber = $task instanceof FiberInterface;
+            $isFiber = $this->isFiber($task);
             if ($isFiber) {
                 $isFiberSuspended = $task->isSuspended();
             }
@@ -704,7 +715,7 @@ final class Coroutine implements CoroutineInterface
                     $this->cancelProgress($task);
 
                 $id = $isFiber ? $task->fiberId() : $task->taskId();
-                if (!$isFiber && $task->isNetwork()) {
+                if ($task->isNetwork()) {
                     $task->close();
                 } else {
                     $task->setState('completed');

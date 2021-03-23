@@ -47,6 +47,14 @@ interface CoroutineInterface
     public function scheduleFiber(FiberInterface $fiber);
 
     /**
+     * Check if `object` is a FiberInterface instance.
+     *
+     * @param mixed $fiber
+     * @return boolean
+     */
+    public function isFiber($object);
+
+    /**
      * Performs a clean application exit/shutdown, killing tasks/processes, and resetting all data.
      *
      * Provide `$skipTask` incase called by an Signal Handler.
