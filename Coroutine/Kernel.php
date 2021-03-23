@@ -79,16 +79,22 @@ final class Kernel
     }
 
     /**
-     * Tells the scheduler to pass the calling task and itself into the function.
+     * Tells the scheduler to pass the calling `task` or `fiber`, and itself into the function.
      *
-     * @param TaskInterface $task
+     * @param TaskInterface|FiberInterface $taskFiber
      * @param CoroutineInterface $coroutine
      * @return mixed
      */
-    public function __invoke(TaskInterface $task, CoroutineInterface $coroutine)
+    public function __invoke($taskFiber, CoroutineInterface $coroutine)
     {
-        $callback = $this->callback;
-        return $callback($task, $coroutine);
+        if ($taskFiber instanceof TaskInterface || $taskFiber instanceof FiberInterface) {
+            $callback = $this->callback;
+            return $callback($taskFiber, $coroutine);
+        }
+
+        // @codeCoverageIgnoreStart
+        \panic('Invalid Instance!');
+        // @codeCoverageIgnoreEnd
     }
 
     /**

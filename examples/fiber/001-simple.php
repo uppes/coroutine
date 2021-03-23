@@ -1,12 +1,21 @@
 <?php
 
-$fiber = new Fiber(function (): void {
-    $value = Fiber::suspend('fiber');
-    echo "Value used to resume fiber: ", $value, "\n";
-});
+include 'vendor/autoload.php';
 
-$value = $fiber->start();
+use Async\Coroutine\Fiber;
 
-echo "Value from fiber suspending: ", $value, "\n";
+function main()
+{
+    $fiber = new Fiber(function () {
+        $value = yield Fiber::suspend('fiber');
+        echo "Value used to resume fiber: ", $value, "\n";
+    });
 
-$fiber->resume('test');
+    $value = yield $fiber->start();
+
+    echo "Value from fiber suspending: ", $value, "\n";
+
+    yield $fiber->resume('test');
+}
+
+\coroutine_run(main());

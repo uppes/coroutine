@@ -146,7 +146,7 @@ final class Fiber implements FiberInterface
         return yield Kernel::throwFiber($this, $exception);
     }
 
-    public static function this(): ?self
+    public static function this(): ?FiberInterface
     {
         return self::$fiber;
     }
