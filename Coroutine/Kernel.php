@@ -1052,9 +1052,6 @@ final class Kernel
         }
     }
 
-    /**
-     * @codeCoverageIgnore
-     */
     public static function suspendFiber($data)
     {
         return new Kernel(
@@ -1069,9 +1066,6 @@ final class Kernel
         );
     }
 
-    /**
-     * @codeCoverageIgnore
-     */
     public static function startFiber(FiberInterface $fiber)
     {
         return new Kernel(
@@ -1082,9 +1076,6 @@ final class Kernel
         );
     }
 
-    /**
-     * @codeCoverageIgnore
-     */
     public static function resumeFiber(FiberInterface $fiber, $data)
     {
         return new Kernel(

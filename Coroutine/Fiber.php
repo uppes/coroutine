@@ -10,8 +10,6 @@ use Throwable;
  * This `Fiber` has same behavior as `Task` class, with exception in that it's directly usable/callable by the user.
  *
  * It has been added to address and simulate the new **unneeded** `RFC` https://wiki.php.net/rfc/fibers.
- *
- * @codeCoverageIgnore
  */
 final class Fiber implements FiberInterface
 {
@@ -141,6 +139,9 @@ final class Fiber implements FiberInterface
         return yield Kernel::resumeFiber($this, $value);
     }
 
+    /**
+     * @codeCoverageIgnore
+     */
     public function throw(Throwable $exception)
     {
         return yield Kernel::throwFiber($this, $exception);

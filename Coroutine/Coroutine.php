@@ -493,9 +493,6 @@ final class Coroutine implements CoroutineInterface
         $this->taskQueue->enqueue($task);
     }
 
-    /**
-     * @codeCoverageIgnore
-     */
     public function addFiber(FiberInterface $fiber)
     {
         $tid = ++$this->maxTaskId;
@@ -503,9 +500,6 @@ final class Coroutine implements CoroutineInterface
         return $tid;
     }
 
-    /**
-     * @codeCoverageIgnore
-     */
     public function scheduleFiber(FiberInterface $fiber)
     {
         $this->taskQueue->enqueue($fiber);
