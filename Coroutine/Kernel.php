@@ -93,7 +93,7 @@ final class Kernel
         }
 
         // @codeCoverageIgnoreStart
-        \panic('Invalid Instance!');
+        \panic('Must be instance of "Async\Coroutine\TaskInterface" or "Async\Coroutine\FiberInterface"');
         // @codeCoverageIgnoreEnd
     }
 
@@ -1024,7 +1024,7 @@ final class Kernel
             return Kernel::createTask(${$asyncLabel}(...$args));
         } else {
             return new Kernel(
-                function (TaskInterface $task, CoroutineInterface $coroutine) use ($asyncLabel, $args) {
+                function ($task, CoroutineInterface $coroutine) use ($asyncLabel, $args) {
                     if ($asyncLabel instanceof \Generator) {
                         $tid = $coroutine->createTask($asyncLabel);
                         if (!empty($args)) {
@@ -1044,7 +1044,9 @@ final class Kernel
                         $task->sendValue($coroutine->createTask(\awaitAble($asyncLabel, ...$args)));
                     }
 
-                    $coroutine->schedule($task);
+                    $coroutine->isFiber($task)
+                        ? $coroutine->scheduleFiber($task)
+                        : $coroutine->schedule($task);
                 }
             );
         }

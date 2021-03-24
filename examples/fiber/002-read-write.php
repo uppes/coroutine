@@ -1,5 +1,10 @@
 <?php
 
+include 'vendor/autoload.php';
+
+use Async\Coroutine\Fiber;
+
+/*
 class EventLoop
 {
     private $nextId = 'a';
@@ -46,41 +51,48 @@ class EventLoop
         $this->streamCallbacks[$id] = $callback;
     }
 }
+*/
 
-[$read, $write] = stream_socket_pair(
-    stripos(PHP_OS, 'win') === 0 ? STREAM_PF_INET : STREAM_PF_UNIX,
-    STREAM_SOCK_STREAM,
-    STREAM_IPPROTO_IP
-);
+function main()
+{
+    [$read, $write] = stream_socket_pair(
+        stripos(PHP_OS, 'win') === 0 ? STREAM_PF_INET : STREAM_PF_UNIX,
+        STREAM_SOCK_STREAM,
+        STREAM_IPPROTO_IP
+    );
 
-// Set streams to non-blocking mode.
-stream_set_blocking($read, false);
-stream_set_blocking($write, false);
+    // Set streams to non-blocking mode.
+    stream_set_blocking($read, false);
+    stream_set_blocking($write, false);
 
-$loop = new EventLoop;
+    // $loop = new EventLoop;
 
-// Read data in a separate fiber after checking if the stream is readable.
-$fiber = new Fiber(function () use ($loop, $read): void {
-    echo "Waiting for data...\n";
+    // Read data in a separate fiber after checking if the stream is readable.
+    $fiber = new Fiber(function () use ($read) {
+        echo "Waiting for data...\n";
 
-    $fiber = Fiber::this();
-    $loop->read($read, function () use ($fiber) {
-        $fiber->resume();
+        $fiber = Fiber::this();
+        yield away(function () use ($read, $fiber) {
+            yield read_wait($read);
+            yield $fiber->resume();
+        });
+
+        yield Fiber::suspend();
+
+        $data = fread($read, 8192);
+
+        echo "Received data: ", $data, "\n";
     });
-    Fiber::suspend();
 
-    $data = fread($read, 8192);
+    // Start the fiber, which will suspend while waiting for a read event.
+    yield $fiber->start();
 
-    echo "Received data: ", $data, "\n";
-});
-
-// Start the fiber, which will suspend while waiting for a read event.
-$fiber->start();
-
-// Defer writing data to an event loop callback.
-$loop->defer(function () use ($write) {
+    // Defer writing data to an event loop callback.
     fwrite($write, "Hello, world!");
-});
 
-// Run the event loop.
-$loop->run();
+    // Run the event loop.
+    // $loop->run();
+    yield;
+}
+
+\coroutine_run(main());
