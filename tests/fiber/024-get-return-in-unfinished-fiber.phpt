@@ -1,21 +1,36 @@
 --TEST--
 Fiber::getReturn() in unfinished fiber
---SKIPIF--
-<?php include __DIR__ . '/include/skip-if.php';
 --FILE--
 <?php
 
-$fiber = new Fiber(fn() => Fiber::suspend(1));
+require 'vendor/autoload.php';
 
-var_dump($fiber->start());
+use Async\Coroutine\Fiber;
+
+function main()
+{
+
+$fiber = new Fiber(function() { yield Fiber::suspend(1);});
+
+var_dump(yield $fiber->start());
 
 $fiber->getReturn();
+
+}
+
+\coroutine_run(main());
 
 --EXPECTF--
 int(1)
 
-Fatal error: Uncaught FiberError: Cannot get fiber return value: The fiber has not returned in %s024-get-return-in-unfinished-fiber.php:%d
+Fatal error: Uncaught Async\Coroutine\FiberError: Cannot get fiber return value: The fiber has not returned in %S
 Stack trace:
-#0 %s024-get-return-in-unfinished-fiber.php(%d): Fiber->getReturn()
-#1 {main}
-  thrown in %s024-get-return-in-unfinished-fiber.php on line %d
+#0 %S
+#1 [internal function]: main()
+#2 %S
+#3 [internal function]: Async\Coroutine\Coroutine::create(Object(Generator))
+#4 %S
+#5 %S
+#6 %S
+#7 %S
+#8 %S

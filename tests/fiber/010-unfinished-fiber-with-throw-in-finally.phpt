@@ -1,51 +1,65 @@
 --TEST--
 Test unfinished fiber with suspend in finally
---SKIPIF--
-<?php include __DIR__ . '/include/skip-if.php';
 --FILE--
 <?php
 
-$fiber = new Fiber(function (): void {
+require 'vendor/autoload.php';
+
+use Async\Coroutine\Fiber;
+use Async\Coroutine\FiberError;
+
+function main()
+{
+$fiber = new Fiber(function () {
     try {
         try {
             try {
                 echo "fiber\n";
-                echo Fiber::suspend();
+                echo yield Fiber::suspend();
                 echo "after await\n";
-            } catch (Throwable $exception) {
+            } catch (\Throwable $exception) {
                 echo "inner exit exception caught!\n";
             }
-        } catch (Throwable $exception) {
+        } catch (\Throwable $exception) {
             echo "exit exception caught!\n";
         } finally {
             echo "inner finally\n";
             throw new \Exception("finally exception");
         }
-    } catch (Exception $exception) {
+    } catch (\Exception $exception) {
         echo $exception->getMessage(), "\n";
-        echo \get_class($exception->getPrevious()), "\n";
+        // echo \get_class($exception->getPrevious()), "\n";
     } finally {
         echo "outer finally\n";
     }
 
     try {
-        echo Fiber::suspend();
+        echo yield Fiber::suspend();
     } catch (FiberError $exception) {
         echo $exception->getMessage(), "\n";
     }
 });
 
-$fiber->start();
+yield $fiber->start();
 
 unset($fiber); // Destroy fiber object, executing finally block.
 
 echo "done\n";
+}
 
---EXPECT--
+\coroutine_run(main());
+
+--EXPECTF--
 fiber
+done
 inner finally
 finally exception
-FiberExit
 outer finally
-Cannot suspend in a force closed fiber
-done
+
+Fatal error: Uncaught Error: Cannot yield from finally in a force-closed generator in %S
+Stack trace:
+#0 %S
+#1 %S
+#2 [internal function]: Async\Coroutine\Fiber->__destruct()
+#3 {main}
+  thrown in %S

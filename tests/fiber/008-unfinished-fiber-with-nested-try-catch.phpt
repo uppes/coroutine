@@ -1,16 +1,20 @@
 --TEST--
 Test unfinished fiber with nested try/catch blocks
---SKIPIF--
-<?php include __DIR__ . '/include/skip-if.php';
 --FILE--
 <?php
 
-$fiber = new Fiber(function (): void {
+require 'vendor/autoload.php';
+
+use Async\Coroutine\Fiber;
+
+function main()
+{
+$fiber = new Fiber(function () {
     try {
         try {
             try {
                 echo "fiber\n";
-                echo Fiber::suspend();
+                echo yield Fiber::suspend();
                 echo "after await\n";
             } catch (Throwable $exception) {
                 echo "inner exit exception caught!\n";
@@ -27,7 +31,7 @@ $fiber = new Fiber(function (): void {
     echo "unreached\n";
 
     try {
-        echo Fiber::suspend();
+        echo yield Fiber::suspend();
     } finally {
         echo "unreached\n";
     }
@@ -35,14 +39,17 @@ $fiber = new Fiber(function (): void {
     echo "end of fiber should not be reached\n";
 });
 
-$fiber->start();
+yield $fiber->start();
 
 unset($fiber); // Destroy fiber object, executing finally block.
 
 echo "done\n";
+}
+
+\coroutine_run(main());
 
 --EXPECT--
 fiber
+done
 inner finally
 outer finally
-done

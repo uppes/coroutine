@@ -1,25 +1,40 @@
 --TEST--
 Fiber::getReturn() after a fiber throws
---SKIPIF--
-<?php include __DIR__ . '/include/skip-if.php';
 --FILE--
 <?php
 
-$fiber = new Fiber(fn() => throw new Exception('test'));
+require 'vendor/autoload.php';
+
+use Async\Coroutine\Fiber;
+
+function main()
+{
+
+$fiber = new Fiber(function() { throw new \Exception('test');});
 
 try {
-    $fiber->start();
+    yield $fiber->start();
 } catch (Exception $exception) {
     echo $exception->getMessage(), "\n";
 }
 
 $fiber->getReturn();
 
+}
+
+\coroutine_run(main());
+
 --EXPECTF--
 test
 
-Fatal error: Uncaught FiberError: Cannot get fiber return value: The fiber threw an exception in %s023-get-return-after-throwing.php:%d
+Fatal error: Uncaught Async\Coroutine\FiberError: Cannot get fiber return value: The fiber has not returned in %S
 Stack trace:
-#0 %s023-get-return-after-throwing.php(%d): Fiber->getReturn()
-#1 {main}
-  thrown in %s023-get-return-after-throwing.php on line %d
+#0 %S
+#1 %S
+#2 %S
+#3 [internal function]: Async\Coroutine\Coroutine::create(Object(Generator))
+#4 %S
+#5 %S
+#6 %S
+#7 %S
+#8 %S

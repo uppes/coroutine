@@ -1,21 +1,29 @@
 --TEST--
 Exit from fiber
---SKIPIF--
-<?php include __DIR__ . '/include/skip-if.php';
 --FILE--
 <?php
 
-$fiber = new Fiber(function (): void {
-    Fiber::suspend();
+require 'vendor/autoload.php';
+
+use Async\Coroutine\Fiber;
+
+function main()
+{
+
+$fiber = new Fiber(function () {
+    yield Fiber::suspend();
     echo "resumed\n";
     exit();
 });
 
-$fiber->start();
+yield $fiber->start();
 
-$fiber->resume();
+yield $fiber->resume();
 
 echo "unreachable\n";
+}
+
+\coroutine_run(main());
 
 --EXPECT--
 resumed

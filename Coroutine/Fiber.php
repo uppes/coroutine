@@ -4,6 +4,8 @@ namespace Async\Coroutine;
 
 use Async\Coroutine\Coroutine;
 use Async\Coroutine\FiberInterface;
+use Async\Coroutine\FiberError;
+use Async\Coroutine\FiberExit;
 use Throwable;
 
 /**
@@ -36,37 +38,11 @@ final class Fiber implements FiberInterface
     protected $fiberId;
 
     /**
-     * A indicator of current file of fiber execution.
-     *
-     * @var string
-     */
-    protected $currentFile;
-
-    /**
-     * A indicator of current line of fiber execution.
-     *
-     * @var int
-     */
-    protected $currentLine;
-
-    /**
-     * Fiber backtrace.
-     *
-     * @var array
-     */
-    protected $trace;
-
-    /**
      * The underlying coroutine associated with `Fiber`.
      *
      * @var mixed
      */
     protected $coroutine;
-
-    /**
-     * @var Coroutine
-     */
-    protected $scheduler;
 
     /**
      * The name of the fiber’s current `status` state.
@@ -81,6 +57,7 @@ final class Fiber implements FiberInterface
      * @var mixed
      */
     protected $result;
+    protected $finishResult;
     protected $sendValue = null;
 
     /**
@@ -110,6 +87,11 @@ final class Fiber implements FiberInterface
      */
     protected static $fiber = null;
 
+    public function __destruct()
+    {
+        $this->close();
+    }
+
     /**
      * @param callable $callback Function to invoke when starting the fiber.
      */
@@ -118,33 +100,41 @@ final class Fiber implements FiberInterface
         self::$fiber = $this;
         $this->callback = $callback;
         $this->state = 'pending';
-        $this->scheduler = \coroutine_create();
-        $this->fiberId = $this->scheduler->addFiber($this);
+        $this->fiberId = \coroutine_create()->addFiber($this);
     }
 
     public function start(...$args)
     {
-        $fiberTask = awaitable($this->callback, ...$args);
-        $this->coroutine = Coroutine::create($fiberTask);
+        if ($this->isStarted())
+            throw new FiberError('Cannot start a fiber that has already been started in ' . __FILE__);
+
+        $data = &$args;
+        $this->coroutine = Coroutine::create(\awaitable($this->callback, ...$data));
         return yield Kernel::startFiber($this);
     }
 
     public static function suspend($value = null)
     {
-        return yield Kernel::suspendFiber($value);
+        $data = &$value;
+        return yield Kernel::suspendFiber($data);
     }
 
     public function resume($value = null)
     {
-        return yield Kernel::resumeFiber($this, $value);
+        if (!$this->isSuspended())
+            throw new FiberError('Cannot resume a fiber that is not suspended in ' . __FILE__);
+
+        $data = &$value;
+        return yield Kernel::resumeFiber($this, $data);
     }
 
-    /**
-     * @codeCoverageIgnore
-     */
     public function throw(Throwable $exception)
     {
-        return yield Kernel::throwFiber($this, $exception);
+        if (!$this->isSuspended())
+            throw new FiberError('Cannot resume a fiber that is not suspended in ' . __FILE__);
+
+        $error = &$exception;
+        return yield Kernel::throwFiber($this, $error);
     }
 
     public static function this(): ?FiberInterface
@@ -173,7 +163,7 @@ final class Fiber implements FiberInterface
                 ? $this->coroutine->send($this->sendValue)
                 : $this->sendValue;
 
-            if (!empty($value))
+            if (!\is_null($value))
                 $this->result = $value;
 
             $this->sendValue = null;
@@ -194,11 +184,18 @@ final class Fiber implements FiberInterface
         $this->fiberStarted = false;
         $this->error = null;
         $this->exception = null;
-        $this->scheduler = null;
         $this->taskFiber = null;
-        $this->currentFile = null;
-        $this->currentLine = null;
-        $this->trace = null;
+        $this->finishResult = null;
+    }
+
+    public function getGenerator()
+    {
+        return $this->coroutine;
+    }
+
+    public function setReturn($value)
+    {
+        $this->finishResult = $value;
     }
 
     public function setState(string $status)
@@ -221,13 +218,26 @@ final class Fiber implements FiberInterface
         $this->error = $this->exception = $exception;
     }
 
+    /**
+     * Return the exception of the fiber.
+     *
+     * @return \Exception
+     *
+     * @internal
+     * @codeCoverageIgnore
+     */
+    public function exception(): ?\Exception
+    {
+        return $this->error;
+    }
+
     public function sendValue($sendValue)
     {
         $this->sendValue = $sendValue;
     }
 
     /**
-     * Add to counter of the cycles the task has run.
+     * Add to counter of the cycles the fiber has run.
      *
      * @return void
      */
@@ -237,7 +247,7 @@ final class Fiber implements FiberInterface
     }
 
     /**
-     * Return the number of times the scheduled task has run.
+     * Return the number of times the scheduled fiber has run.
      *
      * @return int
      */
@@ -271,14 +281,27 @@ final class Fiber implements FiberInterface
         return ($this->state === 'completed');
     }
 
+    public function getReturn()
+    {
+        if ($this->isTerminated()) {
+            return !empty($this->result) ? $this->result : $this->finishResult;
+        } elseif (!$this->isStarted() || $this->isActive() || $this->isErred()) {
+            $error = $this->error;
+            if ($this->isActive()) {
+                throw new FiberError("Cannot get fiber return value: The fiber has not returned in " . __FILE__);
+            } elseif ($this->isErred()) {
+                throw new FiberError("Cannot get fiber return value: The fiber threw an exception in " . $error->getMessage(), 0, $error);
+            } elseif (!$this->isStarted()) {
+                throw new FiberError("Cannot get fiber return value: The fiber has not been started in " . __FILE__);
+            }
+        } else {
+            throw new FiberExit('Invalid internal state called.');
+        }
+    }
+
     public function isErred(): bool
     {
         return ($this->state === 'erred');
-    }
-
-    public function isCompleted(): bool
-    {
-        return $this->isTerminated();
     }
 
     public function isRescheduled(): bool
@@ -286,14 +309,9 @@ final class Fiber implements FiberInterface
         return ($this->state === 'rescheduled');
     }
 
-    public function isPending(): bool
+    public function isActive(): bool
     {
-        return ($this->state === 'pending');
-    }
-
-    public function isNetwork(): bool
-    {
-        return ($this->taskType == 'networked');
+        return ($this->isRunning() || $this->isRescheduled() || $this->isSuspended());
     }
 
     public function isFinished(): bool
@@ -301,35 +319,5 @@ final class Fiber implements FiberInterface
         return ($this->coroutine instanceof \Generator)
             ? !$this->coroutine->valid()
             : true;
-    }
-
-    public function result()
-    {
-        return $this->getReturn();
-    }
-
-    public function getReturn()
-    {
-        if ($this->isTerminated()) {
-            $result = $this->result;
-            $this->close();
-            return !empty($result) ? $result : null;
-        } elseif ($this->isRunning() || $this->isSuspended() || $this->isErred()) {
-            $error = $this->error;
-            if (empty($error))
-                $error = new FiberError("Internal operation stoppage, all data reset.");
-
-            $message = $error->getMessage();
-            $code = $error->getCode();
-            $throwable = $error->getPrevious();
-            $class = \get_class($error);
-            $this->close();
-            return new $class($message, $code, $throwable);
-        } else {
-            // @codeCoverageIgnoreStart
-            $this->close();
-            throw new FiberExit('Invalid internal state called');
-            // @codeCoverageIgnoreEnd
-        }
     }
 }

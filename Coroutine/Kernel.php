@@ -1088,9 +1088,6 @@ final class Kernel
         );
     }
 
-    /**
-     * @codeCoverageIgnore
-     */
     public static function throwFiber(FiberInterface $fiber, $exception)
     {
         return new Kernel(

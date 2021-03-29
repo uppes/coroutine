@@ -1,25 +1,40 @@
 --TEST--
 Test throwing into fiber
---SKIPIF--
-<?php include __DIR__ . '/include/skip-if.php';
 --FILE--
 <?php
 
-$fiber = new Fiber(function (): void {
-    Fiber::suspend('test');
+require 'vendor/autoload.php';
+
+use Async\Coroutine\Fiber;
+
+function main()
+{
+$fiber = new Fiber(function () {
+    yield Fiber::suspend('test');
     throw new Exception('test');
 });
 
-$value = $fiber->start();
+$value = yield $fiber->start();
 var_dump($value);
 
-$fiber->resume($value);
+yield $fiber->resume($value);
+}
+
+\coroutine_run(main());
 
 --EXPECTF--
 string(4) "test"
 
-Fatal error: Uncaught Exception: test in %s005-failing-fiber.php:%d
+Fatal error: Uncaught Exception: test in %S
 Stack trace:
-#0 [internal function]: {closure}()
-#1 {main}
-  thrown in %s005-failing-fiber.php on line %d
+%S#0 [internal function]: {closure}()
+#1 %S
+%S#2 [internal function]: Async\Coroutine\Coroutine::create(Object(Generator))
+#3 %S
+#4 %S
+#5 %S
+#6 %S
+#7 %S
+#8 %S
+#9 {main}
+  thrown in %S

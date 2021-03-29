@@ -1,15 +1,23 @@
 --TEST--
 Fatal error in new fiber
---SKIPIF--
-<?php include __DIR__ . '/include/skip-if.php';
 --FILE--
 <?php
 
-$fiber = new Fiber(function (): void {
+require 'vendor/autoload.php';
+
+use Async\Coroutine\Fiber;
+
+function main()
+{
+
+$fiber = new Fiber(function () {
     trigger_error("Fatal error in fiber", E_USER_ERROR);
 });
 
-$fiber->start();
+yield $fiber->start();
+}
+
+\coroutine_run(main());
 
 --EXPECTF--
-Fatal error: Fatal error in fiber in %s013-fatal-error-in-fiber.php on line %d
+Fatal error: Fatal error in fiber in %S

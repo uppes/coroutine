@@ -1,12 +1,18 @@
 --TEST--
 ReflectionFiber errors
---SKIPIF--
-<?php include __DIR__ . '/include/skip-if.php';
 --FILE--
 <?php
 
-$fiber = new Fiber(function (): void {
-    Fiber::suspend();
+require 'vendor/autoload.php';
+
+use Async\Coroutine\Fiber;
+use Async\Coroutine\ReflectionFiber;
+
+function main()
+{
+
+$fiber = new Fiber(function () {
+    yield Fiber::suspend();
 });
 
 $reflection = new ReflectionFiber($fiber);
@@ -29,12 +35,12 @@ try {
     echo $error->getMessage(), "\n";
 }
 
-$fiber->start();
+yield $fiber->start();
 
 var_dump($reflection->getExecutingFile());
 var_dump($reflection->getExecutingLine());
 
-$fiber->resume();
+yield $fiber->resume();
 
 try {
     $reflection->getTrace();
@@ -54,12 +60,16 @@ try {
     echo $error->getMessage(), "\n";
 }
 
+}
+
+\coroutine_run(main());
+
 --EXPECTF--
 Cannot fetch information from a fiber that has not been started or is terminated
 Cannot fetch information from a fiber that has not been started or is terminated
 Cannot fetch information from a fiber that has not been started or is terminated
-string(%d) "%s%e017-reflection-fiber-errors.php"
-int(4)
+string(%d) "%S
+int(%d)
 Cannot fetch information from a fiber that has not been started or is terminated
 Cannot fetch information from a fiber that has not been started or is terminated
 Cannot fetch information from a fiber that has not been started or is terminated

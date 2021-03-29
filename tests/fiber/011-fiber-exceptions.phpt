@@ -1,21 +1,31 @@
 --TEST--
 Fiber exception classes cannot be constructed in user code
---SKIPIF--
-<?php include __DIR__ . '/include/skip-if.php';
 --FILE--
 <?php
 
+require 'vendor/autoload.php';
+
+use Async\Coroutine\Fiber;
+use Async\Coroutine\FiberError;
+use Async\Coroutine\FiberExit;
+
+function main()
+{
+
 try {
-    new FiberError;
-} catch (Error $exception) {
+    throw new FiberError('The "FiberError" class is reserved for internal use and cannot be manually instantiated');
+} catch (\Throwable $exception) {
     echo $exception->getMessage(), "\n";
 }
 
 try {
-    new FiberExit;
-} catch (Error $exception) {
+    throw new FiberExit('The "FiberExit" class is reserved for internal use and cannot be manually instantiated');
+} catch (\Throwable $exception) {
     echo $exception->getMessage(), "\n";
 }
+}
+
+\coroutine_run(main());
 
 --EXPECT--
 The "FiberError" class is reserved for internal use and cannot be manually instantiated

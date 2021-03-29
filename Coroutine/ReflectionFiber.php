@@ -1,16 +1,30 @@
 <?php
 
-/**
- * @codeCoverageIgnore
- */
+namespace  Async\Coroutine;
+
+use ReflectionGenerator;
+use Async\Coroutine\Fiber;
+use Async\Coroutine\FiberError;
+
 class ReflectionFiber
 {
+    /**
+     * @var array
+     */
+    protected $reflection = [];
+
+    /**
+     * @var Fiber
+     */
+    protected $fiber = null;
+
     /**
      * @param Fiber $fiber Any Fiber object, including those that are not started or have
      *                     terminated.
      */
     public function __construct(Fiber $fiber)
     {
+        $this->fiber = $fiber;
     }
 
     /**
@@ -18,6 +32,14 @@ class ReflectionFiber
      */
     public function getExecutingFile(): string
     {
+        try {
+            if ($this->fiber->getGenerator() instanceof \Generator) {
+                return (new ReflectionGenerator($this->fiber->getGenerator()))->getExecutingFile();
+            }
+        } catch (\ReflectionException $e) {
+        }
+
+        throw new FiberError('Cannot fetch information from a fiber that has not been started or is terminated');
     }
 
     /**
@@ -25,6 +47,14 @@ class ReflectionFiber
      */
     public function getExecutingLine(): int
     {
+        try {
+            if ($this->fiber->getGenerator() instanceof \Generator) {
+                return (new ReflectionGenerator($this->fiber->getGenerator()))->getExecutingLine();
+            }
+        } catch (\ReflectionException $e) {
+        }
+
+        throw new FiberError('Cannot fetch information from a fiber that has not been started or is terminated');
     }
 
     /**
@@ -35,6 +65,16 @@ class ReflectionFiber
      */
     public function getTrace(int $options = DEBUG_BACKTRACE_PROVIDE_OBJECT): array
     {
+        try {
+            if ($this->fiber->getGenerator() instanceof \Generator) {
+                $this->reflection = (new ReflectionGenerator($this->fiber->getGenerator()))->getTrace($options);
+                $json = \json_encode(\print_r($this->fiber, true));
+                return \array_merge($this->reflection, (array) \json_decode($json, true));
+            }
+        } catch (\ReflectionException $e) {
+        }
+
+        throw new FiberError('Cannot fetch information from a fiber that has not been started or is terminated');
     }
 
     /**
@@ -42,6 +82,7 @@ class ReflectionFiber
      */
     public function isStarted(): bool
     {
+        return $this->fiber->isStarted();
     }
 
     /**
@@ -49,6 +90,7 @@ class ReflectionFiber
      */
     public function isSuspended(): bool
     {
+        return $this->fiber->isSuspended();
     }
 
     /**
@@ -56,6 +98,7 @@ class ReflectionFiber
      */
     public function isRunning(): bool
     {
+        return $this->fiber->isRunning();
     }
 
     /**
@@ -64,5 +107,11 @@ class ReflectionFiber
      */
     public function isTerminated(): bool
     {
+        return $this->fiber->isTerminated();
+    }
+
+    public function getFiber(): Fiber
+    {
+        return $this->fiber;
     }
 }

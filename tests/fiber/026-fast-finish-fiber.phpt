@@ -1,15 +1,23 @@
 --TEST--
 Fast finishing fiber does not leak
---SKIPIF--
-<?php include __DIR__ . '/include/skip-if.php';
 --FILE--
 <?php
 
-$fiber = new Fiber(fn() => 'test');
+require 'vendor/autoload.php';
+
+use Async\Coroutine\Fiber;
+
+function main()
+{
+
+$fiber = new Fiber(function() { return 'test';});
 var_dump($fiber->isStarted());
-var_dump($fiber->start());
+var_dump(yield $fiber->start());
 var_dump($fiber->getReturn());
 var_dump($fiber->isTerminated());
+}
+
+\coroutine_run(main());
 
 --EXPECTF--
 bool(false)

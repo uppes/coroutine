@@ -1,17 +1,27 @@
 --TEST--
 Fiber::getReturn() from unstarted fiber
---SKIPIF--
-<?php include __DIR__ . '/include/skip-if.php';
 --FILE--
 <?php
 
-$fiber = new Fiber(fn() => Fiber::suspend(1));
+require 'vendor/autoload.php';
+
+use Async\Coroutine\Fiber;
+
+function main()
+{
+
+$fiber = new Fiber(function() {yield Fiber::suspend(1);});
 
 $fiber->getReturn();
 
+}
+
+\coroutine_run(main());
+
 --EXPECTF--
-Fatal error: Uncaught FiberError: Cannot get fiber return value: The fiber has not been started in %s025-get-return-from-unstarted-fiber.php:%d
+Fatal error: Uncaught Async\Coroutine\FiberError: Cannot get fiber return value: The fiber has not been started in %S
 Stack trace:
-#0 %s025-get-return-from-unstarted-fiber.php(%d): Fiber->getReturn()
-#1 {main}
-  thrown in %s025-get-return-from-unstarted-fiber.php on line %d
+#0 %S
+#1 %S
+#2 {main}
+  thrown in %S

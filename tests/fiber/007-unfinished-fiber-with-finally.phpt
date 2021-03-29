@@ -1,14 +1,18 @@
 --TEST--
 Test unfinished fiber with finally block
---SKIPIF--
-<?php include __DIR__ . '/include/skip-if.php';
 --FILE--
 <?php
 
-$fiber = new Fiber(function (): void {
+require 'vendor/autoload.php';
+
+use Async\Coroutine\Fiber;
+
+function main()
+{
+$fiber = new Fiber(function () {
     try {
         echo "fiber\n";
-        echo Fiber::suspend();
+        echo yield Fiber::suspend();
         echo "after suspend\n";
     } catch (Throwable $exception) {
         echo "exit exception caught!\n";
@@ -19,13 +23,17 @@ $fiber = new Fiber(function (): void {
     echo "end of fiber should not be reached\n";
 });
 
-$fiber->start();
+yield $fiber->start();
 
 unset($fiber); // Destroy fiber object, executing finally block.
 
 echo "done\n";
 
+}
+
+\coroutine_run(main());
+
 --EXPECT--
 fiber
-finally
 done
+finally

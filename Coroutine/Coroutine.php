@@ -21,6 +21,7 @@ use Async\Coroutine\PlainValueCoroutine;
 use Async\Coroutine\CoroutineInterface;
 use Async\Coroutine\Exceptions\CancelledError;
 use Async\Coroutine\Exceptions\InvalidArgumentException;
+use Async\Coroutine\Fiber;
 use Async\Coroutine\FiberInterface;
 
 /**
@@ -669,25 +670,78 @@ final class Coroutine implements CoroutineInterface
         return $this->execute();
     }
 
+    /**
+     * Run all `fibers` in the queue.
+     *
+     * @param Fiber $fiber
+     * @return void
+     *
+     * @internal
+     */
+    protected function executeFiber(Fiber $fiber)
+    {
+        // Skip and reschedule, if `fiber` in suspend state
+        if ($fiber->isSuspended())
+            return $this->scheduleFiber($fiber);
+
+        $fiber->setState('running');
+        $fiber->cyclesAdd();
+        try {
+            $value = $fiber->run();
+        } catch (\Throwable $error) {
+            $returning = $fiber->getTaskFiber();
+            $returning->setState('erred');
+            $returning->setException($error);
+            $this->isFiber($returning)
+                ? $this->scheduleFiber($returning)
+                : $this->schedule($returning);
+            return;
+        }
+
+        if ($value instanceof Kernel) {
+            try {
+                $value($fiber, $this);
+            } catch (\Throwable $error) {
+                $fiber->setState('erred');
+                $fiber->setException($error);
+                $this->scheduleFiber($fiber);
+            }
+
+            return;
+        }
+
+        if ($fiber->isFinished()) {
+            $fiber->setState('completed');
+            $id = $fiber->fiberId();
+            $returning = $fiber->getTaskFiber();
+            $this->isFiber($returning)
+                ? $this->scheduleFiber($returning)
+                : $this->schedule($returning);
+            unset($this->taskMap[$id]);
+        } else {
+            if (!$value instanceof Kernel && !empty($value)) {
+                $fiber->setReturn($value);
+            }
+
+            $fiber->setState('rescheduled');
+            $this->scheduleFiber($fiber);
+        }
+
+        return;
+    }
+
     public function execute($isReturn = false)
     {
         while (!$this->taskQueue->isEmpty()) {
             $task = $this->taskQueue->dequeue();
-            $isFiberSuspended = false;
-            $isFiber = $this->isFiber($task);
-            if ($isFiber) {
-                $isFiberSuspended = $task->isSuspended();
+            if ($this->isFiber($task)) {
+                $this->executeFiber($task);
+                continue;
             }
 
-            // Skip and reschedule, if `fiber` in suspend state
-            if ($isFiberSuspended) {
-                $this->scheduleFiber($task);
-                continue;
-            } else {
-                $task->setState('running');
-                $task->cyclesAdd();
-                $value = $task->run();
-            }
+            $task->setState('running');
+            $task->cyclesAdd();
+            $value = $task->run();
 
             if ($value instanceof Kernel) {
                 try {
@@ -698,17 +752,15 @@ final class Coroutine implements CoroutineInterface
                     );
 
                     $task->setException($error);
-                    $isFiber ? $this->scheduleFiber($task) : $this->schedule($task);
+                    $this->schedule($task);
                 }
 
                 continue;
             }
 
             if ($task->isFinished()) {
-                if (!$isFiber)
-                    $this->cancelProgress($task);
-
-                $id = $isFiber ? $task->fiberId() : $task->taskId();
+                $this->cancelProgress($task);
+                $id = $task->taskId();
                 if ($task->isNetwork()) {
                     $task->close();
                 } else {
@@ -719,7 +771,7 @@ final class Coroutine implements CoroutineInterface
                 unset($this->taskMap[$id]);
             } else {
                 $task->setState('rescheduled');
-                $isFiber ? $this->scheduleFiber($task) : $this->schedule($task);
+                $this->schedule($task);
             }
 
             if ($isReturn) {

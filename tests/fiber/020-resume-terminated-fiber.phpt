@@ -1,19 +1,35 @@
 --TEST--
 Resume terminated fiber
---SKIPIF--
-<?php include __DIR__ . '/include/skip-if.php';
 --FILE--
 <?php
 
-$fiber = new Fiber(fn() => null);
+require 'vendor/autoload.php';
 
-$fiber->start();
+use Async\Coroutine\Fiber;
 
-$fiber->resume();
+function main()
+{
+
+$fiber = new Fiber(function() { return null;});
+
+yield $fiber->start();
+
+yield $fiber->resume();
+
+}
+
+\coroutine_run(main());
 
 --EXPECTF--
-Fatal error: Uncaught FiberError: Cannot resume a fiber that is not suspended in %s020-resume-terminated-fiber.php:%d
+Fatal error: Uncaught Async\Coroutine\FiberError: Cannot resume a fiber that is not suspended in %S
 Stack trace:
-#0 %s020-resume-terminated-fiber.php(%d): Fiber->resume()
-#1 {main}
-  thrown in %s020-resume-terminated-fiber.php on line %d
+#0 %S
+#1 %S
+#2 [internal function]: Async\Coroutine\Coroutine::create(Object(Generator))
+#3 %S
+#4 %S
+#5 %S
+#6 %S
+#7 %S
+#8 {main}
+  thrown in %S

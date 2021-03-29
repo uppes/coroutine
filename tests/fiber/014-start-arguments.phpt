@@ -1,29 +1,43 @@
 --TEST--
 Arguments to fiber callback
---SKIPIF--
-<?php include __DIR__ . '/include/skip-if.php';
 --FILE--
 <?php
 
-$fiber = new Fiber(function (int $x): int {
-    return $x + Fiber::suspend($x);
+require 'vendor/autoload.php';
+
+use Async\Coroutine\Fiber;
+
+function main()
+{
+
+$fiber = new Fiber(function (int $x) {
+    return $x + yield Fiber::suspend($x);
 });
 
-$x = $fiber->start(1);
-$fiber->resume(0);
+$x = yield $fiber->start(1);
+yield $fiber->resume(0);
 var_dump($fiber->getReturn());
 
-$fiber = new Fiber(function (int $x): int {
-    return $x + Fiber::suspend($x);
+$fiber = new Fiber(function (int $x) {
+    return $x + yield Fiber::suspend($x);
 });
 
-$fiber->start('test');
+yield $fiber->start('test');
+
+}
+
+\coroutine_run(main());
 
 --EXPECTF--
 int(1)
 
-Fatal error: Uncaught TypeError: {closure}(): Argument #1 ($x) must be of type int, string given in %s014-start-arguments.php:%d
+Fatal error: Uncaught TypeError: Argument 1 passed to {closure}() must be of the type integer, string given, called in %S
 Stack trace:
-#0 [internal function]: {closure}('test')
-#1 {main}
-  thrown in %s014-start-arguments.php on line %d
+#0 %S
+#1 [internal function]: awaitable(Object(Closure), 'test')
+#2 %S
+#3 [internal function]: Async\Coroutine\Coroutine::create(Object(Generator))
+#4 %S
+#5 %S
+#6 %S
+#7 %S

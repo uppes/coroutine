@@ -1,23 +1,32 @@
 --TEST--
 Fatal error in a fiber with other active fibers
---SKIPIF--
-<?php include __DIR__ . '/include/skip-if.php';
 --FILE--
 <?php
 
-$fiber1 = new Fiber(fn() => Fiber::suspend(1));
+require 'vendor/autoload.php';
 
-$fiber2 = new Fiber(function (): void {
-    \Fiber::suspend(2);
+use Async\Coroutine\Fiber;
+
+function main()
+{
+
+$fiber1 = new Fiber(function() { yield Fiber::suspend(1); });
+
+$fiber2 = new Fiber(function () {
+    yield Fiber::suspend(2);
     trigger_error("Fatal error in fiber", E_USER_ERROR);
 });
 
-var_dump($fiber1->start());
-var_dump($fiber2->start());
-$fiber2->resume();
+var_dump(yield $fiber1->start());
+var_dump(yield $fiber2->start());
+yield $fiber2->resume();
+
+}
+
+\coroutine_run(main());
 
 --EXPECTF--
 int(1)
 int(2)
 
-Fatal error: Fatal error in fiber in %s022-fatal-error-with-multiple-fibers.php on line %d
+Fatal error: Fatal error in fiber in %S
