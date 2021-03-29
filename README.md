@@ -2,7 +2,9 @@
 
 [![Linux](https://github.com/symplely/coroutine/workflows/Linux/badge.svg)](https://github.com/symplely/coroutine/actions?query=workflow%3ALinux)[![Windows](https://github.com/symplely/coroutine/workflows/Windows/badge.svg)](https://github.com/symplely/coroutine/actions?query=workflow%3AWindows)[![macOS](https://github.com/symplely/coroutine/workflows/macOS/badge.svg)](https://github.com/symplely/coroutine/actions?query=workflow%3AmacOS)[![codecov](https://codecov.io/gh/symplely/coroutine/branch/master/graph/badge.svg)](https://codecov.io/gh/symplely/coroutine)[![Codacy Badge](https://api.codacy.com/project/badge/Grade/44a6f32f03194872b7d4cd6a2411ff79)](https://www.codacy.com/app/techno-express/coroutine?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=symplely/coroutine&amp;utm_campaign=Badge_Grade)[![Maintainability](https://api.codeclimate.com/v1/badges/1bfc3497fde67b111a04/maintainability)](https://codeclimate.com/github/symplely/coroutine/maintainability)
 
-> For versions `1.5.x` onward, has features of an PHP extension [UV](https://github.com/amphp/ext-uv), of **Node.js** [libuv](https://github.com/libuv/libuv) library, see the online [book](https://nikhilm.github.io/uvbook/index.html) for a full tutorial overview.
+This is version **2x**, it breaks version [1x](https://github.com/symplely/coroutine/tree/1x), by __namespace__ of *global* functions, moving all required  __CONSTANTS__ to the dependence package. This version includes the new **Fiber** implementation, with no need for *PHP* [`ext-fibers`](https://wiki.php.net/rfc/fibers) extension, slated for **PHP 8.1**.
+
+For maximum performance it's advisable to install the cross-platform [libuv](https://github.com/libuv/libuv) library, the PHP extension [ext-uv](https://github.com/amphp/ext-uv). See the online [book](https://nikhilm.github.io/uvbook/index.html) for a full tutorial overview of it's usage.
 
 > Currently all `libuv` [network](https://github.com/amphp/ext-uv/issues) `socket/stream/udp/tcp` like features are broken on *Windows*, as such will not be implemented for *Windows*, will continue to use native `stream_select` instead.
 
@@ -736,9 +738,10 @@ yield \some_name($whatever, ...$args);
 
 ## Todo
 
+* Add `WebSocket` support, or really convert/rewrite some package.
+* Add `Database` support, base off my maintenance of [ezsql](http://ezsql.github.io/ezsql).
 * Add more standard examples from other languages, converted over.
 * Update docs in reference to similar sections of functionally in Python, Go or any other languages.
-* Add/Update phpunit tests.
 
 ## Package/Comparison
 

@@ -11,7 +11,7 @@ use Throwable;
 /**
  * This `Fiber` has same behavior as `Task` class, with exception in that it's directly usable/callable by the user.
  *
- * It has been added to address and simulate the new **unneeded** `RFC` https://wiki.php.net/rfc/fibers.
+ * It has been added to address and polyfill `RFC` https://wiki.php.net/rfc/fibers.
  */
 final class Fiber implements FiberInterface
 {
