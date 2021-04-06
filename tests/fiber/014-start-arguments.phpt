@@ -31,7 +31,7 @@ yield $fiber->start('test');
 --EXPECTF--
 int(1)
 
-Fatal error: Uncaught TypeError: Argument 1 passed to {closure}() must be of the type integer, string given, called in %S
+Fatal error: Uncaught TypeError: Argument 1 passed to {closure}() must be of the type int, string given, called in %S
 Stack trace:
 #0 %S
 #1 [internal function]: awaitable(Object(Closure), 'test')
@@ -42,3 +42,4 @@ Stack trace:
 #6 %S
 #7 %S
 #8 %S
+#9 %S

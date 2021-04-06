@@ -38,4 +38,4 @@ Stack trace:
 #6 %S
 #7 %S
 #8 %S
-#9 in %S
+#9 %S
