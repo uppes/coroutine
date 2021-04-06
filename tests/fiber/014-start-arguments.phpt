@@ -41,3 +41,4 @@ Stack trace:
 #5 %S
 #6 %S
 #7 %S
+#8 %S
