@@ -2,11 +2,13 @@
 
 [![Linux](https://github.com/symplely/coroutine/workflows/Linux/badge.svg)](https://github.com/symplely/coroutine/actions?query=workflow%3ALinux)[![Windows](https://github.com/symplely/coroutine/workflows/Windows/badge.svg)](https://github.com/symplely/coroutine/actions?query=workflow%3AWindows)[![macOS](https://github.com/symplely/coroutine/workflows/macOS/badge.svg)](https://github.com/symplely/coroutine/actions?query=workflow%3AmacOS)[![codecov](https://codecov.io/gh/symplely/coroutine/branch/master/graph/badge.svg)](https://codecov.io/gh/symplely/coroutine)[![Codacy Badge](https://api.codacy.com/project/badge/Grade/44a6f32f03194872b7d4cd6a2411ff79)](https://www.codacy.com/app/techno-express/coroutine?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=symplely/coroutine&amp;utm_campaign=Badge_Grade)[![Maintainability](https://api.codeclimate.com/v1/badges/1bfc3497fde67b111a04/maintainability)](https://codeclimate.com/github/symplely/coroutine/maintainability)
 
-This is version **2x**, it breaks version [1x](https://github.com/symplely/coroutine/tree/1x), by __namespace__ of *global* functions, moving all required  __CONSTANTS__ to the dependence package. This version includes the new **Fiber** implementation, with no need for *PHP* [`ext-fibers`](https://wiki.php.net/rfc/fibers) extension, slated for **PHP 8.1**.
+This is version **2x**, it breaks version [1x](https://github.com/symplely/coroutine/tree/1x), by __namespace__ of *global* functions, moving all required  __CONSTANTS__ to the dependence package. This version includes the new **Fiber** implementation, with no need for *PHP* [ext-fibers](https://wiki.php.net/rfc/fibers) extension, slated for **PHP 8.1**. All `ext-fibers` [tests](https://github.com/amphp/ext-fiber/tree/master/tests), and [examples](https://github.com/amphp/ext-fiber/tree/master/examples) as they have them, has been implemented here in [examples/fiber](https://github.com/symplely/coroutine/tree/master/examples/fiber/), [tests/fiber](https://github.com/symplely/coroutine/tree/master/tests/fiber/) and [tests/FiberTest.php](https://github.com/symplely/coroutine/blob/master/tests/FiberTest.php).
 
 For maximum performance it's advisable to install the cross-platform [libuv](https://github.com/libuv/libuv) library, the PHP extension [ext-uv](https://github.com/amphp/ext-uv). See the online [book](https://nikhilm.github.io/uvbook/index.html) for a full tutorial overview of it's usage.
 
 > Currently all `libuv` [network](https://github.com/amphp/ext-uv/issues) `socket/stream/udp/tcp` like features are broken on *Windows*, as such will not be implemented for *Windows*, will continue to use native `stream_select` instead.
+
+For a fundamental conceptional overview read ["Concurrency and PHP in relation to modern programming languages, Python, Go, NodeJS, Rust, Etc"](https://github.com/symplely/coroutine/blob/master/wiki/dev.io/concurrency_and_php.md), currently in **draft** form, will be posted on [dev.io](ttps://dev.to) when complete.
 
 ## Table of Contents
 
@@ -24,7 +26,7 @@ For maximum performance it's advisable to install the cross-platform [libuv](htt
 ## Introduction
 
 __What is Async?__
-Simply avoiding the blocking of very next instruction. The mechanism of *capturing* and *running later*.
+Simply avoiding the blocking of the very next instruction. The mechanism of *capturing* and *running later*.
 
 __What issues the current PHP implementations this package address?__
 *Ease of use*. [Amp](#[Amp]) and [ReactPHP](#[ReactPHP]) both do and get you asynchronous results. But both require more setup by the *__user/developer__* to get a simple line of code to run. There is also **Swoole** and **Hhvm**, but neither are standard PHP installations.
@@ -269,11 +271,17 @@ The terminology/naming used here is more in line with [Python's Asyncio](https:/
 
 This package should be seen/used as an **user-land** extension, it's usage of `yield` has been envisioned from [RFC](https://wiki.php.net/rfc/generator-delegation) creators.
 
-The [Lua](https://www.lua.org/pil/9.4.html) language has similar functionality.
-
 ## Functions
 
-Only the functions located here and in the `Core.php` file should be used. Direct access to object class libraries is discouraged, the names might change, or altogether drop if not listed here. Third party library package [development](#Development) is the exception.
+Only the functions located here and in the [Core.php](https://github.com/symplely/coroutine/blob/master/Core.php) file should be used. Direct access to object class libraries is discouraged, the names might change, or altogether drop if not listed here. Third party library package [development](#Development) is the exception.
+
+The functions for **Network** related in [Stream.php](https://github.com/symplely/coroutine/blob/master/Stream.php), **File System** in [Path.php](https://github.com/symplely/coroutine/blob/master/Path.php), and **Processes** in [Worker.php](https://github.com/symplely/coroutine/blob/master/Worker.php), all have been namespaced, so use as follows:
+
+```php
+use function Async\Path\{ , };
+use function Async\Worker\{ , };
+use function Async\Stream\{ , };
+```
 
 ```php
 /**
@@ -447,22 +455,6 @@ yield \get_task();
 yield \cancel_task($tid);
 
 /**
- * Add/execute a blocking `subprocess` task that runs in parallel.
- * This function will return `int` immediately, use `gather()` to get the result.
- * - This function needs to be prefixed with `yield`
- */
-yield \spawn_task($command, $timeout);
-
-/**
- * Add and wait for result of an blocking `I/O` subprocess that runs in parallel.
- * - This function needs to be prefixed with `yield`
- *
- * @see https://docs.python.org/3.7/library/asyncio-subprocess.html#subprocesses
- * @see https://docs.python.org/3.7/library/asyncio-dev.html#running-blocking-code
- */
- yield \spawn_await($callable, $timeout, $display, $channel, $channelTask, $signal, $signalTask);
-
-/**
  * Wait for the callable/task to complete with a timeout.
  * Will continue other tasks until so.
  * - This function needs to be prefixed with `yield`
@@ -500,31 +492,7 @@ yield \input_wait($size);
  * @see https://github.com/lstrojny/functional-php/blob/master/docs/functional-php.md#currying
  */
 \curry($function, $required);
-```
 
-```php
-/**
- * Add and wait for result of an blocking `I/O` subprocess that runs in parallel.
- * This function turns the calling function internal __state/type__ used by `gather()`
- * to **process/paralleled** which is handled differently.
- * - This function needs to be prefixed with `yield`
- *
- * @see https://docs.python.org/3.7/library/asyncio-subprocess.html#subprocesses
- * @see https://docs.python.org/3.7/library/asyncio-dev.html#running-blocking-code
- */
-yield \add_process($command, $timeout);
-```
-
-```php
-/**
- * Executes a blocking system call asynchronously either natively thru `libuv`, `threaded`, or it's `uv_spawn`
- * feature, or in a **child/subprocess** by `proc_open`, if `libuv` is not installed.
- * - This function needs to be prefixed with `yield`
- */
-yield \file_***Any File System Command***( ...$arguments);
-```
-
-```php
 \coroutine_instance();
 
 \coroutine_clear();
@@ -541,6 +509,47 @@ yield \file_***Any File System Command***( ...$arguments);
 \coroutine_run($coroutine);
 ```
 
+```php
+use function Async\Worker\{ add_process, spawn_task, spawn_await };
+
+/**
+ * Add/execute a blocking `subprocess` task that runs in parallel.
+ * This function will return `int` immediately, use `gather()` to get the result.
+ * - This function needs to be prefixed with `yield`
+ */
+yield \spawn_task($command, $timeout);
+
+/**
+ * Add and wait for result of an blocking `I/O` subprocess that runs in parallel.
+ * - This function needs to be prefixed with `yield`
+ *
+ * @see https://docs.python.org/3.7/library/asyncio-subprocess.html#subprocesses
+ * @see https://docs.python.org/3.7/library/asyncio-dev.html#running-blocking-code
+ */
+ yield \spawn_await($callable, $timeout, $display, $channel, $channelTask, $signal, $signalTask);
+/**
+ * Add and wait for result of an blocking `I/O` subprocess that runs in parallel.
+ * This function turns the calling function internal __state/type__ used by `gather()`
+ * to **process/paralleled** which is handled differently.
+ * - This function needs to be prefixed with `yield`
+ *
+ * @see https://docs.python.org/3.7/library/asyncio-subprocess.html#subprocesses
+ * @see https://docs.python.org/3.7/library/asyncio-dev.html#running-blocking-code
+ */
+yield \add_process($command, $timeout);
+```
+
+```php
+use function Async\Path\file_***Any File System Command***;
+
+/**
+ * Executes a blocking system call asynchronously either natively thru `libuv`, `threaded`, or it's `uv_spawn`
+ * feature, or in a **child/subprocess** by `proc_open`, if `libuv` is not installed.
+ * - This function needs to be prefixed with `yield`
+ */
+yield \file_***Any File System Command***( ...$arguments);
+```
+
 ## Installation
 
 ```cmd
@@ -552,13 +561,13 @@ This version will use **libuv** features if available. Do one of the following t
 For **Debian** like distributions, Ubuntu...
 
 ```bash
-apt-get install libuv1-dev php-pear -y
+apt-get install libuv1-dev php-pear php-dev -y
 ```
 
 For **RedHat** like distributions, CentOS...
 
 ```bash
-yum install libuv-devel php-pear -y
+yum install libuv-devel php-pear php-dev -y
 ```
 
 Now have **Pecl** auto compile, install, and setup.
@@ -595,9 +604,7 @@ echo extension=php_uv.dll >> php.ini
 
 ## Usage
 
-In general, any method/function having the `yield` keyword, will operate as an interruption point, suspend current routine, do something else, then return/resume. For an quick how to watch [Advanced Asyncio: Solving Real World Production Problems](https://youtu.be/yKfenooKl6M).
-
-It's advisable to watch this [introduction, 4 hour video](https://youtu.be/D1twn9kLmYg), the concepts, the internals of the talk is what's taking place here. Another good article, [Kotlin: Diving in to Coroutines and Channels](https://proandroiddev.com/kotlin-coroutines-channels-csp-android-db441400965f), **Android** and **Java** base, it's take on coroutines, is what this package attempts to implement.
+In general, any method/function having the `yield` keyword, will operate as an interruption point, suspend current routine, do something else, then return/resume.
 
 ```php
 function main() {
@@ -684,14 +691,14 @@ include 'vendor/autoload.php';
 
 function numbers() {
     for ($i = 1; $i <= 5; $i++) {
-        yield \sleep_for(250 * \MILLISECOND);
+        yield \sleep_for(250 * \MS);
         print(' '.$i);
     }
 }
 
 function alphabets() {
     for ($i = 'a'; $i <= 'e'; $i++) {
-        yield \sleep_for(400 * \MILLISECOND);
+        yield \sleep_for(400 * \MS);
         print(' '.$i);
     }
 }
@@ -699,7 +706,7 @@ function alphabets() {
 function main() {
     yield \go(\numbers());
     yield \go(\alphabets());
-    yield \sleep_for(3000 * \MILLISECOND);
+    yield \sleep_for(3000 * \MS);
     print(" main terminated");
 }
 
@@ -716,13 +723,14 @@ public static function someName($whatever, ...$args)
 {
     return new Kernel(
         function(TaskInterface $task, Coroutine $coroutine) use ($whatever, $args){
-            // Use/Execute/call some $whatever(...$args);
-
-
-            // will return $someValue back to the caller
-            $task->sendValue($someValue);
-            // will return back to the caller, the callback
-            $coroutine->schedule($task);
+            // Use/Execute/call some $whatever with ...$args;
+            //
+            if ($done) {
+                // will return $someValue back to the caller
+                $task->sendValue($someValue);
+                // will return back to the caller, the callback
+                $coroutine->schedule($task);
+            }
         }
     );
 }
@@ -783,32 +791,7 @@ This ___`Coroutine`___ package differs, mainly because it just managing the flow
 
  **Nikita Popov** [Cooperative multitasking using coroutines (in PHP!)](https://nikic.github.io/2012/12/22/Cooperative-multitasking-using-coroutines-in-PHP.html). Which this package **forks** [Ditaio](https://github.com/nikic/ditaio), restructuring/rewriting.
 
- **Christopher Pitt** [Co-operative PHP Multitasking](https://medium.com/async-php/co-operative-php-multitasking-ce4ef52858a0)
-
 **Parallel** class is a restructured/rewrite of [spatie/async](https://github.com/spatie/async). The **Parallel** class rely upon [symplely/spawn](https://github.com/symplely/spawn) as a dependency, used for **subprocess** management/execution, it uses **`uv_spawn`** of **libuv** for launching processes. The **Spawn** package has [opis/closure](https://github.com/opis/closure) as an dependency, used to overcome **PHP** serialization limitations, and [symfony/process](https://github.com/symfony/process) as a fallback to **`proc_open`** for launching processes, in case **libuv** the _PHP_-**UV** extension is not installed.
-
----
-[Build Your Own Async](https://youtu.be/Y4Gt3Xjd7G8) __video__
-
-[Concurrency in Go](https://youtu.be/LvgVSSpwND8) __video__
-
-[Curious Course on Coroutines and Concurrency](https://youtu.be/Z_OAlIhXziw) __video__
-
-[Cooperative multitasking with generators](https://youtu.be/cY8FUhZvK7w) __video__
-
-[Common asynchronous patterns](https://youtu.be/jq2IFUQRbGo) __video__
-
-[Get to grips with asyncio](https://youtu.be/M-UcUs7IMIM) __video__
-
-[Raymond Hettinger, Keynote on Concurrency, PyBay 2017](https://youtu.be/9zinZmE3Ogk) __video__
-
-[Understand Kotlin Coroutines on Android](https://youtu.be/BOHK_w09pVA) __video__
-
-[Python 3.5+ Async: An Easier Way to do Concurrency](https://youtu.be/qfY2cqjJMdw) __video__
-
-[The C# async await Workout](https://youtu.be/eV45ZgXU1Mk) __video__
-
-[Generators: The Final Frontier - ScreenCast](https://youtu.be/5-qadlG7tWo) __video__
 
 ---
 
