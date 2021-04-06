@@ -1,5 +1,7 @@
 --TEST--
 Arguments to fiber callback
+--SKIPIF--
+<?php if ('\\' !== \DIRECTORY_SEPARATOR) print "skip"; ?>
 --FILE--
 <?php
 

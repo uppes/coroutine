@@ -1,5 +1,7 @@
 --TEST--
 Fiber::getReturn() in unfinished fiber
+--SKIPIF--
+<?php if ('\\' !== \DIRECTORY_SEPARATOR) print "skip"; ?>
 --FILE--
 <?php
 
