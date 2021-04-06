@@ -27,7 +27,7 @@ Fatal error: Uncaught Async\Coroutine\FiberError: Cannot start a fiber that has 
 Stack trace:
 #0 [internal function]: Async\Coroutine\Fiber->start()
 #1 %S
-#2 [internal function]: Async\Coroutine\Coroutine::create(Object(Generator))
+#2 [internal function]: Async\Coroutine\Coroutine::create(%S
 #3 %S
 #4 %S
 #5 %S

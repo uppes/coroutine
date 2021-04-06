@@ -32,7 +32,7 @@ Stack trace:
 #0 %S
 #1 %S
 #2 %S
-#3 [internal function]: Async\Coroutine\Coroutine::create(Object(Generator))
+#3 [internal function]: Async\Coroutine\Coroutine::create(%S
 #4 %S
 #5 %S
 #6 %S

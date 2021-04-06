@@ -26,9 +26,9 @@ string(4) "test"
 
 Fatal error: Uncaught Exception: test in %S
 Stack trace:
-%S#0 [internal function]: main()
+#0 [internal function]: main()
 #1 %S
-%S#2 [internal function]: Async\Coroutine\Coroutine::create(Object(Generator))
+#2 [internal function]: Async\Coroutine\Coroutine::create(%S
 #3 %S
 #4 %S
 #5 %S

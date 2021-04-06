@@ -21,9 +21,9 @@ yield $fiber->throw(new Exception('test'));
 --EXPECTF--
 Fatal error: Uncaught Async\Coroutine\FiberError: Cannot resume a fiber that is not suspended in %S
 Stack trace:
-#0 [internal function]: Async\Coroutine\Fiber->throw(Object(Exception))
+#0 [internal function]: Async\Coroutine\Fiber->throw(%S
 #1 %S
-#2 [internal function]: Async\Coroutine\Coroutine::create(Object(Generator))
+#2 [internal function]: Async\Coroutine\Coroutine::create(%S
 #3 %S
 #4 %S
 #5 %S

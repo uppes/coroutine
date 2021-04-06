@@ -34,12 +34,12 @@ int(1)
 Fatal error: Uncaught TypeError: Argument 1 passed to {closure}() must be of the type int, string given, called in %S
 Stack trace:
 #0 %S
-#1 [internal function]: awaitable(Object(Closure), 'test')
+#1 [internal function]: awaitable(%S
 #2 %S
-#3 [internal function]: Async\Coroutine\Coroutine::create(Object(Generator))
+#3 [internal function]: Async\Coroutine\Coroutine::create(%S
 #4 %S
 #5 %S
 #6 %S
 #7 %S
 #8 %S
-#9 %S
+%S
