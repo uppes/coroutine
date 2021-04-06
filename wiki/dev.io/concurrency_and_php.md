@@ -162,7 +162,7 @@ function sleep(ms: number) {
 ```
 
 Here we have the **PHP** version. For this to work as posted, an external package [Coroutine](https://symplely.github.io/coroutine/) is required.
-> This script is hosted on [Github]()
+> This script is hosted on [Github](https://github.com/symplely/coroutine/blob/master/wiki/dev.io/concurrent.php)
 
 ```php
 include 'vendor/autoload.php';
@@ -234,7 +234,7 @@ There will be up to **9** various [abstract data types](https://en.wikipedia.org
 
 By using a [functional programming](https://en.wikipedia.org/wiki/Functional_programming) paradigm where [function composition](https://en.wikipedia.org/wiki/Function_composition_(computer_science)) is mixed with [mutual recursion](https://en.wikipedia.org/wiki/Mutual_recursion), we will get `true` **PHP** concurrency as I have here, it's based on **Python's** [original model](https://www.python.org/dev/peps/pep-0342/) of using [@decorators](https://en.wikipedia.org/wiki/Python_syntax_and_semantics#Decorators) on generator functions, that eventually lead to reserve words `async/await`, just [syntactic sugar](https://en.wikipedia.org/wiki/Syntactic_sugar).
 
-For an general overview of the power of `Generators` watch: <!-- {% youtube Z_OAlIhXziw %} -->
+For an general overview of the power of `Generators` watch:
 [![Curious Course on Coroutines and Concurrency](https://img.youtube.com/vi/Z_OAlIhXziw/default.jpg)](https://www.youtube.com/watch?v=Z_OAlIhXziw) by [David Beazley](http://www.dabeaz.com/coroutines/)
 
 ___Q: What's the underlying concept of why calling `await` outside a `function` not created with `async` throws a **syntax error**?___
