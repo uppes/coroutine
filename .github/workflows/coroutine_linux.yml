@@ -41,3 +41,28 @@ jobs:
         run: vendor/bin/phpunit -d zend.enable_gc=0 --coverage-clover=coverage/phpunit/clover.xml
       - name: Submit code coverage
         run: bash <(curl -s https://codecov.io/bash)
+
+  linux+:
+    name: Linux CI - no libuv
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        operating-system: [ubuntu-latest]
+        php: ['8']
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup PHP, with composer and extensions
+        uses: shivammathur/setup-php@v2 #https://github.com/shivammathur/setup-php
+        with:
+          php-version: '8'
+          extensions: mbstring, simplexml, dom
+      - name: Install dependencies
+        run: composer install
+      - name: Test with phpunit
+        run: vendor/bin/phpunit -d zend.enable_gc=0 --coverage-clover=coverage/phpunit/clover.xml
+      - name: Submit code coverage
+        if: ${{ success() }} || ${{ failure() }}
+        run: bash <(curl -s https://codecov.io/bash)
