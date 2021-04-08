@@ -1,5 +1,7 @@
 --TEST--
 Fiber::getReturn() from unstarted fiber
+--SKIPIF--
+<?php if (!((float) \phpversion() >= 8.0)) print "skip"; ?>
 --FILE--
 <?php
 

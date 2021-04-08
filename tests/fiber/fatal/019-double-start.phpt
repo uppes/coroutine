@@ -1,5 +1,7 @@
 --TEST--
 Start on already running fiber
+--SKIPIF--
+<?php if (!((float) \phpversion() >= 8.0)) print "skip"; ?>
 --FILE--
 <?php
 

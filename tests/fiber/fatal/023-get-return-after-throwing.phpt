@@ -1,7 +1,7 @@
 --TEST--
 Fiber::getReturn() after a fiber throws
 --SKIPIF--
-<?php if ('\\' !== \DIRECTORY_SEPARATOR) print "skip"; ?>
+<?php if (!((float) \phpversion() >= 8.0)) print "skip"; ?>
 --FILE--
 <?php
 

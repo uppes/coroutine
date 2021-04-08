@@ -1,7 +1,7 @@
 --TEST--
 Arguments to fiber callback
 --SKIPIF--
-<?php if ('\\' !== \DIRECTORY_SEPARATOR) print "skip"; ?>
+<?php if (!((float) \phpversion() >= 8.0)) print "skip"; ?>
 --FILE--
 <?php
 
