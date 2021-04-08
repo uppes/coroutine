@@ -46,7 +46,7 @@ jobs:
       with:
         file: ./coverage.xml # optional
 
-  window:
+  windows_php8:
     name: Windows CI - no libuv
     runs-on: windows-latest
     continue-on-error: true

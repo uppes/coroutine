@@ -18,7 +18,6 @@ For a fundamental conceptional overview read ["Concurrency and PHP in relation t
 * [Usage](#usage)
 * [Development](#development)
 * [Todo](#todo)
-* [Package/Comparison](#package/comparison)
 * [Credits/References](#credits/references)
 * [Contributing](#contributing)
 * [License](#license)
@@ -751,49 +750,11 @@ yield \some_name($whatever, ...$args);
 * Add more standard examples from other languages, converted over.
 * Update docs in reference to similar sections of functionally in Python, Go or any other languages.
 
-## Package/Comparison
-
-The closest thing would be [Swoole PHP](https://www.swoole.co.uk/coroutine). However, it's not an standard installation, needs to be compiled, does not work on Windows, enforces there complete framework usage.
-
-You can also use [Facebook's Hack](https://hhvm.com/). However, this too not an standard installation, but instead nearly an whole different language.
-
-The [**PHP Internals**](https://phpinternals.news/11) team has recently released [Parallel](https://www.php.net/manual/en/book.parallel.php). It's available on [PECL](https://pecl.php.net/package/parallel), [krakjoe/parallel](https://github.com/krakjoe/parallel). Looks promising, however this ___`Coroutine`___ package does everything listed in there **Parallel concurrency API** without the unnecessary restrictions, PHP 7.2, and limits on **Tasks**. They too modeling after Google's Go ease of use, but still directly handling the **Future/Promise** concepts. Whenever, some examples are produced, will recreate and benchmark the examples here. Will also create alias function calls for items with the same functionality.
-
-There is also [Async Extension for PHP](https://github.com/concurrent-php/ext-async#async-extension-for-php). Haven't seen this before starting this project, similar concepts but require a lot more coding to do simply things, require *PHP 7.3*, and no *PECL* module. Has *Async* and *Await* keywords, but definitely not following the norms in usage as other languages. No way near the way Google's Go, Pythons, or C# work, seeing there [examples](https://github.com/concurrent-php/ext-async/tree/master/examples).
-
-> The **Async Extension for PHP** seemed to have stopped development, and the main repo removed for unknown reasons. It has been forked at [dreamsxin/ext-async](https://github.com/dreamsxin/ext-async), with the [examples](https://github.com/dreamsxin/ext-async/tree/master/examples). The downloadable pre-compiled DLL **Windows** module was link to the author repo, which too no longer exists.
-
-____Other main asynchronous PHP libraries____
-
-### [Amp](https://github.com/amphp)
-
-* Using *`yield`* generators. However, using *`Promises`* also, which mandates the normal *Event Loop*.
-* Users would need to totally restructure the normal way they develope with there package.
-* There package necessitate there framework, all there packages bring in many files.
-* Try creating the **Google's `Go`** like example with this package as I have an example of above, in the same number of lines.
-
-### [ReactPHP](https://github.com/reactphp)
-
-### [Guzzle Promises](https://github.com/guzzle/promises)
-
-* Using *`Promises`*, which mandates the normal *Event Loop*. Neither can run each other promises without issues, if they following specs, the logic, they should be getting the same results, regardless of the internal code routines used. That necessitated my own [techno-express/promiseplus](https://github.com/techno-express/promiseplus), that runs both, which is archived.
-
-### [Recoil](https://github.com/recoilphp/recoil)
-
-* Based on *ReactPHP*, but using `yield`, not using standard terminology/naming conventions, making it hard to follow. Many additional libraries, and files. But, it could run the the example above after much effort. In the end, not worth using, after all the additions, bringing in *ReactPHP* `Promise`'s and `Event Loop`.
-
-The other libraries one might come across will either require an extension, or don't work on Windows. Regardless, all bring in many unnecessary files and not so intuitive to use. I mean that intuitive that sparks other usage, see the connections elsewhere.
-
----
-This ___`Coroutine`___ package differs, mainly because it just managing the flow of control/execution. The calling function is the callback location, yielding lets other things run. This offers the developer freedom to build, go beyond what typical could be done in PHP. This package is presenting standard usage, as simple as possible.
-
 ## Credits/References
 
  **Nikita Popov** [Cooperative multitasking using coroutines (in PHP!)](https://nikic.github.io/2012/12/22/Cooperative-multitasking-using-coroutines-in-PHP.html). Which this package **forks** [Ditaio](https://github.com/nikic/ditaio), restructuring/rewriting.
 
 **Parallel** class is a restructured/rewrite of [spatie/async](https://github.com/spatie/async). The **Parallel** class rely upon [symplely/spawn](https://github.com/symplely/spawn) as a dependency, used for **subprocess** management/execution, it uses **`uv_spawn`** of **libuv** for launching processes. The **Spawn** package has [opis/closure](https://github.com/opis/closure) as an dependency, used to overcome **PHP** serialization limitations, and [symfony/process](https://github.com/symfony/process) as a fallback to **`proc_open`** for launching processes, in case **libuv** the _PHP_-**UV** extension is not installed.
-
----
 
 ## Contributing
 

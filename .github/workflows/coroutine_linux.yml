@@ -42,7 +42,7 @@ jobs:
       - name: Submit code coverage
         run: bash <(curl -s https://codecov.io/bash)
 
-  linux+:
+  linux_php8:
     name: Linux CI - no libuv
     runs-on: ubuntu-latest
     continue-on-error: true
