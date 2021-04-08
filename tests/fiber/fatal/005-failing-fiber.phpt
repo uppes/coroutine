@@ -38,6 +38,5 @@ Stack trace:
 #6 %S
 #7 %S
 #8 %S
-#9 %S
-#10 {main}
+#9 {main}
   thrown in %S

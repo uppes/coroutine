@@ -25,6 +25,5 @@ Fatal error: Uncaught Async\Coroutine\FiberError: Cannot get fiber return value:
 Stack trace:
 #0 %S
 #1 %S
-#2 %S
-#3 {main}
+#2 {main}
   thrown in %S
