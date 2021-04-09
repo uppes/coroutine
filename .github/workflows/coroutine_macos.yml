@@ -30,12 +30,8 @@ jobs:
           php-version: '7.4'
           extensions: curl, fileinfo, mbstring, openssl, simplexml, dom, sockets, sodium, uv-beta, xdebug
           coverage: xdebug
-      - name: Build and install PHP-UV extension
-        run: |
-          pecl channel-update pecl.php.net
-          pecl install uv-beta
-      - name: Add uv.so to php.ini
-        run: sudo echo "extension=uv.so" >> "$(php -r 'echo php_ini_loaded_file();')"
+      - name: Check PHP extensions
+        run: php -m
       - name: Install dependencies
         run: composer install
       - name: Test with phpunit
