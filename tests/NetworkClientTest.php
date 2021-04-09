@@ -29,7 +29,7 @@ class NetworkClientTest extends TestCase
         #Connect to Server
         #Start SSL
         $resourceObject = yield net_client("$hostname:$port", $contextOptions);
-        $this->assertTrue((\IS_WINDOWS || $useSSL ? \is_resource($resourceObject) : $resourceObject instanceof \UV));
+        $this->assertTrue((\IS_WINDOWS || $useSSL || \IS_PHP8 ? \is_resource($resourceObject) : $resourceObject instanceof \UV));
 
         if ($resourceObject instanceof \UV) {
             $request = new NetworkAssistant('request', $hostname);

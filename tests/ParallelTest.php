@@ -11,7 +11,7 @@ use PHPUnit\Framework\TestCase;
 
 class ParallelTest extends TestCase
 {
-	protected function setUp(): void
+    protected function setUp(): void
     {
         \coroutine_clear();
     }
@@ -24,10 +24,10 @@ class ParallelTest extends TestCase
         $counter = 0;
 
         $parallel->add(function () {
-                return 2;
-            })->then(function (int $output) use (&$counter) {
-                $counter += $output + 4;
-            });
+            return 2;
+        })->then(function (int $output) use (&$counter) {
+            $counter += $output + 4;
+        });
 
         $parallel->wait();
 
@@ -45,10 +45,10 @@ class ParallelTest extends TestCase
         $counter = 0;
 
         $parallel->add(function () {
-                return 20;
-            })->then(function (int $output) use (&$counter) {
-                $counter += $output + 2;
-            });
+            return 20;
+        })->then(function (int $output) use (&$counter) {
+            $counter += $output + 2;
+        });
 
         $parallel->wait();
 
@@ -132,7 +132,7 @@ class ParallelTest extends TestCase
 
         $executionTime = $endTime - $startTime;
 
-        $this->assertGreaterThanOrEqual(2, $executionTime, "Execution time was {$executionTime}, expected more than 2.\n".(string) $parallel->status());
+        $this->assertGreaterThanOrEqual(2, $executionTime, "Execution time was {$executionTime}, expected more than 2.\n" . (string) $parallel->status());
         $this->assertCount(3, $parallel->getFinished(), (string) $parallel->status());
     }
 
@@ -250,7 +250,7 @@ class ParallelTest extends TestCase
 
         $stopwatchResult = \microtime(true) - $stopwatch;
 
-        if (\IS_LINUX) {
+        if (\IS_LINUX && !\IS_PHP8) {
             $expect = (float) 0.4;
             $this->assertTrue($parallel->isPcntl());
         } else {

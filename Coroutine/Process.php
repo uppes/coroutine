@@ -32,7 +32,7 @@ final class Process
         $this->init($timedOutCallback, $finishCallback, $failCallback, $signalCallback);
 
         // @codeCoverageIgnoreStart
-        if ($this->isPcntl() && !\function_exists('uv_spawn'))
+        if ($this->isPcntl())
             $this->registerProcess();
         // @codeCoverageIgnoreEnd
     }
@@ -67,13 +67,13 @@ final class Process
     {
         if (!empty($this->processes)) {
             foreach ($this->processes as $process) {
-               if ($process->isTimedOut()) {
+                if ($process->isTimedOut()) {
                     $this->remove($process);
                     $this->coroutine->executeTask($this->timedOutCallback, $process);
                     continue;
                 }
 
-                if (!$this->pcntl || \function_exists('uv_spawn')) {
+                if (!$this->pcntl) {
                     if ($process->isRunning()) {
                         continue;
                     } elseif ($process->isSignaled()) {
@@ -121,7 +121,7 @@ final class Process
 
     public function isPcntl(): bool
     {
-        $this->pcntl = $this->coroutine->isPcntl();
+        $this->pcntl = $this->coroutine->isPcntl() && !\IS_PHP8  && !\function_exists('uv_spawn');
 
         return $this->pcntl;
     }

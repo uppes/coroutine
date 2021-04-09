@@ -68,7 +68,7 @@ class NetworkServerTest extends TestCase
 
     public function taskListen($resourceInstance)
     {
-        $this->assertTrue((\IS_WINDOWS ? \is_resource($resourceInstance) : $resourceInstance instanceof \UV));
+        $this->assertTrue((\IS_WINDOWS || \IS_PHP8 ? \is_resource($resourceInstance) : $resourceInstance instanceof \UV));
         yield net_stop($this->taskId);
     }
 
@@ -91,7 +91,7 @@ class NetworkServerTest extends TestCase
         $this->expectOutputRegex('/[Listening to ' . $port . 'for connections]/');
         $serverInstance = yield net_server($port);
 
-        $this->assertTrue((\IS_WINDOWS ? \is_resource($serverInstance) : $serverInstance instanceof \UV));
+        $this->assertTrue((\IS_WINDOWS || \IS_PHP8 ? \is_resource($serverInstance) : $serverInstance instanceof \UV));
 
         $fakeClientSkipped = false;
         while ($this->loopController) {
@@ -103,7 +103,7 @@ class NetworkServerTest extends TestCase
 
             // Will pause current task and wait for connection, all others tasks will continue to run
             $connectedServer = yield net_accept($serverInstance);
-            $this->assertTrue((\IS_WINDOWS ? \is_resource($connectedServer) : $connectedServer instanceof \UV));
+            $this->assertTrue((\IS_WINDOWS || \IS_PHP8 ? \is_resource($connectedServer) : $connectedServer instanceof \UV));
             // Once an connection is made, will create new task and continue execution there, will not block
             yield \away($this->taskHandleClient($connectedServer));
         }
