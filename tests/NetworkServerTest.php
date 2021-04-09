@@ -185,16 +185,16 @@ class NetworkServerTest extends TestCase
 
     public function testServer()
     {
-        \coroutine_run($this->taskServer(9999));
+        \coroutine_run($this->taskServer((\IS_WINDOWS ? 9199 : 9099)));
     }
 
     public function testSecureServer()
     {
-        \coroutine_run($this->taskSecureServer(9990));
+        \coroutine_run($this->taskSecureServer((\IS_WINDOWS ? 9290 : 9190)));
     }
 
     public function testServerListen()
     {
-        \coroutine_run($this->taskServerListen(9998));
+        \coroutine_run($this->taskServerListen((\IS_WINDOWS ? 9398 : 9298)));
     }
 }
