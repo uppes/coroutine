@@ -23,7 +23,7 @@ jobs:
         uses: actions/checkout@v2
       - name: Install libuv and PHP build tools
         run: |
-          brew install libuv libuv-dev php-pear
+          brew install libuv
       - name: Setup PHP, with composer and extensions
         uses: shivammathur/setup-php@v2 #https://github.com/shivammathur/setup-php
         with:
