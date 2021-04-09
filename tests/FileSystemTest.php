@@ -597,22 +597,24 @@ class FileSystemTest extends TestCase
 
         yield;
         yield;
-        $this->assertEquals([
-            'CHANGE' =>
-            [
-                0 => [
-                    0 => 'new.txt',
-                    1 => 2
-                ]
-            ],
-            'RENAME' =>
-            [
-                0 => [
-                    0 => 'new.txt',
-                    1 => 1
-                ]
-            ],
-        ], $that->monitorData);
+        if (!\IS_MACOS) {
+            $this->assertEquals([
+                'CHANGE' =>
+                [
+                    0 => [
+                        0 => 'new.txt',
+                        1 => 2
+                    ]
+                ],
+                'RENAME' =>
+                [
+                    0 => [
+                        0 => 'new.txt',
+                        1 => 1
+                    ]
+                ],
+            ], $that->monitorData);
+        }
 
         $bool = yield file_delete('watching');
         $this->assertTrue($bool);
