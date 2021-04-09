@@ -41,4 +41,4 @@ Stack trace:
 #7 %S
 #8 %S
 #9 {main}
-  thrown in D:\a\coroutine\coroutine\Coroutine\Fiber.php on line 291
+  thrown in %S

@@ -573,7 +573,7 @@ class FileSystemTest extends TestCase
 
     public function taskMonitorDirLinux()
     {
-        $that = $this;
+        $that = &$this;
         $watchTask = yield monitor_task(function (?string $filename, int $events, int $status) use (&$that) {
             if ($status == 0) {
                 if ($events & \UV::RENAME)
