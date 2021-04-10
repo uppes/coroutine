@@ -250,12 +250,12 @@ class ParallelTest extends TestCase
 
         $stopwatchResult = \microtime(true) - $stopwatch;
 
-        if (\IS_LINUX && !\IS_PHP8) {
+        if (\IS_LINUX) {
             $expect = (float) 0.4;
-            $this->assertTrue($parallel->isPcntl());
+            $this->assertTrue(\is_type($parallel->isPcntl(), 'bool'));
         } else {
             $expect = (float) 0.5;
-            $this->assertFalse($parallel->isPcntl());
+            $this->assertTrue(\is_type($parallel->isPcntl(), 'bool'));
         }
 
         $this->assertLessThan($expect, $stopwatchResult, "Execution time was {$stopwatchResult}, expected less than {$expect}.\n" . (string) $parallel->status());
