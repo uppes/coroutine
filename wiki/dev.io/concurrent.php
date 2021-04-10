@@ -5,6 +5,8 @@ include 'vendor/autoload.php';
 use function Async\Path\file_get;
 use function Async\Stream\{messenger_for, net_accept, net_close, net_local, net_response, net_server, net_write};
 
+const WEB_DIR = __DIR__ . DS;
+
 function main($port)
 {
   $count = 0;
@@ -30,7 +32,7 @@ function handleClient($socket, int $counter)
   }
 
   $html = messenger_for('response');
-  $contents = yield file_get('hello.html');
+  $contents = yield file_get(WEB_DIR . 'hello.html');
   if (\is_string($contents)) {
     $output = net_response($html, $contents, 200);
   } else {

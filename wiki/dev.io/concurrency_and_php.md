@@ -170,11 +170,13 @@ include 'vendor/autoload.php';
 use function Async\Path\file_get;
 use function Async\Stream\{messenger_for, net_accept, net_close, net_local, net_response, net_server, net_write};
 
+const WEB_DIR = __DIR__ . DS;
+
 function main($port)
 {
   $count = 0;
   $server = yield net_server($port);
-  print('Server is running on: ' . net_local($server) . \EOL);
+  print('Server is running on: ' . net_local($server) . EOL);
 
   while (true) {
     $count++;
@@ -190,12 +192,12 @@ function handleClient($socket, int $counter)
   yield stateless_task();
   // add 2 second delay to every 10th request
   if ($counter % 10 === 0) {
-    print("Adding delay. Count: " . $counter . \EOL);
+    print("Adding delay. Count: " . $counter . EOL);
     yield sleep_for(2);
   }
 
   $html = messenger_for('response');
-  $contents = yield file_get('hello.html');
+  $contents = yield file_get(WEB_DIR . 'hello.html');
   if (is_string($contents)) {
     $output = net_response($html, $contents, 200);
   } else {

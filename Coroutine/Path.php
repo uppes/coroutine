@@ -88,11 +88,11 @@ if (!\function_exists('file_operation')) {
         return yield monitor($directory, $monitorTask);
     }
 
-    function slash_switch($path)
+    function slash_switch(string $path)
     {
-        if (\IS_WINDOWS && (\strpos('/', $path) !== false))
+        if (\IS_WINDOWS && (\strpos($path, '/') !== false))
             $path = \str_replace('/', \DS, $path);
-        elseif (\IS_LINUX && (\strpos('\\', $path) !== false))
+        elseif (\IS_LINUX && (\strpos($path, '\\') !== false))
             $path = \str_replace('\\', \DS, $path);
 
         return $path;
