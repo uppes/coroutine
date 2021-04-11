@@ -11,7 +11,7 @@ function task(int $num)
 
 function main()
 {
-  yield \gather(task(1), task(2), task(3));
+  yield \gather(\array_map('task', \range(1, 3)));
 }
 
 \coroutine_run(main());

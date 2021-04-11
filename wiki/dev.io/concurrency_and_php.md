@@ -333,20 +333,10 @@ function task(int $num) {
 }
 
 function main() {
-  yield gather(task(1), task(2), task(3));
+  yield gather(array_map('task', range(1, 3)));
 }
 
 coroutine_run(main());
-/* `main` could have also written been like:
-function main() {
-  $tid = [];
-  foreach(range(1, 3) as $i) {
-    $tid[] = task($i);
-  }
-
-  yield gather($tid);
-}
-*/
 ```
 
 - todo go over all functions in our web-sever script
