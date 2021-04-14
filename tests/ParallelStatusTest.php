@@ -2,7 +2,7 @@
 
 namespace Async\Tests;
 
-use Async\Coroutine\Coroutine;
+use Async\Coroutine;
 use PHPUnit\Framework\TestCase;
 
 class ParallelStatusTest extends TestCase
@@ -43,9 +43,9 @@ class ParallelStatusTest extends TestCase
 
         $parallel->wait();
 
-		$this->assertStringContainsString('finished: 0', (string) $parallel->status());
-		$this->assertStringContainsString('failed: 5', (string) $parallel->status());
-		$this->assertStringContainsString('failed with Exception: Test', (string) $parallel->status());
+        $this->assertStringContainsString('finished: 0', (string) $parallel->status());
+        $this->assertStringContainsString('failed: 5', (string) $parallel->status());
+        $this->assertStringContainsString('failed with Exception: Test', (string) $parallel->status());
     }
 
     public function testIt_can_show_timeout_status()

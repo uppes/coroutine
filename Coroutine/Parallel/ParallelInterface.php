@@ -1,6 +1,6 @@
 <?php
 
-namespace Async\Coroutine;
+namespace Async;
 
 use Async\Spawn\Channeled;
 use Async\Spawn\LauncherInterface;

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Async\Coroutine;
+namespace Async;
 
-use Async\Coroutine\Parallel;
+use Async\Parallel;
 use Async\Spawn\Launcher;
 use Async\Spawn\SerializableException;
 

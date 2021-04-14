@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Async\Coroutine;
+namespace Async;
 
 use Async\Spawn\LauncherInterface;
-use Async\Coroutine\Coroutine;
-use Async\Coroutine\Exceptions\CancelledError;
-use Async\Coroutine\TaskInterface;
-use Async\Coroutine\Exceptions\InvalidStateError;
+use Async\Coroutine;
+use Async\Exceptions\CancelledError;
+use Async\TaskInterface;
+use Async\Exceptions\InvalidStateError;
 
 /**
  * Task is used to schedule coroutines concurrently.

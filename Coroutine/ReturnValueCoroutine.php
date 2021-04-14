@@ -1,8 +1,9 @@
 <?php
 
-namespace Async\Coroutine;
+namespace Async;
 
-use Async\Coroutine\AbstractCoroutine;
+use Async\AbstractCoroutine;
 
 final class ReturnValueCoroutine extends AbstractCoroutine
-{ }
+{
+}

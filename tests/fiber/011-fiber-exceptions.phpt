@@ -5,9 +5,9 @@ Fiber exception classes cannot be constructed in user code
 
 require 'vendor/autoload.php';
 
-use Async\Coroutine\Fiber;
-use Async\Coroutine\FiberError;
-use Async\Coroutine\FiberExit;
+use Async\Fiber;
+use Async\FiberError;
+use Async\FiberExit;
 
 function main()
 {

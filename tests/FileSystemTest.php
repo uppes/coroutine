@@ -34,8 +34,8 @@ use function Async\Path\{
 };
 use function Async\Worker\spawn_system;
 
-use Async\Coroutine\FileSystem;
-use Async\Coroutine\Exceptions\Panic;
+use Async\FileSystem;
+use Async\Exceptions\Panic;
 use PHPUnit\Framework\TestCase;
 
 class FileSystemTest extends TestCase

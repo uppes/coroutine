@@ -4,7 +4,7 @@ namespace Async\Tests;
 
 use function Async\Stream\{net_client, net_close, net_peer, net_read, net_write};
 
-use Async\Coroutine\NetworkAssistant;
+use Async\NetworkAssistant;
 use PHPUnit\Framework\TestCase;
 
 class NetworkClientTest extends TestCase

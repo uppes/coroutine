@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-use Async\Coroutine\Defer;
-use Async\Coroutine\Kernel;
-use Async\Coroutine\Channel;
-use Async\Coroutine\Coroutine;
-use Async\Coroutine\CoroutineInterface;
-use Async\Coroutine\Exceptions\Panic;
+use Async\Defer;
+use Async\Kernel;
+use Async\Channel;
+use Async\Coroutine;
+use Async\CoroutineInterface;
+use Async\Exceptions\Panic;
 
 if (!\function_exists('coroutine_run')) {
     /**

@@ -4,15 +4,15 @@ namespace Async\Tests;
 
 use function Async\Worker\spawn_task;
 
-use Async\Coroutine\Kernel;
-use Async\Coroutine\TaskInterface;
-use Async\Coroutine\CoroutineInterface;
-use Async\Coroutine\Exceptions\Panicking;
-use Async\Coroutine\Exceptions\TimeoutError;
-use Async\Coroutine\Exceptions\CancelledError;
-use Async\Coroutine\Exceptions\LengthException;
-use Async\Coroutine\Exceptions\InvalidStateError;
-use Async\Coroutine\Exceptions\InvalidArgumentException;
+use Async\Kernel;
+use Async\TaskInterface;
+use Async\CoroutineInterface;
+use Async\Exceptions\Panicking;
+use Async\Exceptions\TimeoutError;
+use Async\Exceptions\CancelledError;
+use Async\Exceptions\LengthException;
+use Async\Exceptions\InvalidStateError;
+use Async\Exceptions\InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
 class KernelTest extends TestCase

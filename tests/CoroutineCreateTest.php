@@ -1,7 +1,8 @@
 <?php
+
 namespace Async\Tests;
 
-use Async\Coroutine\Coroutine;
+use Async\Coroutine;
 use PHPUnit\Framework\TestCase;
 
 class CoroutineCreateTest extends TestCase
@@ -10,7 +11,9 @@ class CoroutineCreateTest extends TestCase
      * @dataProvider testNoSendProvider
      */
     public function testNoSend(
-        $coroutineFactory, $expectedArray, $reIndex = false
+        $coroutineFactory,
+        $expectedArray,
+        $reIndex = false
     ) {
         $coroutine = Coroutine::create($coroutineFactory());
         $resultArray = iterator_to_array($coroutine, !$reIndex);
@@ -25,7 +28,7 @@ class CoroutineCreateTest extends TestCase
         return [
             // Trivial coroutine without nesting
             [
-                function() {
+                function () {
                     for ($i = 0; $i < 5; ++$i) yield $i;
                 }, [
                     0, 1, 2, 3, 4
@@ -33,7 +36,7 @@ class CoroutineCreateTest extends TestCase
             ],
             // Trivial coroutine with keys
             [
-                function() {
+                function () {
                     for ($i = 0; $i < 5; ++$i) yield 5 - $i => $i;
                 }, [
                     5 => 0, 4 => 1, 3 => 2, 2 => 3, 1 => 4
@@ -41,7 +44,7 @@ class CoroutineCreateTest extends TestCase
             ],
             // Singly-nested coroutine
             [
-                function() {
+                function () {
                     yield "p1";
                     yield "p2";
 
@@ -55,7 +58,7 @@ class CoroutineCreateTest extends TestCase
             ],
             // Recursively-nested coroutine
             [
-                function() {
+                function () {
                     yield "p1";
                     yield $this->child2(5);
                     yield "p2";
@@ -66,7 +69,7 @@ class CoroutineCreateTest extends TestCase
             ],
             // Key-preservation with simple coroutines
             [
-                function() {
+                function () {
                     yield "pk1" => "pv1";
                     yield $this->child3();
                     yield "pk2" => "pv2";
@@ -77,7 +80,7 @@ class CoroutineCreateTest extends TestCase
             ],
             // Coroutine::value() in outermost coroutine aborts
             [
-                function() {
+                function () {
                     yield 1;
                     yield 2;
                     yield Coroutine::value(3);
@@ -89,7 +92,7 @@ class CoroutineCreateTest extends TestCase
             ],
             // value() is accessible as yield return value
             [
-                function() {
+                function () {
                     yield "p1";
                     $value = (yield $this->child4());
                     yield "value: $value";
@@ -100,9 +103,8 @@ class CoroutineCreateTest extends TestCase
             ],
             // plain() does a plain passthru
             [
-                function() {
+                function () {
                     yield (yield $this->child5());
-
                 }, [
                     $this->child5(), Coroutine::value('test'), Coroutine::plain('test'), null
                 ], true
@@ -172,7 +174,7 @@ class CoroutineCreateTest extends TestCase
         return [
             // Coroutine without nesting
             [
-                function() {
+                function () {
                     yield (yield (yield (yield (yield 'a'))));
                 }, [
                     'b', 'c', 'd', 'e'
@@ -182,7 +184,7 @@ class CoroutineCreateTest extends TestCase
             ],
             // Coroutine with nesting
             [
-                function() {
+                function () {
                     $s = (yield 'a');
                     $s = (yield $this->child6($s));
                     yield $s;
@@ -204,7 +206,10 @@ class CoroutineCreateTest extends TestCase
      * @dataProvider testThrowProvider
      */
     public function testThrow(
-        $coroutineFactory, $throwAtKeys, $expectedArray, $shouldThrow
+        $coroutineFactory,
+        $throwAtKeys,
+        $expectedArray,
+        $shouldThrow
     ) {
         $coroutine = Coroutine::create($coroutineFactory());
         $throwAtKeys = array_flip($throwAtKeys);
@@ -238,7 +243,7 @@ class CoroutineCreateTest extends TestCase
         return [
             // Throwing an exception from the outermost coroutine
             [
-                function() {
+                function () {
                     yield 'a';
                     throw new \Exception;
                     yield 'b';
@@ -246,7 +251,7 @@ class CoroutineCreateTest extends TestCase
             ],
             // Throwing an exception into the outermost coroutine (uncaught)
             [
-                function() {
+                function () {
                     yield 'a';
                     yield 'throw' => 'b';
                     yield 'c';
@@ -254,17 +259,19 @@ class CoroutineCreateTest extends TestCase
             ],
             // Throwing an exception into the outermost coroutine (caught)
             [
-                function() {
+                function () {
                     yield 'a';
                     try {
                         yield 'throw' => 'b';
-                    } catch (\Exception $e) { yield 'e'; }
+                    } catch (\Exception $e) {
+                        yield 'e';
+                    }
                     yield 'c';
                 }, ['throw'], ['a', 'b', 'e', 'c'], false
             ],
             // Throwing an exception into a nested coroutine (uncaught)
             [
-                function() {
+                function () {
                     yield 'a';
                     yield $this->child7();
                     yield 'b';
@@ -272,7 +279,7 @@ class CoroutineCreateTest extends TestCase
             ],
             // Throwing an exception into a nested coroutine (caught)
             [
-                function() {
+                function () {
                     yield 'a';
                     yield $this->child8();
                     yield 'b';
@@ -280,27 +287,31 @@ class CoroutineCreateTest extends TestCase
             ],
             // Throwing an exception into a nested coroutine (caught in outer)
             [
-                function() {
+                function () {
                     yield 'a';
                     try {
                         yield $this->child7();
-                    } catch (\Exception $e) { yield 'e'; }
+                    } catch (\Exception $e) {
+                        yield 'e';
+                    }
                     yield 'b';
                 }, ['throw'], ['a', 'c', 'e', 'b'], false
             ],
             // Caught exception in deeply nested coroutine (throw() throws)
             [
-                function() {
+                function () {
                     yield 'a';
                     try {
                         yield $this->child9();
-                    } catch (\Exception $e) { yield 'e'; }
+                    } catch (\Exception $e) {
+                        yield 'e';
+                    }
                     yield 'b';
                 }, ['throw'], ['a', 'c', 'e', 'b'], false
             ],
             // Exception during value sending to outermost coroutine
             [
-                function() {
+                function () {
                     yield 'a';
                     yield $this->child10();
                     throw new \Exception;
@@ -309,11 +320,13 @@ class CoroutineCreateTest extends TestCase
             ],
             // Exception during value sending in inner coroutine
             [
-                function() {
+                function () {
                     yield 'a';
                     try {
                         yield $this->child11();
-                    } catch (\Exception $e) { yield 'e'; }
+                    } catch (\Exception $e) {
+                        yield 'e';
+                    }
                     yield 'b';
                 }, [], ['a', 'e', 'b'], false
             ],
@@ -329,7 +342,9 @@ class CoroutineCreateTest extends TestCase
     {
         try {
             yield 'throw' => 'c';
-        } catch (\Exception $e) { yield 'e'; }
+        } catch (\Exception $e) {
+            yield 'e';
+        }
     }
 
     private function child9()

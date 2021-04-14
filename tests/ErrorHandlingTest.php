@@ -2,12 +2,12 @@
 
 namespace Async\Tests;
 
-use Async\Coroutine\Coroutine;
+use Async\Coroutine;
 use PHPUnit\Framework\TestCase;
 
 class ErrorHandlingTest extends TestCase
 {
-	protected function setUp(): void
+    protected function setUp(): void
     {
         \coroutine_clear();
     }

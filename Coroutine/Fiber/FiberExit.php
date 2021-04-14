@@ -1,6 +1,6 @@
 <?php
 
-namespace Async\Coroutine;
+namespace Async;
 
 /**
  * Exception thrown when destroying a fiber. This exception cannot be caught by user code.

@@ -1,8 +1,8 @@
 <?php
 
-namespace Async\Coroutine\Exceptions;
+namespace Async\Exceptions;
 
-use Async\Coroutine\Exceptions\Panicking;
+use Async\Exceptions\Panicking;
 
 class Panic extends \Exception implements Panicking
 {

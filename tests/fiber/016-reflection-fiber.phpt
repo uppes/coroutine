@@ -5,8 +5,8 @@ ReflectionFiber basic tests
 
 require 'vendor/autoload.php';
 
-use Async\Coroutine\Fiber;
-use Async\Coroutine\ReflectionFiber;
+use Async\Fiber;
+use Async\ReflectionFiber;
 
 function main()
 {
@@ -69,9 +69,9 @@ string(%d) "%S
 int(%d)
 array(1) {
   [0]=>
-  string(1100) "Async\Coroutine\Fiber Object
+  string(%d) "Async\Fiber Object
 (
-    [taskFiber:protected] => Async\Coroutine\Task Object
+    [taskFiber:protected] => Async\Task Object
         (
             [taskId:protected] => 1
             [daemon:protected] =>%S

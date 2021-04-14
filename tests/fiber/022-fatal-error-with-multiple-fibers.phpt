@@ -5,7 +5,7 @@ Fatal error in a fiber with other active fibers
 
 require 'vendor/autoload.php';
 
-use Async\Coroutine\Fiber;
+use Async\Fiber;
 
 function main()
 {

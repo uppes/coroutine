@@ -1,8 +1,9 @@
 <?php
 
-namespace Async\Coroutine\Exceptions;
+namespace Async\Exceptions;
 
-use Async\Coroutine\Exceptions\Panicking;
+use Async\Exceptions\Panicking;
 
 class InvalidArgumentException extends \InvalidArgumentException implements Panicking
-{ }
+{
+}

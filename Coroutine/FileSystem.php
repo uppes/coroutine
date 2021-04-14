@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace Async\Coroutine;
+namespace Async;
 
 use function Async\Worker\spawn_system;
 
-use Async\Coroutine\Kernel;
-use Async\Coroutine\TaskInterface;
-use Async\Coroutine\Coroutine;
-use Async\Coroutine\CoroutineInterface;
+use Async\Kernel;
+use Async\TaskInterface;
+use Async\Coroutine;
+use Async\CoroutineInterface;
 
 /**
  * Executes a blocking system call asynchronously.

@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Async\Worker;
 
 use Async\Spawn\Channeled;
-use Async\Coroutine\Kernel;
-use Async\Coroutine\Exceptions\Panic;
+use Async\Kernel;
+use Async\Exceptions\Panic;
 
 if (!\function_exists('awaitable_process')) {
     /**

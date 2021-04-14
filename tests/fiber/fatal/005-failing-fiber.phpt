@@ -7,7 +7,7 @@ Test throwing into fiber
 
 require 'vendor/autoload.php';
 
-use Async\Coroutine\Fiber;
+use Async\Fiber;
 
 function main()
 {
@@ -31,7 +31,7 @@ Fatal error: Uncaught Exception: test in %S
 Stack trace:
 #0 [internal function]: {closure}()
 #1 %S
-#2 [internal function]: Async\Coroutine\Coroutine::create(%S
+#2 [internal function]: Async\Coroutine::create(%S
 #3 %S
 #4 %S
 #5 %S

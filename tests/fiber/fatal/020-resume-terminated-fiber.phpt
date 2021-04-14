@@ -7,7 +7,7 @@ Resume terminated fiber
 
 require 'vendor/autoload.php';
 
-use Async\Coroutine\Fiber;
+use Async\Fiber;
 
 function main()
 {
@@ -23,11 +23,11 @@ yield $fiber->resume();
 \coroutine_run(main());
 
 --EXPECTF--
-Fatal error: Uncaught Async\Coroutine\FiberError: Cannot resume a fiber that is not suspended in %S
+Fatal error: Uncaught Async\FiberError: Cannot resume a fiber that is not suspended in %S
 Stack trace:
 #0 %S
 #1 %S
-#2 [internal function]: Async\Coroutine\Coroutine::create(%S
+#2 [internal function]: Async\Coroutine::create(%S
 #3 %S
 #4 %S
 #5 %S

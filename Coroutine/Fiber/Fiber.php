@@ -1,11 +1,11 @@
 <?php
 
-namespace Async\Coroutine;
+namespace Async;
 
-use Async\Coroutine\Coroutine;
-use Async\Coroutine\FiberInterface;
-use Async\Coroutine\FiberError;
-use Async\Coroutine\FiberExit;
+use Async\Coroutine;
+use Async\FiberInterface;
+use Async\FiberError;
+use Async\FiberExit;
 use Throwable;
 
 /**

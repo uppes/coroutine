@@ -2,7 +2,7 @@
 
 namespace Async\Tests;
 
-use Async\Coroutine\Signaler;
+use Async\Signaler;
 use PHPUnit\Framework\TestCase;
 
 class SignalerTest extends TestCase
@@ -12,7 +12,7 @@ class SignalerTest extends TestCase
         if (!\function_exists('posix_kill') || !\function_exists('posix_getpid')) {
             if (!\function_exists('uv_loop_new'))
                 $this->markTestSkipped(
-                'Signal test skipped because functions "posix_kill" and "posix_getpid", or "uv_loop_new" are missing.'
+                    'Signal test skipped because functions "posix_kill" and "posix_getpid", or "uv_loop_new" are missing.'
                 );
         }
 

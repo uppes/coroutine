@@ -2,7 +2,7 @@
 
 namespace Async\Tests;
 
-use Async\Coroutine\Fiber;
+use Async\Fiber;
 use PHPUnit\Framework\TestCase;
 
 class FiberTest extends TestCase

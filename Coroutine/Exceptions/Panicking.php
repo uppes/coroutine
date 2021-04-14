@@ -1,5 +1,7 @@
 <?php
 
-namespace Async\Coroutine\Exceptions;
+namespace Async\Exceptions;
 
-interface Panicking extends \Throwable {}
+interface Panicking extends \Throwable
+{
+}

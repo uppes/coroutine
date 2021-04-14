@@ -17,7 +17,7 @@ use function Async\Stream\{
     net_write
 };
 
-use Async\Coroutine\NetworkAssistant;
+use Async\NetworkAssistant;
 use PHPUnit\Framework\TestCase;
 
 class NetworkServerTest extends TestCase

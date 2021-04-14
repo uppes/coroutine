@@ -1,6 +1,6 @@
 <?php
 
-namespace Async\Coroutine;
+namespace Async;
 
 /**
  * Provides a way for a task to interrupt itself and pass control back

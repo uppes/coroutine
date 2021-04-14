@@ -6,8 +6,8 @@ namespace Async\Path;
 
 use function Async\Worker\{awaitable_process, spawn_system};
 
-use Async\Coroutine\Kernel;
-use Async\Coroutine\FileSystem;
+use Async\Kernel;
+use Async\FileSystem;
 
 if (!\function_exists('file_operation')) {
     /**

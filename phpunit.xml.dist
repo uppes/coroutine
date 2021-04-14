@@ -15,6 +15,7 @@
             <directory suffix=".php">tests/</directory>
             <directory suffix=".phpt">tests/fiber/</directory>
             <directory suffix=".phpt">tests/libuv/</directory>
+            <directory suffix=".phpt">tests/parallel/</directory>
         </testsuite>
     </testsuites>
 

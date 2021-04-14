@@ -5,8 +5,8 @@ ReflectionFiber errors
 
 require 'vendor/autoload.php';
 
-use Async\Coroutine\Fiber;
-use Async\Coroutine\ReflectionFiber;
+use Async\Fiber;
+use Async\ReflectionFiber;
 
 function main()
 {

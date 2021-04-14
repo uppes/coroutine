@@ -45,7 +45,7 @@ function main()
             echo $channel->read();
             echo $channel->read();
 
-            return \return_in(100, 'The game!');
+            return \flush_value('The game!', 100);
         },
         $ipc,
         $pTask

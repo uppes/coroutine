@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Async\Stream;
 
-use Async\Coroutine\Network;
-use Async\Coroutine\NetworkAssistant;
+use Async\Network;
+use Async\NetworkAssistant;
 
 if (!\function_exists('net_operation')) {
     /**

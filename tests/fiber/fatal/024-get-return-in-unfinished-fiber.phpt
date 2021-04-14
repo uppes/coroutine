@@ -7,7 +7,7 @@ Fiber::getReturn() in unfinished fiber
 
 require 'vendor/autoload.php';
 
-use Async\Coroutine\Fiber;
+use Async\Fiber;
 
 function main()
 {
@@ -25,12 +25,12 @@ $fiber->getReturn();
 --EXPECTF--
 int(1)
 
-Fatal error: Uncaught Async\Coroutine\FiberError: Cannot get fiber return value: The fiber has not returned in %S
+Fatal error: Uncaught Async\FiberError: Cannot get fiber return value: The fiber has not returned in %S
 Stack trace:
 #0 %S
 #1 [internal function]: main()
 #2 %S
-#3 [internal function]: Async\Coroutine\Coroutine::create(%S
+#3 [internal function]: Async\Coroutine::create(%S
 #4 %S
 #5 %S
 #6 %S

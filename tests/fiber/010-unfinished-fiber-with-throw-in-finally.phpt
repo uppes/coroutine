@@ -5,8 +5,8 @@ Test unfinished fiber with suspend in finally
 
 require 'vendor/autoload.php';
 
-use Async\Coroutine\Fiber;
-use Async\Coroutine\FiberError;
+use Async\Fiber;
+use Async\FiberError;
 
 function main()
 {
@@ -60,6 +60,6 @@ Fatal error: Uncaught Error: Cannot yield from finally in a force-closed generat
 Stack trace:
 #0 %S
 #1 %S
-#2 [internal function]: Async\Coroutine\Fiber->__destruct()
+#2 [internal function]: Async\Fiber->__destruct()
 #3 {main}
   thrown in %S

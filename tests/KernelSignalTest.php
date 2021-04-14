@@ -4,7 +4,7 @@ namespace Async\Tests;
 
 use function Async\Worker\{signal_task, spawn_kill, spawn_signal};
 
-use Async\Coroutine\Exceptions\InvalidStateError;
+use Async\Exceptions\InvalidStateError;
 use PHPUnit\Framework\TestCase;
 
 class KernelSignalTest extends TestCase
@@ -60,7 +60,7 @@ class KernelSignalTest extends TestCase
         }, true);
 
         $output = yield \gather_wait([$sigId, $kill], 0, false);
-        $this->assertInstanceOf(\Async\Coroutine\Exceptions\CancelledError::class, $output[$sigId]);
+        $this->assertInstanceOf(\Async\Exceptions\CancelledError::class, $output[$sigId]);
         $this->assertEquals(true, $output[$kill]);
         yield \shutdown();
     }

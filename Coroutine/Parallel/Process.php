@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Async\Coroutine;
+namespace Async;
 
 use Async\Spawn\LauncherInterface;
-use Async\Coroutine\CoroutineInterface;
+use Async\CoroutineInterface;
 
 /**
  * @internal

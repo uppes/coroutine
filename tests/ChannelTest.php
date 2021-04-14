@@ -2,14 +2,14 @@
 
 namespace Async\Tests;
 
-use Async\Coroutine\Channel;
+use Async\Channel;
 use PHPUnit\Framework\TestCase;
 
 class ChannelTest extends TestCase
 {
     protected $counterResult = null;
 
-	protected function setUp(): void
+    protected function setUp(): void
     {
         \coroutine_clear();
     }

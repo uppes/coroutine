@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Async\Coroutine;
+namespace Async;
 
-use Async\Coroutine\CoroutineInterface;
+use Async\CoroutineInterface;
 
 /**
  * A simple manager for signals, modified.

@@ -2,7 +2,7 @@
 
 namespace Async\Tests;
 
-use Async\Coroutine\Coroutine;
+use Async\Coroutine;
 use PHPUnit\Framework\TestCase;
 
 class CoroutineSignalerTest extends TestCase

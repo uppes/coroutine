@@ -1,8 +1,8 @@
 <?php
 
-namespace Async\Coroutine\Exceptions;
+namespace Async\Exceptions;
 
-use Async\Coroutine\Exceptions\RuntimeException;
+use Async\Exceptions\RuntimeException;
 
 class TimeoutError extends RuntimeException
 {

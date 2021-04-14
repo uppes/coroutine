@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Async\Coroutine;
+namespace Async;
 
 /**
  * A simple generic class for handling/constructing **client/server**

@@ -3,7 +3,7 @@
 namespace Async\Tests;
 
 use InvalidArgumentException;
-use Async\Coroutine\Coroutine;
+use Async\Coroutine;
 use Async\Tests\MyClass;
 use Async\Tests\InvokableClass;
 use Async\Tests\NonInvokableClass;

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Async\Coroutine;
+namespace Async;
 
 abstract class AbstractCoroutine
 {

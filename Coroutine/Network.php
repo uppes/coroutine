@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-namespace Async\Coroutine;
+namespace Async;
 
 use function Async\Path\file_exist;
 use function Async\Stream\dns_address;
 use function Async\Worker\{awaitable_process, spawn_system};
 
-use Async\Coroutine\Kernel;
-use Async\Coroutine\TaskInterface;
-use Async\Coroutine\Coroutine;
-use Async\Coroutine\CoroutineInterface;
+use Async\Kernel;
+use Async\TaskInterface;
+use Async\Coroutine;
+use Async\CoroutineInterface;
 
 /**
  * A general purpose networking class where the method is directed

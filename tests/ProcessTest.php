@@ -4,7 +4,7 @@ namespace Async\Tests;
 
 use function Async\Worker\{add_process, spawn_await};
 
-use Async\Coroutine\Coroutine;
+use Async\Coroutine;
 use PHPUnit\Framework\TestCase;
 
 class ProcessTest extends TestCase
@@ -110,7 +110,7 @@ class ProcessTest extends TestCase
             yield add_process(function () {
                 \sleep(1.5);
             }, 1);
-        } catch (\Async\Coroutine\Exceptions\TimeoutError $error) {
+        } catch (\Async\Exceptions\TimeoutError $error) {
             $this->mainResult = $childId;
             $this->errorResult = $error;
         }
@@ -204,7 +204,7 @@ class ProcessTest extends TestCase
         $this->assertNotEquals(0, $this->mainResult);
         $this->assertNotEquals(0, $this->childId);
         $this->assertGreaterThan(30, $this->counterResult);
-        $this->assertTrue($this->errorResult instanceof \Async\Coroutine\Exceptions\TimeoutError, (string) $parallel->status());
+        $this->assertTrue($this->errorResult instanceof \Async\Exceptions\TimeoutError, (string) $parallel->status());
         $this->assertEquals($this->mainResult, $this->childId, (string) $parallel->status());
     }
 }

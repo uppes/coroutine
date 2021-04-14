@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-namespace Async\Coroutine;
+namespace Async;
 
 use ArrayAccess;
 use InvalidArgumentException;
-use Async\Coroutine\ParallelStatus;
-use Async\Coroutine\ParallelInterface;
-use Async\Coroutine\CoroutineInterface;
+use Async\ParallelStatus;
+use Async\ParallelInterface;
+use Async\CoroutineInterface;
 use Async\Spawn\Spawn;
 use Async\Spawn\LauncherInterface;
 

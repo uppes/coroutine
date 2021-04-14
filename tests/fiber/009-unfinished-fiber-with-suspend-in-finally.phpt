@@ -5,7 +5,7 @@ Test unfinished fiber with suspend in finally
 
 require 'vendor/autoload.php';
 
-use Async\Coroutine\Fiber;
+use Async\Fiber;
 
 function main()
 {

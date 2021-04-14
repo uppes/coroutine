@@ -5,7 +5,7 @@ Test unfinished fiber with nested try/catch blocks
 
 require 'vendor/autoload.php';
 
-use Async\Coroutine\Fiber;
+use Async\Fiber;
 
 function main()
 {

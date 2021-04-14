@@ -5,7 +5,7 @@ Test unfinished fiber with finally block
 
 require 'vendor/autoload.php';
 
-use Async\Coroutine\Fiber;
+use Async\Fiber;
 
 function main()
 {

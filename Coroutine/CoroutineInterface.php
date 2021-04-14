@@ -1,14 +1,14 @@
 <?php
 
-namespace Async\Coroutine;
+namespace Async;
 
 use Async\Spawn\Channeled;
 use Async\Spawn\LauncherInterface;
-use Async\Coroutine\Process;
-use Async\Coroutine\TaskInterface;
-use Async\Coroutine\ParallelInterface;
-use Async\Coroutine\Exceptions\RuntimeException;
-use Async\Coroutine\FiberInterface;
+use Async\Process;
+use Async\TaskInterface;
+use Async\ParallelInterface;
+use Async\Exceptions\RuntimeException;
+use Async\FiberInterface;
 
 interface CoroutineInterface
 {
@@ -225,7 +225,6 @@ interface CoroutineInterface
      * @param int|float|null $timeout The timeout in seconds or null to disable
      * @param bool $display set to show child process output
      * @param Channeled|resource|mixed|null $channel IPC communication to be pass to the underlying process standard input.
-     * @param int|null $channelTask The task id to use for realtime **child/subprocess** interaction.
      *
      * @return LauncherInterface
      */

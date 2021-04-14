@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Async\Coroutine;
+namespace Async;
 
-use Async\Coroutine\Coroutine;
-use Async\Coroutine\TaskInterface;
-use Async\Coroutine\CoroutineInterface;
+use Async\Coroutine;
+use Async\TaskInterface;
+use Async\CoroutineInterface;
 
 /**
  * Channels provide a way for two coroutines to communicate with one another

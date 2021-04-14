@@ -2,27 +2,27 @@
 
 declare(strict_types=1);
 
-namespace Async\Coroutine;
+namespace Async;
 
 use function Async\Path\file_operation;
 use function Async\Stream\net_operation;
 
 use Async\Spawn\LauncherInterface;
 use Async\Spawn\ChanneledInterface;
-use Async\Coroutine\Kernel;
-use Async\Coroutine\Task;
-use Async\Coroutine\Parallel;
-use Async\Coroutine\ParallelInterface;
-use Async\Coroutine\Process;
-use Async\Coroutine\Signaler;
-use Async\Coroutine\TaskInterface;
-use Async\Coroutine\ReturnValueCoroutine;
-use Async\Coroutine\PlainValueCoroutine;
-use Async\Coroutine\CoroutineInterface;
-use Async\Coroutine\Exceptions\CancelledError;
-use Async\Coroutine\Exceptions\InvalidArgumentException;
-use Async\Coroutine\Fiber;
-use Async\Coroutine\FiberInterface;
+use Async\Kernel;
+use Async\Task;
+use Async\Parallel;
+use Async\ParallelInterface;
+use Async\Process;
+use Async\Signaler;
+use Async\TaskInterface;
+use Async\ReturnValueCoroutine;
+use Async\PlainValueCoroutine;
+use Async\CoroutineInterface;
+use Async\Exceptions\CancelledError;
+use Async\Exceptions\InvalidArgumentException;
+use Async\Fiber;
+use Async\FiberInterface;
 
 /**
  * The Scheduler

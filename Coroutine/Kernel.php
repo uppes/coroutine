@@ -2,20 +2,20 @@
 
 declare(strict_types=1);
 
-namespace Async\Coroutine;
+namespace Async;
 
 use Async\Spawn\Channeled;
 use Async\Spawn\LauncherInterface;
-use Async\Coroutine\Channel;
-use Async\Coroutine\CoroutineInterface;
-use Async\Coroutine\TaskInterface;
-use Async\Coroutine\Exceptions\LengthException;
-use Async\Coroutine\Exceptions\InvalidStateError;
-use Async\Coroutine\Exceptions\InvalidArgumentException;
-use Async\Coroutine\Exceptions\TimeoutError;
-use Async\Coroutine\Exceptions\CancelledError;
+use Async\Channel;
+use Async\CoroutineInterface;
+use Async\TaskInterface;
+use Async\Exceptions\LengthException;
+use Async\Exceptions\InvalidStateError;
+use Async\Exceptions\InvalidArgumentException;
+use Async\Exceptions\TimeoutError;
+use Async\Exceptions\CancelledError;
 use Async\Spawn\ChanneledInterface;
-use Async\Coroutine\FiberInterface;
+use Async\FiberInterface;
 
 /**
  * The Kernel
@@ -93,7 +93,7 @@ final class Kernel
         }
 
         // @codeCoverageIgnoreStart
-        \panic('Must be instance of "Async\Coroutine\TaskInterface" or "Async\Coroutine\FiberInterface"');
+        \panic('Must be instance of "Async\TaskInterface" or "Async\FiberInterface"');
         // @codeCoverageIgnoreEnd
     }
 

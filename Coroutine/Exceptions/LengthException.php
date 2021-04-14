@@ -1,8 +1,9 @@
 <?php
 
-namespace Async\Coroutine\Exceptions;
+namespace Async\Exceptions;
 
-use Async\Coroutine\Exceptions\Panicking;
+use Async\Exceptions\Panicking;
 
 class LengthException extends \LengthException implements Panicking
-{ }
+{
+}

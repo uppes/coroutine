@@ -2,15 +2,15 @@
 
 namespace Async\Tests;
 
-use Async\Coroutine\Kernel;
-use Async\Coroutine\Coroutine;
+use Async\Kernel;
+use Async\Coroutine;
 use PHPUnit\Framework\TestCase;
 
 class CoroutineTest extends TestCase
 {
     protected $task = '';
 
-	protected function setUp(): void
+    protected function setUp(): void
     {
         \coroutine_clear();
     }
@@ -42,7 +42,7 @@ class CoroutineTest extends TestCase
     public function testCoroutine()
     {
         $coroutine = new Coroutine();
-        $this->assertInstanceOf('\Async\Coroutine\Coroutine', $coroutine);
+        $this->assertInstanceOf('\Async\Coroutine', $coroutine);
 
         $taskId = $coroutine->createTask($this->task1());
         $this->assertNotNull($taskId);
@@ -169,10 +169,10 @@ class CoroutineTest extends TestCase
     }
 
     function testAddWriteStream()
-	{
+    {
         $coroutine = new Coroutine();
         $h = fopen('php://temp', 'r+');
-        $coroutine->addWriter($h, function() use ($h, $coroutine) {
+        $coroutine->addWriter($h, function () use ($h, $coroutine) {
             fwrite($h, 'hello world');
             $coroutine->removeWriter($h);
         });
@@ -184,13 +184,13 @@ class CoroutineTest extends TestCase
     }
 
     function testAddReadStream()
-	{
+    {
         $coroutine = new Coroutine();
         $h = fopen('php://temp', 'r+');
         fwrite($h, 'hello world');
         rewind($h);
         $result = null;
-        $coroutine->addReader($h, function() use ($h, $coroutine, &$result) {
+        $coroutine->addReader($h, function () use ($h, $coroutine, &$result) {
             $result = fgets($h);
             $coroutine->removeReader($h);
         });
@@ -201,10 +201,10 @@ class CoroutineTest extends TestCase
     }
 
     function testTimeout()
-	{
+    {
         $coroutine = new Coroutine();
         $check  = 0;
-        $coroutine->addTimeout(function() use (&$check) {
+        $coroutine->addTimeout(function () use (&$check) {
             $check++;
         }, 0.02);
         $coroutine->run();
@@ -214,16 +214,16 @@ class CoroutineTest extends TestCase
     }
 
     function testTimeoutOrder()
-	{
+    {
         $coroutine = new Coroutine();
         $check  = [];
-        $coroutine->addTimeout(function() use (&$check) {
+        $coroutine->addTimeout(function () use (&$check) {
             $check[] = 'a';
         }, 0.2);
-        $coroutine->addTimeout(function() use (&$check) {
+        $coroutine->addTimeout(function () use (&$check) {
             $check[] = 'b';
         }, 0.1);
-        $coroutine->addTimeout(function() use (&$check) {
+        $coroutine->addTimeout(function () use (&$check) {
             $check[] = 'c';
         }, 0.3);
         $coroutine->run();
@@ -233,20 +233,20 @@ class CoroutineTest extends TestCase
     }
 
     function testTimeoutOrderNative()
-	{
+    {
         $coroutine = new Coroutine();
         $coroutine->setup(false);
 
         $check  = [];
-        $coroutine->addTimeout(function() use (&$check) {
+        $coroutine->addTimeout(function () use (&$check) {
             $check[] = 'a';
         }, 0.2);
 
-        $coroutine->addTimeout(function() use (&$check) {
+        $coroutine->addTimeout(function () use (&$check) {
             $check[] = 'b';
         }, 0.1);
 
-        $coroutine->addTimeout(function() use (&$check) {
+        $coroutine->addTimeout(function () use (&$check) {
             $check[] = 'c';
         }, 0.3);
 

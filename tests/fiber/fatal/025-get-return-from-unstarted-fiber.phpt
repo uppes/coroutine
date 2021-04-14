@@ -7,7 +7,7 @@ Fiber::getReturn() from unstarted fiber
 
 require 'vendor/autoload.php';
 
-use Async\Coroutine\Fiber;
+use Async\Fiber;
 
 function main()
 {
@@ -21,7 +21,7 @@ $fiber->getReturn();
 \coroutine_run(main());
 
 --EXPECTF--
-Fatal error: Uncaught Async\Coroutine\FiberError: Cannot get fiber return value: The fiber has not been started in %S
+Fatal error: Uncaught Async\FiberError: Cannot get fiber return value: The fiber has not been started in %S
 Stack trace:
 #0 %S
 #1 %S

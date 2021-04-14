@@ -1,10 +1,10 @@
 <?php
 
-namespace  Async\Coroutine;
+namespace  Async;
 
 use ReflectionGenerator;
-use Async\Coroutine\Fiber;
-use Async\Coroutine\FiberError;
+use Async\Fiber;
+use Async\FiberError;
 
 class ReflectionFiber
 {
