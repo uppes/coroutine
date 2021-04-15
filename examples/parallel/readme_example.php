@@ -2,7 +2,7 @@
 
 include 'vendor/autoload.php';
 
-use Async\Parallel\Runtime;
+use parallel\Runtime;
 
 function main()
 {

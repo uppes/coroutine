@@ -6,7 +6,7 @@ Check parallel return values
 <?php
 include 'vendor/autoload.php';
 
-$parallel = new Async\Parallel\Runtime();
+$parallel = new parallel\Runtime();
 
 $future = $parallel->run(function() {
 	return 10;

@@ -6,12 +6,12 @@ ZEND_DECLARE_FUNCTION
 <?php
 include 'vendor/autoload.php';
 
-$parallel = new Async\Parallel\Runtime();
+$parallel = new parallel\Runtime();
 
 try {
     $parallel->run(function(){
         function test1() {}
-    })->value();
+    });
 } catch (\Error $ex) {
     var_dump($ex->getMessage());
 }
@@ -23,7 +23,7 @@ try {
 
             }
         };
-    })->value();
+    });
 } catch (\Error $ex) {
     var_dump($ex->getMessage());
 }

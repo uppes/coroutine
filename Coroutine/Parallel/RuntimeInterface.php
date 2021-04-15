@@ -1,10 +1,10 @@
 <?php
 
-namespace Async\Parallel;
+namespace parallel;
 
-use Async\Spawn\LauncherInterface;
 use Async\ParallelInterface;
-use Async\Parallel\FutureInterface;
+use Async\Spawn\LauncherInterface;
+use parallel\FutureInterface;
 
 interface RuntimeInterface
 {

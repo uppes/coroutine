@@ -8,7 +8,7 @@ opcache.optimization_level=0
 <?php
 include 'vendor/autoload.php';
 
-$runtime = new Async\Parallel\Runtime();
+$runtime = new parallel\Runtime();
 
 $f1 = $runtime->run(function() {
 	$closure = function() {
@@ -40,7 +40,7 @@ try {
                 new class{};
             };
         };
-    })->value();
+    });
 } catch (\Error  $ex) {
     var_dump($ex->getMessage());
 }
@@ -52,7 +52,7 @@ try {
                 class illegal {}
             };
         };
-    })->value();
+    });
 } catch (\Error $ex) {
     var_dump($ex->getMessage());
 }

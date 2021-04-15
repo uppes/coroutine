@@ -6,45 +6,45 @@ Copy arginfo (FAIL)
 <?php
 include 'vendor/autoload.php';
 
-$parallel = new Async\Parallel\Runtime();
+$parallel = new parallel\Runtime();
 
 try {
-	$parallel->run(function(DateTime $arg) {})->value();
+	$parallel->run(function(DateTime $arg) {});
 } catch (\Error $ex) {
 	var_dump($ex->getMessage());
 }
 
 try {
-	$parallel->run(function($arg, DateTime $arg2) {})->value();
+	$parallel->run(function($arg, DateTime $arg2) {});
 } catch (\Error $ex) {
 	var_dump($ex->getMessage());
 }
 
 try {
-	$parallel->run(function($arg, $arg2, DateTime ... $arg3) {})->value();
+	$parallel->run(function($arg, $arg2, DateTime ... $arg3) {});
 } catch (\Error $ex) {
 	var_dump($ex->getMessage());
 }
 
 try {
-	$parallel->run(function() : DateTime {})->value();
+	$parallel->run(function() : DateTime {});
 } catch (\Error $ex) {
 	var_dump($ex->getMessage());
 }
 try {
-	$parallel->run(function(&$arg) {}, 1)->value();
-} catch (\Error $ex) {
-	var_dump($ex->getMessage());
-}
-
-try {
-	$parallel->run(function($arg, &$arg2) {}, 1,2)->value();
+	$parallel->run(function(&$arg) {}, 1);
 } catch (\Error $ex) {
 	var_dump($ex->getMessage());
 }
 
 try {
-	$parallel->run(function($arg, $arg2, & ... $arg3) {}, 1,2,3)->value();
+	$parallel->run(function($arg, &$arg2) {}, 1,2);
+} catch (\Error $ex) {
+	var_dump($ex->getMessage());
+}
+
+try {
+	$parallel->run(function($arg, $arg2, & ... $arg3) {}, 1,2,3);
 } catch (\Error $ex) {
 	var_dump($ex->getMessage());
 }
@@ -56,7 +56,7 @@ try {
 	})->value();
 ?>
 --EXPECTF--
-string(479) "Too few arguments to function {closure}(), 0 passed in closure://function () use ($task, $argv) {
+string(%d) "Too few arguments to function {closure}(), 0 passed in closure://function () use ($task, $argv) {
 %S
 %S
 
@@ -65,7 +65,7 @@ string(479) "Too few arguments to function {closure}(), 0 passed in closure://fu
 %S
 #1 %S
 #2 {main}"
-string(479) "Too few arguments to function {closure}(), 0 passed in closure://function () use ($task, $argv) {
+string(%d) "Too few arguments to function {closure}(), 0 passed in closure://function () use ($task, $argv) {
 %S
 %S
 
@@ -74,7 +74,7 @@ string(479) "Too few arguments to function {closure}(), 0 passed in closure://fu
 %S
 #1 %S
 #2 {main}"
-string(479) "Too few arguments to function {closure}(), 0 passed in closure://function () use ($task, $argv) {
+string(%d) "Too few arguments to function {closure}(), 0 passed in closure://function () use ($task, $argv) {
 %S
 %S
 
@@ -83,7 +83,7 @@ string(479) "Too few arguments to function {closure}(), 0 passed in closure://fu
 %S
 #1 %S
 #2 {main}"
-string(365) "Return value of {closure}() must be an instance of DateTime, none returned
+string(%d) "Return value of {closure}() must be an instance of DateTime, none returned
 
 #0 closure://function () use ($task, $argv) {
 %S

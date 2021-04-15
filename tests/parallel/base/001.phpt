@@ -6,11 +6,11 @@ Check basic parallel operation
 <?php
 include 'vendor/autoload.php';
 
-$parallel = new Async\Parallel\Runtime();
+$parallel = new parallel\Runtime();
 
 $parallel->run(function(){
 	echo "OK";
-})->value();
+});
 ?>
 --EXPECT--
 OK

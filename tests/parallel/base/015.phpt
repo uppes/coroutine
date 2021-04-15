@@ -6,12 +6,12 @@ ZEND_YIELD
 <?php
 include 'vendor/autoload.php';
 
-$parallel = new Async\Parallel\Runtime();
+$parallel = new parallel\Runtime();
 $var     = null;
 
 $parallel->run(function() {
 		yield;
-})->value();
+});
 ?>
 --EXPECTF--
 Fatal error: Uncaught Exception: Serialization of 'Generator' is not allowed
@@ -25,3 +25,4 @@ Stack trace:
 #2 %S
 #3 [internal function]: Async\Parallel->markAsFailed(Object(Async\Spawn\Launcher))
 #4 %S
+#5 [internal function]: Async\Coroutine::create(Object(Generator)) in %S

@@ -6,12 +6,12 @@ ZEND_DECLARE_ANON_CLASS
 <?php
 include 'vendor/autoload.php';
 
-$parallel = new Async\Parallel\Runtime();
+$parallel = new parallel\Runtime();
 
 try {
 	$parallel->run(function(){
 		new class {};
-	})->value();
+	});
 } catch (Throwable $t) {
 	var_dump($t->getMessage());
 }

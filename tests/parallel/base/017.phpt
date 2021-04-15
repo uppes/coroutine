@@ -6,14 +6,14 @@ Copy arguments (OK)
 <?php
 include 'vendor/autoload.php';
 
-$parallel = new Async\Parallel\Runtime();
+$parallel = new parallel\Runtime();
 
 try {
 	$parallel->run(function() {
 		var_dump(func_get_args());
 	},
 		1,2,3, "hello"
-	)->value();
+	);
 } catch (Error $ex) {
 	var_dump($ex->getMessage());
 }

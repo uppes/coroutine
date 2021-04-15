@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Async\Parallel;
+namespace parallel;
 
 use Async\ParallelInterface;
-use Async\Parallel\FutureInterface;
+use parallel\FutureInterface;
 use Async\Spawn\LauncherInterface;
 
 final class Future implements FutureInterface
@@ -22,7 +22,7 @@ final class Future implements FutureInterface
 
   public function __destruct()
   {
-    $this->future = null;
+    $this->parallel->wait();
     $this->parallel = null;
   }
 
@@ -37,7 +37,7 @@ final class Future implements FutureInterface
   public function value()
   {
     $this->parallel->wait();
-    return $this->future->getResult();
+    return \deserialize($this->future->getResult());
   }
 
   /* State */

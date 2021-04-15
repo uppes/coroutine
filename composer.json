@@ -41,12 +41,19 @@
             "Coroutine/Stream.php",
             "Coroutine/Worker.php"
         ],
+        "psr-0": {
+            "parallel\\": [
+                "Coroutine/"
+            ],
+            "parallel\\Runtime\\": [
+                "Coroutine/"
+            ]
+        },
         "psr-4": {
             "Async\\": [
                 "Coroutine/",
                 "Coroutine/Exceptions/",
-                "Coroutine/Fiber/",
-                "Coroutine/Parallel/"
+                "Coroutine/Fiber/"
             ]
         }
     },

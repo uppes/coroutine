@@ -1,6 +1,6 @@
 <?php
 
-namespace Async\Parallel;
+namespace parallel;
 
 interface FutureInterface
 {

@@ -8,11 +8,11 @@ opcache.optimization_level=0
 <?php
 include 'vendor/autoload.php';
 
-$parallel = new Async\Parallel\Runtime();
+$parallel = new parallel\Runtime();
 $var     = null; /* avoid undefined */
 
 try {
-	$parallel->run(function() use(&$var) {})->value();
+	$parallel->run(function() use(&$var) {});
 } catch (Throwable $ex) {
 	var_dump($ex->getMessage());
 }

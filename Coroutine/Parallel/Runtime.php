@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Async\Parallel;
+namespace parallel;
 
 use Async\ParallelInterface;
 use Async\Spawn\LauncherInterface;
-use Async\Parallel\RuntimeInterface;
-use Async\Parallel\FutureInterface;
+use parallel\RuntimeInterface;
+use parallel\FutureInterface;
 
 /**
  * @internal
@@ -53,7 +53,7 @@ final class Runtime implements RuntimeInterface
 
   public function kill(): void
   {
-    $this->future->stop();
+    \coroutine_instance()->getProcess();
   }
 
   public function getFuture(): LauncherInterface

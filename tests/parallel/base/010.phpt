@@ -6,12 +6,12 @@ ZEND_DECLARE_INHERITED_CLASS
 <?php
 include 'vendor/autoload.php';
 
-$parallel = new Async\Parallel\Runtime();
+$parallel = new parallel\Runtime();
 
 try {
 	$parallel->run(function(){
 		class Foo extends Bar {}
-	})->value();
+	});
 } catch (Throwable $t) {
 	var_dump($t->getMessage());
 }

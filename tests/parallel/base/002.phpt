@@ -10,7 +10,7 @@ if (!extension_loaded('parallel')) {
 <?php
 include 'vendor/autoload.php';
 
-$parallel = new Async\Parallel\Runtime();
+$parallel = new parallel\Runtime();
 
 $parallel->run(function() {
 	global $thing;

@@ -6,7 +6,7 @@ ZEND_BIND_STATIC (OK)
 <?php
 include 'vendor/autoload.php';
 
-$parallel = new Async\Parallel\Runtime();
+$parallel = new parallel\Runtime();
 
 $var = 10;
 $array = [42];

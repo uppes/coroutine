@@ -2,13 +2,15 @@
 
 declare(strict_types=1);
 
-namespace Async\Parallel;
+namespace parallel;
 
 /**
  * When an `Event` is returned,
  * `Event::$object` shall be removed from the loop that returned it,
  * should the event be a write event the Input for `Event::$source`
  * shall also be removed.
+ *
+ * @codeCoverageIgnore
  */
 abstract class Event
 {

@@ -1,6 +1,6 @@
 <?php
 
-namespace Async\Parallel;
+namespace parallel;
 
 interface ChannelInterface
 {
@@ -23,7 +23,7 @@ interface ChannelInterface
    * @param integer|null $capacity
    * @return ChannelInterface
    */
-  public function make(string $name, ?int $capacity = null): ChannelInterface;
+  public static function make(string $name, ?int $capacity = null): ChannelInterface;
 
   /**
    * Shall open the channel with the given name
@@ -31,7 +31,7 @@ interface ChannelInterface
    * @param string $name
    * @return ChannelInterface
    */
-  public function open(string $name): ChannelInterface;
+  public static function open(string $name): ChannelInterface;
 
   /* Sharing */
   /**
