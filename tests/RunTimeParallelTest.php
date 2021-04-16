@@ -2,7 +2,7 @@
 
 namespace Async\Tests;
 
-use Async\Parallel\Runtime;
+use parallel\Runtime;
 use PHPUnit\Framework\TestCase;
 
 class RunTimeParallelTest extends TestCase

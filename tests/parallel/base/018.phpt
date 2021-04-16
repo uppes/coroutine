@@ -1,6 +1,11 @@
 --TEST--
 Copy arginfo (FAIL)
 --SKIPIF--
+<?php
+if (!extension_loaded('parallel')) {
+	echo 'skip';
+}
+?>
 <?php if (((float) \phpversion() >= 8.0)) print "skip"; ?>
 --FILE--
 <?php
@@ -56,11 +61,32 @@ try {
 	})->value();
 ?>
 --EXPECTF--
-string(%d) "Too few arguments to function {closure}(), 0 passed in closure://function () use ($task, $argv) {
+string(%d) "Too few arguments to function {closure}(), 0 passed in closure://function () use ($task, $argv, $file) {
 %S
 %S
 
-#0 closure://function () use ($task, $argv) {
+%S
+#0 closure://function () use ($task, $argv, $file) {
+%S
+%S
+%S
+
+%S
+%S
+#1 %S
+#2 {main}"
+string(%d) "Too few arguments to function {closure}(), 0 passed in closure://function () use ($task, $argv, $file) {
+%S
+%S
+%S
+
+%S
+%S
+#0 closure://function () use ($task, $argv, $file) {
+%S
+%S
+%S
+
 %S
 %S
 #1 %S
@@ -69,23 +95,22 @@ string(%d) "Too few arguments to function {closure}(), 0 passed in closure://fun
 %S
 %S
 
-#0 closure://function () use ($task, $argv) {
-%S
-%S
-#1 %S
-#2 {main}"
-string(%d) "Too few arguments to function {closure}(), 0 passed in closure://function () use ($task, $argv) {
+#0 closure://function () use ($task, $argv, $file) {
 %S
 %S
 
-#0 closure://function () use ($task, $argv) {
+%S
 %S
 %S
 #1 %S
 #2 {main}"
 string(%d) "Return value of {closure}() must be an instance of DateTime, none returned
 
-#0 closure://function () use ($task, $argv) {
+#0 closure://function () use ($task, $argv, $file) {
+%S
+%S
+%S
+
 %S
 %S
 #1 %S

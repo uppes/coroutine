@@ -414,14 +414,13 @@ if (!\function_exists('coroutine_run')) {
 
     function coroutine_clear()
     {
-        global $__coroutine__, $__timer__;
+        global $__coroutine__, $__timer__, $___bootstrap___, $___run___;
         if ($__coroutine__ instanceof CoroutineInterface) {
             $__coroutine__->setup(false);
-            unset($GLOBALS['__coroutine__'], $GLOBALS['__timer__']);
+            unset($GLOBALS['__coroutine__']);
         }
 
-        $__coroutine__ = null;
-        $__timer__ = null;
+        $__coroutine__ = $__timer__ = $___bootstrap___ = $___run___ = null;
     }
 
     function coroutine_create(\Generator $routine = null)

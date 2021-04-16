@@ -24,18 +24,24 @@ final class Runtime implements RuntimeInterface
    */
   private $future = null;
 
+  private $include = null;
+
   /* Create */
-  public function __construct()
+  public function __construct(?string $file = null)
   {
+    $this->include = $file;
     $this->parallel = \coroutine_create()->getParallel();
   }
 
   /* Execute */
   public function run(?\closure $task = null, ...$argv): FutureInterface
   {
-
+    $file = $this->include;
     $this->future = $this->parallel->add(
-      function () use ($task, $argv) {
+      function () use ($task, $argv, $file) {
+        if (!empty($file) && \is_string($file))
+          include $file;
+
         return \flush_value($task(...$argv), 50);
       }
     )->displayOn();
@@ -49,6 +55,7 @@ final class Runtime implements RuntimeInterface
     $this->future->close();
     $this->future = null;
     $this->parallel = null;
+    $this->include = null;
   }
 
   public function kill(): void

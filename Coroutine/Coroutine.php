@@ -248,7 +248,8 @@ final class Coroutine implements CoroutineInterface
      */
     public function __construct()
     {
-        global $__coroutine__, $__timer__;
+        global $__coroutine__, $__timer__, $___bootstrap___, $___run___;
+        $___bootstrap___ = $___run___ = null;
         $__coroutine__ = $this;
         $this->initSignals();
 

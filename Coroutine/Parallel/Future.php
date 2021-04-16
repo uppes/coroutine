@@ -23,6 +23,7 @@ final class Future implements FutureInterface
   public function __destruct()
   {
     $this->parallel->wait();
+    $this->future = null;
     $this->parallel = null;
   }
 

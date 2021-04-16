@@ -12,6 +12,27 @@ class IllegalInstruction extends \Error
 /**
  * @codeCoverageIgnore
  */
+class IllegalFunction extends \Error
+{
+}
+
+/**
+ * @codeCoverageIgnore
+ */
+class Closed extends \Error
+{
+}
+
+/**
+ * @codeCoverageIgnore
+ */
+class Bootstrap extends \Error
+{
+}
+
+/**
+ * @codeCoverageIgnore
+ */
 class IllegalVariable extends \Error
 {
 }

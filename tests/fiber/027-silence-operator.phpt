@@ -7,14 +7,14 @@ require 'vendor/autoload.php';
 
 use Async\Fiber;
 
+function suspend_with_warnings() {
+    @trigger_error("Warning A", E_USER_WARNING); // Should be silenced.
+    yield Fiber::suspend();
+    @trigger_error("Warning B", E_USER_WARNING); // Should be silenced.
+}
+
 function main()
 {
-
-function suspend_with_warnings() {
-    trigger_error("Warning A", E_USER_WARNING); // Should be silenced.
-    yield Fiber::suspend();
-    trigger_error("Warning B", E_USER_WARNING); // Should be silenced.
-}
 
 $fiber = new Fiber(function () {
     yield @suspend_with_warnings();

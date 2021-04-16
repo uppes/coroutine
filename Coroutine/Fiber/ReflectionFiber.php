@@ -68,8 +68,7 @@ class ReflectionFiber
         try {
             if ($this->fiber->getGenerator() instanceof \Generator) {
                 $this->reflection = (new ReflectionGenerator($this->fiber->getGenerator()))->getTrace($options);
-                $json = \json_encode(\print_r($this->fiber, true));
-                return \array_merge($this->reflection, (array) \json_decode($json, true));
+                return \array_merge($this->reflection, (array) \print_r($this->fiber, true));
             }
         } catch (\ReflectionException $e) {
         }

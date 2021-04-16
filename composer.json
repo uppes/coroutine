@@ -39,13 +39,17 @@
             "Coroutine/Core.php",
             "Coroutine/Path.php",
             "Coroutine/Stream.php",
-            "Coroutine/Worker.php"
+            "Coroutine/Worker.php",
+            "Coroutine/parallel/functional_api.php"
         ],
         "psr-0": {
             "parallel\\": [
                 "Coroutine/"
             ],
             "parallel\\Runtime\\": [
+                "Coroutine/"
+            ],
+            "parallel\\Runtime\\Error\\": [
                 "Coroutine/"
             ]
         },

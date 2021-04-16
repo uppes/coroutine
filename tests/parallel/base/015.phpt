@@ -25,4 +25,4 @@ Stack trace:
 #2 %S
 #3 [internal function]: Async\Parallel->markAsFailed(Object(Async\Spawn\Launcher))
 #4 %S
-#5 [internal function]: Async\Coroutine::create(Object(Generator)) in %S
+#5 %S
