@@ -11,6 +11,7 @@ $parallel = new parallel\Runtime();
 try {
     $parallel->run(function(){
         function test1() {}
+		print('No "illegal instruction (function) on line 1 of task", all good!'. PHP_EOL);
     });
 } catch (\Error $ex) {
     var_dump($ex->getMessage());
@@ -23,9 +24,12 @@ try {
 
             }
         };
+		print('No "illegal instruction (function) in closure on line 1 of task", all good!'. PHP_EOL);
     });
 } catch (\Error $ex) {
     var_dump($ex->getMessage());
 }
 ?>
 --EXPECTF--
+No "illegal instruction (function) on line 1 of task", all good!
+No "illegal instruction (function) in closure on line 1 of task", all good!

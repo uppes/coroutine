@@ -25,6 +25,11 @@ final class Channel implements ChannelInterface
     const Infinite = -1;
 
     /* Anonymous Constructor */
+    /**
+     * Shall make an anonymous buffered/unbuffered channel with the given capacity
+     *
+     * @param integer|null $capacity
+     */
     public function __construct(?int $capacity = null, string $name = __FILE__, bool $anonymous = true)
     {
         if (($capacity < -1) || (!$capacity >= 1))

@@ -11,9 +11,11 @@ $parallel = new parallel\Runtime();
 try {
 	$parallel->run(function(){
 		new class {};
+		print('No "illegal instruction (new class) on line 1 of task", all good!');
 	});
-} catch (Throwable $t) {
+} catch (Error $t) {
 	var_dump($t->getMessage());
 }
 ?>
---EXPECTF--
+--EXPECT--
+No "illegal instruction (new class) on line 1 of task", all good!

@@ -12,9 +12,12 @@ $parallel = new parallel\Runtime();
 $var     = null; /* avoid undefined */
 
 try {
-	$parallel->run(function() use(&$var) {});
+	$parallel->run(function() use(&$var) {
+		print('No "illegal instruction (lexical reference) in task", all good!');
+});
 } catch (Throwable $ex) {
 	var_dump($ex->getMessage());
 }
 ?>
---EXPECTF--
+--EXPECT--
+No "illegal instruction (lexical reference) in task", all good!

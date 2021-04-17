@@ -38,7 +38,7 @@ final class Future implements FutureInterface
   public function value()
   {
     $this->parallel->wait();
-    return \deserialize($this->future->getResult());
+    return $this->future->getResult();
   }
 
   /* State */

@@ -15,7 +15,7 @@ $f1 = $runtime->run(function() {
 	    return true;
 	};
     $result = $closure();
-	print_r($result . PHP_EOL);
+	print_r('bool(' . ($result ? 'true' : 'false') .')' . PHP_EOL);
 });
 
 $f1->value();
@@ -28,7 +28,7 @@ $f2 = $runtime->run(function() {
 	    return $result();
 	};
     $result = $closure();
-	print_r($result . PHP_EOL);
+	print_r('bool('. ($result ? 'true' : 'false') . ')' . PHP_EOL);
 });
 
 $f2->value();
@@ -40,6 +40,7 @@ try {
                 new class{};
             };
         };
+		print('No "illegal instruction (new class) in closure on line 2 of task", all good!'. PHP_EOL);
     });
 } catch (\Error  $ex) {
     var_dump($ex->getMessage());
@@ -58,8 +59,9 @@ try {
 }
 ?>
 --EXPECTF--
-1
-1
+bool(true)
+bool(true)
+No "illegal instruction (new class) in closure on line 2 of task", all good!
 string(%d) "syntax error, unexpected '\' (T_NS_SEPARATOR), expecting identifier (T_STRING)
 
 #0 [internal function]: Opis\Closure\SerializableClosure->unserialize(NULL)
