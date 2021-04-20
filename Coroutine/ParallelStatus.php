@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Async;
 
 use Async\Parallel;
-use Async\Spawn\Launcher;
+use Async\Spawn\Future;
 use Async\Spawn\SerializableException;
 
 final class ParallelStatus
@@ -48,7 +48,7 @@ final class ParallelStatus
 
     protected function failedToString(): string
     {
-        return (string) \array_reduce($this->parallelPool->getFailed(), function ($currentStatus, Launcher $process) {
+        return (string) \array_reduce($this->parallelPool->getFailed(), function ($currentStatus, Future $process) {
             $output = $process->getErrorOutput();
 
             if ($output instanceof SerializableException) {

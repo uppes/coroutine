@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Async;
 
-use Async\Spawn\LauncherInterface;
+use Async\Spawn\FutureInterface;
 use Async\Coroutine;
 use Async\Exceptions\CancelledError;
 use Async\TaskInterface;
@@ -276,7 +276,7 @@ final class Task implements TaskInterface
     {
         if ($this->isCompleted()) {
             $result = $this->result;
-            if ($this->customData instanceof LauncherInterface)
+            if ($this->customData instanceof FutureInterface)
                 $data = $this->customData->getResult();
             $this->close();
             return isset($data) ? $data : $result;

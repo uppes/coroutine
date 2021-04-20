@@ -3,8 +3,8 @@
 namespace parallel;
 
 use Async\ParallelInterface;
-use Async\Spawn\LauncherInterface;
-use parallel\FutureInterface;
+use parallel\FutureInterface as Futures;
+use Async\Spawn\FutureInterface;
 
 interface RuntimeInterface
 {
@@ -19,7 +19,7 @@ interface RuntimeInterface
    *
    * @return FutureInterface
    */
-  public function run(?\closure $task = null, ...$argv): FutureInterface;
+  public function run(?\closure $task = null, ...$argv): Futures;
 
   /**
    * Shall request that the runtime shutdown.
@@ -35,7 +35,7 @@ interface RuntimeInterface
    */
   public function kill(): void;
 
-  public function getFuture(): LauncherInterface;
+  public function getFuture(): FutureInterface;
 
   public function getParallel(): ParallelInterface;
 }

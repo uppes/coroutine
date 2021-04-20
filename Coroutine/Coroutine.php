@@ -7,7 +7,7 @@ namespace Async;
 use function Async\Path\file_operation;
 use function Async\Stream\net_operation;
 
-use Async\Spawn\LauncherInterface;
+use Async\Spawn\FutureInterface;
 use Async\Spawn\ChanneledInterface;
 use Async\Kernel;
 use Async\Task;
@@ -457,11 +457,11 @@ final class Coroutine implements CoroutineInterface
         return $this->process;
     }
 
-    public function addProcess($callable, int $timeout = 0, bool $display = false, $channel = null): LauncherInterface
+    public function addProcess($callable, int $timeout = 0, bool $display = false, $channel = null): FutureInterface
     {
-        $launcher = $this->parallel->add($callable, $timeout, $channel);
+        $Future = $this->parallel->add($callable, $timeout, $channel);
 
-        return $display ? $launcher->displayOn() : $launcher;
+        return $display ? $Future->displayOn() : $Future;
     }
 
     public function isUv(): bool

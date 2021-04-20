@@ -41,7 +41,7 @@ if (!\function_exists('functional_api')) {
       throw new Bootstrap('should be called once, before any calls to \parallel\run');
 
     if (isset($___bootstrap___))
-      throw new Bootstrap(\sprintf('already set to %s', $___bootstrap___));
+      throw new Bootstrap(\sprintf('\parallel\bootstrap already set to %s', $___bootstrap___));
 
     $___bootstrap___ = $file;
   }

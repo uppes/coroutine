@@ -20,4 +20,3 @@ try {
 ?>
 --EXPECT--
 string(76) "\parallel\bootstrap should be called once, before any calls to \parallel\run"
-

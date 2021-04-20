@@ -49,7 +49,7 @@ class KernelProgressTest extends TestCase
         });
 
         $realTime = yield spawn_progress(function (ChanneledInterface $ipc) {
-            $ipc->write('hello ');
+            $ipc->send('hello ');
             return \flush_value('world', (\IS_LINUX && !\IS_MACOS ? 100 : 5500));
         }, $channel, $realTimeTask);
 

@@ -3,7 +3,7 @@
 namespace Async;
 
 use Async\Spawn\Channeled;
-use Async\Spawn\LauncherInterface;
+use Async\Spawn\FutureInterface;
 
 interface ParallelInterface
 {
@@ -23,30 +23,30 @@ interface ParallelInterface
     public function close();
 
     /**
-     * @param Launcher|callable $process
+     * @param Future|callable $process
      * @param int|float|null $timeout The timeout in seconds or null to disable
      * @param Channeled|resource|mixed|null $channel IPC communication to be pass to the underlying process standard input.
      *
-     * @return LauncherInterface
+     * @return FutureInterface
      */
-    public function add($process, int $timeout = 0, $channel = null): LauncherInterface;
+    public function add($process, int $timeout = 0, $channel = null): FutureInterface;
 
-    public function retry(LauncherInterface $process = null): LauncherInterface;
+    public function retry(FutureInterface $process = null): FutureInterface;
 
     public function wait(): array;
 
     /**
-     * @return LauncherInterface[]
+     * @return FutureInterface[]
      */
     public function getQueue(): array;
 
-    public function markAsSignaled(LauncherInterface $process);
+    public function markAsSignaled(FutureInterface $process);
 
-    public function markAsFinished(LauncherInterface $process);
+    public function markAsFinished(FutureInterface $process);
 
-    public function markAsTimedOut(LauncherInterface $process);
+    public function markAsTimedOut(FutureInterface $process);
 
-    public function markAsFailed(LauncherInterface $process);
+    public function markAsFailed(FutureInterface $process);
 
     public function getFinished(): array;
 

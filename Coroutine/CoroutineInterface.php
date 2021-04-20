@@ -3,7 +3,7 @@
 namespace Async;
 
 use Async\Spawn\Channeled;
-use Async\Spawn\LauncherInterface;
+use Async\Spawn\FutureInterface;
 use Async\Process;
 use Async\TaskInterface;
 use Async\ParallelInterface;
@@ -226,9 +226,9 @@ interface CoroutineInterface
      * @param bool $display set to show child process output
      * @param Channeled|resource|mixed|null $channel IPC communication to be pass to the underlying process standard input.
      *
-     * @return LauncherInterface
+     * @return FutureInterface
      */
-    public function addProcess($callable, int $timeout = 0, bool $display = false, $channel = null): LauncherInterface;
+    public function addProcess($callable, int $timeout = 0, bool $display = false, $channel = null): FutureInterface;
 
     /**
      * There are no **UV** file system operations/events pending.

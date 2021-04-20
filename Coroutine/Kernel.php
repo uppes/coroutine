@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Async;
 
 use Async\Spawn\Channeled;
-use Async\Spawn\LauncherInterface;
+use Async\Spawn\FutureInterface;
 use Async\Channel;
 use Async\CoroutineInterface;
 use Async\TaskInterface;
@@ -359,7 +359,7 @@ final class Kernel
                 $task->taskType('paralleled');
                 $task->setState('process');
                 $task->customState($taskType);
-                $launcher = $coroutine->addProcess($command, $timeout, $display, $channel)
+                $Future = $coroutine->addProcess($command, $timeout, $display, $channel)
                     ->then(function ($result) use ($task, $coroutine) {
                         $coroutine->cancelProgress($task);
                         $task->setState('completed');
@@ -380,10 +380,10 @@ final class Kernel
                         $coroutine->schedule($task);
                     });
 
-                $task->customData($launcher);
+                $task->customData($Future);
 
                 if ($signal !== 0 && \is_int($signalTask)) {
-                    $launcher->signal($signal, function ($signaled)
+                    $Future->signal($signal, function ($signaled)
                     use ($task, $coroutine, $signal, $signalTask) {
                         $coroutine->cancelProgress($task);
                         $task->setState('signaled');
@@ -400,9 +400,9 @@ final class Kernel
                 }
 
                 if ($channel instanceof Channeled && \is_int($channelTask)) {
-                    $channel->setHandle($launcher);
+                    $channel->setHandle($Future);
                     $task->customState([$channel, $channelTask]);
-                    $launcher->progress(function ($type, $data)
+                    $Future->progress(function ($type, $data)
                     use ($coroutine, $channelTask) {
                         $ipcTask = $coroutine->taskInstance($channelTask);
                         if ($ipcTask instanceof TaskInterface) {
@@ -485,7 +485,7 @@ final class Kernel
                 $spawnedTask = $coroutine->taskInstance($tid);
                 if ($spawnedTask instanceof TaskInterface) {
                     $customData = $spawnedTask->getCustomData();
-                    if ($customData instanceof LauncherInterface) {
+                    if ($customData instanceof FutureInterface) {
                         $customData->stop($signal);
                     }
                 }

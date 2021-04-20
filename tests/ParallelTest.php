@@ -159,7 +159,7 @@ class ParallelTest extends TestCase
 
         $array = $parallel[0];
 
-        $this->assertEquals(2, $array->getOutput());
+        $this->assertEquals(2, $array->getResult());
 
         unset($parallel[0]);
 

@@ -25,4 +25,5 @@ string(%d) "syntax error, unexpected '\' (T_NS_SEPARATOR), expecting identifier 
 #3 %S
 #4 %S
 #5 %S
-#6 {main}"
+#6 %S
+#7 {main}"

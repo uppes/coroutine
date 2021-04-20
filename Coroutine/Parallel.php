@@ -10,7 +10,7 @@ use Async\ParallelStatus;
 use Async\ParallelInterface;
 use Async\CoroutineInterface;
 use Async\Spawn\Spawn;
-use Async\Spawn\LauncherInterface;
+use Async\Spawn\FutureInterface;
 
 /**
  * @internal
@@ -53,7 +53,7 @@ final class Parallel implements ArrayAccess, ParallelInterface
     {
         if (!empty($this->parallel)) {
             foreach ($this->parallel as $process) {
-                if ($process instanceof LauncherInterface)
+                if ($process instanceof FutureInterface)
                     $process->close();
             }
         }
@@ -99,13 +99,13 @@ final class Parallel implements ArrayAccess, ParallelInterface
         return $this->status;
     }
 
-    public function add($process, int $timeout = 0, $channel = null): LauncherInterface
+    public function add($process, int $timeout = 0, $channel = null): FutureInterface
     {
-        if (!is_callable($process) && !$process instanceof LauncherInterface) {
+        if (!is_callable($process) && !$process instanceof FutureInterface) {
             throw new InvalidArgumentException('The process passed to Parallel::add should be callable.');
         }
 
-        if (!$process instanceof LauncherInterface) {
+        if (!$process instanceof FutureInterface) {
             $process = Spawn::create($process, $timeout, $channel, true);
         }
 
@@ -131,7 +131,7 @@ final class Parallel implements ArrayAccess, ParallelInterface
         $this->putInProgress($process, $restart);
     }
 
-    public function retry(LauncherInterface $process = null): LauncherInterface
+    public function retry(FutureInterface $process = null): FutureInterface
     {
         $this->putInQueue((empty($process) ? $this->process : $process), true);
 
@@ -152,21 +152,21 @@ final class Parallel implements ArrayAccess, ParallelInterface
     }
 
     /**
-     * @return LauncherInterface[]
+     * @return FutureInterface[]
      */
     public function getQueue(): array
     {
         return $this->queue;
     }
 
-    private function putInQueue(LauncherInterface $process, $restart = false)
+    private function putInQueue(FutureInterface $process, $restart = false)
     {
         $this->queue[$process->getId()] = $process;
 
         $this->notify($restart);
     }
 
-    private function putInProgress(LauncherInterface $process, $restart = false)
+    private function putInProgress(FutureInterface $process, $restart = false)
     {
         unset($this->queue[$process->getId()]);
 
@@ -183,7 +183,7 @@ final class Parallel implements ArrayAccess, ParallelInterface
         $this->processor->add($process);
     }
 
-    public function markAsFinished(LauncherInterface $process)
+    public function markAsFinished(FutureInterface $process)
     {
         $this->notify();
 
@@ -192,7 +192,7 @@ final class Parallel implements ArrayAccess, ParallelInterface
         $this->finished[$process->getPid()] = $process;
     }
 
-    public function markAsTimedOut(LauncherInterface $process)
+    public function markAsTimedOut(FutureInterface $process)
     {
         $this->notify();
 
@@ -201,7 +201,7 @@ final class Parallel implements ArrayAccess, ParallelInterface
         $this->timeouts[$process->getPid()] = $process;
     }
 
-    public function markAsSignaled(LauncherInterface $process)
+    public function markAsSignaled(FutureInterface $process)
     {
         $this->notify();
 
@@ -210,7 +210,7 @@ final class Parallel implements ArrayAccess, ParallelInterface
         $this->signaled[$process->getPid()] = $process;
     }
 
-    public function markAsFailed(LauncherInterface $process)
+    public function markAsFailed(FutureInterface $process)
     {
         $this->notify();
 

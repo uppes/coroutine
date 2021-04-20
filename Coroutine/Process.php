@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Async;
 
-use Async\Spawn\LauncherInterface;
+use Async\Spawn\FutureInterface;
 use Async\CoroutineInterface;
 
 /**
@@ -37,17 +37,17 @@ final class Process
         // @codeCoverageIgnoreEnd
     }
 
-    public function add(LauncherInterface $process)
+    public function add(FutureInterface $process)
     {
         $this->processes[$process->getPid()] = $process;
     }
 
-    public function remove(LauncherInterface $process)
+    public function remove(FutureInterface $process)
     {
         unset($this->processes[$process->getPid()]);
     }
 
-    public function stop(LauncherInterface $process)
+    public function stop(FutureInterface $process)
     {
         $this->remove($process);
         $process->stop();
@@ -147,7 +147,7 @@ final class Process
                     continue;
                 }
 
-                if ($process instanceof LauncherInterface && $process->isSignaled()) {
+                if ($process instanceof FutureInterface && $process->isSignaled()) {
                     $this->remove($process);
                     $this->coroutine->executeTask($this->signalCallback, $process);
                     continue;

@@ -1,11 +1,6 @@
 --TEST--
 Check functional bootstrap error (previously set)
 --SKIPIF--
-<?php
-if (!extension_loaded('parallel')) {
-	echo 'skip';
-}
-?>
 <?php if (((float) \phpversion() >= 8.0)) print "skip"; ?>
 --FILE--
 <?php

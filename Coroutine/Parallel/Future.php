@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace parallel;
 
 use Async\ParallelInterface;
-use parallel\FutureInterface;
-use Async\Spawn\LauncherInterface;
+use parallel\FutureInterface as Futures;
+use Async\Spawn\FutureInterface;
 
-final class Future implements FutureInterface
+final class Future implements Futures
 {
   /**
    * @var ParallelInterface
@@ -16,7 +16,7 @@ final class Future implements FutureInterface
   private $parallel = [];
 
   /**
-   * @var LauncherInterface
+   * @var FutureInterface
    */
   private $future = null;
 

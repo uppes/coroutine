@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace parallel;
 
 use Async\ParallelInterface;
-use Async\Spawn\LauncherInterface;
+use parallel\Future;
+use parallel\FutureInterface as Futures;
 use parallel\RuntimeInterface;
-use parallel\FutureInterface;
+use Async\Spawn\FutureInterface;
 
 /**
  * @internal
@@ -20,7 +21,7 @@ final class Runtime implements RuntimeInterface
   private $parallel = [];
 
   /**
-   * @var LauncherInterface
+   * @var FutureInterface
    */
   private $future = null;
 
@@ -34,7 +35,7 @@ final class Runtime implements RuntimeInterface
   }
 
   /* Execute */
-  public function run(?\closure $task = null, ...$argv): FutureInterface
+  public function run(?\closure $task = null, ...$argv): Futures
   {
     $file = $this->include;
     $this->future = $this->parallel->add(
@@ -63,7 +64,7 @@ final class Runtime implements RuntimeInterface
     \coroutine_instance()->getProcess();
   }
 
-  public function getFuture(): LauncherInterface
+  public function getFuture(): FutureInterface
   {
     return $this->future;
   }
