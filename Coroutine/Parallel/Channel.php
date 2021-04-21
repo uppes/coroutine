@@ -4,22 +4,25 @@ declare(strict_types=1);
 
 namespace parallel;
 
+use Closure;
+use Async\Spawn\Channeled;
+use Async\Spawn\ChanneledInterface;
 use parallel\Channel\Error\Closed;
 use parallel\Channel\Error\Existence;
 use parallel\Channel\Error\IllegalValue;
-use parallel\ChannelInterface;
+use stdClass;
 
 /**
  * @codeCoverageIgnore
  */
-final class Channel implements ChannelInterface
+final class Channel extends Channeled
 {
     protected static $channels = [];
     protected static $anonymous = 0;
     protected $name = '';
     protected $capacity = null;
     protected $type = null;
-    protected $input = null;
+    protected $buffered = null;
     protected $open = true;
 
     const Infinite = -1;
@@ -32,13 +35,13 @@ final class Channel implements ChannelInterface
      */
     public function __construct(?int $capacity = null, string $name = __FILE__, bool $anonymous = true)
     {
-        if (($capacity < -1) || (!$capacity >= 1))
+        if (($capacity < -1) || (!$capacity == 0))
             if ($capacity !== self::Infinite)
                 throw new \TypeError('capacity may be -1 for unlimited, or a positive integer');
 
         $this->type = empty($capacity) ? 'unbuffered' : 'buffered';
         $this->capacity = (!empty($capacity) || $capacity === self::Infinite) ? $capacity : -1;
-        $this->input = new \SplStack;
+        $this->buffered = new \SplQueue;
         if ($anonymous) {
             self::$anonymous++;
             $this->name = $name . '#' . \strlen($name) . '@' . '[' . self::$anonymous . ']';
@@ -55,7 +58,7 @@ final class Channel implements ChannelInterface
     }
 
     /* Access */
-    public static function make(string $name, ?int $capacity = null): ChannelInterface
+    public static function make(string $name, ?int $capacity = null): ChanneledInterface
     {
         if (isset(self::$channels[$name]))
             throw new Existence(\sprintf('channel named %s already exists', $name));
@@ -63,7 +66,7 @@ final class Channel implements ChannelInterface
         return new self($capacity, $name, false);
     }
 
-    public static function open(string $name): ChannelInterface
+    public static function open(string $name): ChanneledInterface
     {
         if (isset(self::$channels[$name]))
             return self::$channels[$name];
@@ -92,14 +95,15 @@ final class Channel implements ChannelInterface
         }
 
         if (
-            \is_object($this->channel)
+            null !== $value
+            && \is_object($this->channel)
             && \method_exists($this->channel, 'getProcess')
             && $this->channel->getProcess() instanceof \UVProcess
         ) {
-            \uv_write($this->channel->getPipeInput(), self::validateInput(__METHOD__, $value), function () {
+            \uv_write($this->channel->getPipeInput(), self::validateInput(__FUNCTION__, $value), function () {
             });
-        } else {
-            $this->input->push(self::validateInput(__METHOD__, $value));
+        } elseif (null !== $value) {
+            \fwrite($this->ipcOutput, (string) $value);
         }
     }
 
@@ -113,35 +117,19 @@ final class Channel implements ChannelInterface
         $this->open = false;
     }
 
-    protected function isClosed(): bool
+    public function isClosed(): bool
     {
         return !$this->open;
     }
 
-    /* Constant for Infinitely Buffered */
     /**
-     * Validates and normalizes a Process input.
-     *
-     * @param string $caller The name of method call that validates the input
-     * @param mixed  $input  The input to validate
-     *
-     * @return mixed The validated input
-     *
      * @throws IllegalValue In case the input is not valid
      */
-    protected static function validateInput(string $caller, $input)
+    public static function validateInput(string $caller, $input)
     {
         if (null !== $input) {
-            if (\is_resource($input)) {
+            if (\is_string($input) || \is_scalar($input) || $input instanceof Closure || $input instanceof stdClass) {
                 return $input;
-            }
-
-            if (\is_string($input)) {
-                return $input;
-            }
-
-            if (\is_scalar($input)) {
-                return (string) $input;
             }
 
             throw new IllegalValue('value is illegal.');
