@@ -17,6 +17,8 @@ use stdClass;
  */
 final class Channel extends Channeled
 {
+    const Infinite = -1;
+
     protected static $channels = [];
     protected static $anonymous = 0;
     protected $name = '';
@@ -25,7 +27,9 @@ final class Channel extends Channeled
     protected $buffered = null;
     protected $open = true;
 
-    const Infinite = -1;
+    protected $input = \STDIN;
+    protected $output = \STDOUT;
+    protected $error = \STDERR;
 
     /* Anonymous Constructor */
     /**
@@ -33,18 +37,24 @@ final class Channel extends Channeled
      *
      * @param integer|null $capacity
      */
-    public function __construct(?int $capacity = null, string $name = __FILE__, bool $anonymous = true)
-    {
-        if (($capacity < -1) || (!$capacity == 0))
-            if ($capacity !== self::Infinite)
-                throw new \TypeError('capacity may be -1 for unlimited, or a positive integer');
+    public function __construct(
+        ?int $capacity = null,
+        string $name = __FILE__,
+        bool $anonymous = true
+    ) {
+        \stream_set_read_buffer($this->input, 0);
+        \stream_set_write_buffer($this->output, 0);
+        \stream_set_read_buffer($this->error, 0);
+        \stream_set_write_buffer($this->error, 0);
+        if (($capacity < -1) || ($capacity == 0))
+            throw new \TypeError('capacity may be -1 for unlimited, or a positive integer');
 
         $this->type = empty($capacity) ? 'unbuffered' : 'buffered';
-        $this->capacity = (!empty($capacity) || $capacity === self::Infinite) ? $capacity : -1;
+        $this->capacity = $capacity;
         $this->buffered = new \SplQueue;
         if ($anonymous) {
             self::$anonymous++;
-            $this->name = $name . '#' . \strlen($name) . '@' . '[' . self::$anonymous . ']';
+            $this->name = \sprintf("%s#%u@%d[%d]", $name, __LINE__, \strlen($name), self::$anonymous);
             self::$channels[self::$anonymous] = $this;
         } else {
             $this->name = $name;
@@ -103,7 +113,7 @@ final class Channel extends Channeled
             \uv_write($this->channel->getPipeInput(), self::validateInput(__FUNCTION__, $value), function () {
             });
         } elseif (null !== $value) {
-            \fwrite($this->ipcOutput, (string) $value);
+            \fwrite($this->output, (string) $value);
         }
     }
 
@@ -125,7 +135,7 @@ final class Channel extends Channeled
     /**
      * @throws IllegalValue In case the input is not valid
      */
-    public static function validateInput(string $caller, $input)
+    protected static function validateInput(string $caller, $input)
     {
         if (null !== $input) {
             if (\is_string($input) || \is_scalar($input) || $input instanceof Closure || $input instanceof stdClass) {
