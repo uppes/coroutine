@@ -6,17 +6,17 @@ namespace Async;
 
 abstract class AbstractCoroutine
 {
-    protected $value;
+  protected $value;
 
-    public function __construct($value)
-    {
-        $this->value = $value;
-    }
+  public function __construct($value)
+  {
+    $this->value = $value;
+  }
 
-    public function getValue()
-    {
-        $value = $this->value;
-        $this->value = null;
-        return $value;
-    }
+  public function getValue()
+  {
+    $value = $this->value;
+    $this->value = null;
+    return $value;
+  }
 }
