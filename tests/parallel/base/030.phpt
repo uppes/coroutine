@@ -1,13 +1,10 @@
 --TEST--
 parallel future exception
 --SKIPIF--
-<?php
-if (!extension_loaded('parallel')) {
-	echo 'skip';
-}
-?>
+<?php if (((float) \phpversion() >= 8.0)) print "skip"; ?>
 --FILE--
 <?php
+include 'vendor/autoload.php';
 $parallel = new \parallel\Runtime();
 $future   = $parallel->run(function(){
 	throw new Exception();
@@ -18,10 +15,20 @@ $future   = $parallel->run(function(){
 $future->value();
 ?>
 --EXPECTF--
-Fatal error: Uncaught Exception in %s:4
+Fatal error: Uncaught Exception:%S
+
+#0 closure://function () use ($task, $args, $include, $___parallel___) {
+%S
+%S
+
+%S
+%S
+%S    }(7): {closure}()
+#1 %S
+#2 {main} %S
 Stack trace:
-#0 {main}
-  thrown in %s on line 4
-
-
-
+#0 %S
+#1 %S
+#2 %S
+#3 [internal function]: Async\Parallel->markAsFailed(Object(Async\Spawn\Future))
+#4 %S

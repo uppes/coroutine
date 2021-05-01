@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Async\Path;
 
-use function Async\Worker\{awaitable_process, spawn_system};
+use function Async\Worker\{awaitable_future, spawn_system};
 
 use Async\Kernel;
 use Async\FileSystem;
@@ -113,7 +113,7 @@ if (!\function_exists('file_operation')) {
         // @codeCoverageIgnoreStart
         $system = function ($dirFile) use ($dir, &$system) {
             // Need to check for string type. All child/subprocess automatically
-            // have a Channel instance passed in on process execution.
+            // have a Channel instance passed in on `future` execution.
             $dir = \is_string($dirFile) ? $dirFile : $dir;
             if (\is_dir($dir)) {
                 $files = @\glob($dir . '*', \GLOB_MARK);
@@ -128,8 +128,8 @@ if (!\function_exists('file_operation')) {
         };
         // @codeCoverageIgnoreEnd
 
-        yield awaitable_process(function () use ($system) {
-            return yield Kernel::addProcess($system);
+        yield awaitable_future(function () use ($system) {
+            return yield Kernel::addFuture($system);
         });
 
         $bool = yield file_exist($dir);

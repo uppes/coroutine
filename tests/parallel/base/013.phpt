@@ -40,8 +40,8 @@ try {
                 new class{};
             };
         };
-		print('No "illegal instruction (new class) in closure on line 2 of task", all good!'. PHP_EOL);
     });
+	print('No "illegal instruction (new class) in closure on line 2 of task", all good!'. PHP_EOL);
 } catch (\Error  $ex) {
     var_dump($ex->getMessage());
 }

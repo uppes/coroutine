@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Async;
 
-use Async\Spawn\FutureInterface;
 use Async\Coroutine;
-use Async\Exceptions\CancelledError;
 use Async\TaskInterface;
+use Async\Spawn\FutureInterface;
+use Async\Exceptions\CancelledError;
 use Async\Exceptions\InvalidStateError;
 
 /**
@@ -230,7 +230,7 @@ final class Task implements TaskInterface
         return ($this->taskType == 'networked');
     }
 
-    public function isProcess(): bool
+    public function isFuture(): bool
     {
         return ($this->state == 'process');
     }

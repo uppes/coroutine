@@ -7,52 +7,67 @@ use Async\Spawn\FutureInterface;
 
 interface ParallelInterface
 {
-    public function concurrency(int $concurrency): ParallelInterface;
+  public function concurrency(int $concurrency): ParallelInterface;
 
-    public function sleepTime(int $sleepTime);
+  public function sleepTime(int $sleepTime);
 
-    public function results(): array;
+  public function results(): array;
 
-    public function isPcntl(): bool;
+  public function isPcntl(): bool;
 
-    public function status(): ParallelStatus;
+  public function status(): ParallelStatus;
 
-    /**
-     * Reset all sub process data, and kill any running.
-     */
-    public function close();
+  /**
+   * Reset all sub `future` data, and kill any running.
+   */
+  public function close();
 
-    /**
-     * @param Future|callable $process
-     * @param int|float|null $timeout The timeout in seconds or null to disable
-     * @param Channeled|resource|mixed|null $channel IPC communication to be pass to the underlying process standard input.
-     *
-     * @return FutureInterface
-     */
-    public function add($process, int $timeout = 0, $channel = null): FutureInterface;
+  /**
+   * Create an `yield`able Future `sub/child` **task**, that can include an additional **file**.
+   * This function exists to give same behavior as **parallel\runtime** of `ext-parallel` extension,
+   * but without any of the it's limitations. All child output is displayed.
+   * - This feature is for `Coroutine` package or any third party package using `yield` for execution.
+   *
+   * @param closure $future
+   * @param string $include additional file to execute
+   * @param Channeled|mixed|null ...$args - if a `Channel` instance is passed, it wil be used to set `Future` **IPC/CSP** handler
+   *
+   * @return FutureInterface
+   * @see https://www.php.net/manual/en/parallel.run.php
+   */
+  public function adding(?\closure $future = null, ?string $include = null, ...$args): FutureInterface;
 
-    public function retry(FutureInterface $process = null): FutureInterface;
+  /**
+   * @param Future|callable $future
+   * @param int|float|null $timeout The timeout in seconds or null to disable
+   * @param Channeled|resource|mixed|null $channel IPC/CSP communication to be pass to the underlying `Future` instance.
+   *
+   * @return FutureInterface
+   */
+  public function add($future, int $timeout = 0, $channel = null): FutureInterface;
 
-    public function wait(): array;
+  public function retry(FutureInterface $future = null): FutureInterface;
 
-    /**
-     * @return FutureInterface[]
-     */
-    public function getQueue(): array;
+  public function wait(): array;
 
-    public function markAsSignaled(FutureInterface $process);
+  /**
+   * @return FutureInterface[]
+   */
+  public function getQueue(): array;
 
-    public function markAsFinished(FutureInterface $process);
+  public function markAsSignaled(FutureInterface $future);
 
-    public function markAsTimedOut(FutureInterface $process);
+  public function markAsFinished(FutureInterface $future);
 
-    public function markAsFailed(FutureInterface $process);
+  public function markAsTimedOut(FutureInterface $future);
 
-    public function getFinished(): array;
+  public function markAsFailed(FutureInterface $future);
 
-    public function getFailed(): array;
+  public function getFinished(): array;
 
-    public function getTimeouts(): array;
+  public function getFailed(): array;
 
-    public function getSignaled(): array;
+  public function getTimeouts(): array;
+
+  public function getSignaled(): array;
 }

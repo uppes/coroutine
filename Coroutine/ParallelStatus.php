@@ -48,14 +48,14 @@ final class ParallelStatus
 
     protected function failedToString(): string
     {
-        return (string) \array_reduce($this->parallelPool->getFailed(), function ($currentStatus, Future $process) {
-            $output = $process->getErrorOutput();
+        return (string) \array_reduce($this->parallelPool->getFailed(), function ($currentStatus, Future $future) {
+            $output = $future->getErrorOutput();
 
             if ($output instanceof SerializableException) {
                 $output = \get_class($output->asThrowable()) . ': ' . $output->asThrowable()->getMessage();
             }
 
-            return $this->lines((string) $currentStatus, "{$process->getPid()} failed with {$output}");
+            return $this->lines((string) $currentStatus, "{$future->getPid()} failed with {$output}");
         });
     }
 }

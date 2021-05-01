@@ -6,6 +6,7 @@ namespace parallel;
 
 use Async\ParallelInterface;
 use parallel\FutureInterface as Futures;
+use parallel\Future\Error;
 use Async\Spawn\FutureInterface;
 
 final class Future implements Futures
@@ -19,17 +20,23 @@ final class Future implements Futures
    * @var FutureInterface
    */
   private $future = null;
+  private $hasValue = false;
 
   public function __destruct()
   {
-    $this->parallel->wait();
+    if ($this->future !== null && $this->parallel !== null)
+      $this->parallel->wait();
+
     $this->future = null;
     $this->parallel = null;
   }
 
   /* Create */
-  public function __construct(RuntimeInterface $runtime)
+  public function __construct($runtime = null)
   {
+    if (empty($runtime) || !$runtime instanceof RuntimeInterface)
+      throw new Error('construction of Future objects is not allowed');
+
     $this->future = $runtime->getFuture();
     $this->parallel = $runtime->getParallel();
   }
@@ -37,7 +44,11 @@ final class Future implements Futures
   /* Resolution */
   public function value()
   {
-    $this->parallel->wait();
+    if (!$this->hasValue || !$this->done()) {
+      $this->parallel->wait();
+      $this->hasValue = true;
+    }
+
     return $this->future->getResult();
   }
 
@@ -49,7 +60,8 @@ final class Future implements Futures
 
   public function done(): bool
   {
-    return !$this->future->isRunning();
+    return (!$this->future->isRunning() && $this->future->isStarted())
+      && ($this->future->isTerminated() || $this->future->isSuccessful());
   }
 
   /* Cancellation */

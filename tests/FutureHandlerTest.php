@@ -2,12 +2,12 @@
 
 namespace Async\Tests;
 
-use function Async\Worker\{add_process, spawn_await};
+use function Async\Worker\{add_future, spawn_await};
 
 use Async\Coroutine;
 use PHPUnit\Framework\TestCase;
 
-class ProcessTest extends TestCase
+class FutureHandlerTest extends TestCase
 {
     protected $mainResult;
     protected $counterResult;
@@ -36,7 +36,7 @@ class ProcessTest extends TestCase
         $this->counterResult = $counter;
     }
 
-    public function taskProcessStopAll()
+    public function taskFutureStopAll()
     {
         yield \away(function () {
             yield;
@@ -48,7 +48,7 @@ class ProcessTest extends TestCase
             yield yield shutdown(yield \get_task());
         });
 
-        $result = yield add_process(function () {
+        $result = yield add_future(function () {
             usleep(3000);
             return 3;
         });
@@ -58,10 +58,10 @@ class ProcessTest extends TestCase
         $this->assertNull($result);
     }
 
-    public function taskProcess()
+    public function taskFuture()
     {
         $childId = yield \away($this->childTask());
-        $result = yield add_process(function () {
+        $result = yield add_future(function () {
             usleep(1000);
             return 3;
         });
@@ -73,7 +73,7 @@ class ProcessTest extends TestCase
         yield;
     }
 
-    public function taskProcessDisplay()
+    public function taskFutureDisplay()
     {
         $tid = yield \away($this->childTask());
         $result = yield spawn_await(function () {
@@ -84,12 +84,12 @@ class ProcessTest extends TestCase
         yield;
     }
 
-    public function taskProcessError()
+    public function taskFutureError()
     {
         $childId = yield \away([$this, 'childTask']);
         $result = null;
         try {
-            $result = yield add_process(function () {
+            $result = yield add_future(function () {
                 usleep(1000);
                 throw new \Exception('3');
             });
@@ -103,11 +103,11 @@ class ProcessTest extends TestCase
         yield;
     }
 
-    public function taskProcessTimeOut()
+    public function taskFutureTimeOut()
     {
         $childId = yield away($this->childTask());
         try {
-            yield add_process(function () {
+            yield add_future(function () {
                 \sleep(1.5);
             }, 1);
         } catch (\Async\Exceptions\TimeoutError $error) {
@@ -119,7 +119,7 @@ class ProcessTest extends TestCase
         yield;
     }
 
-    public function testProcess()
+    public function testFuture()
     {
         $this->mainResult = 0;
         $this->childId = 0;
@@ -128,7 +128,7 @@ class ProcessTest extends TestCase
         $coroutine = new Coroutine();
         $parallel = $coroutine->getParallel();
 
-        $coroutine->createTask($this->taskProcess());
+        $coroutine->createTask($this->taskFuture());
         $coroutine->run();
 
         $this->assertNotEquals(0, $this->mainResult);
@@ -138,7 +138,7 @@ class ProcessTest extends TestCase
         $this->assertEquals($this->mainResult, $parallel->results()[0], (string) $parallel->status());
     }
 
-    public function testProcessDisplay()
+    public function testFutureDisplay()
     {
         $this->mainResult = 0;
         $this->childId = 0;
@@ -148,11 +148,11 @@ class ProcessTest extends TestCase
         $parallel = $coroutine->getParallel();
 
         $this->expectOutputString('here!');
-        $coroutine->createTask($this->taskProcessDisplay());
+        $coroutine->createTask($this->taskFutureDisplay());
         $coroutine->run();
     }
 
-    public function testProcessShutDownStopAll()
+    public function testFutureShutDownStopAll()
     {
         $this->mainResult = 0;
         $this->childId = 0;
@@ -160,7 +160,7 @@ class ProcessTest extends TestCase
 
         $coroutine = new Coroutine();
 
-        $coroutine->createTask($this->taskProcessStopAll());
+        $coroutine->createTask($this->taskFutureStopAll());
         $coroutine->run();
 
         $this->assertEquals(0, $this->mainResult);
@@ -168,7 +168,7 @@ class ProcessTest extends TestCase
         $this->assertEquals(0, $this->counterResult);
     }
 
-    public function testProcessError()
+    public function testFutureError()
     {
         $this->mainResult = 0;
         $this->childId = 0;
@@ -178,7 +178,7 @@ class ProcessTest extends TestCase
         $coroutine = new Coroutine();
         $parallel = $coroutine->getParallel();
 
-        $coroutine->createTask($this->taskProcessError());
+        $coroutine->createTask($this->taskFutureError());
         $coroutine->run();
 
         $this->assertNotEquals(0, $this->mainResult);
@@ -188,7 +188,7 @@ class ProcessTest extends TestCase
         $this->assertEquals($this->mainResult, $this->childId, (string) $parallel->status());
     }
 
-    public function testProcessTimeOut()
+    public function testFutureTimeOut()
     {
         $this->mainResult = 0;
         $this->childId = 0;
@@ -198,7 +198,7 @@ class ProcessTest extends TestCase
         $coroutine = new Coroutine();
         $parallel = $coroutine->getParallel();
 
-        $coroutine->createTask($this->taskProcessTimeOut());
+        $coroutine->createTask($this->taskFutureTimeOut());
         $coroutine->run();
 
         $this->assertNotEquals(0, $this->mainResult);

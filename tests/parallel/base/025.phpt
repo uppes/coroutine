@@ -1,13 +1,10 @@
 --TEST--
 parallel may return arrays
 --SKIPIF--
-<?php
-if (!extension_loaded('parallel')) {
-	echo 'skip';
-}
-?>
+<?php if (((float) \phpversion() >= 8.0)) print "skip"; ?>
 --FILE--
 <?php
+include 'vendor/autoload.php';
 $parallel = new parallel\Runtime();
 
 $future = $parallel->run(function(){
@@ -29,6 +26,21 @@ $future = $parallel->run(function(){
 var_dump($future->value());
 ?>
 --EXPECTF--
+closure://function(){
+%S
+
+%S
+
+%S
+%S
+%S
+%S
+%S
+%S
+%S
+%S
+%S
+}:5:
 resource(%d) of type (stream)
 array(7) {
   [0]=>
@@ -47,11 +59,10 @@ array(7) {
     int(6)
   }
   ["seven"]=>
-  object(stdClass)#%d (%d) {
+  object(stdClass)#%d (0) {
   }
   ["eight"]=>
   string(11) "string here"
   ["stdin"]=>
-  NULL
+  int(0)
 }
-

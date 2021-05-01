@@ -65,52 +65,65 @@ bool(true)
 bool(false)
 bool(true)
 bool(false)
-string(%d) "%S
-int(%d)
-array(1) {
-  [0]=>
-  string(%d) "Async\Fiber Object
-(
-    [taskFiber:protected] => Async\Task Object
-        (
-            [taskId:protected] => 1
-            [daemon:protected] =>%S
-            [cycles:protected] => 2
-            [coroutine:protected] => Generator Object
-                (
-                )
-
-            [state:protected] => running
-            [result:protected] =>%S
-            [sendValue:protected] =>%S
-            [beforeFirstYield:protected] =>%S
-            [error:protected] =>%S
-            [exception:protected] =>%S
-            [customState:protected] =>%S
-            [customData:protected] =>%S
-            [taskType:protected] => awaited
-        )
-
-    [taskType:protected] => fiber
-    [cycles:protected] => 1
-    [fiberId:protected] => 3
-    [coroutine:protected] => Generator Object
-        (
-        )
-
-    [state:protected] => suspended
-    [result:protected] =>%S
-    [finishResult:protected] =>%S
-    [sendValue:protected] =>%S
-    [fiberStarted:protected] => 1
-    [error:protected] =>%S
-    [exception:protected] =>%S
-    [callback:protected] => Closure Object
-        (
-        )
-
-)
-"
+string(59) %S
+int(1175)
+array(13) {
+%S
+%S  object(Async\Task)#12 (13) {
+%S    ["taskId":protected]=>
+%S    int(1)
+%S    ["daemon":protected]=>
+%S    NULL
+%S    ["cycles":protected]=>
+%S    int(2)
+%S    ["coroutine":protected]=>
+%S    object(Generator)#13 (0) {
+%S    }
+%S    ["state":protected]=>
+%S    string(7) "running"
+%S    ["result":protected]=>
+%S    NULL
+%S    ["sendValue":protected]=>
+%S    NULL
+%S    ["beforeFirstYield":protected]=>
+%S    bool(false)
+%S    ["error":protected]=>
+%S    NULL
+%S    ["exception":protected]=>
+%S    NULL
+%S    ["customState":protected]=>
+%S    NULL
+%S    ["customData":protected]=>
+%S    NULL
+%S    ["taskType":protected]=>
+%S    string(7) "awaited"
+%S  }
+%S
+%S  string(5) "fiber"
+%S
+%S  int(1)
+%S
+%S  int(3)
+%S
+%S  object(Generator)#23 (0) {
+%S  }
+%S
+%S  string(9) "suspended"
+%S
+%S  NULL
+%S
+%S  NULL
+%S
+%S  NULL
+%S
+%S  bool(true)
+%S
+%S  NULL
+%S
+%S  NULL
+%S
+%S  object(Closure)#19 (0) {
+%S  }
 }
 bool(true)
 bool(false)

@@ -1,13 +1,10 @@
 --TEST--
 parallel may accept arrays
 --SKIPIF--
-<?php
-if (!extension_loaded('parallel')) {
-	echo 'skip';
-}
-?>
+<?php if (((float) \phpversion() >= 8.0)) print "skip"; ?>
 --FILE--
 <?php
+include 'vendor/autoload.php';
 $parallel = new \parallel\Runtime();
 
 $var = $parallel->run(function($array){
@@ -16,11 +13,11 @@ $var = $parallel->run(function($array){
 	$array[2] *= 10;
 
 	return $array;
-}, $argv = [[1,2,3, "hello"]]);
+}, $argv = [1,2,3, "hello"]);
 
 var_dump($var->value());
 
-var_dump($argv[0]);
+var_dump($argv);
 ?>
 --EXPECTF--
 array(4) {
@@ -43,4 +40,3 @@ array(4) {
   [3]=>
   string(5) "hello"
 }
-

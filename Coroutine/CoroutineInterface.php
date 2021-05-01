@@ -4,7 +4,7 @@ namespace Async;
 
 use Async\Spawn\Channeled;
 use Async\Spawn\FutureInterface;
-use Async\Process;
+use Async\FutureHandler;
 use Async\TaskInterface;
 use Async\ParallelInterface;
 use Async\Exceptions\RuntimeException;
@@ -91,7 +91,7 @@ interface CoroutineInterface
 
     /**
      * Start the main supervisor task.
-     * Process/walk the task `queue` and execute the tasks.
+     * Walk the task `queue` and execute the tasks.
      * If a task is finished it's dropped, otherwise rescheduled at the end of the `queue`.
      * - The `task` that's finish with any `result`, is moved into an `completed` task list.
      *
@@ -228,7 +228,7 @@ interface CoroutineInterface
      *
      * @return FutureInterface
      */
-    public function addProcess($callable, int $timeout = 0, bool $display = false, $channel = null): FutureInterface;
+    public function addFuture($callable, int $timeout = 0, bool $display = false, $channel = null): FutureInterface;
 
     /**
      * There are no **UV** file system operations/events pending.
@@ -298,22 +298,22 @@ interface CoroutineInterface
     public function setup(bool $useUvLoop = true): CoroutineInterface;
 
     /**
-     * The `Process` class manager instance for Blocking I/O.
+     * Kill and return an new `Future` process `event` manager handle.
      *
      * @param callable|null $timedOutCallback
      * @param callable|null $finishCallback
      * @param callable|null $failCallback
-     * @return Process
+     * @return FutureHandler
      */
-    public function getProcess(
+    public function getFuture(
         ?callable $timedOutCallback = null,
         ?callable $finishCallback = null,
         ?callable $failCallback = null,
         ?callable $signalCallback  = null
-    ): Process;
+    ): FutureHandler;
 
     /**
-     * The `Parallel` class pool process instance.
+     * The `Parallel` class pool future instance.
      *
      * @return ParallelInterface
      */

@@ -15,8 +15,6 @@ if (!\function_exists('functional_api')) {
    * @param \closure $task
    * @param mixed ...$argv
    * @return FutureInterface|null
-   *
-   * @codeCoverageIgnore
    */
   function run(\closure $task, ...$argv): ?FutureInterface
   {
@@ -31,8 +29,6 @@ if (!\function_exists('functional_api')) {
    *
    * @param string|null $file
    * @return void
-   *
-   * @codeCoverageIgnore
    */
   function bootstrap(?string $file = null)
   {

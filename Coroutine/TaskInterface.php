@@ -89,7 +89,7 @@ interface TaskInterface
     public function isCustomState($state): bool;
 
     /**
-     * A flag that indicates the task is parallel child process.
+     * A flag that indicates the task is parallel child future.
      *
      * @return bool
      */
@@ -104,11 +104,11 @@ interface TaskInterface
     public function isNetwork(): bool;
 
     /**
-     * A flag that indicates whether or not the sub process task has started.
+     * A flag that indicates whether or not the sub future task has started.
      *
      * @return bool
      */
-    public function isProcess(): bool;
+    public function isFuture(): bool;
 
     /**
      * A flag that indicates whether or not the task has an error.
@@ -132,7 +132,7 @@ interface TaskInterface
     public function isCancelled(): bool;
 
     /**
-     * A flag that indicates whether or not the a `parallel/process` task received a kill signal.
+     * A flag that indicates whether or not the a `parallel/future` task received a kill signal.
      *
      * @return bool
      */

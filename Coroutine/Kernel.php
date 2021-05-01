@@ -324,7 +324,7 @@ final class Kernel
     }
 
     /**
-     * Add and wait for result of an blocking `I/O` subprocess that runs in parallel.
+     * Add and wait for result of an blocking `I/O` `future` that runs in parallel.
      * This function turns the calling function internal state/type used by `gather()`
      * to **process/paralleled** which is handled differently.
      *
@@ -335,15 +335,15 @@ final class Kernel
      *
      * @param callable|shell $command
      * @param int|float|null $timeout The timeout in seconds or null to disable
-     * @param bool $display set to show child process output
-     * @param Channeled|resource|mixed|null $channel IPC communication to be pass to the underlying `process` standard input.
-     * @param int|null $channelTask The task id to use for realtime **child/subprocess** interaction.
+     * @param bool $display set to show `future` output
+     * @param Channeled|resource|mixed|null $channel IPC/CSP communication to be passed to the underlying `Future` instance.
+     * @param int|null $channelTask The task id to use for realtime **future** output interaction.
      * @param int $signal
-     * @param int $signalTask The task to call when process is terminated with a signal.
+     * @param int $signalTask The task to call when `future` is terminated with a signal.
      *
      * @return mixed
      */
-    public static function addProcess(
+    public static function addFuture(
         $command,
         $timeout = 0,
         bool $display = false,
@@ -359,7 +359,7 @@ final class Kernel
                 $task->taskType('paralleled');
                 $task->setState('process');
                 $task->customState($taskType);
-                $Future = $coroutine->addProcess($command, $timeout, $display, $channel)
+                $future = $coroutine->addFuture($command, $timeout, $display, $channel)
                     ->then(function ($result) use ($task, $coroutine) {
                         $coroutine->cancelProgress($task);
                         $task->setState('completed');
@@ -380,10 +380,10 @@ final class Kernel
                         $coroutine->schedule($task);
                     });
 
-                $task->customData($Future);
+                $task->customData($future);
 
                 if ($signal !== 0 && \is_int($signalTask)) {
-                    $Future->signal($signal, function ($signaled)
+                    $future->signal($signal, function ($signaled)
                     use ($task, $coroutine, $signal, $signalTask) {
                         $coroutine->cancelProgress($task);
                         $task->setState('signaled');
@@ -400,9 +400,9 @@ final class Kernel
                 }
 
                 if ($channel instanceof Channeled && \is_int($channelTask)) {
-                    $channel->setHandle($Future);
+                    $channel->setFuture($future);
                     $task->customState([$channel, $channelTask]);
-                    $Future->progress(function ($type, $data)
+                    $future->progress(function ($type, $data)
                     use ($coroutine, $channelTask) {
                         $ipcTask = $coroutine->taskInstance($channelTask);
                         if ($ipcTask instanceof TaskInterface) {
@@ -416,7 +416,7 @@ final class Kernel
     }
 
     /**
-     * Add/execute a blocking `I/O` subprocess task that runs in parallel.
+     * Add/execute a blocking `I/O` `future` task that runs in parallel.
      * This function will return `int` immediately, use `gather()` to get the result.
      * - This function needs to be prefixed with `yield`
      *
@@ -425,11 +425,11 @@ final class Kernel
      *
      * @param callable|shell $command
      * @param int|float|null $timeout The timeout in seconds or null to disable
-     * @param bool $display set to show child process output
-     * @param Channeled|resource|mixed|null $channel IPC communication to be pass to the underlying `process` standard input.
-     * @param int|null $channelTask The task id to use for realtime **child/subprocess** interaction.
+     * @param bool $display set to show future output
+     * @param Channeled|resource|mixed|null $channel IPC/CSP communication to be passed to the underlying `Future` instance.
+     * @param int|null $channelTask The task id to use for realtime **future** output interaction.
      * @param int $signal
-     * @param int $signalTask The task to call when process is terminated with a signal.
+     * @param int $signalTask The task to call when `future` is terminated with a signal.
      *
      * @return int
      */
@@ -449,7 +449,7 @@ final class Kernel
             use ($callable, $timeout, $display, $channel, $channelTask, $signal, $signalTask, $taskType) {
                 $command = \awaitAble(function ()
                 use ($callable, $timeout, $display, $channel, $channelTask, $signal, $signalTask, $taskType) {
-                    $result = yield yield Kernel::addProcess(
+                    $result = yield yield Kernel::addFuture(
                         $callable,
                         $timeout,
                         $display,
@@ -470,10 +470,10 @@ final class Kernel
     }
 
     /**
-     * Stop/kill a `child/subprocess` with `signal`, and also `cancel` the task.
+     * Stop/kill a `future` with `signal`, and also `cancel` the task.
      * - This function needs to be prefixed with `yield`
      *
-     * @param int $tid The task id of the subprocess task.
+     * @param int $tid The task id of the `future` task.
      * @param int $signal `Termination/kill` signal constant.
      *
      * @return bool
@@ -499,7 +499,7 @@ final class Kernel
     /**
      * Add a signal handler for the signal, that's continuously monitored.
      * This function will return `int` immediately, use with `spawn_signal()`.
-     * - The `$handler` function will be executed, if subprocess is terminated with the `signal`.
+     * - The `$handler` function will be executed, if `future` is terminated with the `signal`.
      * - Expect the `$handler` to receive `(int $signal)`.
      * - This function needs to be prefixed with `yield`
      *
@@ -550,9 +550,9 @@ final class Kernel
     }
 
     /**
-     * Add a progress handler for the subprocess, that's continuously monitored.
+     * Add a progress handler for the `future`, that's continuously monitored.
      * This function will return `int` immediately, use with `spawn_progress()`.
-     * - The `$handler` function will be executed every time the subprocess produces output.
+     * - The `$handler` function will be executed every time the `future` produces output.
      * - Expect the `$handler` to receive `(string $type, $data)`, where `$type` is either `out` or `err`.
      * - This function needs to be prefixed with `yield`
      *
@@ -672,7 +672,7 @@ final class Kernel
 
                 $taskIdList = [];
                 $isGatherListGenerator = false;
-                $gatherIdList = (\is_array($taskId[0])) ? $taskId[0] : $taskId;
+                $gatherIdList = \is_array($taskId[0]) ? $taskId[0] : $taskId;
                 foreach ($gatherIdList as $id => $value) {
                     if ($value instanceof \Generator) {
                         $isGatherListGenerator = true;
@@ -796,8 +796,8 @@ final class Kernel
                                     continue;
                                 }
 
-                                // Handle if process not running, force run.
-                                if ($tasks->isProcess()) {
+                                // Handle if future not running, force run.
+                                if ($tasks->isFuture()) {
                                     $type = $tasks->getCustomState();
                                     if (\is_string($type) && $type == 'signaling') {
                                         $coroutine->execute('signaling');

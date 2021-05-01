@@ -13,7 +13,7 @@ use Async\Kernel;
 use Async\Task;
 use Async\Parallel;
 use Async\ParallelInterface;
-use Async\Process;
+use Async\FutureHandler;
 use Async\Signaler;
 use Async\TaskInterface;
 use Async\ReturnValueCoroutine;
@@ -160,9 +160,9 @@ final class Coroutine implements CoroutineInterface
     protected $signals = [];
 
     /**
-     * @var Process
+     * @var FutureHandler
      */
-    protected $process = null;
+    protected $future = null;
 
     /**
      * @var Parallel
@@ -217,8 +217,8 @@ final class Coroutine implements CoroutineInterface
 
         $this->uv = null;
         $this->parallel = null;
-        unset($this->process);
-        $this->process = null;
+        unset($this->future);
+        $this->future = null;
         unset($this->signaler);
         $this->signaler = null;
         $this->onEvent = null;
@@ -442,22 +442,22 @@ final class Coroutine implements CoroutineInterface
         return $this->parallel;
     }
 
-    public function getProcess(
+    public function getFuture(
         ?callable $timedOutCallback = null,
         ?callable $finishCallback = null,
         ?callable $failCallback = null,
         ?callable $signalCallback  = null
-    ): Process {
-        if (!empty($this->process)) {
-            $this->process->stopAll();
-            $this->process = null;
+    ): FutureHandler {
+        if (!empty($this->future)) {
+            $this->future->stopAll();
+            $this->future = null;
         }
 
-        $this->process = new Process($this, $timedOutCallback, $finishCallback, $failCallback, $signalCallback);
-        return $this->process;
+        $this->future = new FutureHandler($this, $timedOutCallback, $finishCallback, $failCallback, $signalCallback);
+        return $this->future;
     }
 
-    public function addProcess($callable, int $timeout = 0, bool $display = false, $channel = null): FutureInterface
+    public function addFuture($callable, int $timeout = 0, bool $display = false, $channel = null): FutureInterface
     {
         $Future = $this->parallel->add($callable, $timeout, $channel);
 
@@ -551,8 +551,8 @@ final class Coroutine implements CoroutineInterface
 
     public function shutdown(int $skipTask = 1)
     {
-        if (!empty($this->process))
-            $this->process->stopAll();
+        if (!empty($this->future))
+            $this->future->stopAll();
 
         if (!empty($this->taskMap)) {
             $map = \array_reverse($this->taskMap, true);
@@ -780,7 +780,7 @@ final class Coroutine implements CoroutineInterface
                     return $this->ioWaiting();
                 } elseif ($isReturn === 'channeling') {
                     $this->ioWaiting();
-                    if (!$this->process->isEmpty())
+                    if (!$this->future->isEmpty())
                         continue;
                 }
 
@@ -814,7 +814,7 @@ final class Coroutine implements CoroutineInterface
     }
 
     /**
-     * Check and return `true` for `no` pending I/O events, signals, subprocess,
+     * Check and return `true` for `no` pending I/O events, signals, subprocess futures,
      * streams/sockets/fd activity, timers or tasks.
      */
     protected function hasCoroutines(): bool
@@ -823,7 +823,7 @@ final class Coroutine implements CoroutineInterface
             && empty($this->waitingForRead)
             && empty($this->waitingForWrite)
             && empty($this->timers)
-            && $this->process->isEmpty()
+            && $this->future->isEmpty()
             && !$this->isSignaling()
             && $this->isIoEmpty()
             && $this->isFsEmpty();
@@ -838,9 +838,9 @@ final class Coroutine implements CoroutineInterface
         elseif (!$this->taskQueue->isEmpty())
             // There's a pending 'createTask'. Don't wait.
             $streamWait = 0;
-        elseif (!$this->process->isEmpty())
-            // There's a running 'process', wait some before rechecking.
-            $streamWait = $this->process->sleepingTime();
+        elseif (!$this->future->isEmpty())
+            // There's a running 'future', wait some before rechecking.
+            $streamWait = $this->future->sleepingTime();
 
         return $streamWait;
     }
@@ -856,7 +856,7 @@ final class Coroutine implements CoroutineInterface
                 $this->ioStop();
                 break;
             } else {
-                $this->process->processing();
+                $this->future->processing();
                 $nextTimeout = $this->runTimers();
                 $streamWait = $this->waitTime($nextTimeout);
                 if ($this->isUvActive()) {

@@ -2,11 +2,9 @@
 
 include 'vendor/autoload.php';
 
-use parallel\Runtime;
-
 function main()
 {
-  $runtime = new Runtime;
+  $runtime = new \parallel\Runtime;
 
   $future = $runtime->run(function () {
     for ($i = 0; $i < 500; $i++) {

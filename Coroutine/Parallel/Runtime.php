@@ -38,14 +38,7 @@ final class Runtime implements RuntimeInterface
   public function run(?\closure $task = null, ...$argv): Futures
   {
     $file = $this->include;
-    $this->future = $this->parallel->add(
-      function () use ($task, $argv, $file) {
-        if (!empty($file) && \is_string($file))
-          include $file;
-
-        return \flush_value($task(...$argv), 50);
-      }
-    )->displayOn();
+    $this->future = $this->parallel->adding($task, $file, ...$argv);
 
     return new Future($this);
   }
@@ -61,7 +54,7 @@ final class Runtime implements RuntimeInterface
 
   public function kill(): void
   {
-    \coroutine_instance()->getProcess();
+    \coroutine_instance()->getFuture();
   }
 
   public function getFuture(): FutureInterface

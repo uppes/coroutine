@@ -10,9 +10,9 @@ use Async\CoroutineInterface;
 /**
  * @internal
  */
-final class Process
+final class FutureHandler
 {
-    private $processes = array();
+    private $futures = array();
     private $sleepTime = 15000;
     private $signalCallback = null;
     private $timedOutCallback = null;
@@ -33,58 +33,58 @@ final class Process
 
         // @codeCoverageIgnoreStart
         if ($this->isPcntl())
-            $this->registerProcess();
+            $this->registerFutureHandler();
         // @codeCoverageIgnoreEnd
     }
 
-    public function add(FutureInterface $process)
+    public function add(FutureInterface $future)
     {
-        $this->processes[$process->getPid()] = $process;
+        $this->futures[$future->getPid()] = $future;
     }
 
-    public function remove(FutureInterface $process)
+    public function remove(FutureInterface $future)
     {
-        unset($this->processes[$process->getPid()]);
+        unset($this->futures[$future->getPid()]);
     }
 
-    public function stop(FutureInterface $process)
+    public function stop(FutureInterface $future)
     {
-        $this->remove($process);
-        $process->stop();
-        $process->close();
+        $this->remove($future);
+        $future->stop();
+        $future->close();
     }
 
     public function stopAll()
     {
-        if ($this->processes) {
-            foreach ($this->processes as $process) {
-                $this->stop($process);
+        if ($this->futures) {
+            foreach ($this->futures as $future) {
+                $this->stop($future);
             }
         }
     }
 
     public function processing()
     {
-        if (!empty($this->processes)) {
-            foreach ($this->processes as $process) {
-                if ($process->isTimedOut()) {
-                    $this->remove($process);
-                    $this->coroutine->executeTask($this->timedOutCallback, $process);
+        if (!empty($this->futures)) {
+            foreach ($this->futures as $future) {
+                if ($future->isTimedOut()) {
+                    $this->remove($future);
+                    $this->coroutine->executeTask($this->timedOutCallback, $future);
                     continue;
                 }
 
                 if (!$this->pcntl) {
-                    if ($process->isRunning()) {
+                    if ($future->isRunning()) {
                         continue;
-                    } elseif ($process->isSignaled()) {
-                        $this->remove($process);
-                        $this->coroutine->executeTask($this->signalCallback, $process);
-                    } elseif ($process->isSuccessful()) {
-                        $this->remove($process);
-                        $this->coroutine->executeTask($this->finishCallback, $process);
-                    } elseif ($process->isTerminated()) {
-                        $this->remove($process);
-                        $this->coroutine->executeTask($this->failCallback, $process);
+                    } elseif ($future->isSignaled()) {
+                        $this->remove($future);
+                        $this->coroutine->executeTask($this->signalCallback, $future);
+                    } elseif ($future->isSuccessful()) {
+                        $this->remove($future);
+                        $this->coroutine->executeTask($this->finishCallback, $future);
+                    } elseif ($future->isTerminated()) {
+                        $this->remove($future);
+                        $this->coroutine->executeTask($this->failCallback, $future);
                     }
                 }
             }
@@ -111,12 +111,12 @@ final class Process
 
     public function isEmpty(): bool
     {
-        return empty($this->processes);
+        return empty($this->futures);
     }
 
     public function count(): int
     {
-        return \count($this->processes);
+        return \count($this->futures);
     }
 
     public function isPcntl(): bool
@@ -129,39 +129,39 @@ final class Process
     /**
      * @codeCoverageIgnore
      */
-    protected function registerProcess()
+    protected function registerFutureHandler()
     {
         \pcntl_async_signals(true);
 
         \pcntl_signal(\SIGCHLD, function ($signo, $status) {
             while (true) {
-                $pid = \pcntl_waitpid(-1, $processState, \WNOHANG | \WUNTRACED);
+                $pid = \pcntl_waitpid(-1, $futureState, \WNOHANG | \WUNTRACED);
 
                 if ($pid <= 0) {
                     break;
                 }
 
-                $process = $this->processes[$pid] ?? null;
+                $future = $this->futures[$pid] ?? null;
 
-                if (!$process) {
+                if (!$future) {
                     continue;
                 }
 
-                if ($process instanceof FutureInterface && $process->isSignaled()) {
-                    $this->remove($process);
-                    $this->coroutine->executeTask($this->signalCallback, $process);
+                if ($future instanceof FutureInterface && $future->isSignaled()) {
+                    $this->remove($future);
+                    $this->coroutine->executeTask($this->signalCallback, $future);
                     continue;
                 }
 
                 if ($status['status'] === 0) {
-                    $this->remove($process);
-                    $this->coroutine->executeTask($this->finishCallback, $process);
+                    $this->remove($future);
+                    $this->coroutine->executeTask($this->finishCallback, $future);
 
                     continue;
                 }
 
-                $this->remove($process);
-                $this->coroutine->executeTask($this->failCallback, $process);
+                $this->remove($future);
+                $this->coroutine->executeTask($this->failCallback, $future);
             }
         });
     }

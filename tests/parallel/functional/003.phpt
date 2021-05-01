@@ -15,4 +15,4 @@ $future = \parallel\run(function(){
 var_dump($future->value());
 ?>
 --EXPECT--
-OKstring(2) "OK"
+string(2) "OK"

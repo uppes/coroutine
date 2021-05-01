@@ -3,7 +3,6 @@
 include 'vendor/autoload.php';
 
 use Async\Spawn\Channeled;
-use Async\Spawn\ChanneledInterface;
 
 use function Async\Worker\progress_task;
 use function Async\Worker\spawn_progress;
@@ -30,17 +29,17 @@ function main()
 
     yield \away(\repeat());
     $pTask = yield progress_task(function ($type, $data) use ($ipc) {
-        echo $ipc->receive();
+        echo $ipc->recv();
         if ('ping' === $data) {
             $ipc->send('pang' . \PHP_EOL);
         } elseif (!$ipc->isClosed()) {
-            $ipc->send('pong. ' . \PHP_EOL)
-                ->close();
+            $ipc->send('pong. ' . \PHP_EOL);
+            $ipc->close();
         }
     });
 
     $process = yield spawn_progress(
-        function (ChanneledInterface $channel) {
+        function (Channeled $channel) {
             $channel->write('ping');
             echo $channel->read();
             echo $channel->read();

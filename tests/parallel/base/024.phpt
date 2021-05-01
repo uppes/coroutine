@@ -1,13 +1,10 @@
 --TEST--
 parallel can create parallel
 --SKIPIF--
-<?php
-if (!extension_loaded('parallel')) {
-	echo 'skip';
-}
-?>
+<?php if (((float) \phpversion() >= 8.0)) print "skip"; ?>
 --FILE--
 <?php
+include 'vendor/autoload.php';
 $parallel = new parallel\Runtime();
 
 $parallel->run(function(){
@@ -16,10 +13,9 @@ $parallel->run(function(){
 
 		echo "OK\n";
 	} catch (\parallel\Exception $ex) {
-		
+
 	}
 });
 ?>
 --EXPECT--
 OK
-

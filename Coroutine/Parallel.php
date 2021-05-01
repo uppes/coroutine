@@ -17,246 +17,266 @@ use Async\Spawn\FutureInterface;
  */
 final class Parallel implements ArrayAccess, ParallelInterface
 {
-    private $coroutine = null;
-    private $processor = null;
-    private $status;
-    private $process;
-    private $concurrency = 100;
-    private $queue = [];
-    private $results = [];
-    private $finished = [];
-    private $failed = [];
-    private $timeouts = [];
-    private $signaled = [];
-    private $parallel = [];
+  private $coroutine = null;
+  private $futures = null;
+  private $status;
+  private $future;
+  private $concurrency = 100;
+  private $queue = [];
+  private $results = [];
+  private $finished = [];
+  private $failed = [];
+  private $timeouts = [];
+  private $signaled = [];
+  private $parallel = [];
 
-    public function __destruct()
-    {
-        $this->close();
+  public function __destruct()
+  {
+    $this->close();
+  }
+
+  public function __construct(CoroutineInterface $coroutine)
+  {
+    $this->coroutine = $coroutine;
+
+    $this->futures = $this->coroutine->getFuture(
+      [$this, 'markAsTimedOut'],
+      [$this, 'markAsFinished'],
+      [$this, 'markAsFailed'],
+      [$this, 'markAsSignaled']
+    );
+
+    $this->status = new ParallelStatus($this);
+  }
+
+  public function close()
+  {
+    if (!empty($this->parallel)) {
+      foreach ($this->parallel as $future) {
+        if ($future instanceof FutureInterface)
+          $future->close();
+      }
     }
 
-    public function __construct(CoroutineInterface $coroutine)
-    {
-        $this->coroutine = $coroutine;
+    $this->coroutine = null;
+    $this->futures = null;
+    $this->status = null;
+    $this->future = null;
+    $this->concurrency = 100;
+    $this->queue = [];
+    $this->results = [];
+    $this->finished = [];
+    $this->failed = [];
+    $this->timeouts = [];
+    $this->signaled = [];
+    $this->parallel = [];
+  }
 
-        $this->processor = $this->coroutine->getProcess(
-            [$this, 'markAsTimedOut'],
-            [$this, 'markAsFinished'],
-            [$this, 'markAsFailed'],
-            [$this, 'markAsSignaled']
-        );
+  public function concurrency(int $concurrency): ParallelInterface
+  {
+    $this->concurrency = $concurrency;
 
-        $this->status = new ParallelStatus($this);
+    return $this;
+  }
+
+  public function sleepTime(int $sleepTime)
+  {
+    $this->futures->sleepTime($sleepTime);
+  }
+
+  public function results(): array
+  {
+    return $this->results;
+  }
+
+  public function isPcntl(): bool
+  {
+    return $this->futures->isPcntl();
+  }
+
+  public function status(): ParallelStatus
+  {
+    return $this->status;
+  }
+
+  public function adding(?\closure $future = null, ?string $include = null, ...$args): FutureInterface
+  {
+    if (!is_callable($future) && !$future instanceof FutureInterface) {
+      throw new InvalidArgumentException('The future passed to Parallel::adding should be callable.');
     }
 
-    public function close()
-    {
-        if (!empty($this->parallel)) {
-            foreach ($this->parallel as $process) {
-                if ($process instanceof FutureInterface)
-                    $process->close();
-            }
-        }
-
-        $this->coroutine = null;
-        $this->processor = null;
-        $this->status = null;
-        $this->process = null;
-        $this->concurrency = 100;
-        $this->queue = [];
-        $this->results = [];
-        $this->finished = [];
-        $this->failed = [];
-        $this->timeouts = [];
-        $this->signaled = [];
-        $this->parallel = [];
+    if (!$future instanceof FutureInterface) {
+      $future = \paralleling($future,  $include, ...$args);
     }
 
-    public function concurrency(int $concurrency): ParallelInterface
-    {
-        $this->concurrency = $concurrency;
+    $this->putInQueue($future);
 
-        return $this;
+    $this->parallel[] = $this->future = $future;
+
+    return $future;
+  }
+
+  public function add($future, int $timeout = 0, $channel = null): FutureInterface
+  {
+    if (!is_callable($future) && !$future instanceof FutureInterface) {
+      throw new InvalidArgumentException('The future passed to Parallel::add should be callable.');
     }
 
-    public function sleepTime(int $sleepTime)
-    {
-        $this->processor->sleepTime($sleepTime);
+    if (!$future instanceof FutureInterface) {
+      $future = Spawn::create($future, $timeout, $channel, true);
     }
 
-    public function results(): array
-    {
-        return $this->results;
+    $this->putInQueue($future);
+
+    $this->parallel[] = $this->future = $future;
+
+    return $future;
+  }
+
+  private function notify($restart = false)
+  {
+    if ($this->futures->count() >= $this->concurrency) {
+      return;
     }
 
-    public function isPcntl(): bool
-    {
-        return $this->processor->isPcntl();
+    $future = \array_shift($this->queue);
+
+    if (!$future) {
+      return;
     }
 
-    public function status(): ParallelStatus
-    {
-        return $this->status;
+    $this->putInProgress($future, $restart);
+  }
+
+  public function retry(FutureInterface $future = null): FutureInterface
+  {
+    $this->putInQueue((empty($future) ? $this->future : $future), true);
+
+    return $this->future;
+  }
+
+  public function wait(): array
+  {
+    while (true) {
+      if (!$this->coroutine instanceof CoroutineInterface)
+        break;
+
+      $this->coroutine->run();
+      if ($this->futures->isEmpty()) {
+        $this->coroutine->ioStop();
+        break;
+      }
     }
 
-    public function add($process, int $timeout = 0, $channel = null): FutureInterface
-    {
-        if (!is_callable($process) && !$process instanceof FutureInterface) {
-            throw new InvalidArgumentException('The process passed to Parallel::add should be callable.');
-        }
+    return $this->results;
+  }
 
-        if (!$process instanceof FutureInterface) {
-            $process = Spawn::create($process, $timeout, $channel, true);
-        }
+  /**
+   * @return FutureInterface[]
+   */
+  public function getQueue(): array
+  {
+    return $this->queue;
+  }
 
-        $this->putInQueue($process);
+  private function putInQueue(FutureInterface $future, $restart = false)
+  {
+    $this->queue[$future->getId()] = $future;
 
-        $this->parallel[] = $this->process = $process;
+    $this->notify($restart);
+  }
 
-        return $process;
+  private function putInProgress(FutureInterface $future, $restart = false)
+  {
+    unset($this->queue[$future->getId()]);
+
+    if ($restart) {
+      $future = $future->restart();
+      $this->future = $future;
+    } else {
+      if (!\IS_PHP8)
+        $future->start();
+      elseif (!$future->isRunning())
+        $future->start();
     }
 
-    private function notify($restart = false)
-    {
-        if ($this->processor->count() >= $this->concurrency) {
-            return;
-        }
+    $this->futures->add($future);
+  }
 
-        $process = \array_shift($this->queue);
+  public function markAsFinished(FutureInterface $future)
+  {
+    $this->notify();
 
-        if (!$process) {
-            return;
-        }
+    $this->results[] = yield from $future->triggerSuccess(true);
 
-        $this->putInProgress($process, $restart);
-    }
+    $this->finished[$future->getPid()] = $future;
+  }
 
-    public function retry(FutureInterface $process = null): FutureInterface
-    {
-        $this->putInQueue((empty($process) ? $this->process : $process), true);
+  public function markAsTimedOut(FutureInterface $future)
+  {
+    $this->notify();
 
-        return $this->process;
-    }
+    yield $future->triggerTimeout(true);
 
-    public function wait(): array
-    {
-        while (true) {
-            $this->coroutine->run();
-            if ($this->processor->isEmpty()) {
-                $this->coroutine->ioStop();
-                break;
-            }
-        }
+    $this->timeouts[$future->getPid()] = $future;
+  }
 
-        return $this->results;
-    }
+  public function markAsSignaled(FutureInterface $future)
+  {
+    $this->notify();
 
-    /**
-     * @return FutureInterface[]
-     */
-    public function getQueue(): array
-    {
-        return $this->queue;
-    }
+    yield $future->triggerSignal($future->getSignaled());
 
-    private function putInQueue(FutureInterface $process, $restart = false)
-    {
-        $this->queue[$process->getId()] = $process;
+    $this->signaled[$future->getPid()] = $future;
+  }
 
-        $this->notify($restart);
-    }
+  public function markAsFailed(FutureInterface $future)
+  {
+    $this->notify();
 
-    private function putInProgress(FutureInterface $process, $restart = false)
-    {
-        unset($this->queue[$process->getId()]);
+    yield $future->triggerError(true);
 
-        if ($restart) {
-            $process = $process->restart();
-            $this->process = $process;
-        } else {
-            if (!\IS_PHP8)
-                $process->start();
-            elseif (!$process->isRunning())
-                $process->start();
-        }
+    $this->failed[$future->getPid()] = $future;
+  }
 
-        $this->processor->add($process);
-    }
+  public function getFinished(): array
+  {
+    return $this->finished;
+  }
 
-    public function markAsFinished(FutureInterface $process)
-    {
-        $this->notify();
+  public function getFailed(): array
+  {
+    return $this->failed;
+  }
 
-        $this->results[] = yield from $process->triggerSuccess(true);
+  public function getTimeouts(): array
+  {
+    return $this->timeouts;
+  }
 
-        $this->finished[$process->getPid()] = $process;
-    }
+  public function getSignaled(): array
+  {
+    return $this->signaled;
+  }
 
-    public function markAsTimedOut(FutureInterface $process)
-    {
-        $this->notify();
+  public function offsetExists($offset)
+  {
+    return isset($this->parallel[$offset]);
+  }
 
-        yield $process->triggerTimeout(true);
+  public function offsetGet($offset)
+  {
+    return isset($this->parallel[$offset]) ? $this->parallel[$offset] : null;
+  }
 
-        $this->timeouts[$process->getPid()] = $process;
-    }
+  public function offsetSet($offset, $value, int $timeout = 0)
+  {
+    $this->add($value, $timeout);
+  }
 
-    public function markAsSignaled(FutureInterface $process)
-    {
-        $this->notify();
-
-        yield $process->triggerSignal($process->getSignaled());
-
-        $this->signaled[$process->getPid()] = $process;
-    }
-
-    public function markAsFailed(FutureInterface $process)
-    {
-        $this->notify();
-
-        yield $process->triggerError(true);
-
-        $this->failed[$process->getPid()] = $process;
-    }
-
-    public function getFinished(): array
-    {
-        return $this->finished;
-    }
-
-    public function getFailed(): array
-    {
-        return $this->failed;
-    }
-
-    public function getTimeouts(): array
-    {
-        return $this->timeouts;
-    }
-
-    public function getSignaled(): array
-    {
-        return $this->signaled;
-    }
-
-    public function offsetExists($offset)
-    {
-        return isset($this->parallel[$offset]);
-    }
-
-    public function offsetGet($offset)
-    {
-        return isset($this->parallel[$offset]) ? $this->parallel[$offset] : null;
-    }
-
-    public function offsetSet($offset, $value, int $timeout = 0)
-    {
-        $this->add($value, $timeout);
-    }
-
-    public function offsetUnset($offset)
-    {
-        $this->processor->remove($this->parallel[$offset]);
-        unset($this->parallel[$offset]);
-    }
+  public function offsetUnset($offset)
+  {
+    $this->futures->remove($this->parallel[$offset]);
+    unset($this->parallel[$offset]);
+  }
 }

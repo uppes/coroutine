@@ -16,11 +16,12 @@ class RunTimeParallelTest extends TestCase
     {
         $runtime = new Runtime;
         $future  = $runtime->run(function () {
-            return "World";
+            echo "World";
+            return 'hello';
         });
 
         $this->expectOutputString('World');
-        $this->assertEquals('World', $future->value());
+        $this->assertEquals('hello', $future->value());
     }
 
     public function testShowing_future_as_synchronization_point()
@@ -38,6 +39,7 @@ class RunTimeParallelTest extends TestCase
         });
 
         $future->value();
+        echo 'parent continues';
         $this->expectOutputRegex('/[..... leaving child]/');
     }
 }

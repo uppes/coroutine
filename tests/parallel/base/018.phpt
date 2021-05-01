@@ -67,59 +67,66 @@ try {
 }
 ?>
 --EXPECTF--
-string(635) "Too few arguments to function {closure}(), 0 passed in closure://function () use ($task, $argv, $file) {
-%S        if (!empty($file) && \is_string($file))
-%S          include $file;
+string(%d) "Too few arguments to function {closure}(), 0 passed in closure://function () use ($task, $args, $include, $___parallel___) {
+%S      if (!empty($include) && \is_string($include))
+%S        require $include;
+
+%S      \parallel_setup($___parallel___);
+%S      return $task(...$args);
+%S   } on line 7 and exactly 1 expected
 %S
-%S        return \flush_value($task(...$argv), 50);
-%S      } on line 6 and exactly 1 expected
-%S
-#0 closure://function () use ($task, $argv, $file) {
-%S        if (!empty($file) && \is_string($file))
-%S          include $file;
-%S
-%S        return \flush_value($task(...$argv), 50);
-%S      }(6): {closure}()
+#0 closure://function () use ($task, $args, $include, $___parallel___) {
+%S      if (!empty($include) && \is_string($include))
+%S        require $include;
+
+%S      \parallel_setup($___parallel___);
+%S      return $task(...$args);
+%S    }(7): {closure}()
 #1 %S
 #2 {main}"
-string(635) "Too few arguments to function {closure}(), 0 passed in closure://function () use ($task, $argv, $file) {
-%S        if (!empty($file) && \is_string($file))
-%S          include $file;
+string(%d) "Too few arguments to function {closure}(), 0 passed in closure://function () use ($task, $args, $include, $___parallel___) {
+%S      if (!empty($include) && \is_string($include))
+%S        require $include;
+
+%S      \parallel_setup($___parallel___);
+%S      return $task(...$args);
+%S    } on line 7 and exactly 2 expected
 %S
-%S        return \flush_value($task(...$argv), 50);
-%S      } on line 6 and exactly 2 expected
-%S
-#0 closure://function () use ($task, $argv, $file) {
-%S        if (!empty($file) && \is_string($file))
-%S          include $file;
-%S
-%S        return \flush_value($task(...$argv), 50);
-%S      }(6): {closure}()
+#0 closure://function () use ($task, $args, $include, $___parallel___) {
+%S      if (!empty($include) && \is_string($include))
+%S        require $include;
+
+%S      \parallel_setup($___parallel___);
+%S      return $task(...$args);
+%S    }(7): {closure}()
 #1 %S
 #2 {main}"
-string(635) "Too few arguments to function {closure}(), 0 passed in closure://function () use ($task, $argv, $file) {
-%S        if (!empty($file) && \is_string($file))
-%S          include $file;
+string(%d) "Too few arguments to function {closure}(), 0 passed in closure://function () use ($task, $args, $include, $___parallel___) {
+%S      if (!empty($include) && \is_string($include))
+%S        require $include;
+
+%S      \parallel_setup($___parallel___);
+%S      return $task(...$args);
+%S    } on line 7 and exactly 2 expected
 %S
-%S        return \flush_value($task(...$argv), 50);
-%S      } on line 6 and exactly 2 expected
-%S
-#0 closure://function () use ($task, $argv, $file) {
-%S        if (!empty($file) && \is_string($file))
-%S          include $file;
-%S
-%S        return \flush_value($task(...$argv), 50);
-%S      }(6): {closure}()
+#0 closure://function () use ($task, $args, $include, $___parallel___) {
+%S      if (!empty($include) && \is_string($include))
+%S        require $include;
+
+%S      \parallel_setup($___parallel___);
+%S      return $task(...$args);
+%S    }(7): {closure}()
 #1 %S
 #2 {main}"
-string(440) "Return value of {closure}() must be an instance of DateTime, none returned
+string(%S) "Return value of {closure}() must be an instance of DateTime, none returned
 %S
-#0 closure://function () use ($task, $argv, $file) {
-%S        if (!empty($file) && \is_string($file))
-%S          include $file;
-%S
-%S        return \flush_value($task(...$argv), 50);
-%S      }(6): {closure}()
+#0 closure://function () use ($task, $args, $include, $___parallel___) {
+%S      if (!empty($include) && \is_string($include))
+%S        require $include;
+
+%S      \parallel_setup($___parallel___);
+%S      return $task(...$args);
+%S    }(7): {closure}()
 #1 %S
 #2 {main}"
 No "illegal parameter (reference) accepted by task at argument 1", all good!
