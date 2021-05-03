@@ -4,10 +4,11 @@ Check channel operation (unbuffered)
 <?php
 if (!extension_loaded('parallel')) {
 	echo 'skip';
-}
-?>
+} else
+if (((float) \phpversion() >= 8.0)) print "skip"; ?>
 --FILE--
 <?php
+include 'vendor/autoload.php';
 use \parallel\Channel;
 
 $channel  = Channel::make("io");
@@ -20,9 +21,9 @@ $parallel->run(function($channel){
 	for ($count = 0; $count <= 10; $count++) {
 	    $channel->send($count);
 	}
-	
-	$channel->send(false);
-}, [(string) $channel]);
+
+//	$channel->send(false);
+}, (string) $channel);
 
 while (($value = $channel->recv()) !== false) {
     var_dump($value);
@@ -40,4 +41,3 @@ int(7)
 int(8)
 int(9)
 int(10)
-

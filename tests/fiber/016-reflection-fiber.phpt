@@ -65,8 +65,8 @@ bool(true)
 bool(false)
 bool(true)
 bool(false)
-string(59) %S
-int(1175)
+string(%d) %S
+int(%d)
 array(13) {
 %S
 %S  object(Async\Task)#12 (13) {
