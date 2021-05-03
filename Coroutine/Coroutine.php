@@ -7,6 +7,7 @@ namespace Async;
 use function Async\Path\file_operation;
 use function Async\Stream\net_operation;
 
+use Async\Spawn\Future;
 use Async\Spawn\FutureInterface;
 use Async\Spawn\ChanneledInterface;
 use Async\Kernel;
@@ -180,6 +181,8 @@ final class Coroutine implements CoroutineInterface
    * @var bool
    */
   protected $isHighTimer;
+  protected $isFutureActive = false;
+  protected $channelCounter = null;
 
   public function __destruct()
   {
@@ -255,6 +258,14 @@ final class Coroutine implements CoroutineInterface
 
     if (\IS_UV) {
       $this->uv = \uv_loop_new();
+
+      \channel_destroy();
+      $channelLoop = function ($wait_count) {
+        $this->channelCounter = $wait_count;
+        $this->execute('future');
+        $this->channelCounter = null;
+      };
+      Future::setChannelTick($channelLoop);
 
       \spawn_setup($this->uv);
       file_operation(true);
@@ -782,6 +793,10 @@ final class Coroutine implements CoroutineInterface
           $this->ioWaiting();
           if (!$this->future->isEmpty())
             continue;
+        } elseif ($isReturn === 'future') {
+          $this->isFutureActive = true;
+          $this->ioWaiting();
+          $this->isFutureActive = false;
         }
 
         return;
@@ -860,12 +875,14 @@ final class Coroutine implements CoroutineInterface
         $nextTimeout = $this->runTimers();
         $streamWait = $this->waitTime($nextTimeout);
         if ($this->isUvActive()) {
-          \uv_run($this->uv, ($streamWait ? \UV::RUN_ONCE : \UV::RUN_NOWAIT));
-          $this->ioSocketStream($this->waitTime($nextTimeout));
+          \uv_run($this->uv, ($streamWait || $this->channelCounter ? \UV::RUN_ONCE : \UV::RUN_NOWAIT));
+          $overrideTimeout = $this->isFutureActive ? 0 : $this->waitTime($nextTimeout);
+          $this->ioSocketStream($overrideTimeout);
         } else {
-          $this->ioSocketStream($streamWait);
+          $overrideTimeout = $this->isFutureActive ? 0 : $streamWait;
+          $this->ioSocketStream($overrideTimeout);
           if ($this->isUv()) {
-            \uv_run($this->uv, ($this->waitTime($nextTimeout) ? \UV::RUN_ONCE : \UV::RUN_NOWAIT));
+            \uv_run($this->uv, ($this->waitTime($nextTimeout) || $this->channelCounter ? \UV::RUN_ONCE : \UV::RUN_NOWAIT));
           }
         }
 

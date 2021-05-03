@@ -368,6 +368,7 @@ if (!\function_exists('file_operation')) {
   /**
    * Open specified `$path` file with access `$flag`.
    * - This function needs to be prefixed with `yield`
+   * - Will delay and retry 3 times before returning `false` on failure
    *
    * @param string $path
    * @param string $flag either 'r', 'r+', 'w', 'w+', 'a', 'a+', 'x', 'x+':
@@ -395,7 +396,18 @@ if (!\function_exists('file_operation')) {
    */
   function file_open(string $path, string $flag = 'r', int $mode = \S_IRWXU)
   {
-    return FileSystem::open($path, $flag, $mode);
+    $retry = 0;
+    while (true) {
+      $fd  = yield FileSystem::open($path, $flag, $mode);
+      if (!\is_resource($fd) && $retry < 3) {
+        $retry++;
+        yield;
+        continue;
+      } else
+        break;
+    }
+
+    return $fd;
   }
 
   /**
@@ -485,6 +497,7 @@ if (!\function_exists('file_operation')) {
   /**
    * Open url/uri.
    * - This function needs to be prefixed with `yield`
+   * - Will delay and retry 3 times before returning `false` on failure
    *
    * @param string $url
    * @param resource|array|null $context
@@ -493,7 +506,18 @@ if (!\function_exists('file_operation')) {
    */
   function file_uri(string $url, $contexts = null)
   {
-    return FileSystem::open($url, 'r', 0, $contexts);
+    $retry = 0;
+    while (true) {
+      $fd  = yield FileSystem::open($url, 'r', 0, $contexts);
+      if (!\is_resource($fd) && $retry < 3) {
+        $retry++;
+        yield;
+        continue;
+      } else
+        break;
+    }
+
+    return $fd;
   }
 
   /**

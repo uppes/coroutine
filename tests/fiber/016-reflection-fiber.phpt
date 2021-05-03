@@ -69,7 +69,7 @@ string(%d) %S
 int(%d)
 array(13) {
 %S
-%S  object(Async\Task)#12 (13) {
+%S  object(Async\Task)#%d (%d) {
 %S    ["taskId":protected]=>
 %S    int(1)
 %S    ["daemon":protected]=>
@@ -77,7 +77,7 @@ array(13) {
 %S    ["cycles":protected]=>
 %S    int(2)
 %S    ["coroutine":protected]=>
-%S    object(Generator)#13 (0) {
+%S    object(Generator)#%d (0) {
 %S    }
 %S    ["state":protected]=>
 %S    string(7) "running"
@@ -105,7 +105,7 @@ array(13) {
 %S
 %S  int(3)
 %S
-%S  object(Generator)#23 (0) {
+%S  object(Generator)#%d (0) {
 %S  }
 %S
 %S  string(9) "suspended"
@@ -122,7 +122,7 @@ array(13) {
 %S
 %S  NULL
 %S
-%S  object(Closure)#19 (0) {
+%S  object(Closure)#%d (0) {
 %S  }
 }
 bool(true)
