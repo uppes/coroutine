@@ -9,20 +9,18 @@ include 'vendor/autoload.php';
 $parallel = new parallel\Runtime();
 $var     = null;
 
-$parallel->run(function() {
+try {
+	$parallel->run(function() {
 		yield;
-});
+	});
+} catch (\parallel\Runtime\Error\IllegalInstruction $ex) {
+	var_dump($ex->getMessage());
+}
 ?>
 --EXPECTF--
-Fatal error: Uncaught Exception: Serialization of 'Generator' is not allowed
+string(%d) "Serialization of 'Generator' is not allowed
 
 #0 %S
 #1 %S
 #2 %S
-#3 {main} in %S
-Stack trace:
-#0 %S
-#1 %S
-#2 %S
-#3 [internal function]: Async\Parallel->markAsFailed(Object(Async\Spawn\Future))
-#4 %S
+#3 {main}"

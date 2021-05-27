@@ -42,7 +42,7 @@ try {
         };
     });
 	print('No "illegal instruction (new class) in closure on line 2 of task", all good!'. PHP_EOL);
-} catch (\Error  $ex) {
+} catch (\parallel\Runtime\Error\IllegalInstruction $ex) {
     var_dump($ex->getMessage());
 }
 
@@ -54,7 +54,7 @@ try {
             };
         };
     });
-} catch (\Error $ex) {
+} catch (\parallel\Runtime\Error\IllegalInstruction $ex) {
     var_dump($ex->getMessage());
 }
 ?>

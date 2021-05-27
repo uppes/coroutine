@@ -154,7 +154,7 @@ final class Coroutine implements CoroutineInterface
   protected $events = [];
 
   /**
-   * list of **UV** signal handles, added by ``, ``
+   * list of **UV** signal handles, added by `addSignal`, `removeSignal`
    *
    * @var \UVSignal[]
    */
@@ -251,19 +251,23 @@ final class Coroutine implements CoroutineInterface
    */
   public function __construct()
   {
-    global $__coroutine__, $__timer__, $___bootstrap___, $___run___;
-    $___bootstrap___ = $___run___ = null;
+    global $__coroutine__, $__timer__, $___bootstrap___, $___run___, $___future___, $___paralleling;
+    // For getting `ext-parallel` behavior
+    $___future___ = $___bootstrap___ = $___run___ = $___paralleling = null;
+
     $__coroutine__ = $this;
     $this->initSignals();
 
     if (\IS_UV) {
       $this->uv = \uv_loop_new();
 
-      \channel_destroy();
-      $channelLoop = function ($wait_count) {
-        $this->channelCounter = $wait_count;
-        $this->execute('future');
-        $this->channelCounter = null;
+      $co = $this;
+      $channelLoop = function ($wait_count) use (&$co) {
+        $co->channelCounter = $wait_count;
+        $co->futureOn();
+        $co->run();
+        $co->futureOff();
+        $co->channelCounter = null;
       };
       Future::setChannelTick($channelLoop);
 
@@ -453,7 +457,7 @@ final class Coroutine implements CoroutineInterface
     return $this->parallel;
   }
 
-  public function getFuture(
+  public function getFutureHandler(
     ?callable $timedOutCallback = null,
     ?callable $finishCallback = null,
     ?callable $failCallback = null,
@@ -671,6 +675,16 @@ final class Coroutine implements CoroutineInterface
     $this->ioStarted = false;
   }
 
+  public function futureOn(): void
+  {
+    $this->isFutureActive = 'future';
+  }
+
+  public function futureOff(): void
+  {
+    $this->isFutureActive = false;
+  }
+
   public function run()
   {
     // Check/skip if main supervisor task already running
@@ -679,7 +693,7 @@ final class Coroutine implements CoroutineInterface
       $this->createTask($this->ioWaiting());
     }
 
-    return $this->execute();
+    return $this->execute($this->isFutureActive);
   }
 
   /**
@@ -794,9 +808,7 @@ final class Coroutine implements CoroutineInterface
           if (!$this->future->isEmpty())
             continue;
         } elseif ($isReturn === 'future') {
-          $this->isFutureActive = true;
           $this->ioWaiting();
-          $this->isFutureActive = false;
         }
 
         return;

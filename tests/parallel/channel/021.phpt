@@ -2,12 +2,10 @@
 Check anonymous Channel
 --SKIPIF--
 <?php
-if (!extension_loaded('parallel')) {
-	echo 'skip';
-}
-?>
+if (((float) \phpversion() >= 8.0)) print "skip"; ?>
 --FILE--
 <?php
+include 'vendor/autoload.php';
 use \parallel\Channel;
 
 var_dump(new Channel);
@@ -36,31 +34,125 @@ var_dump((string) Create::channel(), (string) Create::channel());
 ?>
 --EXPECTF--
 object(parallel\Channel)#%d (%d) {
-  ["name"]=>
-  string(%d) "%s021.php#%d@%s[1]"
-  ["type"]=>
-  string(10) "unbuffered"
+  ["name":protected]=>
+  string(%d) "%s[%d]"
+  ["index":protected]=>
+  int(%d)
+  ["capacity":protected]=>
+  int(-1)
+  ["type":protected]=>
+  string(8) "buffered"
+  ["buffered":protected]=>
+  object(SplQueue)#%d (2) {
+    ["flags":"SplDoublyLinkedList":private]=>
+    int(4)
+    ["dllist":"SplDoublyLinkedList":private]=>
+    array(0) {
+    }
+  }
+  ["whenDrained":"Async\Spawn\Channeled":private]=>
+%S
+  ["input":"Async\Spawn\Channeled":private]=>
+  array(0) {
+  }
+  ["open":protected]=>
+%S
+  ["state":protected]=>
+%S
+  ["channel":protected]=>
+%S
+  ["process":protected]=>
+%S
+  ["paralleling":protected]=>
+%S
+  ["futureInput":protected]=>
+%S
+  ["futureOutput":protected]=>
+%S
+  ["futureError":protected]=>
+%S
 }
 object(parallel\Channel)#%d (%d) {
-  ["name"]=>
-  string(%d) "%s021.php#%d@%s[2]"
-  ["type"]=>
+  ["name":protected]=>
+  string(%d) "%s[%d]"
+  ["index":protected]=>
+  int(%d)
+  ["capacity":protected]=>
+  int(-1)
+  ["type":protected]=>
   string(8) "buffered"
-  ["capacity"]=>
-  string(8) "infinite"
+  ["buffered":protected]=>
+  object(SplQueue)#%d (2) {
+    ["flags":"SplDoublyLinkedList":private]=>
+    int(4)
+    ["dllist":"SplDoublyLinkedList":private]=>
+    array(0) {
+    }
+  }
+  ["whenDrained":"Async\Spawn\Channeled":private]=>
+%S
+  ["input":"Async\Spawn\Channeled":private]=>
+  array(0) {
+  }
+  ["open":protected]=>
+%S
+  ["state":protected]=>
+%S
+  ["channel":protected]=>
+%S
+  ["process":protected]=>
+%S
+  ["paralleling":protected]=>
+%S
+  ["futureInput":protected]=>
+%S
+  ["futureOutput":protected]=>
+%S
+  ["futureError":protected]=>
+%S
 }
 object(parallel\Channel)#%d (%d) {
-  ["name"]=>
-  string(%d) "%s021.php#%d@%s[3]"
-  ["type"]=>
-  string(8) "buffered"
-  ["capacity"]=>
+  ["name":protected]=>
+  string(%d) "%s[%d]"
+  ["index":protected]=>
+  int(3)
+  ["capacity":protected]=>
   int(1)
+  ["type":protected]=>
+  string(8) "buffered"
+  ["buffered":protected]=>
+  object(SplQueue)#%d (2) {
+    ["flags":"SplDoublyLinkedList":private]=>
+    int(4)
+    ["dllist":"SplDoublyLinkedList":private]=>
+    array(0) {
+    }
+  }
+  ["whenDrained":"Async\Spawn\Channeled":private]=>
+%S
+  ["input":"Async\Spawn\Channeled":private]=>
+  array(0) {
+  }
+  ["open":protected]=>
+%S
+  ["state":protected]=>
+%S
+  ["channel":protected]=>
+%S
+  ["process":protected]=>
+%S
+  ["paralleling":protected]=>
+%S
+  ["futureInput":protected]=>
+%S
+  ["futureOutput":protected]=>
+%S
+  ["futureError":protected]=>
+%S
 }
-string(%d) "%s021.php#9@%s[4]"
-string(%d) "%s021.php#9@%s[5]"
-string(%d) "create#15@%s[6]"
-string(%d) "create#15@%s[7]"
-string(%d) "Create::channel#22@%s[8]"
-string(%d) "Create::channel#22@%s[9]"
-
+string(%d) "%s[4]"
+string(%d) "%s[5]"
+string(%d) "%s[6]"
+string(%d) "%s[7]"
+string(%d) "%s[8]"
+string(%d) "%s[9]"

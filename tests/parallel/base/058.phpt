@@ -1,16 +1,14 @@
 --TEST--
 parallel object check finds non-existent class
 --SKIPIF--
-<?php
-if (!extension_loaded('parallel')) {
-	die("skip parallel not loaded");
-}
+<?php if (((float) \phpversion() >= 8.0)) print "skip";
 if (ini_get("opcache.enable_cli")) {
     die("skip opcache must not be loaded");
 }
 ?>
 --FILE--
 <?php
+include 'vendor/autoload.php';
 $parallel = new \parallel\Runtime;
 
 try {
@@ -21,6 +19,5 @@ try {
     var_dump($ex->getMessage());
 }
 ?>
---EXPECT--
-string(63) "illegal parameter (DoesNotExist) accepted by task at argument 1"
-
+--EXPECTF--
+string(%d) "illegal parameter"

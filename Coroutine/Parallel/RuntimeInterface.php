@@ -2,7 +2,6 @@
 
 namespace parallel;
 
-use Async\ParallelInterface;
 use parallel\FutureInterface as Futures;
 use Async\Spawn\FutureInterface;
 
@@ -34,8 +33,4 @@ interface RuntimeInterface
    * @return void
    */
   public function kill(): void;
-
-  public function getFuture(): FutureInterface;
-
-  public function getParallel(): ParallelInterface;
 }

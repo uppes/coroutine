@@ -2,12 +2,10 @@
 Check channel operation send on closed
 --SKIPIF--
 <?php
-if (!extension_loaded('parallel')) {
-	echo 'skip';
-}
-?>
+if (((float) \phpversion() >= 8.0)) print "skip"; ?>
 --FILE--
 <?php
+include 'vendor/autoload.php';
 use \parallel\Channel;
 
 $channel = Channel::make("io");
@@ -21,6 +19,3 @@ try {
 ?>
 --EXPECT--
 string(18) "channel(io) closed"
-
-
-

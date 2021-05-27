@@ -39,7 +39,7 @@ class RunTimeParallelTest extends TestCase
         });
 
         $future->value();
-        echo 'parent continues';
-        $this->expectOutputRegex('/[..... leaving child]/');
+        echo ' parent continues';
+        $this->expectOutputRegex('/[..... leaving child parent continues]/');
     }
 }

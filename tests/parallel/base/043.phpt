@@ -1,13 +1,10 @@
 --TEST--
 parallel Closure::fromCallable internal
 --SKIPIF--
-<?php
-if (!extension_loaded('parallel')) {
-	die("skip parallel not loaded");
-}
-?>
+<?php if (((float) \phpversion() >= 8.0)) print "skip"; ?>
 --FILE--
 <?php
+include 'vendor/autoload.php';
 $parallel = new \parallel\Runtime();
 
 try {
@@ -18,7 +15,5 @@ try {
 }
 ?>
 --EXPECTF--
+%S
 string(%d) "illegal function type (internal)"
-
-
-

@@ -1,16 +1,14 @@
 --TEST--
 parallel task check cached, Future used second time
 --SKIPIF--
-<?php
-if (!extension_loaded('parallel')) {
-	die("skip parallel not loaded");
-}
+<?php if (((float) \phpversion() >= 8.0)) print "skip";
 if (ini_get("opcache.enable_cli")) {
     die("skip opcache must not be loaded");
 }
 ?>
 --FILE--
 <?php
+include 'vendor/autoload.php';
 $parallel = new \parallel\Runtime;
 
 $closure = function() {

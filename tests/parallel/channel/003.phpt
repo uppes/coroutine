@@ -2,9 +2,6 @@
 Check channel operation (unbuffered)
 --SKIPIF--
 <?php
-if (!extension_loaded('parallel')) {
-	echo 'skip';
-} else
 if (((float) \phpversion() >= 8.0)) print "skip"; ?>
 --FILE--
 <?php
@@ -22,7 +19,7 @@ $parallel->run(function($channel){
 	    $channel->send($count);
 	}
 
-//	$channel->send(false);
+	$channel->send(false);
 }, (string) $channel);
 
 while (($value = $channel->recv()) !== false) {

@@ -286,6 +286,20 @@ interface CoroutineInterface
   public function isUv(): bool;
 
   /**
+   * Turn **On** _manual_ `main supervisor task` execution, pause *automatic*.
+   *
+   * @return void
+   */
+  public function futureOn(): void;
+
+  /**
+   * Turn **Off** _manual_ `main supervisor task` execution, resume *automatic*.
+   *
+   * @return void
+   */
+  public function futureOff(): void;
+
+  /**
    * Setup to use `libuv` features, reset/recreate **UV** handle, enable/disable.
    * - This will `stop` and `delete` any current **UV** event loop instance.
    * - This will also reset `FileSystem::setup` and **symplely/spawn** `Spawn::setup`
@@ -305,7 +319,7 @@ interface CoroutineInterface
    * @param callable|null $failCallback
    * @return FutureHandler
    */
-  public function getFuture(
+  public function getFutureHandler(
     ?callable $timedOutCallback = null,
     ?callable $finishCallback = null,
     ?callable $failCallback = null,

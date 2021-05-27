@@ -1,11 +1,7 @@
 --TEST--
 Check functional reuse
 --SKIPIF--
-<?php
-if (!extension_loaded('parallel')) {
-	echo 'skip';
-}
-?>
+<?php if (((float) \phpversion() >= 8.0)) print "skip"; ?>
 --FILE--
 <?php
 include 'vendor/autoload.php';
@@ -30,5 +26,10 @@ usleep(1000000/2); # we can't be sure how fast the runtime will become available
     var_dump($var);
 });
 ?>
---EXPECT--
+--EXPECTF--
+closure://function(){
+%S
+%S
+%S
+}:5:
 int(42)

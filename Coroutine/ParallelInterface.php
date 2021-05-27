@@ -23,6 +23,11 @@ interface ParallelInterface
   public function close();
 
   /**
+   * Kill all running `Future's`.
+   */
+  public function kill();
+
+  /**
    * Create an `yield`able Future `sub/child` **task**, that can include an additional **file**.
    * This function exists to give same behavior as **parallel\runtime** of `ext-parallel` extension,
    * but without any of the it's limitations. All child output is displayed.
@@ -49,6 +54,22 @@ interface ParallelInterface
   public function retry(FutureInterface $future = null): FutureInterface;
 
   public function wait(): array;
+
+  /**
+   * Try to cancel the Future.
+   *
+   * @param FutureInterface $future
+   * @return void
+   */
+  public function cancel(FutureInterface $future): void;
+
+  /**
+   * Start and monitor the scheduled tasks.
+   *
+   * @param FutureInterface $future
+   * @return void
+   */
+  public function tick(FutureInterface $future);
 
   /**
    * @return FutureInterface[]

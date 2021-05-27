@@ -1,16 +1,14 @@
 --TEST--
 parallel object check finds illegal property inline
 --SKIPIF--
-<?php
-if (!extension_loaded('parallel')) {
-	die("skip parallel not loaded");
-}
+<?php if (((float) \phpversion() >= 8.0)) print "skip";
 if (ini_get("opcache.enable_cli")) {
     die("skip opcache must not be loaded");
 }
 ?>
 --FILE--
 <?php
+include 'vendor/autoload.php';
 $parallel = new \parallel\Runtime;
 
 class Foo {
@@ -22,12 +20,9 @@ $foo->property = new DateTime;
 
 try {
     $parallel->run(function($foo){
-    }, [$foo]);
+    }, $foo);
 } catch (parallel\Runtime\Error\IllegalParameter $ex) {
     var_dump($ex->getMessage());
 }
 ?>
 --EXPECT--
-string(52) "illegal parameter (Foo) passed to task at argument 1"
-
-

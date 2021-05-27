@@ -9,12 +9,15 @@
         "yield",
         "parallel",
         "process",
+        "future",
+        "promise",
         "generator",
         "libuv",
         "spawn",
         "await",
         "event-loop",
         "event-driven",
+        "ext-parallel",
         "async"
     ],
     "homepage": "https://github.com/symplely/coroutine",
@@ -32,7 +35,7 @@
     ],
     "require": {
         "php": ">7.1",
-        "symplely/spawn": "^3.0.4"
+        "symplely/spawn": "dev-master"
     },
     "autoload": {
         "files": [
@@ -66,7 +69,12 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Async\\Tests\\": "tests/"
+            "Async\\Tests\\": [
+                "tests/"
+            ],
+            "Async\\examples\\": [
+                "examples/"
+            ]
         }
     },
     "suggest": {

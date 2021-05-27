@@ -7,6 +7,7 @@ namespace parallel;
 use parallel\Runtime;
 use parallel\FutureInterface;
 use parallel\Runtime\Error\Bootstrap;
+use parallel\Runtime\Error\IllegalVariable;
 
 if (!\function_exists('functional_api')) {
   /**
@@ -19,22 +20,27 @@ if (!\function_exists('functional_api')) {
   function run(\closure $task, ...$argv): ?FutureInterface
   {
     global $___bootstrap___, $___run___;
-    $___run___ = new Runtime($___bootstrap___);
-    return $___run___->run($task, ...$argv);
+
+    try {
+      $___run___ = new Runtime($___bootstrap___);
+      return $___run___->run($task, ...$argv);
+    } catch (\Throwable $e) {
+      throw new IllegalVariable('illegal variable');
+    }
   }
 
   /**
    * Shall use the provided file to bootstrap all runtimes created for
-   * automatic scheduling via parallel\run().
+   * automatic scheduling via `parallel\run()`.
    *
    * @param string|null $file
    * @return void
    */
   function bootstrap(?string $file = null)
   {
-    global $___bootstrap___, $___run___;
-    if (empty($___bootstrap___) && $___run___ instanceof FutureInterface)
-      throw new Bootstrap('should be called once, before any calls to \parallel\run');
+    global $___bootstrap___, $___run___, $___channeled___;
+    if ($___run___ !== null || $___channeled___ === 'parallel')
+      throw new Bootstrap('\parallel\bootstrap should be called once, before any calls to \parallel\run');
 
     if (isset($___bootstrap___))
       throw new Bootstrap(\sprintf('\parallel\bootstrap already set to %s', $___bootstrap___));

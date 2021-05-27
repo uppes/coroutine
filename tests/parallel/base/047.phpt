@@ -1,13 +1,10 @@
 --TEST--
 parallel cancellation (ready)
 --SKIPIF--
-<?php
-if (!extension_loaded('parallel')) {
-	die("skip parallel not loaded");
-}
-?>
+<?php if (((float) \phpversion() >= 8.0)) print "skip"; ?>
 --FILE--
 <?php
+include 'vendor/autoload.php';
 $parallel = new \parallel\Runtime();
 
 $future = $parallel->run(function(){});
@@ -19,5 +16,3 @@ var_dump($future->cancel(), $future->cancelled());
 --EXPECT--
 bool(false)
 bool(false)
-
-

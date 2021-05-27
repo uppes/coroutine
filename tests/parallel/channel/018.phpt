@@ -2,12 +2,10 @@
 Check Channel closures inside object properties
 --SKIPIF--
 <?php
-if (!extension_loaded('parallel')) {
-	echo 'skip';
-}
-?>
+if (((float) \phpversion() >= 8.0)) print "skip"; ?>
 --FILE--
 <?php
+include 'vendor/autoload.php';
 use \parallel\{Runtime, Channel};
 
 $runtime = new Runtime;
@@ -17,7 +15,7 @@ $runtime->run(function($channel){
     $data = $channel->recv();
 
     ($data->closure)();
-}, [$channel]);
+}, $channel);
 
 $std = new stdClass;
 $std->closure = function(){
@@ -28,4 +26,3 @@ $channel->send($std);
 ?>
 --EXPECT--
 OK
-

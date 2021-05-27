@@ -1,13 +1,10 @@
 --TEST--
 Check closures cached function check
 --SKIPIF--
-<?php
-if (!extension_loaded('parallel')) {
-	echo 'skip';
-}
-?>
+<?php if (((float) \phpversion() >= 8.0)) print "skip"; ?>
 --FILE--
 <?php
+include 'vendor/autoload.php';
 use \parallel\Runtime;
 
 $runtime = new Runtime;
@@ -23,9 +20,20 @@ $closure = function() {
 $runtime->run($closure);
 $runtime->run($closure);
 ?>
---EXPECT--
+--EXPECTF--
+closure://function() {
+%S
+%S
+%S
+
+%S
+%S}:7:
 string(2) "OK"
+closure://function() {
+%S
+%S
+%S
+
+%S
+%S}:7:
 string(2) "OK"
-
-
-

@@ -2,12 +2,10 @@
 Check buffered Channel drains
 --SKIPIF--
 <?php
-if (!extension_loaded('parallel')) {
-	echo 'skip';
-}
-?>
+if (((float) \phpversion() >= 8.0)) print "skip"; ?>
 --FILE--
 <?php
+include 'vendor/autoload.php';
 use \parallel\Channel;
 
 $chan = Channel::make("hi", 10001);
@@ -44,5 +42,3 @@ int(8)
 int(9)
 int(10)
 string(18) "channel(hi) closed"
-
-

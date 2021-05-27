@@ -67,6 +67,11 @@ final class FutureHandler
   {
     if (!empty($this->futures)) {
       foreach ($this->futures as $future) {
+        if (!$future->isStarted()) {
+          $future->start();
+          continue;
+        }
+
         if ($future->isTimedOut()) {
           $this->remove($future);
           $this->coroutine->executeTask($this->timedOutCallback, $future);

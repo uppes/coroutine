@@ -22,13 +22,10 @@ Fatal error: Uncaught Exception:%S
 #0 closure://function(){
 %S
 %S
-#1 closure://function () use ($task, $args, $include, $___parallel___) {
-%S      if (!empty($include) && \is_string($include))
-%S        require $include;
-
-%S      \parallel_setup($___parallel___);
-%S      return $task(...$args);
-%S    }(7): {closure}()
+#1 closure://function () use ($future, $args, $include, $transfer) {
+%S
+%S
+%S
 #2 %S
 #3 {main} in %S
 Stack trace:

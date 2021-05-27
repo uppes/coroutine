@@ -1,28 +1,36 @@
 --TEST--
 parallel Future exception with trace
 --SKIPIF--
-<?php
-if (!extension_loaded('parallel')) {
-	echo 'skip';
-}
-?>
+<?php if (((float) \phpversion() >= 8.0)) print "skip"; ?>
 --FILE--
 <?php
+include 'vendor/autoload.php';
 $parallel = new \parallel\Runtime(sprintf("%s/bootstrap.inc", __DIR__));
 
 $future = $parallel->run(function(){
 	$foo = new Foo();
-	
+
 	return $foo->bar([42],new stdClass);
 });
 
 var_dump($future->value());
 ?>
 --EXPECTF--
-Fatal error: Uncaught RuntimeException: message in %s:12
-Stack trace:
-#0 %s(19): Qux->method(Array, Object(stdClass))
-#1 %s(7): Foo->bar(Array, Object(stdClass))
-#2 {main}
-  thrown in %s on line 12
+Fatal error: Uncaught RuntimeException: message
 
+#0 %S
+#1 closure://function(){
+%S
+
+%S
+}(5): Foo->bar(Array, Object(stdClass))
+#2 closure://function () use ($future, $args, $include, $transfer) {
+%S
+%S
+%S
+#3 %S
+#4 {main} in %S
+Stack trace:
+#0 %S
+#1 %S
+#2 %S

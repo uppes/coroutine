@@ -8,7 +8,17 @@ For maximum performance it's advisable to install the cross-platform [libuv](htt
 
 > Currently all `libuv` [network](https://github.com/amphp/ext-uv/issues) `socket/stream/udp/tcp` like features are broken on *Windows*, as such will not be implemented for *Windows*, will continue to use native `stream_select` instead.
 
-For a fundamental conceptional overview read ["Concurrency and PHP in relation to modern programming languages, Python, Go, NodeJS, Rust, Etc"](https://github.com/symplely/coroutine/blob/master/wiki/dev.io/concurrency_and_php.md), currently in **draft** form, will be posted on [dev.io](ttps://dev.to) when complete.
+For a fundamental conceptional overview read ["Concurrency and PHP in relation to modern programming languages, Python, Go, NodeJS, Rust, Etc"](https://github.com/symplely/coroutine/blob/master/wiki/dev.io/concurrency_and_php.md), currently in **draft** form, will be posted on [dev.io](ttps://dev.to) when completed.
+
+This version also implements **PHP** [ext-parallel](https://www.php.net/manual/en/book.parallel.php) extension in a way that uses the child [process](http://docs.libuv.org/en/v1.x/guide/processes.html) features of **libuv**. For a quick performance study between a *thread* and *process* see [Launching Linux threads and processes with clone](https://eli.thegreenplace.net/2018/launching-linux-threads-and-processes-with-clone/).
+
+The implement here follows [parallel\Runtime](https://www.php.net/manual/en/class.parallel-runtime.php),[parallel\Future](https://www.php.net/manual/en/class.parallel-future.php), [parallel\Channel](https://www.php.net/manual/en/class.parallel-channel.php), and [Functional](https://www.php.net/manual/en/functional.parallel.php) **API** *specs* as defined, but without the many [limitations](https://www.php.net/manual/en/intro.parallel.php).
+
+The limitations are overcome by using [opis/closure](https://opis.io/closure) package. All **ext-parallel** extension [tests](https://github.com/krakjoe/parallel/tree/develop/tests) and examples, have been mainly modified here in [examples/parallel](https://github.com/symplely/coroutine/tree/master/examples/parallel/), [tests/parallel](https://github.com/symplely/coroutine/tree/master/tests/parallel/) to include this package library instead and remove single array parameter requirement to variadic array. The **tests** with a somewhat major difference have `.1` added to filename, some test are skipped that might require `yield` for proper usage.
+
+The **ext-parallel** `events` and `sync` API are not implemented, don't see a use case and is already internally part of this **coroutine** package.
+
+---
 
 ## Table of Contents
 
