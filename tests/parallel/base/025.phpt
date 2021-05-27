@@ -1,7 +1,13 @@
 --TEST--
 parallel may return arrays
 --SKIPIF--
-<?php if (((float) \phpversion() >= 8.0)) print "skip"; ?>
+<?php
+if (!extension_loaded('uv')) {
+	echo 'skip';
+}
+if (!version_compare(PHP_VERSION, "7.4", ">=")) {
+    die("skip php 7.4 required");
+}?>
 --FILE--
 <?php
 include 'vendor/autoload.php';
@@ -26,21 +32,6 @@ $future = $parallel->run(function(){
 var_dump($future->value());
 ?>
 --EXPECTF--
-closure://function(){
-%S
-
-%S
-
-%S
-%S
-%S
-%S
-%S
-%S
-%S
-%S
-%S
-}:5:
 resource(%d) of type (stream)
 array(7) {
   [0]=>

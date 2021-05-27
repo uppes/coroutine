@@ -19,16 +19,13 @@ try {
 }
 ?>
 --EXPECTF--
-closure://function() {
-%S
-%S
 array(4) {
-  [0] =>
+  [0]=>
   int(1)
-  [1] =>
+  [1]=>
   int(2)
-  [2] =>
+  [2]=>
   int(3)
-  [3] =>
+  [3]=>
   string(5) "hello"
 }

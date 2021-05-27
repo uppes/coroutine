@@ -1,7 +1,13 @@
 --TEST--
 Check closures cached function check
 --SKIPIF--
-<?php if (((float) \phpversion() >= 8.0)) print "skip"; ?>
+<?php
+if (!extension_loaded('uv')) {
+	echo 'skip';
+}
+if (!version_compare(PHP_VERSION, "7.4", ">=")) {
+    die("skip php 7.4 required");
+}?>
 --FILE--
 <?php
 include 'vendor/autoload.php';
@@ -21,19 +27,5 @@ $runtime->run($closure);
 $runtime->run($closure);
 ?>
 --EXPECTF--
-closure://function() {
-%S
-%S
-%S
-
-%S
-%S}:7:
 string(2) "OK"
-closure://function() {
-%S
-%S
-%S
-
-%S
-%S}:7:
 string(2) "OK"

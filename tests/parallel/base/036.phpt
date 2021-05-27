@@ -57,17 +57,5 @@ No return reference error!
 PHP Notice:  Undefined variable: var in closure://function(){
 %S
 %S
-PHP Stack trace:
-%S
-%S
-%S
-%S
-%S
-%S
-%S
-%S
-%S
-%S
-%S
 string(%d) "return of task ignored by caller, caller must retain reference to Future"
 OK

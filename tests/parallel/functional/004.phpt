@@ -1,7 +1,13 @@
 --TEST--
 Check functional reuse
 --SKIPIF--
-<?php if (((float) \phpversion() >= 8.0)) print "skip"; ?>
+<?php
+if (!extension_loaded('uv')) {
+	echo 'skip';
+}
+if (!version_compare(PHP_VERSION, "7.4", ">=")) {
+    die("skip php 7.4 required");
+}?>
 --FILE--
 <?php
 include 'vendor/autoload.php';
@@ -27,9 +33,4 @@ usleep(1000000/2); # we can't be sure how fast the runtime will become available
 });
 ?>
 --EXPECTF--
-closure://function(){
-%S
-%S
-%S
-}:5:
 int(42)

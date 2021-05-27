@@ -1,7 +1,13 @@
 --TEST--
 ZEND_BIND_STATIC (OK)
 --SKIPIF--
-<?php if (((float) \phpversion() >= 8.0)) print "skip"; ?>
+<?php
+if (!extension_loaded('uv')) {
+	echo 'skip';
+}
+if (!version_compare(PHP_VERSION, "7.4", ">=")) {
+    die("skip php 7.4 required");
+}?>
 --FILE--
 <?php
 include 'vendor/autoload.php';
@@ -30,40 +36,14 @@ var_dump($future->value());
 var_dump($var, $array);
 ?>
 --EXPECTF--
-closure://function() use($array) {
-%S
-
-%S
-
-%S
-
-%S
-
-%S
-
-%S
-%S
 array(1) {
-  [0] =>
+  [0]=>
   int(42)
 }
-closure://function() use($array) {
-%S
-
-%S
-
-%S
-
-%S
-
-%S
-
-%S
-%S
 array(2) {
-  [0] =>
+  [0]=>
   int(42)
-  [1] =>
+  [1]=>
   int(42)
 }
 int(1)

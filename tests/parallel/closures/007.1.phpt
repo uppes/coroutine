@@ -1,7 +1,13 @@
 --TEST--
 Check closures statics
 --SKIPIF--
-<?php if (((float) \phpversion() >= 8.0)) print "skip"; ?>
+<?php
+if (!extension_loaded('uv')) {
+	echo 'skip';
+}
+if (!version_compare(PHP_VERSION, "7.4", ">=")) {
+    die("skip php 7.4 required");
+}?>
 --FILE--
 <?php
 include 'vendor/autoload.php';
@@ -29,93 +35,43 @@ $channel->send(function(){
 $channel->send(false);
 ?>
 --EXPECTF--
-closure://function(){
-%S
-%S
-%S
-}:5:
 array(1) {
-  [0] =>
+  [0]=>
   int(452)
 }
-closure://function(){
-%S
-%S
-%S
-}:5:
 array(1) {
-  [0] =>
+  [0]=>
   int(452)
 }
-closure://function(){
-%S
-%S
-%S
-}:5:
 array(1) {
-  [0] =>
+  [0]=>
   int(452)
 }
-closure://function(){
-%S
-%S
-%S
-}:5:
 array(1) {
-  [0] =>
+  [0]=>
   int(452)
 }
-closure://function(){
-%S
-%S
-%S
-}:5:
 array(1) {
-  [0] =>
+  [0]=>
   int(452)
 }
-closure://function(){
-%S
-%S
-%S
-}:5:
 array(1) {
-  [0] =>
+  [0]=>
   int(452)
 }
-closure://function(){
-%S
-%S
-%S
-}:5:
 array(1) {
-  [0] =>
+  [0]=>
   int(452)
 }
-closure://function(){
-%S
-%S
-%S
-}:5:
 array(1) {
-  [0] =>
+  [0]=>
   int(452)
 }
-closure://function(){
-%S
-%S
-%S
-}:5:
 array(1) {
-  [0] =>
+  [0]=>
   int(452)
 }
-closure://function(){
-%S
-%S
-%S
-}:5:
 array(1) {
-  [0] =>
+  [0]=>
   int(452)
 }

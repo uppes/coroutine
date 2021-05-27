@@ -1,7 +1,13 @@
 --TEST--
 parallel future exception
 --SKIPIF--
-<?php if (((float) \phpversion() >= 8.0)) print "skip"; ?>
+<?php
+if (!extension_loaded('uv')) {
+	echo 'skip';
+}
+if (!version_compare(PHP_VERSION, "7.4", ">=")) {
+    die("skip php 7.4 required");
+}?>
 --FILE--
 <?php
 include 'vendor/autoload.php';
@@ -29,4 +35,3 @@ Stack trace:
 #2 %S
 #3 [internal function]: Async\Parallel->markAsFailed(Object(Async\Spawn\Future))
 #4 %S
-#5 [internal function]: %S
