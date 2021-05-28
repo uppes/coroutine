@@ -18,7 +18,7 @@ try {
 ?>
 --EXPECTF--
 No! Serialization of 'parallel\Channel' is not allowed, all good.
-object(parallel\Channel)#4 (15) {
+object(parallel\Channel)#%d (15) {
   ["name":protected]=>
   string(%d) "%s[1]"
   ["index":protected]=>
@@ -28,7 +28,7 @@ object(parallel\Channel)#4 (15) {
   ["type":protected]=>
   string(8) "buffered"
   ["buffered":protected]=>
-  object(SplQueue)#5 (2) {
+  object(SplQueue)#%d (2) {
     ["flags":"SplDoublyLinkedList":private]=>
     int(4)
     ["dllist":"SplDoublyLinkedList":private]=>

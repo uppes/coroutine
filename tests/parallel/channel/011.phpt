@@ -21,7 +21,7 @@ try {
 ?>
 --EXPECTF--
 No! value of type DateTime is illegal
-object(DateTime)#6 (3) {
+object(DateTime)#%d (3) {
   ["date"]=>
   string(%d) %S
   ["timezone_type"]=>
