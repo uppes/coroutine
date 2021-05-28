@@ -29,7 +29,7 @@ Fatal error: Uncaught RuntimeException: message
 %S
 
 %S
-}(5): Foo->bar(Array, Object(stdClass))
+}(5): Foo->bar(%S
 #2 closure://function () use ($future, $args, $include, $transfer) {
 %S
 %S
