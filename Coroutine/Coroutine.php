@@ -24,7 +24,6 @@ use Async\Exceptions\CancelledError;
 use Async\Exceptions\InvalidArgumentException;
 use Async\Fiber;
 use Async\FiberInterface;
-use parallel\Channel;
 
 /**
  * The Scheduler
@@ -261,9 +260,6 @@ final class Coroutine implements CoroutineInterface
 
     if (\IS_UV) {
       $this->uv = \uv_loop_new();
-
-      if (\IS_LINUX)
-        Channel::destroy();
 
       $co = $this;
       $channelLoop = function ($wait_count) use (&$co) {
