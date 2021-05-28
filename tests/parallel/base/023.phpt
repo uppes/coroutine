@@ -34,3 +34,4 @@ Stack trace:
 #2 %S
 #3 [internal function]: Async\Parallel->markAsFailed(Object(Async\Spawn\Future))
 #4 %S
+#5 %S
