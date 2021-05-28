@@ -5,7 +5,7 @@ parallel Future exception with trace
 if (!extension_loaded('uv')) {
 	echo 'skip';
 }
-if (!version_compare(PHP_VERSION, "7.4", ">=")) {
+if (!version_compare(PHP_VERSION, "7.4", ">=") || '\\' === \DIRECTORY_SEPARATOR) {
     die("skip php 7.4 required");
 }
 --FILE--
