@@ -19,9 +19,9 @@ try {
 --EXPECTF--
 string(%d) "syntax error, unexpected '\' (T_NS_SEPARATOR), expecting identifier (T_STRING)
 
-#0 [internal function]: Opis\Closure\SerializableClosure->unserialize(NULL)
+#0 [internal function]: Opis\Closure\SerializableClosure->unserialize(%S
 #1 %S
-#2 [internal function]: Opis\Closure\SerializableClosure->unserialize('a:5:{s:3:"use";...')
+#2 [internal function]: Opis\Closure\SerializableClosure->unserialize(%S
 #3 %S
 #4 %S
 #5 %S
