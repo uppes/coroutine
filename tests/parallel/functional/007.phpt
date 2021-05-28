@@ -20,7 +20,7 @@ string(%S) "\parallel\bootstrap should be called once, before any calls to \para
 
 #0 closure://function() {
 %S
-%S}(3): parallel\bootstrap('1.php')
+%S
 #1 closure://function () use ($future, $args, $include, $transfer) {
 %S
 %S

@@ -5,7 +5,7 @@ Check functional bootstrap error (set after run)
 --FILE--
 <?php
 include 'vendor/autoload.php';
-$sync = \parallel\channel::make("sync");
+$sync = \parallel\Channel::make("sync");
 \parallel\run(function($sync) {
     $sync->recv();
 }, $sync);
