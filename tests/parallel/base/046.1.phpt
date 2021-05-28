@@ -33,7 +33,7 @@ var_dump($future->cancel(), $future->cancelled());
 
 $_sync->send(true);
 ?>
---EXPECT--
+--EXPECTF--
 waiting...
 bool(true)
 bool(true)
