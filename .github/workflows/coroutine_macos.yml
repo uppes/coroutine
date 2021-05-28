@@ -16,20 +16,16 @@ jobs:
       fail-fast: false
       matrix:
         operating-system: [macos-latest]
-        php-versions: ['7.4']
+        php-versions: ['8']
 
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - name: Install libuv and PHP build tools
-        run: |
-          brew install libuv
       - name: Setup PHP, with composer and extensions
         uses: shivammathur/setup-php@v2 #https://github.com/shivammathur/setup-php
         with:
-          php-version: '7.4'
-          extensions: curl, fileinfo, mbstring, openssl, simplexml, dom, sockets, sodium, uv-beta, xdebug
-          coverage: xdebug
+          php-version: '8'
+          extensions: curl, fileinfo, mbstring, openssl, simplexml, dom, sockets, sodium
       - name: Install dependencies
         run: composer install
       - name: Test with phpunit
