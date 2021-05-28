@@ -34,4 +34,3 @@ Stack trace:
 #0 %S
 #1 %S
 #2 %S
-#3 %S
