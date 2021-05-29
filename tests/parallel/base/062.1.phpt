@@ -2,7 +2,7 @@
 parallel immutable class load
 --SKIPIF--
 <?php
-if (!extension_loaded('parallel')) {
+if (!extension_loaded('uv')) {
 	echo 'skip';
 }
 if (!version_compare(PHP_VERSION, "7.4", ">=")) {
@@ -16,10 +16,10 @@ include 'vendor/autoload.php';
 
 use parallel\Runtime;
 
-$bootstrapFile = sprintf('%s/062.bootstrap.inc', __DIR__);
-include_once $bootstrapFile;
+use Async\Tests\parallel\base\EnvDto;
+use Async\Tests\parallel\base\EnvWrap;
 
-$rt = new Runtime($bootstrapFile);
+$rt = new Runtime();
 $params = new EnvWrap(new EnvDto('ok'));
 
 $rt->run(static function (EnvWrap $params) {

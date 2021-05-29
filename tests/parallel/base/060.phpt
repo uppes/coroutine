@@ -2,7 +2,7 @@
 parallel class check invalid member
 --SKIPIF--
 <?php
-if (!extension_loaded('parallel')) {
+if (!extension_loaded('uv')) {
 	echo 'skip';
 }
 if (!version_compare(PHP_VERSION, "7.4", ">=")) {

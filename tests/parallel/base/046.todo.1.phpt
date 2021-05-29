@@ -2,7 +2,10 @@
 parallel cancellation (running)
 --SKIPIF--
 <?php
-if (((float) \phpversion() >= 8.0)) print "skip"; ?>
+if (!extension_loaded('uv')) {
+	echo 'skip';
+}
+?>
 --FILE--
 <?php
 include 'vendor/autoload.php';

@@ -2,7 +2,10 @@
 Check Channel share
 --SKIPIF--
 <?php
-if (((float) \phpversion() >= 8.0)) print "skip"; ?>
+if (!extension_loaded('uv')) {
+	echo 'skip';
+}
+?>
 --FILE--
 <?php
 include 'vendor/autoload.php';
@@ -43,7 +46,7 @@ object(parallel\Channel)#%d (%d) {
 %S
   ["state":protected]=>
 %S
-  ["channel":protected]=>
+  ["future":protected]=>
 %S
   ["process":protected]=>
 %S

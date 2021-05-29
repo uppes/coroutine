@@ -1,5 +1,10 @@
 <?php
-declare(strict_types = 1);
+
+declare(strict_types=1);
+
+namespace Async\Tests\parallel\base;
+
+use Async\Tests\parallel\base\EnvDto;
 
 class EnvWrap
 {

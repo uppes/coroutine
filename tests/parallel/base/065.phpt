@@ -2,7 +2,7 @@
 parallel check type list missing definition
 --SKIPIF--
 <?php
-if (!extension_loaded('parallel')) {
+if (!extension_loaded('uv')) {
 	echo 'skip';
 }
 ?>
@@ -15,7 +15,7 @@ try {
     \parallel\run(function(Foo $a){
         echo "FAIL\n";
     }, 42);
-} catch (parallel\Runtime\Error\IllegalParameter) {
+} catch (parallel\Runtime\Error\IllegalParameter $e) {
     echo "OK\n";
 }
 ?>

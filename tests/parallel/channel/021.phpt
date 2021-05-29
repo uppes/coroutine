@@ -59,7 +59,7 @@ object(parallel\Channel)#%d (%d) {
 %S
   ["state":protected]=>
 %S
-  ["channel":protected]=>
+  ["future":protected]=>
 %S
   ["process":protected]=>
 %S
@@ -98,7 +98,7 @@ object(parallel\Channel)#%d (%d) {
 %S
   ["state":protected]=>
 %S
-  ["channel":protected]=>
+  ["future":protected]=>
 %S
   ["process":protected]=>
 %S
@@ -137,7 +137,7 @@ object(parallel\Channel)#%d (%d) {
 %S
   ["state":protected]=>
 %S
-  ["channel":protected]=>
+  ["future":protected]=>
 %S
   ["process":protected]=>
 %S

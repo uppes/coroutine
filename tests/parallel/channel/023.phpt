@@ -44,7 +44,7 @@ object(parallel\Channel)#%d (15) {
   bool(true)
   ["state":protected]=>
   string(5) "libuv"
-  ["channel":protected]=>
+  ["future":protected]=>
   NULL
   ["process":protected]=>
   NULL

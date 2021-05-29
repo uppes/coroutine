@@ -2,16 +2,15 @@
 parallel check type list property
 --SKIPIF--
 <?php
-if (!extension_loaded('parallel')) {
+if (!extension_loaded('uv')) {
 	echo 'skip';
 }
 ?>
 --FILE--
 <?php
 include 'vendor/autoload.php';
-\parallel\bootstrap(sprintf("%s/066-bootstrap.inc", __DIR__));
 
-include (sprintf("%s/066-bootstrap.inc", __DIR__));
+use Async\Tests\parallel\base\Foo;
 
 \parallel\run(function(Foo $a){
         echo "OK\n";

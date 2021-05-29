@@ -9,9 +9,8 @@ if (!extension_loaded('parallel')) {
 --FILE--
 <?php
 include 'vendor/autoload.php';
-\parallel\bootstrap(sprintf("%s/067-bootstrap.inc", __DIR__));
 
-include (sprintf("%s/067-bootstrap.inc", __DIR__));
+use Async\Tests\parallel\base\Foo;
 
 \parallel\run(function(Foo $a){
         echo "OK\n";
