@@ -5,6 +5,9 @@ parallel cancellation (value on cancelled)
 if (!extension_loaded('uv')) {
 	echo 'skip';
 }
+if ('\\' === \DIRECTORY_SEPARATOR) {
+    die("skip");
+}
 ?>
 --FILE--
 <?php
@@ -34,6 +37,8 @@ try {
 ?>
 --EXPECTF--
 waiting...
-string(21) "cannot retrieve value"
+waiting...
+waiting...
+string(%d) "cannot retrieve value"
 --XLEAK--
 The interrupt we use for cancellation is not treated in a thread safe way in core

@@ -5,6 +5,9 @@ parallel cancellation (already cancelled)
 if (!extension_loaded('uv')) {
 	echo 'skip';
 }
+if ('\\' === \DIRECTORY_SEPARATOR) {
+    die("skip");
+}
 ?>
 --FILE--
 <?php
@@ -34,8 +37,10 @@ try {
 ?>
 --EXPECTF--
 waiting...
+waiting...
+waiting...
 bool(true)
 bool(true)
-string(26) "task was already cancelled"
+string(%d) "task was already cancelled"
 --XLEAK--
 The interrupt we use for cancellation is not treated in a thread safe way in core

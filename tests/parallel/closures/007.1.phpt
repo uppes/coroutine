@@ -5,9 +5,10 @@ Check closures statics
 if (!extension_loaded('uv')) {
 	echo 'skip';
 }
-if (!version_compare(PHP_VERSION, "7.4", ">=")) {
-    die("skip php 7.4 required");
-}?>
+if (!version_compare(PHP_VERSION, "7.4", ">=") && ('\\' !== \DIRECTORY_SEPARATOR)) {
+    die("skip");
+}
+?>
 --FILE--
 <?php
 include 'vendor/autoload.php';

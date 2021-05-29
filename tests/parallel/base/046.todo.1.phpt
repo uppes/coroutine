@@ -5,6 +5,9 @@ parallel cancellation (running)
 if (!extension_loaded('uv')) {
 	echo 'skip';
 }
+if ('\\' === \DIRECTORY_SEPARATOR) {
+    die("skip");
+}
 ?>
 --FILE--
 <?php
@@ -37,6 +40,8 @@ var_dump($future->cancel(), $future->cancelled());
 $_sync->send(true);
 ?>
 --EXPECTF--
+waiting...
+waiting...
 waiting...
 bool(true)
 bool(true)

@@ -5,6 +5,9 @@ parallel cancellation (runtime killed)
 if (!extension_loaded('uv')) {
 	echo 'skip';
 }
+if ('\\' === \DIRECTORY_SEPARATOR) {
+    die("skip");
+}
 ?>
 --FILE--
 <?php
@@ -33,6 +36,8 @@ try {
 }
 ?>
 --EXPECTF--
+waiting...
+waiting...
 waiting...
 string(%d) "runtime executing task was killed"
 --XLEAK--

@@ -5,6 +5,9 @@ Check closures over channel unbuffered destroy last
 if (!extension_loaded('uv')) {
 	echo 'skip';
 }
+if (!version_compare(PHP_VERSION, "7.4", ">=") && ('\\' !== \DIRECTORY_SEPARATOR)) {
+    die("skip");
+}
 ?>
 --FILE--
 <?php
